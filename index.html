@@ -6,7 +6,7 @@
           content="width=device-width, initial-scale=1.0">
     <title>사거리인터넷 실시간 요금 안내</title>
     <style>
-        /* 🎨 대표님의 국방색 테마 설정 */
+        /* 🎨 대표님의 국방색 마케팅 테마 설정 */
         :root { 
             --main-bg: #4B5320; 
             --point-color: #3B4218; 
@@ -23,7 +23,7 @@
             color: #fff; 
         }
         
-        /* 마스코트 캐릭터와 타이틀 구역 */
+        /* 상단 마스코트 캐릭터 구역 */
         .header-container { 
             padding: 40px 20px; 
             text-align: center; 
@@ -33,8 +33,6 @@
                 rgba(0,0,0,0.1)
             ); 
         }
-        
-        /* 🐻 마스코트 이미지 스타일 */
         .mascot-img { 
             max-width: 150px; 
             height: auto; 
@@ -44,7 +42,6 @@
             background-color: #fff; 
             padding: 5px;
         }
-        
         .main-title { 
             font-size: 28px; 
             font-weight: bold; 
@@ -58,7 +55,7 @@
             margin-top: 12px; 
         }
         
-        /* 통신사 필터링 버튼 탭 */
+        /* 🚫 '전체보기'가 삭제된 통신사 필터 버튼 탭 */
         .nav-tabs { 
             display: flex; 
             justify-content: center; 
@@ -69,52 +66,60 @@
         .tab-btn { 
             border: 2px solid #fff; 
             background: none; 
-            padding: 8px 16px; 
+            padding: 8px 18px; 
             font-size: 14px; 
             font-weight: bold; 
             cursor: pointer; 
             color: #fff; 
             margin: 5px; 
             border-radius: 20px; 
+            transition: 0.2s;
         }
         .tab-btn.active, .tab-btn:hover { 
             background: #fff; 
             color: var(--main-bg); 
         }
         
-        /* 요금 카드 레이아웃 */
-        .grid-container { 
-            max-width: 1200px; 
+        /* 📜 가로로 길게 1개씩만 나열되는 리스트 레이아웃 */
+        .list-container { 
+            max-width: 1000px; 
             margin: 30px auto; 
             padding: 0 20px; 
-            display: grid; 
-            grid-template-columns: repeat(
-                auto-fill, 
-                minmax(280px, 1fr)
-            ); 
-            gap: 20px; 
+            display: flex;
+            flex-direction: column;
+            gap: 15px; 
         }
-        .card { 
+        
+        /* 가로형 대형 상품 바(Bar) 디자인 */
+        .row-card { 
             background: #fff; 
-            border-radius: 12px; 
+            border-radius: 10px; 
             box-shadow: 0 6px 15px rgba(0,0,0,0.2); 
-            overflow: hidden; 
             display: flex; 
-            flex-direction: column; 
-            border-top: 6px solid #ccc; 
+            align-items: center;
+            justify-content: space-between;
+            border-left: 8px solid #ccc; 
             color: #333; 
+            padding: 20px 25px;
+            gap: 20px;
+            transition: 0.2s;
+        }
+        .row-card:hover {
+            transform: scale(1.01);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
         
-        .card.kt { border-top-color: var(--kt-color); } 
-        .card.lg { border-top-color: var(--lg-color); } 
-        .card.sk { border-top-color: var(--sk-color); } 
-        .card.sky { border-top-color: var(--sky-color); } 
-        .card.hello { border-top-color: var(--hello-color); }
+        /* 통신사별 왼쪽 라인 포인트 색상 */
+        .row-card.kt { border-left-color: var(--kt-color); } 
+        .row-card.lg { border-left-color: var(--lg-color); } 
+        .row-card.sk { border-left-color: var(--sk-color); } 
+        .row-card.sky { border-left-color: var(--sky-color); } 
+        .row-card.hello { border-left-color: var(--hello-color); }
         
-        .card-header { 
-            padding: 20px; 
-            background: #fdfdfd; 
-            border-bottom: 1px solid #f3f3f3; 
+        /* 상품 정보 왼쪽 구역 */
+        .info-section {
+            flex: 1.5;
+            text-align: left;
         }
         .provider-badge { 
             display: inline-block; 
@@ -123,7 +128,7 @@
             font-size: 11px; 
             font-weight: bold; 
             color: #fff; 
-            margin-bottom: 8px; 
+            margin-bottom: 6px; 
         }
         .kt .provider-badge { background: var(--kt-color); } 
         .lg .provider-badge { background: var(--lg-color); } 
@@ -132,24 +137,34 @@
         .hello .provider-badge { background: var(--hello-color); }
         
         .speed-title { 
-            font-size: 18px; 
+            font-size: 19px; 
             font-weight: bold; 
             margin: 0; 
             color: #111; 
         }
-        .card-body { 
-            padding: 20px; 
-            flex-grow: 1; 
-            text-align: center; 
+        .guide-text {
+            font-size: 12px;
+            color: #777;
+            margin-top: 5px;
         }
-        .price-box { margin: 10px 0; }
+        
+        /* 가격 및 혜택 중간 구역 */
+        .price-section { 
+            flex: 2;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+        }
+        .price-box { text-align: right; }
         .price-label { 
             font-size: 12px; 
             color: #999; 
             text-decoration: line-through; 
         }
         .price-main { 
-            font-size: 26px; 
+            font-size: 25px; 
             font-weight: bold; 
             color: #111; 
         }
@@ -158,46 +173,69 @@
             font-weight: normal; 
         }
         
+        /* 대박 사은품 혜택 상자 */
         .benefit-box { 
             background: #fff3e0; 
             border-radius: 6px; 
-            padding: 12px; 
-            margin-top: 12px; 
+            padding: 10px 15px; 
             font-size: 13px; 
             font-weight: bold; 
             color: #d35400; 
             border: 1px dashed #ffb74d; 
+            max-width: 250px;
+            text-align: left;
         }
         
+        /* 상담 신청 버튼 오른쪽 구역 */
+        .btn-section {
+            flex: 0.8;
+            text-align: right;
+        }
         .btn-consult { 
-            display: block; 
+            display: inline-block;
             width: 100%; 
-            padding: 12px 0; 
+            padding: 14px 0; 
             background: var(--point-color); 
             color: #fff; 
             text-align: center; 
             text-decoration: none; 
             font-weight: bold; 
             border: none; 
+            border-radius: 6px;
             cursor: pointer; 
+            transition: 0.2s;
         }
+        .btn-consult:hover {
+            background: #222;
+        }
+        
         .loading { 
             text-align: center; 
             padding: 50px; 
             font-size: 16px; 
-            grid-column: 1/-1; 
         }
         .footer { 
             text-align: center; 
             color: rgba(255,255,255,0.6); 
             font-size: 13px; 
-            padding: 30px 0; 
+            padding: 40px 0; 
+        }
+
+        /* 스마트폰 화면 최적화 (가로형태가 세로로 부드럽게 전환) */
+        @media (max-width: 768px) {
+            .row-card { flex-direction: column; text-align: center; padding: 20px; }
+            .info-section { text-align: center; }
+            .price-section { flex-direction: column; gap: 10px; margin: 10px 0; }
+            .price-box { text-align: center; }
+            .benefit-box { text-align: center; max-width: 100%; }
+            .btn-section { width: 100%; }
         }
     </style>
 </head>
 <body>
 
     <div class="header-container">
+        <!-- 마스코트 이미지 주소 삽입 구역 -->
         <img src="https://via.placeholder.com/150" 
              alt="마스코트" 
              class="mascot-img">
@@ -205,10 +243,9 @@
         <div class="notice">★ 돈 절약! 최대 혜택! 실시간 단가표 ★</div>
     </div>
     
+    <!-- 🚫 '전체보기'가 제거되고 첫 진입 시 'KT 올레'가 먼저 열리도록 수정 -->
     <div class="nav-tabs">
         <button class="tab-btn active" 
-                onclick="filterProvider('all')">전체보기</button>
-        <button class="tab-btn" 
                 onclick="filterProvider('KT')">KT 올레</button>
         <button class="tab-btn" 
                 onclick="filterProvider('LG')">LG U+</button>
@@ -220,19 +257,17 @@
                 onclick="filterProvider('헬로')">LG헬로비전</button>
     </div>
 
-    <div class="grid-container" id="rate-grid">
+    <!-- 📜 한 줄에 1개씩 노출되는 리스트 구역 -->
+    <div class="list-container" id="rate-list">
         <div class="loading">요금제 데이터를 불러오는 중입니다...</div>
     </div>
 
     <div class="footer">www.사거리인터넷.com</div>
 
     <script>
-        // 대표님의 진짜 구글 시트 ID가 정확히 반영되었습니다!
-        const sheetId = 
-        '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
-        
-        const csvUrl = 
-        `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+        // 대표님의 구글 시트 ID 적용
+        const sheetId = '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
         let allData = [];
 
         async function loadData() {
@@ -241,10 +276,12 @@
                 const text = await response.text();
                 const rows = text.split('\n').map(row => row.split(','));
                 allData = rows.slice(1).filter(r => r[0] && r[0].trim() !== "");
-                renderCards(allData);
+                
+                // 🚀 첫 진입 시 기본으로 'KT 올레' 요금제를 1G부터 순서대로 보여줍니다.
+                filterProvider('KT');
             } catch (error) {
-                document.getElementById('rate-grid').innerHTML = 
-                '<div class="loading">데이터 로드 실패. [웹에 게시]를 확인해주세요.</div>';
+                document.getElementById('rate-list').innerHTML = 
+                '<div class="loading">데이터 로드 실패. 구글 시트 권한을 확인해주세요.</div>';
             }
         }
 
@@ -257,9 +294,24 @@
             return '';
         }
 
-        function renderCards(data) {
-            const grid = document.getElementById('rate-grid');
-            grid.innerHTML = '';
+        // 📊 속도 문자열에서 숫자 크기를 추출하는 내부 연산 기능
+        function getSpeedNumber(speedStr) {
+            if (speedStr.includes('1G')) return 1000;
+            if (speedStr.includes('500M')) return 500;
+            if (speedStr.includes('200M')) return 200;
+            if (speedStr.includes('160M')) return 160;
+            if (speedStr.includes('100M')) return 100;
+            return 0;
+        }
+
+        function renderList(data) {
+            const listContainer = document.getElementById('rate-list');
+            listContainer.innerHTML = '';
+            
+            // 🔄 1G ➔ 500M ➔ 200M/160M ➔ 100M 순서로 역순 자동 정렬
+            data.sort((a, b) => {
+                return getSpeedNumber(b[1]) - getSpeedNumber(a[1]);
+            });
             
             data.forEach(row => {
                 const provider = row[0].replace(/"/g, '').trim();
@@ -268,48 +320,55 @@
                       parseInt(row[2]).toLocaleString() : row[2];
                 const finalPrice = parseInt(row[4]) ? 
                       parseInt(row[4]).toLocaleString() : row[4];
-                const totalGift = row[8] ? 
-                      row[8].replace(/"/g, '').trim() : '최대지원';
+                const guide = row[5].replace(/"/g, '').trim();
+                const totalGift = row[6] ? 
+                      row[6].replace(/"/g, '').trim() : '최대지원';
 
                 const cardClass = getCardClass(provider);
 
+                // 💳 깔끔한 가로형 대형 리스트 바 구조 조립
                 const cardHtml = `
-                    <div class="card ${cardClass}" data-provider="${provider}">
-                        <div class="card-header">
+                    <div class="row-card ${cardClass}">
+                        <div class="info-section">
                             <span class="provider-badge">${provider}</span>
                             <h3 class="speed-title">${speed}</h3>
+                            <div class="guide-text">가이드: ${guide}</div>
                         </div>
-                        <div class="card-body">
+                        <div class="price-section">
                             <div class="price-box">
                                 <div class="price-label">본사기준 월 ${basePrice}원</div>
                                 <div class="price-main">${finalPrice}<span>원/월</span></div>
                             </div>
-                            <div class="benefit-box">🎁 총 혜택: ${totalGift}</div>
+                            <div class="benefit-box">🎁 특별 혜택 및 사은품:<br>${totalGift}</div>
                         </div>
-                        <button class="btn-consult" 
-                                onclick="alert('전화 혹은 카톡으로 문의하시면 신속하게 상담해 드립니다!')">
-                                빠른 상담 신청하기
-                        </button>
+                        <div class="btn-section">
+                            <button class="btn-consult" 
+                                    onclick="alert('전화 혹은 카톡으로 문의하시면 신속하게 대박 상담 도와드립니다!')">
+                                    상담 신청
+                            </button>
+                        </div>
                     </div>
                 `;
-                grid.innerHTML += cardHtml;
+                listContainer.innerHTML += cardHtml;
             });
         }
 
         function filterProvider(providerKey) {
             document.querySelectorAll('.tab-btn')
                     .forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            
+            // 클릭한 버튼에 불 들어오게 설정
+            const targetBtn = Array.from(document.querySelectorAll('.tab-btn'))
+                                   .find(btn => btn.textContent.includes(providerKey));
+            if(targetBtn) targetBtn.classList.add('active');
 
-            if(providerKey === 'all') {
-                renderCards(allData);
-            } else {
-                const filtered = allData.filter(row => row[0].includes(providerKey));
-                renderCards(filtered);
-            }
+            const filtered = allData.filter(row => row[0].includes(providerKey));
+            renderList(filtered);
         }
 
         window.onload = loadData;
     </script>
+</body>
+</html>
 </body>
 </html>
