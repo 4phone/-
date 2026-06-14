@@ -27,6 +27,7 @@
             background-color: var(--main-bg); 
             color: #fff; 
             letter-spacing: -0.5px;
+            overflow-x: hidden;
         }
         
         /* 1. 힙한 고정 상단바 */
@@ -67,25 +68,42 @@
             color: #fff; text-shadow: 3px 3px 0px rgba(0,0,0,0.3);
         }
         
-        /* ✨ [사장님 전용] 역대급 메인 비주얼 구역 */
+        /* ✨ [사장님 전용] 역대급 메인 비주얼 구역 (폭죽 배경 컨테이너 지정) */
         #boss-section { 
             background: radial-gradient(circle at center, #555D29 0%, #2A2E14 100%);
-            padding-top: 160px; padding-bottom: 90px;
-            overflow: hidden;
+            padding-top: 150px; padding-bottom: 90px;
+            overflow: relative;
+        }
+        
+        /* 🔍 원 안에서 튀어나올 것 같은 3D 입체 털보아저씨 액자 프레임 */
+        .mascot-container {
+            position: relative;
+            display: inline-block;
+            width: 280px; /* 기존보다 크기를 크게 확장 */
+            height: 280px;
+            margin-bottom: 25px;
+            perspective: 1000px;
         }
         .main-mascot {
-            max-width: 240px; border-radius: 50%; background: #fff;
-            padding: 8px; margin-bottom: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 4px solid var(--gold-color);
-            transition: 0.3s ease;
+            width: 100%; height: 100%;
+            border-radius: 50%; background: #fff;
+            padding: 4px; box-sizing: border-box;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            border: 6px solid var(--gold-color);
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s;
+            transform-style: preserve-3d;
         }
-        .main-mascot:hover { transform: rotate(3deg) scale(1.05); }
+        /* 마우스를 올리거나 모바일에서 터치 시 프레임을 깨고 튀어나오는 무빙 이펙트 */
+        .mascot-container:hover .main-mascot {
+            transform: scale(1.15) translateY(-10px) rotateX(5deg);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 30px rgba(255,215,0,0.4);
+        }
         
         /* 화려한 떡값 축제 문구 디자인 */
         .headline { 
             font-size: 42px; font-weight: 900; margin: 15px 0; line-height: 1.4;
             text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+            position: relative; z-index: 5;
         }
         .headline span { 
             color: #111; background: var(--gold-color); 
@@ -96,6 +114,20 @@
         .sub-headline { 
             font-size: 20px; font-weight: 700; color: #E2E8F0; margin-top: 20px;
             text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+            position: relative; z-index: 5;
+        }
+
+        /* 🎆 실시간 사방으로 날아다니는 폭죽 입자 생성 전용 CSS */
+        .confetti {
+            position: absolute;
+            z-index: 2;
+            pointer-events: none;
+            user-select: none;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
         
         /* 📊 [요금 계산기] 구역 */
@@ -119,15 +151,9 @@
             transition: 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             overflow: hidden;
         }
-        
-        /* 통신사 로고 하얀 배경 제거 마법 */
         .logo-btn img { 
-            max-width: 95%; 
-            max-height: 95%; 
-            object-fit: contain; 
-            mix-blend-mode: multiply; 
+            max-width: 95%; max-height: 95%; object-fit: contain; mix-blend-mode: multiply; 
         }
-        
         .logo-btn:hover { border-color: #CBD5E0; transform: translateY(-2px); }
         .logo-btn.active { border-color: #799F0C; background: #F0FDF4; box-shadow: 0 8px 15px rgba(121,159,12,0.15); }
         
@@ -141,7 +167,7 @@
         .text-btn:hover { border-color: #CBD5E0; transform: translateY(-2px); }
         .text-btn.active { background: var(--main-bg); color: #fff; border-color: var(--main-bg); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
         
-        /* 💰 [구조 전면 리팩토링] 대박 요금 결과창 보드 (세로 정렬형) */
+        /* 💰 요금 결과창 메인 보드 (세로 정렬형) */
         .calc-result-box {
             background: #F8FAFC; border: 3px solid #E2E8F0; border-radius: 22px;
             padding: 35px; margin-top: 40px; display: flex;
@@ -149,7 +175,6 @@
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
         }
         
-        /* 상단 요금 2개 가로 정렬 및 가운데 정렬 레이아웃 */
         .res-row-prices {
             display: flex; justify-content: center; align-items: center;
             flex-wrap: wrap; gap: 40px; width: 100%;
@@ -159,7 +184,7 @@
         .res-val { font-size: 34px; font-weight: 900; color: #1A202C; }
         .res-val span { font-size: 18px; font-weight: 700; }
         
-        /* 🔥 [위치 이동] 사거리 특별 지원금 하단 배치 대형 와이드 보드 */
+        /* 사거리 특별 지원금 와이드 하단 보드 */
         .subsidy-box { 
             width: 100%; max-width: 760px; margin: 0 auto;
             background: linear-gradient(135deg, #FFFDF5 0%, #FFF3E0 100%); 
@@ -254,9 +279,12 @@
         </div>
     </div>
 
-    <!-- 📌 [사장님 전용] 메인 비주얼 구역 -->
+    <!-- 📌 [사장님 전용] 메인 비주얼 구역 (폭죽 시스템 실시간 적용) -->
     <div class="section" id="boss-section">
-        <img src="털보아저씨국방색.png" class="main-mascot">
+        <!-- 입체 이펙트 전용 컨테이너 프레임 -->
+        <div class="mascot-container">
+            <img src="털보아저씨국방색.png" class="main-mascot" alt="사거리인터넷 대표 털보아저씨">
+        </div>
         <div class="headline">✨ 털보아저씨가 <span>시원하게 떡값 쏘는 곳!</span> ✨</div>
         <div class="sub-headline">인터넷 + TV 가입하면 대박 지원금에 최신 고급 가전 사은품까지 100% 전격 증정!</div>
     </div>
@@ -289,9 +317,8 @@
                 <div class="text-options" id="speed-box"></div>
             </div>
 
-            <!-- 💰 [리빌딩 완료] 이미지 삭제 및 중앙 정렬 세로 배치 레이아웃 결과창 -->
+            <!-- 💰 요금 결과 확인창 -->
             <div class="calc-result-box">
-                <!-- 상단: 2대 요금 정보 나란히 정렬 -->
                 <div class="res-row-prices">
                     <div class="res-col">
                         <div class="res-label" id="label-base">본사 표준 요금</div>
@@ -303,7 +330,6 @@
                     </div>
                 </div>
                 
-                <!-- 하단: 이미지 위치로 자리를 옮겨 웅장하게 확장된 사거리 특별 지원금 보드 -->
                 <div class="subsidy-box">
                     <div class="res-label" style="color:#DD6B20; font-weight:900; font-size:16px;">💵 사거리 특별 지원금 (현금+떡값)</div>
                     <div class="res-val subsidy-val" id="res-subsidy">0원</div>
@@ -357,6 +383,7 @@
 
     <div class="footer">© 사거리인터넷 ALL RIGHTS RESERVED. | 실시간 단가표 데이터 구글 시트 연동 홀딩 완료.</div>
 
+    <!-- 🎆 실시간 축제 폭죽 생성 자바스크립트 스크립트 추가 연동 -->
     <script>
         const sheetId = '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
         const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
@@ -365,6 +392,35 @@
         let curProv = 'KT';
         let curProd = '단독';
 
+        // 🎇 금빛 가루 폭죽 실시간 생성 무한 루프 스크립트
+        function createConfetti() {
+            const container = document.getElementById('boss-section');
+            if(!container) return;
+            
+            const shapes = ['★', '✨', '🪙', '✦', '⭐'];
+            const colors = ['#FFD700', '#FFA500', '#FF4500', '#FFFF00', '#ADFF2F'];
+            
+            for (let i = 0; i < 3; i++) { // 한 번에 3개씩 생성
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+                confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
+                
+                // 화면 가로 범위 내 무작위 스폰 배치
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.fontSize = Math.random() * 15 + 15 + 'px';
+                
+                // 떨어지는 속도 및 지속 시간 무작위 셔플
+                const duration = Math.random() * 3 + 2;
+                confetti.style.animationDuration = duration + 's';
+                
+                container.appendChild(confetti);
+                
+                // 애니메이션 종료 후 브라우저 메모리 부하 방지를 위해 자동 파기
+                setTimeout(() => { confetti.remove(); }, duration * 1000);
+            }
+        }
+
         async function loadData() {
             try {
                 const response = await fetch(csvUrl);
@@ -372,6 +428,9 @@
                 const rows = text.split('\n').map(row => row.split(','));
                 allData = rows.slice(1).filter(r => r[0] && r[0].trim() !== "");
                 updateOptions();
+                
+                // ⏱️ 0.4초마다 끊임없이 폭죽 입자를 터뜨립니다
+                setInterval(createConfetti, 400);
             } catch (e) { console.error('데이터 바인딩 연동 실패'); }
         }
 
@@ -418,7 +477,6 @@
             }
         }
 
-        // 🔄 정밀하게 개조된 자바스크립트 화면 연동 매칭 함수
         function showResult(row) {
             const cleanRow = row.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
             const basePriceRaw = cleanRow[2];
