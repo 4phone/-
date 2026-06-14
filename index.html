@@ -4,18 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" 
           content="width=device-width, initial-scale=1.0">
-    <title>사거리인터넷 실시간 요금 안내</title>
+    <title>사거리인터넷 - 실시간 맞춤 요금 계산기</title>
+    <!-- 🌐 파비콘(Favicon) 설정: 대표님의 멋진 로고 적용 -->
+    <link rel="icon" href="사거리 로고.png" type="image/png">
     <style>
-        /* 🎨 대표님의 국방색 마케팅 테마 설정 */
+        /* 🎨 대표님의 국방색 마케팅 테마 및 브랜드 컬러 설정 */
         :root { 
             --main-bg: #4B5320; 
             --point-color: #3B4218; 
+            --card-border: #ffb74d;
             --kt-color: #d32f2f; 
             --lg-color: #c2185b; 
             --sk-color: #e65100; 
             --sky-color: #0288d1; 
             --hello-color: #7b1fa2; 
         }
+        
+        html { scroll-behavior: smooth; }
         body { 
             margin: 0; 
             font-family: 'Malgun Gothic', sans-serif; 
@@ -23,279 +28,457 @@
             color: #fff; 
         }
         
-        /* 상단 마스코트 캐릭터 구역 */
-        .header-container { 
-            padding: 40px 20px; 
-            text-align: center; 
-            background: linear-gradient(
-                to bottom, 
-                rgba(0,0,0,0.4), 
-                rgba(0,0,0,0.1)
-            ); 
-        }
-        .mascot-img { 
-            max-width: 150px; 
-            height: auto; 
-            border-radius: 50%; 
-            margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            background-color: #fff; 
-            padding: 5px;
-        }
-        .main-title { 
-            font-size: 28px; 
-            font-weight: bold; 
-            margin: 0; 
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.6); 
-        }
-        .notice { 
-            font-size: 14px; 
-            color: #ffeb3b; 
-            font-weight: bold; 
-            margin-top: 12px; 
-        }
-        
-        /* 🚫 '전체보기'가 삭제된 통신사 필터 버튼 탭 */
-        .nav-tabs { 
-            display: flex; 
-            justify-content: center; 
-            flex-wrap: wrap;
-            background: rgba(0, 0, 0, 0.2); 
-            padding: 10px 0; 
-        }
-        .tab-btn { 
-            border: 2px solid #fff; 
-            background: none; 
-            padding: 8px 18px; 
-            font-size: 14px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            color: #fff; 
-            margin: 5px; 
-            border-radius: 20px; 
-            transition: 0.2s;
-        }
-        .tab-btn.active, .tab-btn:hover { 
-            background: #fff; 
-            color: var(--main-bg); 
-        }
-        
-        /* 📜 가로로 길게 1개씩만 나열되는 리스트 레이아웃 */
-        .list-container { 
-            max-width: 1000px; 
-            margin: 30px auto; 
-            padding: 0 20px; 
+        /* 1. 상단 고정 내비게이션 바 (대표님 요청 4대 카테고리) */
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 70px;
+            background: rgba(0, 0, 0, 0.85);
             display: flex;
-            flex-direction: column;
-            gap: 15px; 
-        }
-        
-        /* 가로형 대형 상품 바(Bar) 디자인 */
-        .row-card { 
-            background: #fff; 
-            border-radius: 10px; 
-            box-shadow: 0 6px 15px rgba(0,0,0,0.2); 
-            display: flex; 
             align-items: center;
             justify-content: space-between;
-            border-left: 8px solid #ccc; 
-            color: #333; 
-            padding: 20px 25px;
-            gap: 20px;
+            padding: 0 40px;
+            z-index: 1000;
+            border-bottom: 2px solid var(--point-color);
+        }
+        .nav-logo img { height: 45px; width: auto; vertical-align: middle; }
+        .nav-menu { display: flex; gap: 25px; }
+        .nav-menu a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
             transition: 0.2s;
         }
-        .row-card:hover {
-            transform: scale(1.01);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        }
+        .nav-menu a:hover { color: #ffeb3b; }
         
-        /* 통신사별 왼쪽 라인 포인트 색상 */
-        .row-card.kt { border-left-color: var(--kt-color); } 
-        .row-card.lg { border-left-color: var(--lg-color); } 
-        .row-card.sk { border-left-color: var(--sk-color); } 
-        .row-card.sky { border-left-color: var(--sky-color); } 
-        .row-card.hello { border-left-color: var(--hello-color); }
+        /* 섹션 공통 스타일 */
+        .section { padding: 100px 20px 60px 20px; text-align: center; }
+        .section-title { font-size: 32px; font-weight: bold; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
         
-        /* 상품 정보 왼쪽 구역 */
-        .info-section {
-            flex: 1.5;
-            text-align: left;
+        /* 📌 [사장님 전용] & 메인 비주얼 구역 */
+        #boss-section {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0));
+            padding-top: 140px;
         }
-        .provider-badge { 
-            display: inline-block; 
-            padding: 4px 10px; 
-            border-radius: 4px; 
-            font-size: 11px; 
-            font-weight: bold; 
-            color: #fff; 
-            margin-bottom: 6px; 
+        .main-mascot {
+            max-width: 240px;
+            height: auto;
+            border-radius: 50%;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            background: #fff;
+            padding: 6px;
+            margin-bottom: 20px;
         }
-        .kt .provider-badge { background: var(--kt-color); } 
-        .lg .provider-badge { background: var(--lg-color); } 
-        .sk .provider-badge { background: var(--sk-color); } 
-        .sky .provider-badge { background: var(--sky-color); } 
-        .hello .provider-badge { background: var(--hello-color); }
+        .headline { font-size: 36px; font-weight: bold; margin: 10px 0; }
+        .headline span { color: #ffeb3b; }
+        .sub-headline { font-size: 18px; color: #ddd; margin-bottom: 30px; }
         
-        .speed-title { 
-            font-size: 19px; 
-            font-weight: bold; 
-            margin: 0; 
-            color: #111; 
+        /* 📌 [요금 계산기] 구역 */
+        #calculator-section { background: rgba(0,0,0,0.15); }
+        .calc-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 16px;
+            padding: 35px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            color: #333;
         }
-        .guide-text {
-            font-size: 12px;
-            color: #777;
-            margin-top: 5px;
-        }
+        .calc-group { margin-bottom: 30px; text-align: left; }
+        .calc-group-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; color: #555; border-left: 4px solid var(--main-bg); padding-left: 8px; }
         
-        /* 가격 및 혜택 중간 구역 */
-        .price-section { 
-            flex: 2;
-            text-align: center;
+        /* 이미지 로고 버튼 선택기 스타일 */
+        .logo-options { display: flex; flex-wrap: wrap; gap: 12px; }
+        .logo-btn {
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 25px;
-        }
-        .price-box { text-align: right; }
-        .price-label { 
-            font-size: 12px; 
-            color: #999; 
-            text-decoration: line-through; 
-        }
-        .price-main { 
-            font-size: 25px; 
-            font-weight: bold; 
-            color: #111; 
-        }
-        .price-main span { 
-            font-size: 14px; 
-            font-weight: normal; 
-        }
-        
-        /* 대박 사은품 혜택 상자 */
-        .benefit-box { 
-            background: #fff3e0; 
-            border-radius: 6px; 
-            padding: 10px 15px; 
-            font-size: 13px; 
-            font-weight: bold; 
-            color: #d35400; 
-            border: 1px dashed #ffb74d; 
-            max-width: 250px;
-            text-align: left;
-        }
-        
-        /* 상담 신청 버튼 오른쪽 구역 */
-        .btn-section {
-            flex: 0.8;
-            text-align: right;
-        }
-        .btn-consult { 
-            display: inline-block;
-            width: 100%; 
-            padding: 14px 0; 
-            background: var(--point-color); 
-            color: #fff; 
-            text-align: center; 
-            text-decoration: none; 
-            font-weight: bold; 
-            border: none; 
-            border-radius: 6px;
-            cursor: pointer; 
+            width: 140px;
+            height: 55px;
             transition: 0.2s;
         }
-        .btn-consult:hover {
-            background: #222;
+        .logo-btn img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .logo-btn.active { border-color: var(--main-bg); background: #f0f4f0; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        /* 일반 텍스트 옵션 버튼 스타일 */
+        .text-options { display: flex; flex-wrap: wrap; gap: 12px; }
+        .text-btn {
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: bold;
+            color: #444;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .text-btn.active { background: var(--main-bg); color: #fff; border-color: var(--main-bg); }
+        
+        /* 실시간 연동 계산 결과창 카드 */
+        .calc-result-box {
+            background: #fafafa;
+            border: 2px dashed var(--card-border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .result-left { text-align: left; }
+        .result-price-label { font-size: 14px; color: #888; text-decoration: line-through; }
+        .result-price-main { font-size: 32px; font-weight: bold; color: #111; }
+        .result-price-main span { font-size: 16px; font-weight: normal; color: #555; }
+        
+        .result-mid { flex: 1; text-align: left; background: #fff3e0; padding: 15px; border-radius: 8px; color: #d35400; font-weight: bold; font-size: 14px; }
+        .result-right img { max-width: 130px; height: auto; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        /* 📌 [사은품] 구역 */
+        #gift-section { background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.2)); }
+        .gift-banner-container { max-width: 1000px; margin: 0 auto 30px auto; position: relative; }
+        .gift-main-banner { width: 100%; height: auto; border-radius: 14px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); }
+        .gift-grid {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        .gift-card { background: #fff; color: #333; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; padding: 15px; }
+        .gift-card img { max-width: 100%; height: 140px; object-fit: contain; margin-bottom: 10px; }
+        .gift-card h4 { margin: 10px 0 5px 0; font-size: 15px; font-weight: bold; }
+        
+        /* 📌 [실시간 후기] & 상담 접수처 구역 */
+        #review-section { max-width: 1100px; margin: 0 auto; display: flex; gap: 30px; text-align: left; }
+        .review-left { flex: 1.2; background: #fff; color: #333; border-radius: 14px; padding: 25px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+        .review-table { width: 100%; border-collapse: collapse; }
+        .review-table th { padding: 12px 8px; border-bottom: 2px solid #eee; text-align: left; font-size: 14px; color: #666; }
+        .review-table td { padding: 14px 8px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+        .badge-status { background: #27ae60; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        
+        /* ✍️ 3대 맞춤형 상담 접수창 탭 구조 */
+        .consult-right { flex: 1; background: rgba(0, 0, 0, 0.4); border-radius: 14px; padding: 25px; box-shadow: 0 6px 20px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
+        .consult-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .c-tab-btn { flex: 1; padding: 12px 0; border: 1px solid #fff; background: none; color: #fff; font-weight: bold; cursor: pointer; border-radius: 6px; font-size: 13px; transition: 0.2s; }
+        .c-tab-btn.active { background: #ffeb3b; color: #111; border-color: #ffeb3b; }
+        
+        .form-panel { display: none; }
+        .form-panel.active { display: block; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 13px; color: #ddd; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; font-size: 14px;
+        }
+        .submit-btn { width: 100%; padding: 14px; background: #ffeb3b; color: #111; font-size: 16px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .submit-btn:hover { background: #f1d800; }
+        
+        /* 카카오 링크 전용 대형 버튼 */
+        .kakao-large-btn {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            background: #FEE500; color: #191919; text-decoration: none; padding: 20px;
+            border-radius: 10px; font-size: 18px; font-weight: bold; text-align: center; margin-top: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         
-        .loading { 
-            text-align: center; 
-            padding: 50px; 
-            font-size: 16px; 
-        }
-        .footer { 
-            text-align: center; 
-            color: rgba(255,255,255,0.6); 
-            font-size: 13px; 
-            padding: 40px 0; 
-        }
-
-        /* 스마트폰 화면 최적화 (가로형태가 세로로 부드럽게 전환) */
-        @media (max-width: 768px) {
-            .row-card { flex-direction: column; text-align: center; padding: 20px; }
-            .info-section { text-align: center; }
-            .price-section { flex-direction: column; gap: 10px; margin: 10px 0; }
-            .price-box { text-align: center; }
-            .benefit-box { text-align: center; max-width: 100%; }
-            .btn-section { width: 100%; }
+        .footer { text-align: center; padding: 40px 0; color: rgba(255,255,255,0.5); font-size: 13px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 60px; }
+        
+        /* 모바일 최적화 반응형 화면 처리 */
+        @media (max-width: 900px) {
+            #review-section { flex-direction: column; }
+            .calc-result-box { flex-direction: column; text-align: center; }
+            .result-left, .result-mid { text-align: center; }
+            .navbar { padding: 0 20px; }
+            .nav-menu { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <div class="header-container">
-        <!-- 마스코트 이미지 주소 삽입 구역 -->
-        <img src="https://via.placeholder.com/150" 
-             alt="마스코트" 
-             class="mascot-img">
-        <h1 class="main-title">🌐 사거리인터넷 실시간 요금 안내</h1>
-        <div class="notice">★ 돈 절약! 최대 혜택! 실시간 단가표 ★</div>
-    </div>
-    
-    <!-- 🚫 '전체보기'가 제거되고 첫 진입 시 'KT 올레'가 먼저 열리도록 수정 -->
-    <div class="nav-tabs">
-        <button class="tab-btn active" 
-                onclick="filterProvider('KT')">KT 올레</button>
-        <button class="tab-btn" 
-                onclick="filterProvider('LG')">LG U+</button>
-        <button class="tab-btn" 
-                onclick="filterProvider('SK')">SK브로드밴드</button>
-        <button class="tab-btn" 
-                onclick="filterProvider('스카이')">스카이라이프</button>
-        <button class="tab-btn" 
-                onclick="filterProvider('헬로')">LG헬로비전</button>
+    <!-- 1. 최상단 고정 상단바 구역 (로고 + 4대 메뉴 연동) -->
+    <div class="navbar">
+        <div class="nav-logo">
+            <img src="사거리 로고.png" alt="사거리인터넷 로고">
+        </div>
+        <div class="nav-menu">
+            <a href="#boss-section">사장님전용</a>
+            <a href="#calculator-section">요금계산기</a>
+            <a href="#gift-section">사은품</a>
+            <a href="#review-section">실시간후기</a>
+        </div>
     </div>
 
-    <!-- 📜 한 줄에 1개씩 노출되는 리스트 구역 -->
-    <div class="list-container" id="rate-list">
-        <div class="loading">요금제 데이터를 불러오는 중입니다...</div>
+    <!-- 📌 [사장님 전용] & 메인 대형 비주얼 섹션 -->
+    <div class="section" id="boss-section">
+        <!-- 첫 화면 중앙에 국방색 배경 털보아저씨 메인 배치 -->
+        <img src="털보아저씨국방색.png" alt="사거리인터넷 대표 털보아저씨" class="main-mascot">
+        <div class="headline">인터넷 + TV 가입 시 <span>최신 가전제품 100% 증정!</span></div>
+        <div class="sub-headline">원룸 · 상가 · 소상공인 사장님 단체 가입 파격 우대 정책 시행 중</div>
     </div>
 
-    <div class="footer">www.사거리인터넷.com</div>
+    <!-- 📌 [요금 계산기] 섹션 (구글 시트 기반 지능형 시스템) -->
+    <div class="section" id="calculator-section">
+        <div class="section-title">📊 실시간 지능형 요금 계산기</div>
+        <div class="calc-wrapper">
+            
+            <!-- 1. 통신사 로고 이미지 선택기 -->
+            <div class="calc-group">
+                <div class="calc-group-title">통신사를 선택해 주세요</div>
+                <div class="logo-options">
+                    <div class="logo-btn active" onclick="setProvider('KT', this)">
+                        <img src="KT 로고.jpg" alt="KT">
+                    </div>
+                    <div class="logo-btn" onclick="setProvider('LG U+', this)">
+                        <img src="LGU+ 로고.png" alt="LG U+">
+                    </div>
+                    <div class="logo-btn" onclick="setProvider('SK브로드밴드', this)">
+                        <img src="SKB 로고.jpg" alt="SKB">
+                    </div>
+                    <div class="logo-btn" onclick="setProvider('스카이라이프', this)">
+                        <img src="KTSKYLIFE 로고.png" alt="스카이라이프">
+                    </div>
+                    <div class="logo-btn" onclick="setProvider('LG헬로비전', this)">
+                        <img src="LG헬로비전 로고.png" alt="LG헬로비전">
+                    </div>
+                </div>
+            </div>
 
+            <!-- 2. 상품종류 선택기 -->
+            <div class="calc-group">
+                <div class="calc-group-title">상품 종류를 선택해 주세요</div>
+                <div class="text-options">
+                    <div class="text-btn active" onclick="setProduct('단독', this)">인터넷 단독</div>
+                    <div class="text-btn" onclick="setProduct('결합', this)">인터넷 + TV 결합</div>
+                </div>
+            </div>
+
+            <!-- 3. 인터넷 속도 선택기 -->
+            <div class="calc-group">
+                <div class="calc-group-title">인터넷 속도를 선택해 주세요</div>
+                <div class="text-options" id="speed-options-box">
+                    <!-- 자바스크립트가 통신사별 맞춤형 속도를 자동으로 뿌려줍니다 -->
+                </div>
+            </div>
+
+            <!-- 💰 실시간 연동 매칭 결과창 카드 -->
+            <div class="calc-result-box">
+                <div class="result-left">
+                    <div class="result-price-label" id="res-base">본사기준 월 00,000원</div>
+                    <div class="result-price-main" id="res-final">00,000<span>원/월</span></div>
+                </div>
+                <div class="result-mid" id="res-gift">
+                    🎁 로딩 중...
+                </div>
+                <!-- 요금제 종류에 따라 현금/현물 캐릭터 이미지가 실시간 교체 노출 -->
+                <div class="result-right">
+                    <img id="res-mascot" src="털보아저씨현금.png" alt="혜택 가이드">
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 📌 [사은품] 섹션 (가전 및 현물 갤러리) -->
+    <div class="section" id="gift-section">
+        <div class="section-title">🎁 사거리인터넷 역대급 사은품 라인업</div>
+        <div class="gift-banner-container">
+            <!-- 사은품 배경 대형 이미지 적용 -->
+            <img src="현물사은품.jpg" alt="종합 현물 사은품 세트" class="gift-main-banner">
+        </div>
+        <div class="gift-grid">
+            <div class="gift-card">
+                <img src="삼성무빙스타일.jpg" alt="무빙스타일 TV">
+                <h4>삼성 무빙스타일 32인치 TV</h4>
+            </div>
+            <div class="gift-card">
+                <img src="삼성제트핏.jpg" alt="삼성 제트핏">
+                <h4>삼성 제트핏 무선청소기</h4>
+            </div>
+            <div class="gift-card">
+                <img src="삼성통돌이세탁기.jpg" alt="비스포크 세탁기">
+                <h4>삼성 비스포크 통돌이 세탁기</h4>
+            </div>
+            <div class="gift-card">
+                <img src="삼성55인치TV.jpg" alt="삼성 55인치 TV">
+                <h4>삼성 55인치 스마트 UHD TV</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📌 [실시간 후기] & 3대 맞춤형 접수처 섹션 -->
+    <div class="section" style="background: rgba(0,0,0,0.1);">
+        <div class="section-title" style="text-align:center; width:100%;">📋 실시간 후기 및 상담 접수처</div>
+        <div id="review-section">
+            
+            <!-- 왼쪽: 실시간 신청자 현황판 -->
+            <div class="review-left">
+                <h3 style="margin-top:0; border-bottom:2px solid #333; padding-bottom:10px;">⚡ 실시간 가입 접수 현황</h3>
+                <table class="review-table">
+                    <thead>
+                        <tr>
+                            <th>날짜</th>
+                            <th>이름</th>
+                            <th>접수 현황</th>
+                            <th>사은품</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2026.06.14</td>
+                            <td>김*현 (안산시)</td>
+                            <td><span class="badge-status">설치 완료</span></td>
+                            <td>55인치 스마트TV</td>
+                        </tr>
+                        <tr>
+                            <td>2026.06.14</td>
+                            <td>박*우 (시흥시)</td>
+                            <td><span class="badge-status">설치 완료</span></td>
+                            <td>당일 현금 최고액 지원</td>
+                        </tr>
+                        <tr>
+                            <td>2026.06.13</td>
+                            <td>이*정 (화성시)</td>
+                            <td><span class="badge-status">접수 완료</span></td>
+                            <td>비스포크 통돌이세탁기</td>
+                        </tr>
+                        <tr>
+                            <td>2026.06.13</td>
+                            <td>최*성 (평택시)</td>
+                            <td><span class="badge-status">설치 완료</span></td>
+                            <td>제트핏 무선청소기</td>
+                        </tr>
+                        <tr>
+                            <td>2026.06.12</td>
+                            <td>정*아 (수원시)</td>
+                            <td><span class="badge-status">설치 완료</span></td>
+                            <td>무빙스타일 32인치TV</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 오른쪽: 3대 스마트 맞춤형 상담창 탭 내부 시스템 -->
+            <div class="consult-right">
+                <div class="consult-tabs">
+                    <button class="c-tab-btn active" onclick="switchForm('fast', this)">간편 빠른상담</button>
+                    <button class="c-tab-btn" onclick="switchForm('full', this)">원스톱 바로접수</button>
+                    <button class="c-tab-btn" onclick="switchForm('kakao', this)">카톡 상담</button>
+                </div>
+
+                <!-- 탭 1: 간편 빠른 상담 (이름 + 연락처) -->
+                <div class="form-panel active" id="form-fast">
+                    <p style="font-size:13px; color:#ffeb3b; margin-top:0;">⚠️ 번호만 남겨주시면 5분 내로 즉시 전화를 드립니다!</p>
+                    <div class="form-group">
+                        <label>고객명</label>
+                        <input type="text" placeholder="이름을 입력해 주세요">
+                    </div>
+                    <div class="form-group">
+                        <label>연락처</label>
+                        <input type="text" placeholder="전화번호를 입력해 주세요">
+                    </div>
+                    <button class="submit-btn" onclick="alert('간편 상담 신청이 정상 접수되었습니다. 털보아저씨가 곧 연락드립니다!')">빠른 상담 신청하기</button>
+                </div>
+
+                <!-- 탭 2: 원스톱 바로 접수 (상세 항목 수집 양식) -->
+                <div class="form-panel" id="form-full">
+                    <div class="form-group">
+                        <label>고객명</label>
+                        <input type="text" placeholder="실명 입력">
+                    </div>
+                    <div class="form-group">
+                        <label>주민등록번호</label>
+                        <input type="text" placeholder="주민번호 앞자리-뒷자리 입력 (접수 필수)">
+                    </div>
+                    <div class="form-group">
+                        <label>연락처</label>
+                        <input type="text" placeholder="전화번호 입력">
+                    </div>
+                    <div class="form-group">
+                        <label>설치 희망 주소</label>
+                        <input type="text" placeholder="시/구/동 및 상세주소 정확히 입력">
+                    </div>
+                    <div class="form-group">
+                        <label>희망 통신사 및 상품</label>
+                        <select id="form-product-select">
+                            <option>KT 올레 - 인터넷+TV 결합</option>
+                            <option>LG U+ - 인터넷+TV 결합</option>
+                            <option>SK브로드밴드 - 인터넷+TV 결합</option>
+                            <option>스카이라이프 - 실속형 결합</option>
+                            <option>LG헬로비전 - 초특가 결합</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>희망 사은품 및 선택사항</label>
+                        <textarea rows="2" placeholder="원하시는 현물 사은품 종류 혹은 현금 지원 문의를 적어주세요"></textarea>
+                    </div>
+                    <button class="submit-btn" onclick="alert('원스톱 다이렉트 접수가 완료되었습니다. 신속 개통을 시작하겠습니다!')">다이렉트 즉시 접수하기</button>
+                </div>
+
+                <!-- 탭 3: 카카오톡 실시간 상담 연동 링크 -->
+                <div class="form-panel" id="form-kakao">
+                    <p style="font-size:14px; color:#ddd; line-height:1.5;">전화 통화나 서류 작성이 부담스러우시다면? 실시간 카카오톡 채팅 대화창을 통해 털보아저씨와 1:1로 가장 편하게 소통해 보세요!</p>
+                    <a href="https://pf.kakao.com" target="_blank" class="kakao-large-btn">
+                        💬 털보아저씨와 1:1 카톡 상담하기
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        사거리인터넷 | 경기도 안산시 단원구 고잔동 사거리 모바일 매장 내<br>
+        본 사이트의 요금제 알고리즘은 구글 스프레드시트 단가표 데이터와 100% 실시간 연동됩니다.
+    </div>
+
+    <!-- 🔮 실시간 구글 시트 연동 및 지능형 필터링 자바스크립트 엔진 -->
     <script>
-        // 대표님의 구글 시트 ID 적용
         const sheetId = '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
         const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+        
         let allData = [];
+        let currentProvider = 'KT';
+        let currentProduct = '단독';
+        let currentSpeed = '';
 
-        async function loadData() {
+        // 1. 구글 스프레드시트 실시간 데이터 로드
+        async function loadSheetData() {
             try {
                 const response = await fetch(csvUrl);
                 const text = await response.text();
                 const rows = text.split('\n').map(row => row.split(','));
                 allData = rows.slice(1).filter(r => r[0] && r[0].trim() !== "");
                 
-                // 🚀 첫 진입 시 기본으로 'KT 올레' 요금제를 1G부터 순서대로 보여줍니다.
-                filterProvider('KT');
+                updateSpeedOptions(); 
             } catch (error) {
-                document.getElementById('rate-list').innerHTML = 
-                '<div class="loading">데이터 로드 실패. 구글 시트 권한을 확인해주세요.</div>';
+                document.getElementById('res-gift').textContent = '구글 시트 연동 오류 발생';
             }
         }
 
-        function getCardClass(provider) {
-            if(provider.includes('KT')) return 'kt';
-            if(provider.includes('LG U')) return 'lg';
-            if(provider.includes('SK')) return 'sk';
-            if(provider.includes('스카이')) return 'sky';
-            if(provider.includes('헬로')) return 'hello';
-            return '';
+        // 2. 통신사 클릭 스위칭 연동
+        function setProvider(providerName, element) {
+            document.querySelectorAll('.logo-btn').forEach(b => b.classList.remove('active'));
+            element.classList.add('active');
+            currentProvider = providerName;
+            updateSpeedOptions();
         }
 
-        // 📊 속도 문자열에서 숫자 크기를 추출하는 내부 연산 기능
-        function getSpeedNumber(speedStr) {
+        // 3. 상품 종류(단독/결합) 클릭 스위칭 연동
+        function setProduct(productType, element) {
+            document.querySelectorAll('.text-options .text-btn').forEach(b => b.classList.remove('active'));
+            element.classList.add('active');
+            currentProduct = productType;
+            updateSpeedOptions();
+        }
+
+        // 📊 속도 우선순위 정렬 연산자 (1G ➔ 500M ➔ 200M/160M ➔ 100M)
+        function getSpeedRank(speedStr) {
             if (speedStr.includes('1G')) return 1000;
             if (speedStr.includes('500M')) return 500;
             if (speedStr.includes('200M')) return 200;
@@ -304,71 +487,82 @@
             return 0;
         }
 
-        function renderList(data) {
-            const listContainer = document.getElementById('rate-list');
-            listContainer.innerHTML = '';
-            
-            // 🔄 1G ➔ 500M ➔ 200M/160M ➔ 100M 순서로 역순 자동 정렬
-            data.sort((a, b) => {
-                return getSpeedNumber(b[1]) - getSpeedNumber(a[1]);
-            });
-            
-            data.forEach(row => {
-                const provider = row[0].replace(/"/g, '').trim();
-                const speed = row[1].replace(/"/g, '').trim();
-                const basePrice = parseInt(row[2]) ? 
-                      parseInt(row[2]).toLocaleString() : row[2];
-                const finalPrice = parseInt(row[4]) ? 
-                      parseInt(row[4]).toLocaleString() : row[4];
-                const guide = row[5].replace(/"/g, '').trim();
-                const totalGift = row[6] ? 
-                      row[6].replace(/"/g, '').trim() : '최대지원';
+        // 4. 통신사+상품 조합에 따라 구글 시트에서 지원 가능한 속도 동적 추출 및 자동 정렬
+        function updateSpeedOptions() {
+            const speedBox = document.getElementById('speed-options-box');
+            speedBox.innerHTML = '';
 
-                const cardClass = getCardClass(provider);
+            // 현재 조건에 부합하는 데이터들만 추출
+            const filtered = allData.filter(row => {
+                const sheetProvider = row[0].replace(/"/g, '').trim();
+                const sheetSpeed = row[1].replace(/"/g, '').trim();
+                
+                const matchProvider = sheetProvider.includes(currentProvider);
+                const isCombo = sheetSpeed.includes('+') || sheetSpeed.includes('TV');
+                const matchProduct = (currentProduct === '결합') ? isCombo : !isCombo;
 
-                // 💳 깔끔한 가로형 대형 리스트 바 구조 조립
-                const cardHtml = `
-                    <div class="row-card ${cardClass}">
-                        <div class="info-section">
-                            <span class="provider-badge">${provider}</span>
-                            <h3 class="speed-title">${speed}</h3>
-                            <div class="guide-text">가이드: ${guide}</div>
-                        </div>
-                        <div class="price-section">
-                            <div class="price-box">
-                                <div class="price-label">본사기준 월 ${basePrice}원</div>
-                                <div class="price-main">${finalPrice}<span>원/월</span></div>
-                            </div>
-                            <div class="benefit-box">🎁 특별 혜택 및 사은품:<br>${totalGift}</div>
-                        </div>
-                        <div class="btn-section">
-                            <button class="btn-consult" 
-                                    onclick="alert('전화 혹은 카톡으로 문의하시면 신속하게 대박 상담 도와드립니다!')">
-                                    상담 신청
-                            </button>
-                        </div>
-                    </div>
-                `;
-                listContainer.innerHTML += cardHtml;
+                return matchProvider && matchProduct;
             });
+
+            // 1G부터 순서대로 역순 자동 정렬
+            filtered.sort((a, b) => getSpeedRank(b[1]) - getSpeedRank(a[1]));
+
+            if(filtered.length > 0) {
+                filtered.forEach((row, index) => {
+                    const speedName = row[1].replace(/"/g, '').trim();
+                    const btn = document.createElement('div');
+                    btn.className = 'text-btn' + (index === 0 ? ' active' : '');
+                    btn.textContent = speedName;
+                    btn.onclick = function() {
+                        document.querySelectorAll('#speed-options-box .text-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        calculateFinalRate(row);
+                    };
+                    speedBox.appendChild(btn);
+                });
+                // 기본값으로 정렬 최상단(1G) 매칭 결과 출력
+                calculateFinalRate(filtered[0]);
+            } else {
+                speedBox.innerHTML = '<div style="font-size:14px; color:#999; padding:10px;">해당 조합의 상품은 고객센터 특별 맞춤 상담이 필요합니다.</div>';
+                clearResultCard();
+            }
         }
 
-        function filterProvider(providerKey) {
-            document.querySelectorAll('.tab-btn')
-                    .forEach(btn => btn.classList.remove('active'));
-            
-            // 클릭한 버튼에 불 들어오게 설정
-            const targetBtn = Array.from(document.querySelectorAll('.tab-btn'))
-                                   .find(btn => btn.textContent.includes(providerKey));
-            if(targetBtn) targetBtn.classList.add('active');
+        // 5. 선택된 최종 행 데이터를 결과 카드에 실시간 바인딩
+        function calculateFinalRate(row) {
+            const basePrice = parseInt(row[2]) ? parseInt(row[2]).toLocaleString() : row[2];
+            const finalPrice = parseInt(row[4]) ? parseInt(row[4]).toLocaleString() : row[4];
+            const totalGift = row[6] ? row[6].replace(/"/g, '').trim() : '안산지역 최고지원 보장';
 
-            const filtered = allData.filter(row => row[0].includes(providerKey));
-            renderList(filtered);
+            document.getElementById('res-base').textContent = `본사기준 월 ${basePrice}원`;
+            document.getElementById('res-final').innerHTML = `${finalPrice}<span>원/월</span>`;
+            document.getElementById('res-gift').innerHTML = `🎁 특별 혜택 및 대박 사은품 가이드:<br><span style="color:#e65100; font-size:15px;">${totalGift}</span>`;
+            
+            // 결합 상품(고가형)을 선택했을 때는 가전 이미지를 든 현물 아저씨 매칭, 단독일 땐 현금 아저씨 매칭 변환
+            const sheetSpeed = row[1].replace(/"/g, '').trim();
+            if(sheetSpeed.includes('+') || sheetSpeed.includes('TV')) {
+                document.getElementById('res-mascot').src = '털보아저씨현물.png';
+            } else {
+                document.getElementById('res-mascot').src = '털보아저씨현금.png';
+            }
         }
 
-        window.onload = loadData;
+        function clearResultCard() {
+            document.getElementById('res-base').textContent = '-';
+            document.getElementById('res-final').innerHTML = '상담 요망';
+            document.getElementById('res-gift').textContent = '대표 번호로 연락하시면 특별 단가를 맞춰드립니다.';
+        }
+
+        // 6. 상담 접수창 3단 스위칭 탭 제어 함수
+        function switchForm(formKey, element) {
+            document.querySelectorAll('.c-tab-btn').forEach(b => b.classList.remove('active'));
+            element.classList.add('active');
+
+            document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('form-' + formKey).classList.add('active');
+        }
+
+        window.onload = loadSheetData;
     </script>
-</body>
-</html>
 </body>
 </html>
