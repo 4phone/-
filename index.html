@@ -38,9 +38,8 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
         
-        /* 🔍 [수정] 어두운 상단바에서도 사거리 로고가 쨍하게 보이도록 필터 전면 교체 */
         .nav-logo {
-            background: #fff; /* 로고 자체에 깔끔한 흰색 라운드 배경을 살짝 부여하여 로고 본연의 색상을 보호합니다 */
+            background: #fff; 
             padding: 4px 12px;
             border-radius: 8px;
             display: flex;
@@ -142,29 +141,34 @@
         .text-btn:hover { border-color: #CBD5E0; transform: translateY(-2px); }
         .text-btn.active { background: var(--main-bg); color: #fff; border-color: var(--main-bg); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
         
-        /* 💰 대박 요금 결과창 메인 보드 */
+        /* 💰 [구조 전면 리팩토링] 대박 요금 결과창 보드 (세로 정렬형) */
         .calc-result-box {
-            background: #F8FAFC; border: 3px solid #E2E8F0; border-radius: 20px;
+            background: #F8FAFC; border: 3px solid #E2E8F0; border-radius: 22px;
             padding: 35px; margin-top: 40px; display: flex;
-            align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 25px;
+            flex-direction: column; gap: 30px;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
         }
-        .res-col { flex: 1; min-width: 220px; text-align: center; }
-        .res-label { font-size: 15px; font-weight: 700; color: #718096; margin-bottom: 10px; }
-        .res-val { font-size: 32px; font-weight: 900; color: #1A202C; }
+        
+        /* 상단 요금 2개 가로 정렬 및 가운데 정렬 레이아웃 */
+        .res-row-prices {
+            display: flex; justify-content: center; align-items: center;
+            flex-wrap: wrap; gap: 40px; width: 100%;
+        }
+        .res-col { flex: 1; min-width: 200px; text-align: center; }
+        .res-label { font-size: 16px; font-weight: 700; color: #718096; margin-bottom: 10px; }
+        .res-val { font-size: 34px; font-weight: 900; color: #1A202C; }
         .res-val span { font-size: 18px; font-weight: 700; }
         
-        /* 🔥 특별 지원금 대형 상자 */
+        /* 🔥 [위치 이동] 사거리 특별 지원금 하단 배치 대형 와이드 보드 */
         .subsidy-box { 
+            width: 100%; max-width: 760px; margin: 0 auto;
             background: linear-gradient(135deg, #FFFDF5 0%, #FFF3E0 100%); 
-            border: 3px solid #FFB74D; border-radius: 18px; padding: 20px;
-            box-shadow: 0 6px 12px rgba(255,183,77,0.15);
+            border: 3px solid #FFB74D; border-radius: 20px; padding: 22px 15px;
+            box-shadow: 0 8px 16px rgba(255,183,77,0.2);
+            box-sizing: border-box; text-align: center;
             animation: pulse 2s infinite;
         }
-        .subsidy-val { color: var(--fire-orange); font-size: 36px; font-weight: 900; text-shadow: 1px 1px 0px #fff; }
-        
-        /* 결과창 캐릭터 우측 정렬 */
-        .res-mascot-box img { max-width: 130px; border-radius: 16px; box-shadow: 0 6px 15px rgba(0,0,0,0.15); border: 2px solid #fff; }
+        .subsidy-val { color: var(--fire-orange); font-size: 40px; font-weight: 900; text-shadow: 1px 1px 0px #fff; margin-top: 5px; }
         
         /* 🎁 [사은품] 가전제품 라인업 메인 구역 */
         #gift-section { background: rgba(0, 0, 0, 0.1); }
@@ -223,13 +227,13 @@
 
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
+            50% { transform: scale(1.01); }
             100% { transform: scale(1); }
         }
 
         @media (max-width: 900px) {
             #review-section { flex-direction: column; }
-            .calc-result-box { flex-direction: column; }
+            .res-row-prices { flex-direction: column; gap: 20px; }
             .nav-menu { display: none; }
             .headline { font-size: 30px; }
         }
@@ -239,7 +243,6 @@
 
     <!-- 1. 고정 내비게이션 바 구역 -->
     <div class="navbar">
-        <!-- 🎯 [수정 완료] 어두운 배경에서도 녹색 로고 글씨가 선명하게 살아나는 세련된 라운드 보드 적용 -->
         <div class="nav-logo">
             <img src="사거리 로고.png" alt="사거리인터넷 로고">
         </div>
@@ -286,22 +289,24 @@
                 <div class="text-options" id="speed-box"></div>
             </div>
 
-            <!-- 💰 결과 확인창 -->
+            <!-- 💰 [리빌딩 완료] 이미지 삭제 및 중앙 정렬 세로 배치 레이아웃 결과창 -->
             <div class="calc-result-box">
-                <div class="res-col">
-                    <div class="res-label" id="label-base">본사 표준 요금</div>
-                    <div class="res-val" id="res-base" style="color:#A0AEC0; font-size:22px; text-decoration:line-through;">0원</div>
+                <!-- 상단: 2대 요금 정보 나란히 정렬 -->
+                <div class="res-row-prices">
+                    <div class="res-col">
+                        <div class="res-label" id="label-base">본사 표준 요금</div>
+                        <div class="res-val" id="res-base" style="color:#A0AEC0; font-size:24px; text-decoration:line-through;">0원</div>
+                    </div>
+                    <div class="res-col" id="comb-display-area">
+                        <div class="res-label">📱 휴대폰 가입 결합 시 요금</div>
+                        <div class="res-val" id="res-comb" style="color:#2D3748;">0<span>원/월</span></div>
+                    </div>
                 </div>
-                <div class="res-col" id="comb-display-area">
-                    <div class="res-label">📱 휴대폰 가입 결합 시 요금</div>
-                    <div class="res-val" id="res-comb" style="color:#2D3748;">0<span>원/월</span></div>
-                </div>
-                <div class="res-col subsidy-box">
+                
+                <!-- 하단: 이미지 위치로 자리를 옮겨 웅장하게 확장된 사거리 특별 지원금 보드 -->
+                <div class="subsidy-box">
                     <div class="res-label" style="color:#DD6B20; font-weight:900; font-size:16px;">💵 사거리 특별 지원금 (현금+떡값)</div>
                     <div class="res-val subsidy-val" id="res-subsidy">0원</div>
-                </div>
-                <div class="res-mascot-box">
-                    <img id="res-img" src="털보아저씨현금.png">
                 </div>
             </div>
             <p id="res-special" style="margin-top:25px; font-weight:900; color:var(--fire-orange); font-size:18px; letter-spacing:0px;"></p>
@@ -413,6 +418,7 @@
             }
         }
 
+        // 🔄 정밀하게 개조된 자바스크립트 화면 연동 매칭 함수
         function showResult(row) {
             const cleanRow = row.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
             const basePriceRaw = cleanRow[2];
@@ -445,9 +451,6 @@
             } else {
                 document.getElementById('res-special').textContent = special;
             }
-
-            const speed = cleanRow[1];
-            document.getElementById('res-img').src = (speed.includes('+') || speed.includes('TV')) ? '털보아저씨현물.png' : '털보아저씨현금.png';
         }
 
         function switchForm(k, el) {
