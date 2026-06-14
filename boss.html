@@ -21,18 +21,46 @@
             text-align: center;
             letter-spacing: -0.5px;
         }
-        .header-box { padding: 60px 20px 30px 20px; background: radial-gradient(circle at center, #555D29 0%, #2A2E14 100%); border-bottom: 4px solid var(--gold-color); }
-        .main-mascot {
-            max-width: 200px; border-radius: 50%; background: #fff; padding: 6px; margin-bottom: 15px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 4px solid var(--gold-color);
+        
+        /* 상단 헤더 영역 배경 레이아웃 */
+        .header-box { 
+            padding: 50px 20px 30px 20px; 
+            background: radial-gradient(circle at center, #555D29 0%, #2A2E14 100%); 
+            border-bottom: 4px solid var(--gold-color); 
         }
-        h1 { font-size: 38px; font-weight: 900; margin: 10px 0; text-shadow: 2px 2px 6px rgba(0,0,0,0.4); }
+        
+        /* 🎯 [워터마크 차단막 세팅] 이미지 모서리를 감싸서 워터마크만 잘라내는 마스킹 박스 */
+        .boss-mascot-container {
+            position: relative;
+            display: inline-block;
+            width: 320px; /* 프레임 크기 고정 */
+            height: 200px; /* 이미지 하단 워터마크 구역이 잘려 나가도록 높이 제한 */
+            margin-bottom: 15px;
+            overflow: hidden; /* ★중요: 범위를 벗어나는 우측 하단 워터마크를 투명하게 날려버립니다 */
+            perspective: 1000px;
+        }
+        
+        .main-mascot {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin-top: -10px; /* 이미지 위쪽 여백을 살짝 당겨 중심을 맞춥니다 */
+            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        
+        /* 마우스 오버 시 손가락이 아래 요금표를 더 역동적으로 가리키도록 무빙 제어 */
+        .boss-mascot-container:hover .main-mascot {
+            transform: scale(1.06) translateY(4px);
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+        }
+        
+        h1 { font-size: 38px; font-weight: 900; margin: 15px 0 10px 0; text-shadow: 2px 2px 6px rgba(0,0,0,0.4); }
         h1 span { color: var(--gold-color); }
-        .sub-txt { font-size: 18px; color: #E2E8F0; font-weight: 700; }
+        .sub-txt { font-size: 18px; color: #E2E8F0; font-weight: 700; margin-bottom: 10px; }
         
-        .container { max-width: 900px; margin: 40px auto; padding: 0 20px; box-sizing: border-box; }
+        .container { max-width: 900px; margin: 20px auto 40px auto; padding: 0 20px; box-sizing: border-box; }
         
-        /* 📊 대표님이 주신 '사장님전용 요금표.png' 기반 프리미엄 웹 테이블 스타일링 */
+        /* 📊 프리미엄 웹 테이블 스타일링 */
         .table-section-title { font-size: 24px; font-weight: 900; text-align: left; margin: 40px 0 15px 0; color: var(--gold-color); border-left: 5px solid var(--gold-color); padding-left: 10px; }
         .premium-table { width: 100%; border-collapse: collapse; background: #fff; color: #2D3748; border-radius: 14px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.3); margin-bottom: 10px; }
         .premium-table th { background: #2D3214; color: #fff; font-size: 16px; font-weight: 900; padding: 15px; border: 1px solid #4A5568; }
@@ -53,7 +81,10 @@
 <body>
 
     <div class="header-box">
-        <img src="털보아저씨국방색.png" class="main-mascot" alt="털보아저씨">
+        <!-- 🎯 워터마크 원천 차단 마스킹 프레임 작동 구역 -->
+        <div class="boss-mascot-container">
+            <img src="image_627d8d.jpg" class="main-mascot" alt="사거리인터넷 털보아저씨 가이드">
+        </div>
         <h1>🏬 사거리인터넷 <span>사장님전용 요금표</span></h1>
         <div class="sub-txt">원룸 · 상가 · 소상공인 사업장 전용 단체 가입 결합 단가표</div>
     </div>
