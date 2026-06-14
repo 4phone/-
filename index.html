@@ -230,45 +230,41 @@
         .footer { text-align: center; padding: 50px 0; color: rgba(255,255,255,0.4); font-size: 14px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 80px; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.01); } 100% { transform: scale(1); } }
 
-        /* 📱 [모바일 대응 전면 수리 수치 조정] */
+        /* 📱 모바일 대응 전면 수리 수치 조정 */
         @media (max-width: 950px) {
-            /* 💥 상단 고정바 모바일에서도 완벽 유지 및 폰트 축소 최적화 */
             .navbar { padding: 0 15px; height: 65px; }
             .nav-logo { padding: 4px 8px; }
             .nav-logo img { height: 30px; }
-            .nav-menu { gap: 8px; display: flex !important; } /* 숨김 해제 */
+            .nav-menu { gap: 8px; display: flex !important; } 
             .nav-menu a { font-size: 12px; padding: 5px 8px; }
             .nav-menu a.boss-highlight-btn { border-width: 1px; padding: 4px 7px; }
 
-            /* 첫 배너 세로 1열로 단정하게 한눈에 들어오게 조율 */
             #boss-section { flex-direction: column; text-align: center; padding-top: 100px; padding-bottom: 40px; gap: 20px; }
             .main-left { text-align: center; width: 100%; }
-            .mascot-container { width: 160px; height: 160px; margin-bottom: 10px; } /* 💥 모바일 아저씨 크기 최적화 */
+            .mascot-container { width: 160px; height: 160px; margin-bottom: 10px; } 
             .headline { font-size: 24px; }
             .sub-headline { font-size: 14px; padding: 0 10px; }
             .main-right { width: 100%; padding: 0 10px; box-sizing: border-box; }
             .consult-main-card { padding: 15px; }
             .c-tab-btn { font-size: 11px; padding: 10px 4px; }
 
-            /* 계산기 구역 모바일 가독성 증폭 */
             .section { padding: 60px 10px 30px 10px; }
             .section-title { font-size: 24px; margin-bottom: 20px; }
             .calc-wrapper { padding: 20px 15px; }
             .calc-group-title { font-size: 15px; }
             .logo-options { gap: 8px; justify-content: center; }
-            .logo-btn { width: 46%; height: 50px; } /* 2열 정렬 */
+            .logo-btn { width: 46%; height: 50px; } 
             .text-options { gap: 8px; justify-content: center; }
             .text-btn { width: 100%; padding: 12px 10px; font-size: 13px; box-sizing: border-box; text-align: center; }
             .res-row-prices { flex-direction: column; gap: 15px; }
             .res-val { font-size: 26px; }
             .subsidy-val { font-size: 28px; }
 
-            /* 후기 전광판 모바일 텍스트 축소 대응 */
             .review-rolling-viewport { height: 260px; }
             .review-row { padding: 12px 15px; height: 78px; }
             .review-user { font-size: 13px; }
             .review-text { max-width: 100%; font-size: 12px; }
-            .review-stars { display: none; } /* 공간 확보용 우측 별 숨김 */
+            .review-stars { display: none; } 
         }
     </style>
 </head>
@@ -341,7 +337,8 @@
                 <div class="calc-group-title">1단계: 통신사 브랜드를 선택해 주세요</div>
                 <div class="logo-options">
                     <div class="logo-btn active" onclick="setProvider('KT', this)"><img src="KT 로고.jpg"></div>
-                    <div class="logo-btn" onclick="setProvider('LG U+', this)"><img src="LGU+ 로고.png"></div>
+                    <!-- 🎯 [해결 완결] 특수문자 깨짐 오류를 원천 차단하기 위해 깃허브 원본 상대 경로 방식(./)으로 정밀 치환했습니다 -->
+                    <div class="logo-btn" onclick="setProvider('LG U+', this)"><img src="./사거리인터넷 요금계산기 로고파일/LGU+ 로고.png"></div>
                     <div class="logo-btn" onclick="setProvider('SK', this)"><img src="SKB 로고.jpg"></div>
                     <div class="logo-btn" onclick="setProvider('스카이', this)"><img src="KTSKYLIFE 로고.png"></div>
                     <div class="logo-btn" onclick="setProvider('헬로', this)"><img src="LG헬로비전 로고.png"></div>
@@ -531,7 +528,7 @@
             const filtered = allData.filter(row => {
                 const sProv = row[0].trim(); const sSpeed = row[1].trim();
                 const mProv = sProv.includes(curProv);
-                const isCombo = sSpeed.includes('+') || sSpeed.includes('TV');
+                const isCombo = sSpeed.includes('+' || sSpeed.includes('TV');
                 const mProd = (curProd === '결합') ? isCombo : !isCombo;
                 return mProv && mProd;
             });
