@@ -12,7 +12,7 @@
     <style>
         /* 🎨 털보아저씨의 화끈한 국방색 & 골드 축제 테마 */
         :root { 
-            --main-bg: #3E441E; /* 조금 더 짙고 고급스러운 리치 국방색 */
+            --main-bg: #3E441E; 
             --point-color: #2D3214; 
             --gold-color: #FFD700;
             --gold-gradient: linear-gradient(135deg, #FFE000 0%, #799F0C 100%);
@@ -37,7 +37,14 @@
             z-index: 1000; border-bottom: 3px solid var(--gold-color);
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
-        .nav-logo img { height: 50px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5)); }
+        
+        /* 🔍 사거리 로고 하얀 배경 제거 마법 */
+        .nav-logo img { 
+            height: 50px; 
+            mix-blend-mode: multiply; /* 하얀색 배경을 투명하게 투과시킵니다 */
+            filter: contrast(1.1); /* 로고 색상을 조금 더 선명하게 보정 */
+        }
+        
         .nav-menu { display: flex; gap: 30px; }
         .nav-menu a { 
             color: #fff; text-decoration: none; font-weight: 700; font-size: 16px; 
@@ -102,8 +109,17 @@
             padding: 10px; cursor: pointer; width: 150px; height: 55px;
             display: flex; align-items: center; justify-content: center;
             transition: 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            overflow: hidden;
         }
-        .logo-btn img { max-width: 90%; max-height: 90%; object-fit: contain; }
+        
+        /* 🔍 통신사 로고 하얀 배경 제거 마법 */
+        .logo-btn img { 
+            max-width: 95%; 
+            max-height: 95%; 
+            object-fit: contain; 
+            mix-blend-mode: multiply; /* 버튼 안의 하얀 바탕을 지워 버튼 색과 일치시킵니다 */
+        }
+        
         .logo-btn:hover { border-color: #CBD5E0; transform: translateY(-2px); }
         .logo-btn.active { border-color: #799F0C; background: #F0FDF4; box-shadow: 0 8px 15px rgba(121,159,12,0.15); }
         
@@ -129,7 +145,7 @@
         .res-val { font-size: 32px; font-weight: 900; color: #1A202C; }
         .res-val span { font-size: 18px; font-weight: 700; }
         
-        /* 🔥 특별 지원금 대형 상자 (완전 화려하게 변경) */
+        /* 🔥 특별 지원금 대형 상자 */
         .subsidy-box { 
             background: linear-gradient(135deg, #FFFDF5 0%, #FFF3E0 100%); 
             border: 3px solid #FFB74D; border-radius: 18px; padding: 20px;
@@ -223,14 +239,14 @@
         </div>
     </div>
 
-    <!-- 📌 [사장님 전용] 메인 비주얼 구역 (화끈한 떡값 축제 연출) -->
+    <!-- 📌 [사장님 전용] 메인 비주얼 구역 -->
     <div class="section" id="boss-section">
         <img src="털보아저씨국방색.png" class="main-mascot">
         <div class="headline">✨ 털보아저씨가 <span>시원하게 떡값 쏘는 곳!</span> ✨</div>
         <div class="sub-headline">인터넷 + TV 가입하면 대박 지원금에 최신 고급 가전 사은품까지 100% 전격 증정!</div>
     </div>
 
-    <!-- 📌 [요금 계산기] 구역 (지능형 연동 엔진 고도화) -->
+    <!-- 📌 [요금 계산기] 구역 -->
     <div class="section" id="calculator-section">
         <div class="section-title">📊 실시간 맞춤 요금 계산기</div>
         <div class="calc-wrapper">
@@ -258,7 +274,7 @@
                 <div class="text-options" id="speed-box"></div>
             </div>
 
-            <!-- 💰 화려하게 리빌딩된 3박자 결과 확인창 -->
+            <!-- 💰 결과 확인창 -->
             <div class="calc-result-box">
                 <div class="res-col">
                     <div class="res-label" id="label-base">본사 표준 요금</div>
@@ -276,7 +292,6 @@
                     <img id="res-img" src="털보아저씨현금.png">
                 </div>
             </div>
-            <!-- 떡값 마케팅 멘트 전용 라인 -->
             <p id="res-special" style="margin-top:25px; font-weight:900; color:var(--fire-orange); font-size:18px; letter-spacing:0px;"></p>
         </div>
     </div>
@@ -309,7 +324,8 @@
             </div>
             
             <div class="form-panel" id="form-full">
-                <div class="form-group"><input type="text" placeholder="성함 및 주민등록번호 양식 입력"></div>
+                <div class="form-group"><input type="text" placeholder="성함 입력"></div>
+                <div class="form-group"><input type="text" placeholder="주민등록번호 입력 [RRN Omitted]"></div>
                 <div class="form-group"><input type="text" placeholder="연락처 및 설치받으실 상세 주소"></div>
                 <div class="form-group"><input type="text" placeholder="희망하시는 통신사/상품 및 원하는 사은품 명세"></div>
                 <button class="submit-btn" onclick="alert('다이렉트 원스톱 접수 완료! 즉시 개통 심사를 시작합니다!')">다이렉트 즉시 접수하기</button>
@@ -412,7 +428,6 @@
             }
             document.getElementById('res-subsidy').textContent = subsidy.includes('원') ? subsidy : subsidy + '원';
             
-            // 💥 '+떡값지원금' 같은 보너스 멘트가 시트에 들어있으면 불타는 불꽃 이펙트 아이콘 추가 효과
             if(special.includes('+') || special.includes('떡값')) {
                 document.getElementById('res-special').innerHTML = `🔥 털보아저씨의 특별 보너스: ${special} 🔥`;
             } else {
