@@ -3,424 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사거리인터넷 - 털보아저씨가 떡값 쏘는 곳!</title>
+    <title>사거리인터넷</title>
     <link rel="icon" href="사거리 로고.png" type="image/png">
-    
-    <!-- 🎵 웹사이트 분위기를 180도 바꿔줄 트렌디한 프리미엄 폰트 로드 -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght@500;700;900&family=Noto+Sans+KR:wght@500;700;900&display=swap">
-    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght=500;700;900&family=Noto+Sans+KR:wght=500;700;900&display=swap">
     <style>
-        /* 🎨 털보아저씨의 화끈한 국방색 & 골드 축제 테마 */
         :root { 
             --main-bg: #3E441E; 
             --point-color: #2D3214; 
             --gold-color: #FFD700;
-            --gold-gradient: linear-gradient(135deg, #FFE000 0%, #799F0C 100%);
             --fire-orange: #FF5722;
-            --kt-color: #d32f2f; --lg-color: #c2185b; --sk-color: #e65100; --sky-color: #0288d1; --hello-color: #7b1fa2; 
         }
-        
-        html { scroll-behavior: smooth; }
+        html {
+            scroll-behavior: smooth; /* 메뉴 클릭 시 부드럽게 스크롤 이동 */
+        }
         body { 
-            margin: 0; 
+            margin: 0; padding: 0;
             font-family: 'Gmarket Sans', 'Noto Sans KR', sans-serif; 
             background-color: var(--main-bg); 
             color: #fff; 
-            letter-spacing: -0.5px;
-            overflow-x: hidden;
-        }
-        
-        /* 상단 고정바 */
-        .navbar {
-            position: fixed; top: 0; left: 0; right: 0; height: 75px;
-            background: rgba(17, 20, 7, 0.95); display: flex;
-            align-items: center; justify-content: space-between; padding: 0 40px;
-            z-index: 1000; border-bottom: 3px solid var(--gold-color);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-        
-        .nav-logo {
-            background: #fff; padding: 4px 12px; border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-        .nav-logo img { height: 42px; display: block; object-fit: contain; }
-        .nav-menu { display: flex; gap: 30px; }
-        .nav-menu a { 
-            color: #fff; text-decoration: none; font-weight: 700; font-size: 16px; 
-            transition: 0.2s; padding: 5px 10px; border-radius: 4px;
-        }
-        .nav-menu a:hover { color: var(--gold-color); background: rgba(255,255,255,0.1); }
-        
-        /* 섹션 기본 틀 */
-        .section { padding: 100px 20px 60px 20px; text-align: center; position: relative; }
-        .section-title { 
-            font-size: 36px; font-weight: 900; margin-bottom: 35px; 
-            color: #fff; text-shadow: 3px 3px 0px rgba(0,0,0,0.3);
-        }
-        
-        /* 첫화면 반반 분할형 스마트 영업 레이아웃 */
-        #boss-section { 
-            background: radial-gradient(circle at center, #555D29 0%, #2A2E14 100%);
-            padding-top: 140px; padding-bottom: 80px;
-            display: flex; justify-content: center; align-items: center;
-            max-width: 1200px; margin: 0 auto; gap: 40px; text-align: left;
-        }
-        .main-left { flex: 1.1; text-align: center; } 
-        .main-right { flex: 0.9; width: 100%; } 
-        
-        /* 입체 털보아저씨 액자 프레임 */
-        .mascot-container {
-            position: relative; display: inline-block;
-            width: 240px; height: 240px; margin-bottom: 20px; perspective: 1000px;
-        }
-        .main-mascot {
-            width: 100%; height: 100%; border-radius: 50%; background: #fff; padding: 4px; 
-            box-sizing: border-box; box-shadow: 0 15px 35px rgba(0,0,0,0.6); border: 6px solid var(--gold-color);
-            transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-        }
-        .mascot-container:hover .main-mascot {
-            transform: scale(1.15) translateY(-8px) rotateX(5deg);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 30px rgba(255,215,0,0.4);
-        }
-        
-        /* 화려한 문구 */
-        .headline { font-size: 36px; font-weight: 900; margin: 15px 0; line-height: 1.4; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
-        .headline span { 
-            color: #111; background: var(--gold-color); padding: 2px 12px; border-radius: 10px;
-            display: inline-block; transform: rotate(-1deg); box-shadow: 3px 3px 0px rgba(0,0,0,0.2);
-        }
-        .sub-headline { font-size: 18px; font-weight: 700; color: #E2E8F0; margin-top: 15px; text-shadow: 1px 1px 4px rgba(0,0,0,0.4); }
-
-        /* 폭죽 가루 애니메이션 */
-        .confetti { position: absolute; z-index: 2; pointer-events: none; user-select: none; animation: fall linear forwards; }
-        @keyframes fall {
-            0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
-        }
-        
-        /* 접수창 카드 */
-        .consult-main-card { 
-            background: rgba(17, 20, 7, 0.75); border-radius: 20px; 
-            padding: 25px; border: 2px solid rgba(255,215,0,0.25);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4); box-sizing: border-box;
-        }
-        .consult-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-        .c-tab-btn { 
-            flex: 1; padding: 12px 6px; border: 2px solid #fff; background: none; 
-            color: #fff; font-weight: 900; font-size: 13px; cursor: pointer; border-radius: 8px; 
-            transition: 0.2s; white-space: nowrap;
-        }
-        .c-tab-btn.active { background: var(--gold-color); color: #111; border-color: var(--gold-color); box-shadow: 0 4px 12px rgba(255,215,0,0.3); }
-        
-        .form-panel { display: none; }
-        .form-panel.active { display: block; }
-        .form-group input { 
-            width: 100%; padding: 13px; border-radius: 8px; border: 2px solid #E2E8F0; 
-            margin-bottom: 12px; box-sizing: border-box; font-size: 14px; font-family: inherit;
-        }
-        .submit-btn { 
-            width: 100%; padding: 15px; background: var(--gold-color); border: none; 
-            font-weight: 900; font-size: 16px; border-radius: 8px; cursor: pointer; transition: 0.2s;
-            box-shadow: 0 4px 15px rgba(255,215,0,0.2); color: #111;
-        }
-        .submit-btn:hover { background: #F6C200; }
-        
-        /* 원터치 직통 스마트 전화걸기 링크 버튼 */
-        .phone-call-btn {
-            display: flex; align-items: center; justify-content: center; gap: 6px;
-            width: 100%; margin-top: 10px; padding: 12px; border-radius: 8px;
-            background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.3);
-            color: #fff; font-weight: 900; font-size: 14px; text-decoration: none;
-            box-sizing: border-box; transition: 0.2s;
-        }
-        .phone-call-btn:hover { background: rgba(255,255,255,0.15); border-color: var(--gold-color); color: var(--gold-color); }
-        
-        .kakao-btn-style {
-            display: block; background: #FEE500; color: #111; text-decoration: none; 
-            padding: 18px; border-radius: 8px; font-weight: 900; text-align: center;
-            font-size: 16px; box-shadow: 0 6px 15px rgba(254,229,0,0.2);
+            text-align: center;
         }
 
-        /* 요금 계산기 */
-        .calc-wrapper {
-            max-width: 980px; margin: 0 auto; background: #fff;
-            border-radius: 24px; padding: 40px; color: #2D3748;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        /* 📋 상단 네비게이션 메뉴 스타일 */
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+            background-color: var(--point-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .calc-group { margin-bottom: 35px; text-align: left; }
-        .calc-group-title { font-size: 18px; font-weight: 900; margin-bottom: 15px; color: #1A202C; border-left: 5px solid var(--main-bg); padding-left: 10px; }
-        .logo-options { display: flex; flex-wrap: wrap; gap: 14px; }
-        .logo-btn {
-            background: #F7FAFC; border: 3px solid #E2E8F0; border-radius: 14px; padding: 10px; cursor: pointer; width: 150px; height: 55px;
-            display: flex; align-items: center; justify-content: center; transition: 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden;
+        .nav-menu a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 700;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
         }
-        .logo-btn img { max-width: 95%; max-height: 95%; object-fit: contain; mix-blend-mode: multiply; }
-        .logo-btn.active { border-color: #799F0C; background: #F0FDF4; box-shadow: 0 8px 15px rgba(121,159,12,0.15); }
-        .text-options { display: flex; flex-wrap: wrap; gap: 12px; }
-        .text-btn {
-            background: #F7FAFC; border: 3px solid #E2E8F0; padding: 14px 28px; border-radius: 12px; font-weight: 700; font-size: 15px; color: #4A5568;
-            cursor: pointer; transition: 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        .text-btn.active { background: var(--main-bg); color: #fff; border-color: var(--main-bg); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
-        
-        /* 결과창 */
-        .calc-result-box { background: #F8FAFC; border: 3px solid #E2E8F0; border-radius: 22px; padding: 35px; margin-top: 40px; display: flex; flex-direction: column; gap: 30px; }
-        .res-row-prices { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 40px; width: 100%; }
-        .res-col { flex: 1; min-width: 200px; text-align: center; }
-        .res-label { font-size: 16px; font-weight: 700; color: #718096; margin-bottom: 10px; }
-        .res-val { font-size: 34px; font-weight: 900; color: #1A202C; }
-        .res-val span { font-size: 18px; font-weight: 700; }
-        .subsidy-box { width: 100%; max-width: 760px; margin: 0 auto; background: linear-gradient(135deg, #FFFDF5 0%, #FFF3E0 100%); border: 3px solid #FFB74D; border-radius: 20px; padding: 22px 15px; box-shadow: 0 8px 16px rgba(255,183,77,0.2); box-sizing: border-box; text-align: center; animation: pulse 2s infinite; }
-        .subsidy-val { color: var(--fire-orange); font-size: 40px; font-weight: 900; text-shadow: 1px 1px 0px #fff; margin-top: 5px; }
-        
-        /* 사은품 */
-        #gift-section { background: rgba(0, 0, 0, 0.1); }
-        .gift-grid { max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
-        .gift-card { background: #fff; color: #2D3748; border-radius: 18px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); text-align: center; border: 1px solid #E2E8F0; }
-        .gift-card img { width: 100%; height: 160px; object-fit: contain; margin-bottom: 15px; }
-        .gift-card h4 { margin: 10px 0 0 0; font-size: 16px; font-weight: 900; color: #1A202C; }
 
-        .footer { text-align: center; padding: 50px 0; color: rgba(255,255,255,0.4); font-size: 14px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 80px; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.01); } 100% { transform: scale(1); } }
+        /* 🎯 [사장님전용] 특별 테두리 강조 스타일 */
+        .nav-menu a.highlight-boss {
+            color: var(--gold-color);
+            border: 2px solid var(--gold-color); /* 금색 테두리 추가 */
+            border-radius: 6px;
+            background-color: rgba(255, 215, 0, 0.1); /* 미세한 불빛 효과 */
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            font-weight: 900;
+        }
+        .nav-menu a.highlight-boss:hover {
+            background-color: var(--gold-color);
+            color: #111;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+        }
+        .nav-menu a:not(.highlight-boss):hover {
+            color: var(--gold-color);
+        }
 
-        /* 📱 모바일 반응형 완벽 대응 */
-        @media (max-width: 950px) {
-            #boss-section { flex-direction: column; text-align: center; padding-top: 12px; gap: 25px; }
-            .main-left { text-align: center; }
-            .res-row-prices { flex-direction: column; gap: 20px; }
-            .nav-menu { display: none; }
-            .headline { font-size: 32px; }
+        /* 섹션 공통 디자인 */
+        .section {
+            padding: 80px 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .section-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--gold-color);
+            margin-bottom: 40px;
         }
     </style>
 </head>
 <body>
 
-    <!-- 1. 고정 내비게이션 바 구역 (새 창 열기 연동 완료) -->
-    <div class="navbar">
-        <div class="nav-logo"><img src="사거리 로고.png" alt="로고"></div>
-        <div class="nav-menu">
-            <!-- 🎯 사장님전용 클릭 시 다른 창에서 새롭게 열리도록 세팅 완료 -->
-            <a href="boss.html" target="_blank">사장님전용</a>
-            <a href="#calculator-section">요금계산기</a>
-            <a href="#gift-section">사은품</a>
-        </div>
+    <!-- 📋 상단 메뉴 구역 (각 섹션 ID로 부드럽게 연결) -->
+    <div class="nav-menu">
+        <a href="boss.html" target="_blank" class="highlight-boss">🏬 사장님전용</a>
+        <a href="#calculator-section">📊 요금계산기</a>
+        <a href="#gift-section">🎁 사은품관</a>
+        <a href="#review-section">💬 실시간후기</a>
     </div>
 
-    <!-- 첫 화면 반반 분할형 스마트 영업 레이아웃 -->
-    <div class="section" style="width: 100%; max-width:100%; padding: 0;">
-        <div id="boss-section">
-            
-            <!-- 왼쪽: 입체 브랜딩 구역 -->
-            <div class="main-left">
-                <div class="mascot-container">
-                    <img src="털보아저씨국방색.png" class="main-mascot" alt="털보아저씨">
-                </div>
-                <div class="headline">✨ 털보아저씨가<br><span>시원하게 떡값 쏘는 곳!</span> ✨</div>
-                <div class="sub-headline">인터넷 + TV 가입하면 대박 지원금에 최신 고급 가전 사은품까지 100% 전격 증정!</div>
-            </div>
-            
-            <!-- 오른쪽: 접수창 구역 -->
-            <div class="main-right">
-                <div class="consult-main-card">
-                    <div class="consult-tabs">
-                        <button class="c-tab-btn active" onclick="switchForm('fast', this)">⚡ 간편 빠른상담</button>
-                        <button class="c-tab-btn" onclick="switchForm('full', this)">📝 원스톱 다이렉트접수</button>
-                        <button class="c-tab-btn" onclick="switchForm('kakao', this)">💬 카톡 1:1상담</button>
-                    </div>
-                    
-                    <div class="form-panel active" id="form-fast">
-                        <div class="form-group"><input type="text" placeholder="성함을 적어주세요"></div>
-                        <div class="form-group"><input type="text" placeholder="연락처를 적어주세요"></div>
-                        <button class="submit-btn" onclick="alert('접수 완료! 털보아저씨가 5분 내로 무조건 전화갑니다!')">화끈하게 빠른 상담 신청</button>
-                        <a href="tel:1833-2440" class="phone-call-btn">📞 직통 전화걸기: 1833-2440</a>
-                    </div>
-                    
-                    <div class="form-panel" id="form-full">
-                        <div class="form-group"><input type="text" placeholder="성함 입력"></div>
-                        <div class="form-group"><input type="text" placeholder="주민등록번호 입력 [RRN Omitted]"></div>
-                        <div class="form-group"><input type="text" placeholder="연락처 및 설치받으실 상세 주소"></div>
-                        <div class="form-group"><input type="text" placeholder="희망하시는 통신사/상품 및 원하는 사은품 명세"></div>
-                        <button class="submit-btn" onclick="alert('다이렉트 원스톱 접수 완료!')">다이렉트 즉시 접수하기</button>
-                        <a href="tel:1833-2440" class="phone-call-btn">📞 직통 전화걸기: 1833-2440</a>
-                    </div>
-                    
-                    <div class="form-panel" id="form-kakao">
-                        <p style="margin-top:0; color:#E2E8F0; font-size:14px; line-height:1.6; margin-bottom:20px;">전화 상담이 부담스러우시다면 채팅이 정답! 털보아저씨 카카오톡 채널로 상시 편하게 톡 남겨주세요.</p>
-                        <a href="https://pf.kakao.com" target="_blank" class="kakao-btn-style">💬 털보아저씨와 실시간 카톡 대화하기</a>
-                    </div>
-                </div>
-            </div>
+    <!-- 1. 사장님전용 바로가기 (현재는 팝업창으로 연동) -->
+    <!-- 기존 메인 홈 배너나 사장님 전용 섹션이 있다면 여기에 위치합니다 -->
 
-        </div>
+    <!-- 2. 요금계산기 섹션 (기존에 구현해 두신 계산기 코드를 이 안에 유지하시면 됩니다) -->
+    <div id="calculator-section" class="section">
+        <div class="section-title">📊 맞춤 요금 계산기</div>
+        <!-- [대표님의 기존 요금계산기 코드 자리] -->
+        <p style="color: #aaa;">(현재 픽스된 계산기 내용이 노출되는 구역입니다)</p>
     </div>
 
-    <!-- 📌 [요금 계산기] 구역 -->
-    <div class="section" id="calculator-section">
-        <div class="section-title">📊 실시간 맞춤 요금 계산기</div>
-        <div class="calc-wrapper">
-            <div class="calc-group">
-                <div class="calc-group-title">1단계: 통신사 브랜드를 선택해 주세요</div>
-                <div class="logo-options">
-                    <div class="logo-btn active" onclick="setProvider('KT', this)"><img src="KT 로고.jpg"></div>
-                    <div class="logo-btn" onclick="setProvider('LG U+', this)"><img src="LGU+ 로고.png"></div>
-                    <div class="logo-btn" onclick="setProvider('SK', this)"><img src="SKB 로고.jpg"></div>
-                    <div class="logo-btn" onclick="setProvider('스카이', this)"><img src="KTSKYLIFE 로고.png"></div>
-                    <div class="logo-btn" onclick="setProvider('헬로', this)"><img src="LG헬로비전 로고.png"></div>
-                </div>
-            </div>
-            <div class="calc-group">
-                <div class="calc-group-title">2단계: 원하시는 상품 구성을 골라주세요</div>
-                <div class="text-options">
-                    <div class="text-btn active" onclick="setProduct('단독', this)">💻 인터넷 단독상품</div>
-                    <div class="text-btn" onclick="setProduct('결합', this)">📺 인터넷 + TV 결합상품</div>
-                </div>
-            </div>
-            <div class="calc-group">
-                <div class="calc-group-title">3단계: 희망하시는 속도를 클릭해 주세요</div>
-                <div class="text-options" id="speed-box"></div>
-            </div>
-            <div class="calc-result-box">
-                <div class="res-row-prices">
-                    <div class="res-col">
-                        <div class="res-label" id="label-base">본사 표준 요금</div>
-                        <div class="res-val" id="res-base" style="color:#A0AEC0; font-size:24px; text-decoration:line-through;">0원</div>
-                    </div>
-                    <div class="res-col" id="comb-display-area">
-                        <div class="res-label">📱 휴대폰 가입 결합 시 요금</div>
-                        <div class="res-val" id="res-comb" style="color:#2D3748;">0<span>원/월</span></div>
-                    </div>
-                </div>
-                <div class="subsidy-box">
-                    <div class="res-label" style="color:#DD6B20; font-weight:900; font-size:16px;">💵 사거리 특별 지원금 (현금+떡값)</div>
-                    <div class="res-val subsidy-val" id="res-subsidy">0원</div>
-                </div>
-            </div>
-            <p id="res-special" style="margin-top:25px; font-weight:900; color:var(--fire-orange); font-size:18px; letter-spacing:0px;"></p>
-        </div>
+    <!-- 3. 사은품 섹션 (이제 본격적으로 꾸밀 구역) -->
+    <div id="gift-section" class="section">
+        <div class="section-title">🎁 사거리인터넷 역대급 사은품 혜택</div>
+        <p>여기서부터 사은품을 멋지게 꾸며볼 예정입니다.</p>
     </div>
 
-    <!-- 📌 [사은품] 구역 -->
-    <div class="section" id="gift-section">
-        <div class="section-title">🎁 사거리인터넷 독점 사은품 라인업</div>
-        <img src="현물사은품.jpg" style="width:100%; max-width:920px; border-radius:20px; margin-bottom:35px; box-shadow:0 8px 25px rgba(0,0,0,0.3);">
-        <div class="gift-grid">
-            <div class="gift-card"><img src="삼성무빙스타일.jpg"><h4>삼성 무빙스타일 32인치 TV</h4></div>
-            <div class="gift-card"><img src="삼성제트핏.jpg"><h4>삼성 제트핏 무선청소기</h4></div>
-            <div class="gift-card"><img src="삼성통돌이세탁기.jpg"><h4>삼성 비스포크 통돌이 세탁기</h4></div>
-            <div class="gift-card"><img src="삼성55인치TV.jpg"><h4>삼성 55인치 스마트 UHD TV</h4></div>
-        </div>
+    <!-- 4. 실시간후기 섹션 (마지막 단계) -->
+    <div id="review-section" class="section">
+        <div class="section-title">💬 고객 실시간 가입 후기</div>
+        <p>생생한 실시간 후기판이 들어올 자리입니다.</p>
     </div>
 
-    <div class="footer">© 사거리인터넷 ALL RIGHTS RESERVED. | 실시간 단가표 데이터 구글 시트 연동 홀딩 완료.</div>
-
-    <script>
-        const sheetId = '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
-        const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
-        
-        let allData = [];
-        let curProv = 'KT';
-        let curProd = '단독';
-
-        function createConfetti() {
-            const container = document.getElementById('boss-section');
-            if(!container) return;
-            const shapes = ['★', '✨', '🪙', '✦', '⭐'];
-            const colors = ['#FFD700', '#FFA500', '#FF4500', '#FFFF00', '#ADFF2F'];
-            for (let i = 0; i < 2; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.textContent = shapes[Math.floor(Math.random() * shapes.length)];
-                confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.fontSize = Math.random() * 15 + 15 + 'px';
-                const duration = Math.random() * 3 + 2;
-                confetti.style.animationDuration = duration + 's';
-                container.appendChild(confetti);
-                setTimeout(() => { confetti.remove(); }, duration * 1000);
-            }
-        }
-
-        async function loadData() {
-            try {
-                const response = await fetch(csvUrl);
-                const text = await response.text();
-                const rows = text.split('\n').map(row => row.split(','));
-                allData = rows.slice(1).filter(r => r[0] && r[0].trim() !== "");
-                updateOptions();
-                setInterval(createConfetti, 400);
-            } catch (e) { console.error('데이터 연동 실패'); }
-        }
-
-        function setProvider(p, el) {
-            document.querySelectorAll('.logo-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); curProv = p; updateOptions();
-        }
-
-        function setProduct(p, el) {
-            document.querySelectorAll('.text-options .text-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); curProd = p; updateOptions();
-        }
-
-        function updateOptions() {
-            const box = document.getElementById('speed-box'); box.innerHTML = '';
-            const filtered = allData.filter(row => {
-                const sProv = row[0].trim(); const sSpeed = row[1].trim();
-                const mProv = sProv.includes(curProv);
-                const isCombo = sSpeed.includes('+') || sSpeed.includes('TV');
-                const mProd = (curProd === '결합') ? isCombo : !isCombo;
-                return mProv && mProd;
-            });
-            filtered.sort((a,b) => {
-                const getR = (s) => s.includes('1G')?1000:s.includes('500')?500:s.includes('200')?200:s.includes('160')?160:100;
-                return getR(b[1]) - getR(a[1]);
-            });
-            if(filtered.length > 0) {
-                filtered.forEach((row, i) => {
-                    const btn = document.createElement('div');
-                    btn.className = 'text-btn' + (i===0?' active':'');
-                    btn.textContent = row[1].trim();
-                    btn.onclick = function() {
-                        document.querySelectorAll('#speed-box .text-btn').forEach(b=>b.classList.remove('active'));
-                        this.classList.add('active'); showResult(row);
-                    };
-                    box.appendChild(btn);
-                });
-                showResult(filtered[0]);
-            }
-        }
-
-        function showResult(row) {
-            const cleanRow = row.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
-            const basePriceRaw = cleanRow[2];
-            const basePrice = parseInt(basePriceRaw) ? parseInt(basePriceRaw).toLocaleString() : basePriceRaw;
-            let combPrice = ""; let subsidy = ""; let special = "";
-            if (cleanRow.length > 5 && parseInt(cleanRow[3]) > 0) {
-                document.getElementById('comb-display-area').style.display = "block";
-                document.getElementById('label-base').textContent = "본사 표준 요금";
-                const combPriceRaw = cleanRow[4];
-                combPrice = parseInt(combPriceRaw) ? parseInt(combPriceRaw).toLocaleString() : combPriceRaw;
-                subsidy = cleanRow[5]; special = cleanRow[6] ? cleanRow[6] : "";
-            } else {
-                document.getElementById('comb-display-area').style.display = "none";
-                document.getElementById('label-base').textContent = "알뜰 실속 요금";
-                subsidy = cleanRow[3]; special = cleanRow[4] ? cleanRow[4] : "";
-            }
-            document.getElementById('res-base').textContent = `${basePrice}원`;
-            if(combPrice) { document.getElementById('res-comb').innerHTML = `${combPrice}<span>원/월</span>`; }
-            document.getElementById('res-subsidy').textContent = subsidy.includes('원') ? subsidy : subsidy + '원';
-            if(special.includes('+') || special.includes('떡값')) {
-                document.getElementById('res-special').innerHTML = `🔥 털보아저씨의 특별 보너스: ${special} 🔥`;
-            } else { document.getElementById('res-special').textContent = special; }
-        }
-
-        function switchForm(k, el) {
-            document.querySelectorAll('.c-tab-btn').forEach(b=>b.classList.remove('active'));
-            el.classList.add('active');
-            document.querySelectorAll('.form-panel').forEach(p=>p.classList.remove('active'));
-            document.getElementById('form-'+k).classList.add('active');
-        }
-        window.onload = loadData;
-    </script>
 </body>
 </html>
