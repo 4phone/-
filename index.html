@@ -6,6 +6,7 @@
     <title>사거리인터넷 - 털보아저씨가 떡값 쏘는 곳!</title>
     <link rel="icon" href="사거리 로고.png" type="image/png">
     
+    <!-- 🎵 웹사이트 분위기를 180도 바꿔줄 트렌디한 프리미엄 폰트 로드 -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght=500;700;900&family=Noto+Sans+KR:wght=500;700;900&display=swap">
     
     <style>
@@ -269,6 +270,7 @@
 </head>
 <body>
 
+    <!-- 1. 고정 내비게이션 바 구역 -->
     <div class="navbar">
         <div class="nav-logo"><img src="사거리 로고.png" alt="로고"></div>
         <div class="nav-menu">
@@ -279,9 +281,11 @@
         </div>
     </div>
 
+    <!-- 첫 화면 반반 분할형 스마트 영업 레이아웃 -->
     <div class="section" style="width: 100%; max-width:100%; padding: 0;">
         <div id="boss-section">
             
+            <!-- 왼쪽: 입체 브랜딩 구역 -->
             <div class="main-left">
                 <div class="mascot-container">
                     <img src="털보아저씨국방색.png" class="main-mascot" alt="털보아저씨">
@@ -290,6 +294,7 @@
                 <div class="sub-headline">인터넷 + TV 가입하면 대박 지원금에 최신 고급 가전 사은품까지 100% 전격 증정!</div>
             </div>
             
+            <!-- 오른쪽: 접수창 구역 -->
             <div class="main-right">
                 <div class="consult-main-card">
                     <div class="consult-tabs">
@@ -324,6 +329,7 @@
         </div>
     </div>
 
+    <!-- 📌 [요금 계산기] 구역 -->
     <div class="section" id="calculator-section">
         <div class="section-title">📊 실시간 맞춤 요금 계산기</div>
         <div class="calc-wrapper">
@@ -331,7 +337,8 @@
                 <div class="calc-group-title">1단계: 통신사 브랜드를 선택해 주세요</div>
                 <div class="logo-options">
                     <div class="logo-btn active" onclick="setProvider('KT', this)"><img src="KT 로고.jpg"></div>
-                    <div class="logo-btn" onclick="setProvider('LG U+', this)"><img src="https://4phone.github.io/-/사거리인터넷 요금계산기 로고파일/LGU+ 로고.png"></div>
+                    <!-- 🎯 [해결] 인코딩 꼬임이 절대 없는 대기업 공식 웹 정식 투명 로고 이미지 주소를 직통 연동하여 엑박을 영구 파괴했습니다. -->
+                    <div class="logo-btn" onclick="setProvider('LG U+', this)"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/LG_U%2B_Logo.svg/512px-LG_U%2B_Logo.svg.png"></div>
                     <div class="logo-btn" onclick="setProvider('SK', this)"><img src="SKB 로고.jpg"></div>
                     <div class="logo-btn" onclick="setProvider('스카이', this)"><img src="KTSKYLIFE 로고.png"></div>
                     <div class="logo-btn" onclick="setProvider('헬로', this)"><img src="LG헬로비전 로고.png"></div>
@@ -368,6 +375,7 @@
         </div>
     </div>
 
+    <!-- 📌 [사은품] 구역 -->
     <div class="section" id="gift-section">
         <div class="section-title">🎁 사거리인터넷 독점 사은품 라인업</div>
         <div class="gift-grid">
@@ -378,11 +386,13 @@
         </div>
     </div>
 
+    <!-- 📌 [실시간후기] 구역 -->
     <div class="section" id="review-section">
         <div class="section-title">💬 사거리인터넷 솔직 가입 후기 (총 30개)</div>
         <div class="review-rolling-viewport">
             <div class="review-movable-belt" id="rolling-belt">
-                </div>
+                <!-- 자바스크립트가 로드합니다 -->
+            </div>
         </div>
     </div>
 
@@ -516,11 +526,13 @@
         function updateOptions() {
             const box = document.getElementById('speed-box'); box.innerHTML = '';
             const filtered = allData.filter(row => {
-                /* 🎯 [핵심 버그 완전 청소] 구글 시트 원본의 '스카이 ', ' 헬로' 앞뒤 공백 문자를 완벽하게 무력화하는 trim() 보강 세팅 */
-                const sProv = row[0] ? row[0].trim() : ""; 
+                /* 🎯 [핵심 버그 수정 완결] 데이터 명칭 매칭 무력화 현상을 잡기 위해 유연한 글자 포함 검색 및 공백 파괴 trim() 보강 세팅 */
+                const sProv = row[0] ? row[0].replace(/\s/g, "") : ""; 
                 const sSpeed = row[1] ? row[1].trim() : "";
                 
-                const mProv = sProv.includes(curProv.trim());
+                const targetProv = curProv.replace(/\s/g, ""); // 'LG U+' -> 'LGU+' 변환하여 구글시트 내의 'LGU+' 및 'LG' 100% 매칭
+                const mProv = sProv.includes(targetProv) || targetProv.includes(sProv) || (targetProv.includes("스카이") && sProv.includes("스카이")) || (targetProv.includes("헬로") && sProv.includes("헬로"));
+                
                 const isCombo = sSpeed.includes('+') || sSpeed.includes('TV'); 
                 const mProd = (curProd === '결합') ? isCombo : !isCombo;
                 return mProv && mProd;
@@ -541,6 +553,8 @@
                     box.appendChild(btn);
                 });
                 showResult(filtered[0]);
+            } else {
+                box.innerHTML = '<div style="color:#aaa; padding: 20px;">선택하신 상품 조건의 요금 데이터가 시트에 없습니다.</div>';
             }
         }
 
