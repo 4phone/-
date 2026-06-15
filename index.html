@@ -160,7 +160,6 @@
                 <div class="calc-group-title">3단계: 희망하시는 인터넷 속도를 골라주세요</div>
                 <div class="text-options" id="speed-box"></div>
             </div>
-            <!-- 🌟 새로 분리 배치된 4단계 TV상품 전용 레이어 구역 -->
             <div class="calc-group" id="tv-group-layer" style="display:none;">
                 <div class="calc-group-title">4단계: TV 요금제 상품을 선택해 주세요</div>
                 <div class="text-options" id="tv-product-box"></div>
@@ -257,13 +256,13 @@
             const speedBox = document.getElementById('speed-box'); if (!speedBox) return; speedBox.innerHTML = '';
             const filteredRows = allData.filter(row => {
                 if (!row[0] || !row[1]) return false;
-                const sProv = row[0].trim().toUpperCase(), sProd = row[1].trim();
+                const sProv = row[0].trim(), sProd = row[1].trim();
                 let isMatch = false;
-                if (curProv === "KT" && sProv.includes("KT")) isMatch = true;
-                if (curProv === "LG" && sProv.includes("LG")) isMatch = true;
-                if (curProv === "SK" && sProv.includes("SK") && !sProv.includes("POP")) isMatch = true;
-                if (curProv === "스카이" && sProv.includes("스카이")) isMatch = true;
-                if (curProv === "헬로" && sProv.includes("헬로")) isMatch = true;
+                if (curProv === "KT" && sProv === "KT") isMatch = true;
+                if (curProv === "LG" && sProv === "LG") isMatch = true;
+                if (curProv === "SK" && sProv === "SK") isMatch = true;
+                if (curProv === "스카이" && sProv === "스카이") isMatch = true;
+                if (curProv === "헬로" && sProv === "헬로") isMatch = true;
                 return isMatch && (sProd === curProd);
             });
             const speeds = [...new Set(filteredRows.map(row => row[2].trim()))];
@@ -294,6 +293,12 @@
                 tvLayer.style.display = 'none'; if (finalRows.length > 0) showResult(finalRows[0]);
             } else {
                 tvLayer.style.display = 'block';
+                // 🌟 [교정 완료] 결합시최종요금(인덱스 6)을 숫자로 치환해 비싼 순서(내림차순)로 버튼 자동 정렬
+                finalRows.sort((a, b) => {
+                    const priceA = parseInt(a[6].replace(/,/g, "")) || 0;
+                    const priceB = parseInt(b[6].replace(/,/g, "")) || 0;
+                    return priceB - priceA;
+                });
                 finalRows.forEach((row, i) => {
                     const btn = document.createElement('div'); btn.className = 'text-btn' + (i === 0 ? ' active' : ''); btn.textContent = row[3].trim();
                     btn.onclick = function() {
@@ -308,18 +313,21 @@
 
         function showResult(row) {
             const cleanRow = row.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
-            const basePrice = parseInt(cleanRow[4]) ? parseInt(cleanRow[4]).toLocaleString() : cleanRow[4];
-            let subsidy = cleanRow[7] || "0", special = cleanRow[8] || "";
+            const basePriceRaw = cleanRow[4].replace(/,/g, "") || "0";
+            const basePrice = parseInt(basePriceRaw) ? parseInt(basePriceRaw).toLocaleString() : basePriceRaw;
+            let combPrice = ""; let subsidy = cleanRow[7] || "0", special = cleanRow[8] || "";
             const isAlthempone = curProv === '스카이' || curProv === '헬로';
 
             if (isAlthempone) {
                 document.getElementById('comb-display-area').style.display = "none";
                 document.getElementById('label-base').textContent = "알뜰 실속 요금";
             } else {
-                if (parseInt(cleanRow[5]) > 0) {
+                const dcPriceRaw = parseInt(cleanRow[5].replace(/,/g, "")) || 0;
+                if (dcPriceRaw > 0) {
                     document.getElementById('comb-display-area').style.display = "block";
                     document.getElementById('label-base').textContent = "본사 표준 요금";
-                    const combPrice = parseInt(cleanRow[6]) ? parseInt(cleanRow[6]).toLocaleString() : cleanRow[6];
+                    const combPriceRaw = cleanRow[6].replace(/,/g, "") || "0";
+                    combPrice = parseInt(combPriceRaw) ? parseInt(combPriceRaw).toLocaleString() : combPriceRaw;
                     document.getElementById('res-comb').innerHTML = `${combPrice}<span>원/월</span>`;
                 } else {
                     document.getElementById('comb-display-area').style.display = "none";
