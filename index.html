@@ -221,7 +221,19 @@
         async function loadData() {
             try {
                 const response = await fetch(csvUrl); const text = await response.text();
-                const rows = text.split(/\r?\n/).map(row => row.split(','));
+                
+                // 🔒 [방탄 보호 장치 완료] 큰따옴표 내부에 부활한 구글 시트 콤마(,) 서식으로 인한 칸 밀림을 원천 차단하는 고급 CSV 정규식 분류기
+                const rows = text.split(/\r?\n/).map(line => {
+                    const result = []; let current = '', inQuotes = false;
+                    for (let i = 0; i < line.length; i++) {
+                        const char = line[i];
+                        if (char === '"') { inQuotes = !inQuotes; }
+                        else if (char === ',' && !inQuotes) { result.push(current); current = ''; }
+                        else { current += char; }
+                    }
+                    result.push(current); return result;
+                });
+
                 allData = rows.slice(1).filter(r => r[0] && r[0].trim() !== "");
                 updateOptions(); setInterval(createConfetti, 500); initLiveReviews();
             } catch (e) { console.error('시트 연동 상태 확인 중'); }
@@ -258,11 +270,11 @@
                 if (!row[0] || !row[1]) return false;
                 const sProv = row[0].trim(), sProd = row[1].trim();
                 let isMatch = false;
-                if (curProv === "KT" && sProv === "KT") isMatch = true;
-                if (curProv === "LG" && sProv === "LG") isMatch = true;
-                if (curProv === "SK" && sProv === "SK") isMatch = true;
-                if (curProv === "스카이" && sProv === "스카이") isMatch = true;
-                if (curProv === "헬로" && sProv === "헬로") isMatch = true;
+                if (curProv === "KT" && sProv.includes("KT")) isMatch = true;
+                if (curProv === "LG" && sProv.includes("LG")) isMatch = true;
+                if (curProv === "SK" && sProv.includes("SK")) isMatch = true;
+                if (curProv === "스카이" && sProv.includes("스카이")) isMatch = true;
+                if (curProv === "헬로" && sProv.includes("헬로")) isMatch = true;
                 return isMatch && (sProd === curProd);
             });
             const speeds = [...new Set(filteredRows.map(row => row[2].trim()))];
@@ -293,10 +305,10 @@
                 tvLayer.style.display = 'none'; if (finalRows.length > 0) showResult(finalRows[0]);
             } else {
                 tvLayer.style.display = 'block';
-                // 🌟 [교정 완료] 결합시최종요금(인덱스 6)을 숫자로 치환해 비싼 순서(내림차순)로 버튼 자동 정렬
+                // 🔥 [기획 고도화] 결합 최종요금을 역추적하여 무조건 고가 프리미엄 상품부터 왼쪽 대가리로 노출되도록 강제 정렬 완료
                 finalRows.sort((a, b) => {
-                    const priceA = parseInt(a[6].replace(/,/g, "")) || 0;
-                    const priceB = parseInt(b[6].replace(/,/g, "")) || 0;
+                    const priceA = parseInt(a[6].replace(/[^0-9]/g, "")) || 0;
+                    const priceB = parseInt(b[6].replace(/[^0-9]/g, "")) || 0;
                     return priceB - priceA;
                 });
                 finalRows.forEach((row, i) => {
@@ -313,8 +325,10 @@
 
         function showResult(row) {
             const cleanRow = row.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
-            const basePriceRaw = cleanRow[4].replace(/,/g, "") || "0";
-            const basePrice = parseInt(basePriceRaw) ? parseInt(basePriceRaw).toLocaleString() : basePriceRaw;
+            
+            // 🔒 [버그 완치] 쉼표 특수문자를 강제로 싹 지우고 순수 숫자만 발라내어 정밀 파싱 (인덱스 밀림 100% 방어)
+            const basePriceRaw = cleanRow[4].replace(/[^0-9]/g, "") || "0";
+            const basePrice = parseInt(basePriceRaw) ? parseInt(basePriceRaw).toLocaleString() : cleanRow[4];
             let combPrice = ""; let subsidy = cleanRow[7] || "0", special = cleanRow[8] || "";
             const isAlthempone = curProv === '스카이' || curProv === '헬로';
 
@@ -322,12 +336,12 @@
                 document.getElementById('comb-display-area').style.display = "none";
                 document.getElementById('label-base').textContent = "알뜰 실속 요금";
             } else {
-                const dcPriceRaw = parseInt(cleanRow[5].replace(/,/g, "")) || 0;
+                const dcPriceRaw = parseInt(cleanRow[5].replace(/[^0-9]/g, "")) || 0;
                 if (dcPriceRaw > 0) {
                     document.getElementById('comb-display-area').style.display = "block";
                     document.getElementById('label-base').textContent = "본사 표준 요금";
-                    const combPriceRaw = cleanRow[6].replace(/,/g, "") || "0";
-                    combPrice = parseInt(combPriceRaw) ? parseInt(combPriceRaw).toLocaleString() : combPriceRaw;
+                    const combPriceRaw = cleanRow[6].replace(/[^0-9]/g, "") || "0";
+                    combPrice = parseInt(combPriceRaw) ? parseInt(combPriceRaw).toLocaleString() : cleanRow[6];
                     document.getElementById('res-comb').innerHTML = `${combPrice}<span>원/월</span>`;
                 } else {
                     document.getElementById('comb-display-area').style.display = "none";
