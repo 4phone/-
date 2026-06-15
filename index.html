@@ -144,44 +144,51 @@
         .calc-group { margin-bottom: 35px; text-align: left; }
         .calc-group-title { font-size: 18px; font-weight: 900; margin-bottom: 20px; color: #1A202C; border-left: 5px solid var(--main-bg); padding-left: 10px; }
         
-        /* ✨ [대수리] 스카이로고처럼 이질감·테두리·배경 분리를 완벽히 지워버리는 5대 로고 규격화 세팅 */
+        /* 🚨 [1단계 브랜드 존 대수리 스펙] */
         .logo-options { 
             display: flex; 
             flex-wrap: wrap; 
-            gap: 15px; 
+            gap: 12px; 
             justify-content: space-between; 
-            align-items: center; 
-            background: none;
-            padding: 5px 0;
+            align-items: center;
         }
         .logo-btn {
-            background: none !important; 
-            border: none !important; 
-            outline: none !important;
-            padding: 0 !important; 
+            /* 5개 박스의 외형 규격을 완벽한 순백색 사각형 틀로 100% 통일 */
+            background-color: #FFFFFF !important; 
+            border: 3px solid #E2E8F0 !important;
+            border-radius: 14px !important;
+            padding: 8px 12px !important; 
             cursor: pointer; 
-            /* 5개 박스 크기를 완전히 정규 규격화 */
-            width: 140px; 
-            height: 55px; 
+            width: 170px; 
+            height: 65px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            transition: transform 0.2s ease, filter 0.2s ease;
-            /* 비활성화 시 이질감 최소화를 위한 은은한 흑백 블렌딩 */
-            filter: grayscale(100%) opacity(40%);
-            mix-blend-mode: multiply; /* 하얀 바탕 강제 투명 제거 특효약 */
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.2s ease, box-shadow 0.2s ease;
+            /* 🚨 어두운 색상 필터 삭제: 상시 100% 원본 컬러 표출 */
+            filter: none !important;
+            opacity: 1 !important;
         }
         .logo-btn img { 
             width: 100%; 
             height: 100%; 
-            object-fit: contain; /* 이미지 비율 절대 왜곡 방지 */
+            object-fit: contain; /* 원본 비율 절대 사수 */
             background: transparent !important;
         }
         
-        /* 활성화되었을 때 지저분한 이외 테두리 선 없이 스카이로고처럼 깔끔하고 선명하게 도출 */
+        /* 🚨 헬로비전 로고가 스카이로고만큼 큼직하고 훤하게 보이도록 가로 스케일 집중 인젝션 */
+        .logo-btn.hello-fix img {
+            transform: scale(1.35);
+            width: 105%;
+        }
+        
+        /* 🚨 선택(Active) 시 테두리가 국방색 그린 포인트로 챡 감기며, 사이즈가 살짝 커지는 바운스 효과 */
         .logo-btn.active { 
-            filter: grayscale(0%) opacity(100%) drop-shadow(0px 3px 6px rgba(0,0,0,0.12)) !important;
-            transform: scale(1.08);
+            border-color: #799F0C !important;
+            background-color: #FFFFFF !important;
+            box-shadow: 0 10px 20px rgba(121,159,12,0.18) !important;
+            transform: scale(1.12); /* 살짝 커지는 볼륨업 최적화 */
+            z-index: 10;
         }
         
         .text-options { display: flex; flex-wrap: wrap; gap: 12px; }
@@ -241,8 +248,9 @@
             .section { padding: 60px 10px 30px 10px; }
             .section-title { font-size: 24px; }
             .calc-wrapper { padding: 20px 15px; }
-            .logo-options { gap: 10px; justify-content: center; }
-            .logo-btn { width: 44%; height: 45px; } 
+            .logo-options { gap: 8px; justify-content: center; }
+            .logo-btn { width: 46%; height: 50px; } 
+            .logo-btn.hello-fix img { transform: scale(1.15); }
             .text-btn { width: 100%; text-align: center; font-size: 13px; }
             .res-row-prices { flex-direction: column; gap: 15px; }
             .res-val { font-size: 26px; }
@@ -317,12 +325,12 @@
             <div class="calc-group">
                 <div class="calc-group-title">1단계: 통신사 브랜드를 선택해 주세요</div>
                 <div class="logo-options">
-                    <!-- 🚨 [수리 완료] 모든 테두리·하얀박스 팩을 파괴하고 스카이로고급 정렬 비율 일체화 실현 -->
                     <div class="logo-btn active" onclick="setProvider('KT', this)"><img src="케이티로고.jpg" alt="KT"></div>
                     <div class="logo-btn" onclick="setProvider('LG', this)"><img src="엘지로고.png" alt="LG U+"></div>
                     <div class="logo-btn" onclick="setProvider('SK', this)"><img src="에스케이로고.jpg" alt="SK브로드밴드"></div>
                     <div class="logo-btn" onclick="setProvider('스카이', this)"><img src="스카이로고.png" alt="skylife"></div>
-                    <div class="logo-btn" onclick="setProvider('헬로', this)"><img src="헬로비전로고.png" alt="LG헬로비전"></div>
+                    <!-- hello-fix 클래스로 헬로비전 로고 시인성 대폭 업그레이드 완료 -->
+                    <div class="logo-btn hello-fix" onclick="setProvider('헬로', this)"><img src="헬로비전로고.png" alt="LG헬로비전"></div>
                 </div>
             </div>
             <div class="calc-group">
@@ -374,7 +382,7 @@
         </div>
     </div>
 
-    <div class="footer">© 사거리인터넷 ALL RIGHTS RESERVED. | 실시간 단가표 데이터 구글 시트 연동 홀딩 완료.</div>
+    <div class="footer">© 사거리인터넷 ALL RIGHTS RESERVED. | 실시간 단가표 데이터 구글 시트 연동 HOLDING.</div>
 
     <script>
         const sheetId = '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
