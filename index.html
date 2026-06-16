@@ -53,11 +53,29 @@
         .text-btn { background: #F7FAFC; border: 3px solid #E2E8F0; padding: 14px 24px; border-radius: 12px; font-weight: 700; font-size: 15px; color: #4A5568; cursor: pointer; transition: 0.2s; }
         .text-btn.active { background: var(--main-bg); color: #fff; border-color: var(--main-bg); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
         .calc-result-box { background: #F8FAFC; border: 3px solid #E2E8F0; border-radius: 22px; padding: 35px; margin-top: 40px; display: flex; flex-direction: column; gap: 30px; }
-        .res-row-prices { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 40px; width: 100%; }
+        .res-row-prices { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 30px; width: 100%; }
         .res-col { flex: 1; min-width: 200px; text-align: center; }
         .res-label { font-size: 16px; font-weight: 700; color: #718096; margin-bottom: 10px; }
         .res-val { font-size: 34px; font-weight: 900; color: #1A202C; }
         .res-val span { font-size: 18px; font-weight: 700; }
+        
+        /* 🗺️ 실시간 가용지역 및 아코디언 추가 디자인 스킨 */
+        .normal-region-box { font-size: 15px; font-weight: 900; color: #3182ce; line-height: 1.5; background: #EDF2F7; padding: 18px; border-radius: 14px; border: 1px dashed #CBD5E0; }
+        .accordion-wrapper { text-align: left; width: 100%; }
+        .accordion-trigger { width: 100%; background: #fff; border: 2px solid #E2E8F0; padding: 12px 15px; border-radius: 12px; font-family: inherit; font-size: 14px; font-weight: 900; color: #2D3748; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .accordion-trigger:hover { border-color: #799F0C; background: #F7FAFC; }
+        .accordion-trigger img { height: 20px; object-fit: contain; }
+        .accordion-arrow { font-size: 12px; transition: transform 0.3s ease; color: #A0AEC0; }
+        .accordion-arrow.open { transform: rotate(180deg); color: #799F0C; }
+        .accordion-panel { max-height: 0; overflow: hidden; transition: max-height 0.3s cubic-bezier(0, 1, 0, 1); background: #fff; border: 0 solid #E2E8F0; border-radius: 12px; margin-top: 6px; }
+        .accordion-panel.open { max-height: 1000px; transition: max-height 0.4s cubic-bezier(1, 0, 1, 0); border: 2px solid #E2E8F0; }
+        .panel-scroll-box { max-height: 250px; overflow-y: auto; padding: 10px; }
+        .region-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        .region-table th { background: #F7FAFC; color: #4A5568; font-weight: 900; padding: 10px 8px; border-bottom: 2px solid #E2E8F0; position: sticky; top: 0; }
+        .region-table td { padding: 10px 8px; border-bottom: 1px solid #EDF2F7; color: #2D3748; font-weight: 500; line-height: 1.4; }
+        .region-table tr:last-child td { border-bottom: none; }
+        .region-tag { background: #EBF8FF; color: #2B6CB0; padding: 2px 6px; border-radius: 4px; font-weight: 900; font-size: 11px; }
+
         .subsidy-box { width: 100%; max-width: 760px; margin: 0 auto; background: linear-gradient(135deg, #FFFDF5 0%, #FFF3E0 100%); border: 3px solid #FFB74D; border-radius: 20px; padding: 22px 15px; box-sizing: border-box; text-align: center; }
         .subsidy-val { color: var(--fire-orange); font-size: 40px; font-weight: 900; margin-top: 5px; }
         #gift-section { background: rgba(0, 0, 0, 0.1); }
@@ -76,6 +94,7 @@
         .review-text { font-size: 14px; color: #E2E8F0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 680px; }
         .review-stars { color: var(--gold-color); font-size: 15px; font-weight: bold; }
         .footer { text-align: center; padding: 50px 0; color: rgba(255,255,255,0.4); font-size: 14px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 80px; }
+        
         @media (max-width: 950px) {
             .navbar { padding: 0 15px; height: 65px; } .nav-logo img { height: 32px; } .nav-menu { gap: 6px; } .nav-menu a { font-size: 12px; padding: 4px 6px; }
             #boss-section { flex-direction: column; text-align: center; padding-top: 100px; padding-bottom: 40px; gap: 20px; }
@@ -175,11 +194,17 @@
                         <div class="res-label">📱 결합 할인 적용 요금</div>
                         <div class="res-val" id="res-comb" style="color:#1A202C;">0<span>원/월</span></div>
                     </div>
+                    <div class="res-col" id="region-display-area">
+                        <div class="res-label">🗺️ 설치 가용 지역</div>
+                        <div id="region-content-slot">
+                            <div class="normal-region-box">🏠 전국 어디서나<br>전지역 즉시 설치!</div>
+                        </div>
+                    </div>
                 </div>
                 <div class="subsidy-box">
-                   <div class="res-label" style="color:#DD6B20; font-weight:900; font-size:16px;">💰 사거리 특별 독점 지원금 (설치당일 입금) </div>
-    <div class="res-val subsidy-val" id="res-subsidy">0원</div>
-</div>
+                   <div class="res-label" style="color:#DD6B20; font-weight:900; font-size:16px;">💰 사거리 특별 독점 지원금 (설치당일 입금) 🪙</div>
+                    <div class="res-val subsidy-val" id="res-subsidy">0원</div>
+                </div>
             </div>
             <div id="res-special" style="margin-top:25px; font-weight:900; color:var(--fire-orange); font-size:18px;"></div>
         </div>
@@ -200,12 +225,15 @@
         <div class="review-rolling-viewport"><div class="review-movable-belt" id="rolling-belt"></div></div>
     </div>
 
-    <div class="footer">© 사거리인터넷 ALL RIGHTS RESERVED. | 실시간 단가표 데이터 구글 시트 연동 HOLDING.</div>
+    <div class="footer">© 사거리인터넷 ALL RIGHTS RESERVED. | 실시간 단가표 데이터 구글 시트 연동 COMPLETION.</div>
 
     <script>
         const sheetId = '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
         const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&_=${Date.now()}`;
         let allData = [], curProv = 'KT', curProd = '단독';
+
+        // 🗺️ 하드코딩 없는 순수 구글 시트 기반 헬로비전 지역 데이터베이스 배열
+        let hellovisionRegions = [];
 
         function createConfetti() {
             const container = document.getElementById('boss-section'); if(!container) return;
@@ -222,7 +250,6 @@
             try {
                 const response = await fetch(csvUrl); const text = await response.text();
                 
-                // 🔒 [방탄 보호 장치 완료] 큰따옴표 내부에 부활한 구글 시트 콤마(,) 서식으로 인한 칸 밀림을 원천 차단하는 고급 CSV 정규식 분류기
                 const rows = text.split(/\r?\n/).map(line => {
                     const result = []; let current = '', inQuotes = false;
                     for (let i = 0; i < line.length; i++) {
@@ -235,6 +262,15 @@
                 });
 
                 allData = rows.slice(1).filter(r => r[0] && r[0].trim() !== "");
+                
+                // 🗺️ 구글 시트 원본 로우데이터에서 통신사가 '헬로' 혹은 '헬로비전'인 행의 [지역(Index 9), 상세구역(Index 10)] 컬럼 추출기 활성화
+                hellovisionRegions = allData
+                    .filter(row => row[0] && row[0].trim().includes('헬로') && row[9] && row[10])
+                    .map(row => ({
+                        city: row[9].trim(),
+                        districts: row[10].replace(/"/g, '').trim()
+                    }));
+
                 updateOptions(); setInterval(createConfetti, 500); initLiveReviews();
             } catch (e) { console.error('시트 연동 상태 확인 중'); }
         }
@@ -247,6 +283,7 @@
                 { user: "이*민 사장님 (인천 식당 매장)", text: "소상공인 결합에 CCTV 가입 복잡했는데 유선으로 단가 싹 깎아주시고 떡값 지원 엄청 납니다.", stars: "★★★★★", time: "34분 전" },
                 { user: "최*철 사장님 (부산 카페 창업)", text: "KT 오피스 단체 인터넷 알아보다가 혜택 가장 좋아서 계약 완료했습니다. 강추해요.", stars: "★★★★★", time: "1시간 전" }
             ];
+            belt.innerHTML = '';
             rawReviews.forEach(r => {
                 const row = document.createElement('div'); row.className = 'review-row';
                 row.innerHTML = `<div class="review-left-info"><div class="review-user">${r.user} <span>${r.time}</span></div><div class="review-text" title="${r.text}">${r.text}</div></div><div class="review-stars">${r.stars}</div>`;
@@ -264,6 +301,16 @@
         function setProvider(p, el) { document.querySelectorAll('.logo-options .logo-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); curProv = p; updateOptions(); }
         function setProduct(p, el) { document.querySelectorAll('.text-options .text-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); curProd = p; updateOptions(); }
 
+        // 🗺️ 실시간 아코디언 ON/OFF 및 화살표 회전 처리 함수
+        function toggleRegionAccordion() {
+            const panel = document.getElementById('region-list-panel');
+            const arrow = document.getElementById('accordion-arrow');
+            if(panel && arrow) {
+                panel.classList.toggle('open');
+                arrow.classList.toggle('open');
+            }
+        }
+
         function updateOptions() {
             const speedBox = document.getElementById('speed-box'); if (!speedBox) return; speedBox.innerHTML = '';
             const filteredRows = allData.filter(row => {
@@ -279,6 +326,46 @@
             });
             const speeds = [...new Set(filteredRows.map(row => row[2].trim()))];
             speeds.sort((a, b) => (b.includes('1G') ? 1000 : parseInt(b) || 100) - (a.includes('1G') ? 1000 : parseInt(a) || 100));
+
+            // 🗺️ 1단계 통신사 선택에 따른 실시간 우측 가용지역 UI 스위칭 스크립트
+            const slot = document.getElementById('region-content-slot');
+            if(slot) {
+                if(curProv === '헬로') {
+                    // 구글 시트에서 긁어온 실제 행 개수만큼 동적으로 표 구성
+                    let tableRowsHtml = '';
+                    if(hellovisionRegions.length > 0) {
+                        hellovisionRegions.forEach(r => {
+                            tableRowsHtml += `<tr><td><span class="region-tag">${r.city}</span></td><td>${r.districts}</td></tr>`;
+                        });
+                    } else {
+                        tableRowsHtml = `<tr><td colspan="2" style="text-align:center;color:#A0AEC0;">가용지역 데이터 로딩중...</td></tr>`;
+                    }
+
+                    slot.innerHTML = `
+                        <div class="accordion-wrapper">
+                            <button class="accordion-trigger" onclick="toggleRegionAccordion()">
+                                <img src="헬로비전로고.png" alt="헬로">
+                                <span>📍 설치 가능 지역 확인 ▼</span>
+                                <span class="accordion-arrow" id="accordion-arrow">▼</span>
+                            </button>
+                            <div class="accordion-panel" id="region-list-panel">
+                                <div class="panel-scroll-box">
+                                    <table class="region-table">
+                                        <thead>
+                                            <tr><th style="width:70px;">시/도</th><th>상세 구역 명칭</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            ${tableRowsHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    slot.innerHTML = `<div class="normal-region-box">🏠 전국 어디서나<br>전지역 즉시 설치!</div>`;
+                }
+            }
 
             if (speeds.length > 0) {
                 speeds.forEach((speed, i) => {
@@ -305,7 +392,6 @@
                 tvLayer.style.display = 'none'; if (finalRows.length > 0) showResult(finalRows[0]);
             } else {
                 tvLayer.style.display = 'block';
-                // 🔥 [기획 고도화] 결합 최종요금을 역추적하여 무조건 고가 프리미엄 상품부터 왼쪽 대가리로 노출되도록 강제 정렬 완료
                 finalRows.sort((a, b) => {
                     const priceA = parseInt(a[6].replace(/[^0-9]/g, "")) || 0;
                     const priceB = parseInt(b[6].replace(/[^0-9]/g, "")) || 0;
@@ -326,7 +412,6 @@
         function showResult(row) {
             const cleanRow = row.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
             
-            // 🔒 [버그 완치] 쉼표 특수문자를 강제로 싹 지우고 순수 숫자만 발라내어 정밀 파싱 (인덱스 밀림 100% 방어)
             const basePriceRaw = cleanRow[4].replace(/[^0-9]/g, "") || "0";
             const basePrice = parseInt(basePriceRaw) ? parseInt(basePriceRaw).toLocaleString() : cleanRow[4];
             let combPrice = ""; let subsidy = cleanRow[7] || "0", special = cleanRow[8] || "";
@@ -354,10 +439,6 @@
             if(special) { specEl.innerHTML = `🔥 털보아저씨의 특별 보너스: ${special} 🔥`; } else { specEl.textContent = ""; }
         }
 
-        function switchForm(k, el) {
-            document.querySelectorAll('.c-tab-btn').forEach(b=>b.classList.remove('active')); el.classList.add('active');
-            document.querySelectorAll('.form-panel').forEach(p=>p.classList.remove('active')); document.getElementById('form-'+k).classList.add('active');
-        }
         window.onload = loadData;
     </script>
 </body>
