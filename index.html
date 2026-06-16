@@ -236,6 +236,7 @@
 
         let allData = [], curProv = 'KT', curProd = '단독';
         let hellovisionRegions = [];
+        let skPopRegions = []; 
 
         function createConfetti() {
             const container = document.getElementById('boss-section'); if(!container) return;
@@ -277,8 +278,15 @@
                             city: row[1].trim(),
                             districts: row[2].replace(/"/g, '').trim()
                         }));
+
+                    skPopRegions = rRows.slice(1)
+                        .filter(row => row[0] && row[0].trim() === 'SK POP' && row[1] && row[2])
+                        .map(row => ({
+                            city: row[1].trim(),
+                            districts: row[2].replace(/"/g, '').trim()
+                        }));
                 } catch(eRegion) {
-                    console.error("가용지역 탭 연동 오류", eRegion);
+                    console.error("가용지역 데이터 로드 오류", eRegion);
                 }
 
                 updateOptions(); setInterval(createConfetti, 500); initLiveReviews();
@@ -412,6 +420,37 @@
                             </div>
                         </div>
                     `;
+                } else if(curProv === 'SK' && curProd === '요금할인형') {
+                    let tableRowsHtml = '';
+                    if(skPopRegions.length > 0) {
+                        skPopRegions.forEach(r => {
+                            tableRowsHtml += `<tr><td><span class="region-tag">${r.city}</span></td><td>${r.districts}</td></tr>`;
+                        });
+                    } else {
+                        tableRowsHtml = `<tr><td colspan="2" style="text-align:center;color:#A0AEC0;padding:15px;">시트 내 'SK POP' 지역 라인을 조회하는 중입니다...</td></tr>`;
+                    }
+
+                    slot.innerHTML = `
+                        <div class="accordion-wrapper">
+                            <button class="accordion-trigger" onclick="toggleRegionAccordion()">
+                                <span style="font-weight:900; color:#E53E3E;">[SK POP 전용]</span>
+                                <span style="margin-left:5px;">📍 설치 가능 지역 확인 ▼</span>
+                                <span class="accordion-arrow" id="accordion-arrow">▼</span>
+                            </button>
+                            <div class="accordion-panel" id="region-list-panel">
+                                <div class="panel-scroll-box">
+                                    <table class="region-table">
+                                        <thead>
+                                            <tr><th style="width:70px;">시/도</th><th>상세 구역 명칭</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            ${tableRowsHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 } else {
                     slot.innerHTML = `<div class="normal-region-box">🏠 전국 어디서나<br>전지역 즉시 설치!</div>`;
                 }
@@ -508,7 +547,7 @@
                     document.getElementById('comb-display-area').style.display = "none";
                     document.getElementById('label-base').textContent = "본사 실속 요금";
                     if (baseEl) {
-                        baseEl.style.textDecoration = "none";
+                        document.getElementById('text-decoration').style.textDecoration = "none";
                         baseEl.style.color = "#1A202C";
                         baseEl.style.fontSize = "34px";
                         baseEl.style.fontWeight = "900";
