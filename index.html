@@ -409,12 +409,27 @@
             const basePriceRaw = cleanRow[4].replace(/[^0-9]/g, "") || "0";
             const basePrice = parseInt(basePriceRaw) ? parseInt(basePriceRaw).toLocaleString() : cleanRow[4];
             let combPrice = ""; let subsidy = cleanRow[7] || "0", special = cleanRow[8] || "";
+            
             const isAlthempone = curProv === '스카이' || curProv === '헬로';
+            const baseEl = document.getElementById('res-base');
 
             if (isAlthempone) {
                 document.getElementById('comb-display-area').style.display = "none";
                 document.getElementById('label-base').textContent = "알뜰 실속 요금";
+                
+                // 🚨 [방탄 요금 버그 완치] 취소선 완전 제거 및 크고 진한 검은색(#1A202C)으로 강제 전환
+                if (baseEl) {
+                    baseEl.style.textDecoration = "none";
+                    baseEl.style.color = "#1A202C";
+                    baseEl.style.fontSize = "34px";
+                }
             } else {
+                if (baseEl) {
+                    baseEl.style.textDecoration = "line-through";
+                    baseEl.style.color = "#A0AEC0";
+                    baseEl.style.fontSize = "24px";
+                }
+
                 const dcPriceRaw = parseInt(cleanRow[5].replace(/[^0-9]/g, "")) || 0;
                 if (dcPriceRaw > 0) {
                     document.getElementById('comb-display-area').style.display = "block";
@@ -425,9 +440,17 @@
                 } else {
                     document.getElementById('comb-display-area').style.display = "none";
                     document.getElementById('label-base').textContent = "본사 실속 요금";
+                    if (baseEl) {
+                        baseEl.style.textDecoration = "none";
+                        baseEl.style.color = "#1A202C";
+                        baseEl.style.fontSize = "34px";
+                    }
                 }
             }
-            document.getElementById('res-base').textContent = basePrice.includes('원') ? basePrice : basePrice + '원';
+            
+            if (baseEl) {
+                baseEl.innerHTML = basePrice.includes('원') ? basePrice : `${basePrice}<span>원</span>`;
+            }
             document.getElementById('res-subsidy').textContent = subsidy.includes('원') ? subsidy : subsidy + '원';
             const specEl = document.getElementById('res-special');
             if(special) { specEl.innerHTML = `🔥 털보아저씨의 특별 보너스: ${special} 🔥`; } else { specEl.textContent = ""; }
