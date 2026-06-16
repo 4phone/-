@@ -202,7 +202,7 @@
                     </div>
                 </div>
                 <div class="subsidy-box">
-                   <div class="res-label" style="color:#DD6B20; font-weight:900; font-size:16px;">💰 사거리 특별 독점 지원금 (설치당일 입금) 🪙</div>
+                   <div class="res-label" style="color:#DD6B20; font-weight:900; font-size:16px;">사거리 특별 독점 지원금 (설치당일입금)</div>
                     <div class="res-val subsidy-val" id="res-subsidy">0원</div>
                 </div>
             </div>
@@ -231,8 +231,6 @@
         const sheetId = '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
         const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&_=${Date.now()}`;
         let allData = [], curProv = 'KT', curProd = '단독';
-
-        // 🗺️ 하드코딩 없는 순수 구글 시트 기반 헬로비전 지역 데이터베이스 배열
         let hellovisionRegions = [];
 
         function createConfetti() {
@@ -263,7 +261,6 @@
 
                 allData = rows.slice(1).filter(r => r[0] && r[0].trim() !== "");
                 
-                // 🗺️ 구글 시트 원본 로우데이터에서 통신사가 '헬로' 혹은 '헬로비전'인 행의 [지역(Index 9), 상세구역(Index 10)] 컬럼 추출기 활성화
                 hellovisionRegions = allData
                     .filter(row => row[0] && row[0].trim().includes('헬로') && row[9] && row[10])
                     .map(row => ({
@@ -301,7 +298,6 @@
         function setProvider(p, el) { document.querySelectorAll('.logo-options .logo-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); curProv = p; updateOptions(); }
         function setProduct(p, el) { document.querySelectorAll('.text-options .text-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); curProd = p; updateOptions(); }
 
-        // 🗺️ 실시간 아코디언 ON/OFF 및 화살표 회전 처리 함수
         function toggleRegionAccordion() {
             const panel = document.getElementById('region-list-panel');
             const arrow = document.getElementById('accordion-arrow');
@@ -327,11 +323,9 @@
             const speeds = [...new Set(filteredRows.map(row => row[2].trim()))];
             speeds.sort((a, b) => (b.includes('1G') ? 1000 : parseInt(b) || 100) - (a.includes('1G') ? 1000 : parseInt(a) || 100));
 
-            // 🗺️ 1단계 통신사 선택에 따른 실시간 우측 가용지역 UI 스위칭 스크립트
             const slot = document.getElementById('region-content-slot');
             if(slot) {
                 if(curProv === '헬로') {
-                    // 구글 시트에서 긁어온 실제 행 개수만큼 동적으로 표 구성
                     let tableRowsHtml = '';
                     if(hellovisionRegions.length > 0) {
                         hellovisionRegions.forEach(r => {
