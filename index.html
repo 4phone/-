@@ -316,6 +316,7 @@
             }, 1200);
         }
 
+        // 🚨 [동적 변신 스케일 업] 1단계 통신사별 2단계 상품구성 버튼 동적 체인지
         function setProvider(p, el) { 
             document.querySelectorAll('.logo-options .logo-btn').forEach(b => b.classList.remove('active')); 
             el.classList.add('active'); 
@@ -323,11 +324,18 @@
 
             const menuBox = document.getElementById('product-type-box');
             if(menuBox) {
+                // SK 브로드밴드나 스카이라이프를 누르면 하위 요금할인형 버튼을 추가 개설
                 if(curProv === 'SK') {
                     menuBox.innerHTML = `
                         <div class="text-btn active" onclick="setProduct('단독', this)">💻 인터넷 단독상품</div>
                         <div class="text-btn" onclick="setProduct('결합', this)">📺 인터넷 + TV 결합상품</div>
                         <div class="text-btn" onclick="setProduct('요금할인형', this)">🔥 요금할인형 (SK POP)</div>
+                    `;
+                } else if(curProv === '스카이') {
+                    menuBox.innerHTML = `
+                        <div class="text-btn active" onclick="setProduct('단독', this)">💻 인터넷 단독상품</div>
+                        <div class="text-btn" onclick="setProduct('결합', this)">📺 인터넷 + TV 결합상품</div>
+                        <div class="text-btn" onclick="setProduct('요금할인형', this)">🔥 요금할인형 (스카이 특가)</div>
                     `;
                 } else {
                     if(curProd === '요금할인형') curProd = '단독';
@@ -361,8 +369,13 @@
             const step3Title = document.getElementById('step3-title');
             const step4Title = document.getElementById('step4-title');
 
-            if(curProd === '요금할인형' && curProv === 'SK') {
-                if(step3Title) step3Title.textContent = "3단계: SK 자회사 독점! 결합 특가 라인업을 골라주세요";
+            // 🚨 [마케팅 기획 연동] 요금할인형 상태이면 3단계 타이틀 문구 자동 변신
+            if(curProd === '요금할인형') {
+                if(curProv === 'SK') {
+                    step3Title.textContent = "3단계: SK 자회사 독점! 결합 특가 라인업을 골라주세요";
+                } else if(curProv === '스카이') {
+                    step3Title.textContent = "3단계: 스카이라이프 독점! 결합 특가 라인업을 골라주세요";
+                }
                 if(step4Title) step4Title.textContent = "4단계: 원하시는 할인 유형을 골라주세요";
             } else {
                 if(step3Title) step3Title.textContent = "3단계: 희망하시는 인터넷 속도를 골라주세요";
@@ -387,6 +400,7 @@
                 speeds.sort((a, b) => (b.includes('1G') ? 1000 : parseInt(b) || 100) - (a.includes('1G') ? 1000 : parseInt(a) || 100));
             }
 
+            // 가용지역 조건부 스위칭 슬롯 마감
             const slot = document.getElementById('region-content-slot');
             if(slot) {
                 if(curProv === '헬로') {
@@ -452,6 +466,7 @@
                         </div>
                     `;
                 } else {
+                    // 스카이라이프 요금할인형을 포함한 타 일반 대기업 망들은 기본적으로 전국 즉시 설치박스 출력 노출
                     slot.innerHTML = `<div class="normal-region-box">🏠 전국 어디서나<br>전지역 즉시 설치!</div>`;
                 }
             }
@@ -516,7 +531,11 @@
                 document.getElementById('comb-display-area').style.display = "none";
                 
                 if(curProd === '요금할인형') {
-                    document.getElementById('label-base').textContent = "SK 요금할인형 특가";
+                    if(curProv === 'SK') {
+                        document.getElementById('label-base').textContent = "SK 요금할인형 특가";
+                    } else if(curProv === '스카이') {
+                        document.getElementById('label-base').textContent = "스카이 요금할인형 특가";
+                    }
                 } else {
                     document.getElementById('label-base').textContent = "알뜰 실속 요금";
                 }
@@ -547,7 +566,7 @@
                     document.getElementById('comb-display-area').style.display = "none";
                     document.getElementById('label-base').textContent = "본사 실속 요금";
                     if (baseEl) {
-                        document.getElementById('text-decoration').style.textDecoration = "none";
+                        baseEl.style.textDecoration = "none";
                         baseEl.style.color = "#1A202C";
                         baseEl.style.fontSize = "34px";
                         baseEl.style.fontWeight = "900";
