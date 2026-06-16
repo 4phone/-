@@ -417,7 +417,6 @@
                 document.getElementById('comb-display-area').style.display = "none";
                 document.getElementById('label-base').textContent = "알뜰 실속 요금";
                 
-                // 🚨 [방탄 요금 버그 완치] 취소선 완전 제거 및 크고 진한 검은색(#1A202C)으로 강제 전환
                 if (baseEl) {
                     baseEl.style.textDecoration = "none";
                     baseEl.style.color = "#1A202C";
@@ -441,6 +440,7 @@
                     document.getElementById('comb-display-area').style.display = "none";
                     document.getElementById('label-base').textContent = "본사 실속 요금";
                     if (baseEl) {
+                        document.getElementById('label-base').textContent = "본사 실속 요금";
                         baseEl.style.textDecoration = "none";
                         baseEl.style.color = "#1A202C";
                         baseEl.style.fontSize = "34px";
@@ -448,8 +448,13 @@
                 }
             }
             
+            // 🚨 [단위 매칭 완치] 알뜰 통신사일 때도 뒤에 깔끔하게 <span>원/월</span> 세팅 완료
             if (baseEl) {
-                baseEl.innerHTML = basePrice.includes('원') ? basePrice : `${basePrice}<span>원</span>`;
+                if (isAlthempone) {
+                    baseEl.innerHTML = `${basePrice}<span>원/월</span>`;
+                } else {
+                    baseEl.innerHTML = basePrice.includes('원') ? basePrice : `${basePrice}<span>원</span>`;
+                }
             }
             document.getElementById('res-subsidy').textContent = subsidy.includes('원') ? subsidy : subsidy + '원';
             const specEl = document.getElementById('res-special');
