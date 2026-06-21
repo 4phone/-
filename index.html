@@ -81,6 +81,20 @@
         .subsidy-box { width: 100%; max-width: 760px; margin: 0 auto; background: linear-gradient(135deg, #FFFDF5 0%, #FFF3E0 100%); border: 3px solid #FFB74D; border-radius: 20px; padding: 22px 15px; box-sizing: border-box; text-align: center; }
         .subsidy-val { color: var(--fire-orange); font-size: 40px; font-weight: 900; margin-top: 5px; }
         
+        /* 신설 가입신청 섹션 UI 스타일링 */
+        .calc-apply-trigger-btn { display: block; width: 100%; max-width: 760px; margin: 25px auto 0 auto; padding: 20px; background: linear-gradient(135deg, var(--fire-orange) 0%, #E64A19 100%); border: none; border-radius: 16px; color: #fff; font-family: inherit; font-size: 18px; font-weight: 900; cursor: pointer; text-align: center; box-shadow: 0 8px 25px rgba(255,87,34,0.35); transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .calc-apply-trigger-btn:hover { transform: scale(1.02); background: linear-gradient(135deg, #FF6E40 0%, var(--fire-orange) 100%); }
+        .calc-dynamic-apply-panel { display: none; width: 100%; max-width: 760px; margin: 20px auto 0 auto; background: #1A202C; border: 2px solid #4A5568; border-radius: 20px; padding: 25px; box-sizing: border-box; text-align: left; animation: slideDown 0.3s ease-out forwards; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .apply-product-summary-box { background: rgba(255,255,255,0.05); border-left: 5px solid #48BB78; padding: 15px; border-radius: 4px 10px 10px 4px; margin-bottom: 20px; }
+        .apply-product-title { font-size: 14px; font-weight: 700; color: #A0AEC0; margin-bottom: 6px; }
+        .apply-product-value { font-size: 18px; font-weight: 900; color: #48BB78; line-height: 1.4; }
+        .apply-input-row { display: flex; gap: 12px; margin-bottom: 15px; }
+        .apply-input-row input { flex: 1; padding: 15px; border: 2px solid #4A5568; border-radius: 10px; background: #2D3748; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; transition: 0.2s; }
+        .apply-input-row input:focus { border-color: #48BB78; background: #1A202C; outline: none; }
+        .apply-submit-final-btn { width: 100%; padding: 18px; background: #48BB78; border: none; font-family: inherit; font-size: 16px; font-weight: 900; color: #fff; border-radius: 12px; cursor: pointer; transition: 0.2s; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        .apply-submit-final-btn:hover { background: #38A169; box-shadow: 0 5px 15px rgba(72,187,120,0.4); }
+
         #gift-section { background: rgba(0, 0, 0, 0.1); }
         .gift-grid { max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
         .gift-grid .gift-card { background: #fff; color: #2D3748; border-radius: 18px; padding: 20px; text-align: center; border: 1px solid #E2E8F0; transition: 0.3s; }
@@ -110,6 +124,14 @@
             .text-btn { width: 100% !important; text-align: center; font-size: 14px; padding: 14px; } .res-row-prices { flex-direction: column; gap: 15px; }
             .res-val { font-size: 26px; } .subsidy-val { font-size: 28px; }
             .review-rolling-viewport { height: 260px; } .review-row { height: 78px; padding: 12px 15px; } .review-text { max-width: 240px; font-size: 12px; } .review-stars { display: none; }
+            
+            /* 모바일 대응 가입신청 레이아웃 패치 */
+            .calc-apply-trigger-btn { font-size: 15px; padding: 16px; margin-top: 20px; }
+            .calc-dynamic-apply-panel { padding: 15px; }
+            .apply-product-value { font-size: 15px; }
+            .apply-input-row { flex-direction: column; gap: 8px; }
+            .apply-input-row input { width: 100%; padding: 13px; font-size: 14px; }
+            .apply-submit-final-btn { padding: 15px; font-size: 15px; }
         }
     </style>
 </head>
@@ -139,8 +161,8 @@
                         <button class="c-tab-btn" onclick="switchForm('kakao', this)">💬 카톡 1:1상담</button>
                     </div>
                     <div class="form-panel active" id="form-fast">
-                        <div class="form-group"><input type="text" placeholder="성함을 적어주세요"></div>
-                        <div class="form-group"><input type="text" placeholder="연락처를 적어주세요"></div>
+                        <div class="form-group"><input type="text" id="main-fast-name" placeholder="성함을 적어주세요"></div>
+                        <div class="form-group"><input type="text" id="main-fast-phone" placeholder="연락처를 적어주세요"></div>
                         <button class="submit-btn" onclick="alert('접수 완료!')">화끈하게 빠른 상담 신청</button>
                         <a href="tel:1833-2440" class="phone-call-btn">📞 직통 전화걸기: 1833-2440</a>
                     </div>
@@ -212,6 +234,25 @@
                 </div>
             </div>
             <div id="res-special" style="margin-top:25px; font-weight:900; color:var(--fire-orange); font-size:18px;"></div>
+            
+            <button class="calc-apply-trigger-btn" id="calc-apply-btn" onclick="openCalculateApplyForm()">
+                🔥 내가 고른 조건으로 즉시 가입신청하기 (1초 완성) ▼
+            </button>
+            
+            <div class="calc-dynamic-apply-panel" id="calc-apply-panel">
+                <div class="apply-product-summary-box">
+                    <div class="apply-product-title">신청하시는 상품</div>
+                    <div class="apply-product-value" id="apply-product-text-summary">KT / 인터넷 단독상품 / 500M</div>
+                </div>
+                <div class="apply-input-row">
+                    <input type="text" id="calc-apply-name" placeholder="성함을 적어주세요">
+                    <input type="text" id="calc-apply-phone" placeholder="연락처를 적어주세요">
+                </div>
+                <button class="apply-submit-final-btn" onclick="submitCalculateApplyForm()">
+                    🚀 위 조건 그대로 화끈하게 가입 신청하기
+                </button>
+            </div>
+
         </div>
     </div>
 
@@ -243,6 +284,9 @@
         let allData = [], curProv = 'KT', curProd = '단독';
         let hellovisionRegions = [];
         let skPopRegions = []; 
+        
+        // 현재 최종 엄선된 데이터 기록 보관용 글로벌 변수 파츠
+        let currentSelectedString = "";
 
         function createConfetti() {
             const container = document.getElementById('boss-section'); if(!container) return;
@@ -532,6 +576,8 @@
             const isAlthempone = curProv === '스카이' || curProv === '헬로' || curProd === '요금할인형';
             const baseEl = document.getElementById('res-base');
 
+            let printableProductDetail = "";
+
             if (isAlthempone) {
                 document.getElementById('comb-display-area').style.display = "none";
                 if(curProd === '요금할인형') {
@@ -546,6 +592,7 @@
                 if (baseEl) {
                     baseEl.style.textDecoration = "none"; baseEl.style.color = "#1A202C"; baseEl.style.fontSize = "34px"; baseEl.style.fontWeight = "900"; baseEl.style.transform = "none";
                 }
+                printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]}`;
             } else {
                 if (baseEl) {
                     baseEl.style.textDecoration = "line-through"; baseEl.style.color = "#A0AEC0"; baseEl.style.fontSize = "24px"; baseEl.style.fontWeight = "700";
@@ -560,6 +607,7 @@
                     document.getElementById('comb-display-area').style.display = "none"; document.getElementById('label-base').textContent = "본사 실속 요금";
                     if (baseEl) { baseEl.style.textDecoration = "none"; baseEl.style.color = "#1A202C"; baseEl.style.fontSize = "34px"; baseEl.style.fontWeight = "900"; }
                 }
+                printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]} / ${cleanRow[3]}`;
             }
             if (baseEl) {
                 if (isAlthempone) { baseEl.innerHTML = `${basePrice}<span>원/월</span>`; } 
@@ -568,6 +616,62 @@
             document.getElementById('res-subsidy').textContent = subsidy.includes('원') ? subsidy : subsidy + '원';
             const specEl = document.getElementById('res-special');
             if(special) { specEl.innerHTML = `🔥 털보아저씨의 특별 보너스: ${special} 🔥`; } else { specEl.textContent = ""; }
+            
+            // 실시간 가입신청 양식 텍스트 슬롯 업데이트 동기화
+            currentSelectedString = printableProductDetail;
+            const summarySlot = document.getElementById('apply-product-text-summary');
+            if(summarySlot) {
+                summarySlot.textContent = currentSelectedString;
+            }
+            
+            // 고객이 조건을 바꾸면 신청 완료 레이어가 뜬 상태일 때 실시간 동기화 피드백을 유지하되, 굳이 창을 닫진 않습니다.
+        }
+
+        // 가입신청 아코디언 토글 제어 및 정밀 스크롤 이동 함수
+        function openCalculateApplyForm() {
+            const panel = document.getElementById('calc-apply-panel');
+            const triggerBtn = document.getElementById('calc-apply-btn');
+            if(panel) {
+                if(panel.style.display === "block") {
+                    panel.style.display = "none";
+                    if(triggerBtn) triggerBtn.textContent = "🔥 내가 고른 조건으로 즉시 가입신청하기 (1초 완성) ▼";
+                } else {
+                    panel.style.display = "block";
+                    if(triggerBtn) triggerBtn.textContent = "▲ 가입 신청창 접기";
+                    
+                    // 모바일 및 PC 가독성 픽스: 입력창 오픈 시 해당 위치로 자연스럽게 스크롤 포커싱
+                    setTimeout(() => {
+                        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }, 100);
+                }
+            }
+        }
+
+        // 가입신청 데이터 수집 및 전송 스크립트
+        function submitCalculateApplyForm() {
+            const nameVal = document.getElementById('calc-apply-name').value.trim();
+            const phoneVal = document.getElementById('calc-apply-phone').value.trim();
+            
+            if(!nameVal) {
+                alert('성함을 입력해 주세요!');
+                document.getElementById('calc-apply-name').focus();
+                return;
+            }
+            if(!phoneVal) {
+                alert('연락처를 입력해 주세요!');
+                document.getElementById('calc-apply-phone').focus();
+                return;
+            }
+            
+            // 기존 팝업 알림 시스템에 완벽 가인 바인딩 출력
+            alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n성함: ${nameVal}\n연락처: ${phoneVal}\n\n사거리인터넷에서 확인 후 당일 신속하게 연락드리겠습니다!`);
+            
+            // 접수 후 깔끔하게 폼 초기화 및 닫기 마감
+            document.getElementById('calc-apply-name').value = "";
+            document.getElementById('calc-apply-phone').value = "";
+            document.getElementById('calc-apply-panel').style.display = "none";
+            const triggerBtn = document.getElementById('calc-apply-btn');
+            if(triggerBtn) triggerBtn.textContent = "🔥 내가 고른 조건으로 즉시 가입신청하기 (1초 완성) ▼";
         }
 
         function switchForm(type, el) {
