@@ -39,8 +39,13 @@
         .form-group input { width: 100%; padding: 13px; border-radius: 8px; border: 2px solid #E2E8F0; margin-bottom: 12px; font-size: 14px; font-family: inherit; }
         .submit-btn { width: 100%; padding: 15px; background: var(--gold-color); border: none; font-weight: 900; font-size: 16px; border-radius: 8px; cursor: pointer; color: #111; transition: 0.2s; }
         .submit-btn:hover { background: #F6C200; }
+        
+        /* 메인 상담창 유입 채널 디자인 파츠 (전화/문자 나란히 세트 배치) */
         .phone-call-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 10px; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.3); color: #fff; font-weight: 900; font-size: 14px; text-decoration: none; transition: 0.2s; }
-        .phone-call-btn:hover { border-color: var(--gold-color); color: var(--gold-color); }
+        .phone-call-btn:hover { border-color: var(--gold-color); color: var(--gold-color); background: rgba(255,215,0,0.05); }
+        .main-sms-routing-btn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 8px; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.3); color: #fff; font-weight: 900; font-size: 14px; text-decoration: none; transition: 0.2s; cursor: pointer; }
+        .main-sms-routing-btn:hover { border-color: #48BB78; color: #48BB78; background: rgba(72,187,120,0.05); }
+
         .kakao-btn-style { display: block; background: #FEE500; color: #111; text-decoration: none; padding: 18px; border-radius: 8px; font-weight: 900; text-align: center; font-size: 16px; }
         
         .calc-wrapper { max-width: 980px; margin: 0 auto; background: #fff; border-radius: 24px; padding: 40px; color: #2D3748; box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
@@ -94,7 +99,6 @@
         .apply-submit-final-btn { width: 100%; padding: 18px; background: #48BB78; border: none; font-family: inherit; font-size: 16px; font-weight: 900; color: #fff; border-radius: 12px; cursor: pointer; transition: 0.2s; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
         .apply-submit-final-btn:hover { background: #38A169; box-shadow: 0 5px 15px rgba(72,187,120,0.4); }
         
-        /* 신설: 문자접수 서브 버튼 스타일 */
         .apply-sms-routing-btn { display: block; width: 100%; text-align: center; margin-top: 10px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.2); color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; transition: 0.2s; }
         .apply-sms-routing-btn:hover { border-color: var(--gold-color); color: var(--gold-color); background: rgba(255,215,0,0.05); }
 
@@ -159,15 +163,16 @@
                     <div class="consult-tabs">
                         <button class="c-tab-btn active" onclick="switchForm('fast', this)">⚡ 간편 빠른상담</button>
                         <button class="c-tab-btn" onclick="switchForm('full', this)">📝 원스톱 다이렉트접수</button>
-                        <!-- ★ 실시간 카카오 채널 연결 완료 파츠 -->
                         <button class="c-tab-btn" onclick="window.open('http://pf.kakao.com/_PxjsKG/chat', '_blank')">💬 카톡 1:1상담</button>
                     </div>
                     <div class="form-panel active" id="form-fast">
                         <div class="form-group"><input type="text" id="main-fast-name" placeholder="성함을 적어주세요"></div>
                         <div class="form-group"><input type="text" id="main-fast-phone" placeholder="연락처를 적어주세요"></div>
                         <button class="submit-btn" onclick="alert('접수 완료!')">화끈하게 빠른 상담 신청</button>
-                        <!-- ★ 모바일 원터치 대표번호 전화연결 패치 완료 -->
+                        
+                        <!-- ★ 메인 상담 구역 인바운드 듀얼 채널 매칭 (전화/문자 연동 라인업) -->
                         <a href="tel:18332440" class="phone-call-btn">📞 직통 전화걸기: 1833-2440</a>
+                        <a href="#" class="main-sms-routing-btn" onclick="triggerMainFastSms(event)">💬 문자로 상담 접수: 010-6414-2444</a>
                     </div>
                     <div class="form-panel" id="form-full">
                         <div class="form-group"><input type="text" placeholder="성함 입력"></div>
@@ -250,8 +255,6 @@
                 <button class="apply-submit-final-btn" onclick="submitCalculateApplyForm()">
                     🚀 위 조건 그대로 화끈하게 가입 신청하기
                 </button>
-                
-                <!-- ★ [기믹] 010-6414-2444 문자 자동생성 스마트 링크 탑재형 버튼 파츠 -->
                 <a href="#" id="calc-sms-direct-btn" class="apply-sms-routing-btn" onclick="triggerSmsRouting(event)">
                     💬 털보아저씨에게 문자로 상담 접수하기
                 </a>
@@ -551,18 +554,27 @@
             }
         }
 
-        // ★ 모바일 기기별 문자 메시지 생성 전용 함수
-        function triggerSmsRouting(e) {
+        // ★ [기믹] 상단 메인 간편 상담용 문자 발송 시스템 
+        function triggerMainFastSms(e) {
             e.preventDefault();
             const targetPhone = "01064142444";
-            const smsBody = `[사거리 가입신청] ${currentSelectedString} 상담 요청합니다.`;
-            
-            // 아이폰(iOS)과 안드로이드의 sms 규격 파싱 통합 제어 기믹
+            const smsBody = `[사거리인터넷] 인터넷 가입 빠른 상담 요청합니다.`;
             const isTargetIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             const smsLink = isTargetIos 
                 ? `sms:${targetPhone}&body=${encodeURIComponent(smsBody)}` 
                 : `sms:${targetPhone}?body=${encodeURIComponent(smsBody)}`;
-                
+            window.location.href = smsLink;
+        }
+
+        // 요금 계산기 조건 연동형 하단 문자 발송 시스템
+        function triggerSmsRouting(e) {
+            e.preventDefault();
+            const targetPhone = "01064142444";
+            const smsBody = `[사거리 가입신청] ${currentSelectedString} 상담 요청합니다.`;
+            const isTargetIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const smsLink = isTargetIos 
+                ? `sms:${targetPhone}&body=${encodeURIComponent(smsBody)}` 
+                : `sms:${targetPhone}?body=${encodeURIComponent(smsBody)}`;
             window.location.href = smsLink;
         }
 
