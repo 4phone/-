@@ -111,10 +111,8 @@
         .apply-sms-routing-btn:hover { border-color: var(--gold-color); color: var(--gold-color); background: rgba(255,215,0,0.05); }
 
         #gift-section { background: rgba(0, 0, 0, 0.1); }
-        
-        /* 고도화 패치: 요금할인형 선택 시 사은품 전체 숨김 레이어 제어용 컨테이너 스타일 */
         #gift-display-master-container { max-width: 1040px; margin: 0 auto; position: relative; }
-        .gift-discount-lock-overlay { display: none; background: rgba(0,0,0,0.7); position: absolute; top:0; left:0; right:0; bottom:0; z-index: 100; border-radius: 24px; align-items: center; justify-content: center; padding: 30px; }
+        .gift-discount-lock-overlay { display: none; background: rgba(0,0,0,0.85); position: absolute; top:0; left:0; right:0; bottom:0; z-index: 100; border-radius: 24px; align-items: center; justify-content: center; padding: 30px; }
         .gift-discount-lock-text { color: var(--gold-color); font-size: 18px; font-weight: 900; line-height: 1.6; text-align: center; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
 
         .gift-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
@@ -124,9 +122,8 @@
         .gift-grid .gift-card img { width: 100%; height: 160px; object-fit: contain; margin-bottom: 15px; pointer-events: none; }
         .gift-grid .gift-card h4 { margin: 10px 0 0 0; font-size: 16px; font-weight: 900; color: #1A202C; pointer-events: none; }
         
-        /* 1안 패치: 저속 요금제(100/160/200M) 선택 시 가전 자물쇠 락다운 스킨 마크업 */
         .gift-card.low-speed-locked { opacity: 0.25 !important; cursor: not-allowed !important; transform: none !important; box-shadow: none !important; border-color: #CBD5E0 !important; background: #EDF2F7 !important; }
-        .lock-badge-tag { display: none; position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.4); color: #fff; font-weight: 900; font-size: 13px; align-items: center; justify-content: center; padding: 10px; line-height: 1.4; text-shadow: 1px 1px 2px #000; }
+        .lock-badge-tag { display: none; position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.5); color: #fff; font-weight: 900; font-size: 14px; align-items: center; justify-content: center; padding: 10px; line-height: 1.4; text-shadow: 1px 1px 2px #000; }
         .gift-card.low-speed-locked .lock-badge-tag { display: flex; }
 
         #review-section { background: rgba(0, 0, 0, 0.05); }
@@ -232,7 +229,7 @@
                 </div>
             </div>
             <div class="calc-group">
-                <div class="calc-group-title">3단계: 희망하시는 인터넷 속도를 골라주세요</div>
+                <div class="calc-group-title" id="step3-title">3단계: 희망하시는 인터넷 속도를 골라주세요</div>
                 <div class="text-options" id="speed-box"></div>
             </div>
             <div class="calc-group" id="tv-group-layer" style="display:none;">
@@ -293,39 +290,36 @@
     <div class="section" id="gift-section">
         <div class="section-title">🎁 사거리인터넷 독점 사은품 라인업</div>
         
-        <!-- 2안+1안 최적화 연동형 마스터 감시 가전 컨테이너 베이스 파츠 -->
         <div id="gift-display-master-container">
             
-            <!-- 요금할인형 전용 완전 마킹 차단막 -->
             <div class="gift-discount-lock-overlay" id="gift-discount-lock-layer">
                 <div class="gift-discount-lock-text">
-                    ⚠️ 선택하신 [요금할인형 특가] 상품은 매달 청구 요금이 자체 최대로 대폭 할인되는 상품입니다.<br>
-                    가전 사은품 중복 지급이 불가능하여 가전 라인업이 차단됩니다.<br>
-                    <span style="color:var(--gold-color); font-size:15px; font-weight:500;">(본사 정식 인터넷+TV 결합상품으로 변경하시면 가전 사은품 혜택창이 오픈됩니다!)</span>
+                    ⚠️ 선택하신 [요금할인형 특가] 상품은 매달 청구 요금이 파격 할인되는 소상공인 전용 상품입니다.<br>
+                    결합 마진이 완전히 제외되어 가전 사은품 중복 지급이 전면 불가능합니다.<br>
+                    <span style="color:var(--gold-color); font-size:14px; font-weight:500;">(본사 정식 결합상품(500M 이상)을 선택하시면 대왕 가전 사은품창이 완전히 해제됩니다!)</span>
                 </div>
             </div>
 
             <div class="gift-grid">
-                <!-- 저속 요금제일때 락다운 자물쇠 가이드 마크업 이식 완료 -->
                 <div class="gift-card" id="gift-moving" onclick="selectGiftTier('무빙스타일')">
                     <img src="삼성무빙스타일.jpg">
                     <h4>삼성 무빙스타일 32인치 TV</h4>
-                    <div class="lock-badge-tag">🔒 500M+TV 전용<br>(속도를 올리면 해제!)</div>
+                    <div class="lock-badge-tag">🔒 500M+TV 전용<br>(속도를 올리면 즉시 해제!)</div>
                 </div>
                 <div class="gift-card" id="gift-jetfit" onclick="selectGiftTier('제트핏')">
                     <img src="삼성제트핏.jpg">
                     <h4>삼성 제트핏 무선청소기</h4>
-                    <div class="lock-badge-tag">🔒 500M+TV 전용<br>(속도를 올리면 해제!)</div>
+                    <div class="lock-badge-tag">🔒 500M+TV 전용<br>(속도를 올리면 즉시 해제!)</div>
                 </div>
                 <div class="gift-card" id="gift-wash" onclick="selectGiftTier('세탁기')">
                     <img src="삼성통돌이세탁기.jpg">
                     <h4>삼성 비스포크 통돌이 세탁기</h4>
-                    <div class="lock-badge-tag">🔒 500M+TV 전용<br>(속도를 올리면 해제!)</div>
+                    <div class="lock-badge-tag">🔒 500M+TV 전용<br>(속도를 올리면 즉시 해제!)</div>
                 </div>
                 <div class="gift-card" id="gift-tv55" onclick="selectGiftTier('55인치TV')">
                     <img src="삼성55인치TV.jpg">
                     <h4>삼성 55인치 스마트 UHD TV</h4>
-                    <div class="lock-badge-tag">🔒 500M+TV 전용<br>(속도를 올리면 해제!)</div>
+                    <div class="lock-badge-tag">🔒 500M+TV 전용<br>(속도를 올리면 즉시 해제!)</div>
                 </div>
             </div>
         </div>
@@ -351,14 +345,13 @@
         let skPopRegions = []; 
         let currentSelectedString = "";
         let currentActiveSpeed = ""; 
-        
         let globalSelectedGift = null;
 
         function parseCsvText(text) {
             return text.split(/\r?\n/).map(line => {
                 const result = []; let current = '', inQuotes = false;
                 for (let i = 0; i < line.length; i++) {
-                    const char = line[Char];
+                    const char = line[i]; // 대소문자 정밀 오타 수정 완료 구역!
                     if (char === '"') { inQuotes = !inQuotes; }
                     else if (char === ',' && !inQuotes) { result.push(current); current = ''; }
                     else { current += char; }
@@ -410,12 +403,18 @@
         }
 
         function selectGiftTier(giftKey) {
+            // 요금할인형 선택된 상태에서 사은품 누르려할 때 차단 팝업 
+            if (curProd === '요금할인형') {
+                alert('⚠️ 선택하신 요금할인형 특가 상품은 매달 청구 요금이 청구 최대로 자동 할인되는 상품입니다.\n가전 사은품 중복 지급이 불가능하여 가전을 선택하실 수 없습니다.\n(본사 정식 결합상품 선택 시 가전 해제창이 오픈됩니다!)');
+                return;
+            }
+
             const cardIdMap = { '무빙스타일': 'gift-moving', '제트핏': 'gift-jetfit', '세탁기': 'gift-wash', '55인치TV': 'gift-tv55' };
             const targetCard = document.getElementById(cardIdMap[giftKey]);
 
-            // 자물쇠 락다운 상태일 경우 마우스 클릭 필터링 디펜스
+            // 저속 요금제 락다운 상태일 때 가전 선택 필터 디펜스
             if(targetCard && targetCard.classList.contains('low-speed-locked')) {
-                alert('⚠️ 선택하신 고급 사은품은 [500M 이상의 인터넷+TV 결합상품] 전용 특별 혜택입니다!\n위의 요금계산기판에서 속도를 500M 또는 1G로 한 단계 올려주시면 즉시 락이 해제됩니다!');
+                alert('⚠️ 선택하신 고급 사은품은 [500M 이상의 인터넷+TV 결합상품] 전용 특별 혜택입니다!\n위의 요금제판에서 인터넷 속도를 500M 또는 1G로 올려주시면 즉시 락이 해제됩니다!');
                 return;
             }
 
@@ -551,7 +550,7 @@
                 speeds.sort((a, b) => (b.includes('1G') ? 1000 : parseInt(b) || 100) - (a.includes('1G') ? 1000 : parseInt(a) || 100));
             }
 
-            // 사은품 역연동 필터: 청소기/세탁기/TV가 선택되어 있을 때는 저속 100,160,200M 원천 드랍
+            // 사은품 필터 락다운 시 100M/160M/200M 강제 제거
             const isPremiumGift = globalSelectedGift === '55인치TV' || globalSelectedGift === '세탁기' || globalSelectedGift === '제트핏';
             if(isPremiumGift) {
                 speeds = speeds.filter(s => !s.includes('100M') && !s.includes('160M') && !s.includes('200M'));
@@ -645,23 +644,21 @@
             const labelSlot = document.getElementById('subsidy-label-text');
             const subsidySlot = document.getElementById('res-subsidy');
 
-            // ★ 실시간 마케팅 스위칭 필터 가동 (저속 요금제 및 할인형에 따른 하단 사은품 실시간 모폴로지 패치)
+            // 실시간 상호 보완 락다운 필터 렌더링 시스템
             const isLowSpeed = currentActiveSpeed.includes('100M') || currentActiveSpeed.includes('160M') || currentActiveSpeed.includes('200M') || curProd === '단독';
             const overlayLayer = document.getElementById('gift-discount-lock-layer');
 
-            // 1단계: 요금할인형인 경우 -> 아래 사은품 구역 전면 노출 차단 (2안 완벽 적용)
+            // 1. 요금할인형(SK POP 등)일 때 -> 가전 라인 전면 차단막 작동 (2안 연동)
             if(curProd === '요금할인형') {
                 if(overlayLayer) overlayLayer.style.display = "flex";
-                
                 labelSlot.textContent = `사거리 특별 독점 지원금 (설치당일입금)`;
                 subsidySlot.textContent = subsidy.includes('원') ? subsidy : subsidy + '원';
-                globalSelectedGift = null; // 필터링 정보 휘발
+                globalSelectedGift = null;
                 document.querySelectorAll('.gift-card').forEach(c => c.classList.remove('selected'));
             } else {
-                // 요금할인형이 아니면 전면 차단막 오프
                 if(overlayLayer) overlayLayer.style.display = "none";
 
-                // 2단계: 저단가 요금제(100/160/200M/단독)인 경우 -> 가전 사은품 카드에 자물쇠 채우기 (1안 완벽 적용)
+                // 2. 100M대 저단가/단독 요금제일 때 -> 가전 사은품 전체 자물쇠 채우기 (1안 연동)
                 if(isLowSpeed) {
                     document.querySelectorAll('.gift-grid .gift-card').forEach(card => {
                         card.classList.add('low-speed-locked');
@@ -671,12 +668,11 @@
                     labelSlot.textContent = `사거리 특별 독점 지원금 (설치당일입금)`;
                     subsidySlot.textContent = subsidy.includes('원') ? subsidy : subsidy + '원';
                 } else {
-                    // 500M / 1G 고단가 진입 시 -> 사은품 자물쇠 일제히 해제! 🔓
+                    // 3. 500M / 1G 정상 고단가 결합 진입 시 -> 자물쇠 일제히 완전 해제 🔓
                     document.querySelectorAll('.gift-grid .gift-card').forEach(card => {
                         card.classList.remove('low-speed-locked');
                     });
 
-                    // 사은품 세부 가격 매칭 리포트
                     if(globalSelectedGift) {
                         const giftNames = { '무빙스타일': '삼성 무빙스타일 32인치 TV', '제트핏': '삼성 제트핏 청소기', '세탁기': '삼성 비스포크 세탁기', '55인치TV': '삼성 55인치 UHD TV' };
                         labelSlot.textContent = `🎁 선택 사은품 지급 상태 (당일 전액 책임발송)`;
