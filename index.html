@@ -81,7 +81,6 @@
         .subsidy-box { width: 100%; max-width: 760px; margin: 0 auto; background: linear-gradient(135deg, #FFFDF5 0%, #FFF3E0 100%); border: 3px solid #FFB74D; border-radius: 20px; padding: 22px 15px; box-sizing: border-box; text-align: center; }
         .subsidy-val { color: var(--fire-orange); font-size: 40px; font-weight: 900; margin-top: 5px; }
         
-        /* 신설 가입신청 섹션 UI 스타일링 */
         .calc-apply-trigger-btn { display: block; width: 100%; max-width: 760px; margin: 25px auto 0 auto; padding: 20px; background: linear-gradient(135deg, var(--fire-orange) 0%, #E64A19 100%); border: none; border-radius: 16px; color: #fff; font-family: inherit; font-size: 18px; font-weight: 900; cursor: pointer; text-align: center; box-shadow: 0 8px 25px rgba(255,87,34,0.35); transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .calc-apply-trigger-btn:hover { transform: scale(1.02); background: linear-gradient(135deg, #FF6E40 0%, var(--fire-orange) 100%); }
         .calc-dynamic-apply-panel { display: none; width: 100%; max-width: 760px; margin: 20px auto 0 auto; background: #1A202C; border: 2px solid #4A5568; border-radius: 20px; padding: 25px; box-sizing: border-box; text-align: left; animation: slideDown 0.3s ease-out forwards; }
@@ -94,6 +93,10 @@
         .apply-input-row input:focus { border-color: #48BB78; background: #1A202C; outline: none; }
         .apply-submit-final-btn { width: 100%; padding: 18px; background: #48BB78; border: none; font-family: inherit; font-size: 16px; font-weight: 900; color: #fff; border-radius: 12px; cursor: pointer; transition: 0.2s; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
         .apply-submit-final-btn:hover { background: #38A169; box-shadow: 0 5px 15px rgba(72,187,120,0.4); }
+        
+        /* 신설: 문자접수 서브 버튼 스타일 */
+        .apply-sms-routing-btn { display: block; width: 100%; text-align: center; margin-top: 10px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.2); color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; transition: 0.2s; }
+        .apply-sms-routing-btn:hover { border-color: var(--gold-color); color: var(--gold-color); background: rgba(255,215,0,0.05); }
 
         #gift-section { background: rgba(0, 0, 0, 0.1); }
         .gift-grid { max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
@@ -124,8 +127,6 @@
             .text-btn { width: 100% !important; text-align: center; font-size: 14px; padding: 14px; } .res-row-prices { flex-direction: column; gap: 15px; }
             .res-val { font-size: 26px; } .subsidy-val { font-size: 28px; }
             .review-rolling-viewport { height: 260px; } .review-row { height: 78px; padding: 12px 15px; } .review-text { max-width: 240px; font-size: 12px; } .review-stars { display: none; }
-            
-            /* 모바일 대응 가입신청 레이아웃 패치 */
             .calc-apply-trigger-btn { font-size: 15px; padding: 16px; margin-top: 20px; }
             .calc-dynamic-apply-panel { padding: 15px; }
             .apply-product-value { font-size: 15px; }
@@ -158,13 +159,15 @@
                     <div class="consult-tabs">
                         <button class="c-tab-btn active" onclick="switchForm('fast', this)">⚡ 간편 빠른상담</button>
                         <button class="c-tab-btn" onclick="switchForm('full', this)">📝 원스톱 다이렉트접수</button>
-                        <button class="c-tab-btn" onclick="switchForm('kakao', this)">💬 카톡 1:1상담</button>
+                        <!-- ★ 실시간 카카오 채널 연결 완료 파츠 -->
+                        <button class="c-tab-btn" onclick="window.open('http://pf.kakao.com/_PxjsKG/chat', '_blank')">💬 카톡 1:1상담</button>
                     </div>
                     <div class="form-panel active" id="form-fast">
                         <div class="form-group"><input type="text" id="main-fast-name" placeholder="성함을 적어주세요"></div>
                         <div class="form-group"><input type="text" id="main-fast-phone" placeholder="연락처를 적어주세요"></div>
                         <button class="submit-btn" onclick="alert('접수 완료!')">화끈하게 빠른 상담 신청</button>
-                        <a href="tel:1833-2440" class="phone-call-btn">📞 직통 전화걸기: 1833-2440</a>
+                        <!-- ★ 모바일 원터치 대표번호 전화연결 패치 완료 -->
+                        <a href="tel:18332440" class="phone-call-btn">📞 직통 전화걸기: 1833-2440</a>
                     </div>
                     <div class="form-panel" id="form-full">
                         <div class="form-group"><input type="text" placeholder="성함 입력"></div>
@@ -172,10 +175,6 @@
                         <div class="form-group"><input type="text" placeholder="연락처 및 설치 희망 상세 주소"></div>
                         <div class="form-group"><input type="text" placeholder="희망 통신사 / 가입 상품명"></div>
                         <button class="submit-btn" onclick="alert('다이렉트 접수 완료!')">다이렉트 즉시 접수하기</button>
-                    </div>
-                    <div class="form-panel" id="form-kakao">
-                        <p style="margin-top:0; color:#E2E8F0; font-size:14px; line-height:1.6; margin-bottom:20px;">털보아저씨의 카카오톡 공식 채널 1:1 채팅 대화로 언제든 노크해 주세요!</p>
-                        <a href="https://pf.kakao.com" target="_blank" class="kakao-btn-style">💬 털보아저씨와 실시간 카톡 대화하기</a>
                     </div>
                 </div>
             </div>
@@ -251,6 +250,11 @@
                 <button class="apply-submit-final-btn" onclick="submitCalculateApplyForm()">
                     🚀 위 조건 그대로 화끈하게 가입 신청하기
                 </button>
+                
+                <!-- ★ [기믹] 010-6414-2444 문자 자동생성 스마트 링크 탑재형 버튼 파츠 -->
+                <a href="#" id="calc-sms-direct-btn" class="apply-sms-routing-btn" onclick="triggerSmsRouting(event)">
+                    💬 털보아저씨에게 문자로 상담 접수하기
+                </a>
             </div>
 
         </div>
@@ -284,20 +288,7 @@
         let allData = [], curProv = 'KT', curProd = '단독';
         let hellovisionRegions = [];
         let skPopRegions = []; 
-        
-        // 현재 최종 엄선된 데이터 기록 보관용 글로벌 변수 파츠
         let currentSelectedString = "";
-
-        function createConfetti() {
-            const container = document.getElementById('boss-section'); if(!container) return;
-            const shapes = ['★', '✨', '🪙', '✦', '⭐'], colors = ['#FFD700', '#FFA500', '#FF4500', '#FFFF00'];
-            const confetti = document.createElement('div'); confetti.className = 'confetti';
-            confetti.textContent = shapes[Math.floor(Math.random() * shapes.length)];
-            confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.left = Math.random() * 95 + 'vw'; confetti.style.fontSize = Math.random() * 12 + 15 + 'px';
-            const duration = Math.random() * 3 + 2; confetti.style.animationDuration = duration + 's';
-            container.appendChild(confetti); setTimeout(() => { confetti.remove(); }, duration * 1000);
-        }
 
         function parseCsvText(text) {
             return text.split(/\r?\n/).map(line => {
@@ -451,66 +442,12 @@
             if(slot) {
                 if(curProv === '헬로') {
                     let tableRowsHtml = '';
-                    if(hellovisionRegions.length > 0) {
-                        hellovisionRegions.forEach(r => {
-                            tableRowsHtml += `<tr><td><span class="region-tag">${r.city}</span></td><td>${r.districts}</td></tr>`;
-                        });
-                    } else {
-                        tableRowsHtml = `<tr><td colspan="2" style="text-align:center;color:#A0AEC0;padding:15px;">가용지역 데이터를 로드하고 있습니다...</td></tr>`;
-                    }
-
-                    slot.innerHTML = `
-                        <div class="accordion-wrapper">
-                            <button class="accordion-trigger" onclick="toggleRegionAccordion()">
-                                <img src="헬로비전로고.png" alt="헬로">
-                                <span>📍 설치 가능 지역 확인 ▼</span>
-                                <span class="accordion-arrow" id="accordion-arrow">▼</span>
-                            </button>
-                            <div class="accordion-panel" id="region-list-panel">
-                                <div class="panel-scroll-box">
-                                    <table class="region-table">
-                                        <thead>
-                                            <tr><th style="width:70px;">시/도</th><th>상세 구역 명칭</th></tr>
-                                        </thead>
-                                        <tbody>
-                                            ${tableRowsHtml}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                    hellovisionRegions.forEach(r => { tableRowsHtml += `<tr><td><span class="region-tag">${r.city}</span></td><td>${r.districts}</td></tr>`; });
+                    slot.innerHTML = `<div class="accordion-wrapper"><button class="accordion-trigger" onclick="toggleRegionAccordion()"><img src="헬로비전로고.png" alt="헬로"><span>📍 설치 가능 지역 확인 ▼</span><span class="accordion-arrow" id="accordion-arrow">▼</span></button><div class="accordion-panel" id="region-list-panel"><div class="panel-scroll-box"><table class="region-table"><thead><tr><th style="width:70px;">시/도</th><th>상세 구역 명칭</th></tr></thead><tbody>${tableRowsHtml}</tbody></table></div></div></div>`;
                 } else if(curProv === 'SK' && curProd === '요금할인형') {
                     let tableRowsHtml = '';
-                    if(skPopRegions.length > 0) {
-                        skPopRegions.forEach(r => {
-                            tableRowsHtml += `<tr><td><span class="region-tag">${r.city}</span></td><td>${r.districts}</td></tr>`;
-                        });
-                    } else {
-                        tableRowsHtml = `<tr><td colspan="2" style="text-align:center;color:#A0AEC0;padding:15px;">시트 내 'SK POP' 지역 라인을 조회하는 중입니다...</td></tr>`;
-                    }
-
-                    slot.innerHTML = `
-                        <div class="accordion-wrapper">
-                            <button class="accordion-trigger" onclick="toggleRegionAccordion()">
-                                <span style="font-weight:900; color:#E53E3E;">[SK POP 전용]</span>
-                                <span style="margin-left:5px;">📍 설치 가능 지역 확인 ▼</span>
-                                <span class="accordion-arrow" id="accordion-arrow">▼</span>
-                            </button>
-                            <div class="accordion-panel" id="region-list-panel">
-                                <div class="panel-scroll-box">
-                                    <table class="region-table">
-                                        <thead>
-                                            <tr><th style="width:70px;">시/도</th><th>상세 구역 명칭</th></tr>
-                                        </thead>
-                                        <tbody>
-                                            ${tableRowsHtml}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                    skPopRegions.forEach(r => { tableRowsHtml += `<tr><td><span class="region-tag">${r.city}</span></td><td>${r.districts}</td></tr>`; });
+                    slot.innerHTML = `<div class="accordion-wrapper"><button class="accordion-trigger" onclick="toggleRegionAccordion()"><span style="font-weight:900; color:#E53E3E;">[SK POP 전용]</span><span style="margin-left:5px;">📍 설치 가능 지역 확인 ▼</span><span class="accordion-arrow" id="accordion-arrow">▼</span></button><div class="accordion-panel" id="region-list-panel"><div class="panel-scroll-box"><table class="region-table"><thead><tr><th style="width:70px;">시/도</th><th>상세 구역 명칭</th></tr></thead><tbody>${tableRowsHtml}</tbody></table></div></div></div>`;
                 } else {
                     slot.innerHTML = `<div class="normal-region-box">🏠 전국 어디서나<br>전지역 즉시 설치!</div>`;
                 }
@@ -526,9 +463,6 @@
                     speedBox.appendChild(btn);
                 });
                 updateTvOptions(filteredRows, speeds[0]);
-            } else {
-                speedBox.innerHTML = '<div style="color:#e53e3e; padding:15px; font-weight:700;">시트에 데이터가 없습니다.</div>';
-                document.getElementById('tv-group-layer').style.display = 'none';
             }
         }
 
@@ -542,20 +476,11 @@
             } else if (curProd === '요금할인형') {
                 tvLayer.style.display = 'none'; 
                 const discountRow = finalRows.find(row => row[3].trim() === '매달 추가할인형');
-                if (discountRow) {
-                    showResult(discountRow);
-                } else if (finalRows.length > 0) {
-                    showResult(finalRows[0]);
-                }
+                if (discountRow) showResult(discountRow);
+                else if (finalRows.length > 0) showResult(finalRows[0]);
             } else {
                 tvLayer.style.display = 'block';
-                
-                finalRows.sort((a, b) => {
-                    const priceA = parseInt(a[6].replace(/[^0-9]/g, "")) || 0;
-                    const priceB = parseInt(b[6].replace(/[^0-9]/g, "")) || 0;
-                    return priceB - priceA;
-                });
-                
+                finalRows.sort((a, b) => (parseInt(b[6].replace(/[^0-9]/g, "")) || 0) - (parseInt(a[6].replace(/[^0-9]/g, "")) || 0));
                 finalRows.forEach((row, i) => {
                     const btn = document.createElement('div'); btn.className = 'text-btn' + (i === 0 ? ' active' : ''); btn.textContent = row[3].trim();
                     btn.onclick = function() {
@@ -581,22 +506,14 @@
             if (isAlthempone) {
                 document.getElementById('comb-display-area').style.display = "none";
                 if(curProd === '요금할인형') {
-                    if(curProv === 'SK') {
-                        document.getElementById('label-base').textContent = "SK 요금할인형 특가";
-                    } else if(curProv === '스카이') {
-                        document.getElementById('label-base').textContent = "스카이 요금할인형 특가";
-                    }
+                    document.getElementById('label-base').textContent = (curProv === 'SK') ? "SK 요금할인형 특가" : "스카이 요금할인형 특가";
                 } else {
                     document.getElementById('label-base').textContent = "알뜰 실속 요금";
                 }
-                if (baseEl) {
-                    baseEl.style.textDecoration = "none"; baseEl.style.color = "#1A202C"; baseEl.style.fontSize = "34px"; baseEl.style.fontWeight = "900"; baseEl.style.transform = "none";
-                }
+                if (baseEl) { baseEl.style.textDecoration = "none"; baseEl.style.color = "#1A202C"; baseEl.style.fontSize = "34px"; baseEl.style.fontWeight = "900"; }
                 printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]}`;
             } else {
-                if (baseEl) {
-                    baseEl.style.textDecoration = "line-through"; baseEl.style.color = "#A0AEC0"; baseEl.style.fontSize = "24px"; baseEl.style.fontWeight = "700";
-                }
+                if (baseEl) { baseEl.style.textDecoration = "line-through"; baseEl.style.color = "#A0AEC0"; baseEl.style.fontSize = "24px"; baseEl.style.fontWeight = "700"; }
                 const dcPriceRaw = parseInt(cleanRow[5].replace(/[^0-9]/g, "")) || 0;
                 if (dcPriceRaw > 0) {
                     document.getElementById('comb-display-area').style.display = "block"; document.getElementById('label-base').textContent = "본사 표준 요금";
@@ -609,25 +526,16 @@
                 }
                 printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]} / ${cleanRow[3]}`;
             }
-            if (baseEl) {
-                if (isAlthempone) { baseEl.innerHTML = `${basePrice}<span>원/월</span>`; } 
-                else { baseEl.innerHTML = basePrice.includes('원') ? basePrice : `${basePrice}<span>원</span>`; }
-            }
+            if (baseEl) { baseEl.innerHTML = isAlthempone ? `${basePrice}<span>원/월</span>` : (basePrice.includes('원') ? basePrice : `${basePrice}<span>원</span>`); }
             document.getElementById('res-subsidy').textContent = subsidy.includes('원') ? subsidy : subsidy + '원';
             const specEl = document.getElementById('res-special');
             if(special) { specEl.innerHTML = `🔥 털보아저씨의 특별 보너스: ${special} 🔥`; } else { specEl.textContent = ""; }
             
-            // 실시간 가입신청 양식 텍스트 슬롯 업데이트 동기화
             currentSelectedString = printableProductDetail;
             const summarySlot = document.getElementById('apply-product-text-summary');
-            if(summarySlot) {
-                summarySlot.textContent = currentSelectedString;
-            }
-            
-            // 고객이 조건을 바꾸면 신청 완료 레이어가 뜬 상태일 때 실시간 동기화 피드백을 유지하되, 굳이 창을 닫진 않습니다.
+            if(summarySlot) summarySlot.textContent = currentSelectedString;
         }
 
-        // 가입신청 아코디언 토글 제어 및 정밀 스크롤 이동 함수
         function openCalculateApplyForm() {
             const panel = document.getElementById('calc-apply-panel');
             const triggerBtn = document.getElementById('calc-apply-btn');
@@ -638,47 +546,54 @@
                 } else {
                     panel.style.display = "block";
                     if(triggerBtn) triggerBtn.textContent = "▲ 가입 신청창 접기";
-                    
-                    // 모바일 및 PC 가독성 픽스: 입력창 오픈 시 해당 위치로 자연스럽게 스크롤 포커싱
-                    setTimeout(() => {
-                        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }, 100);
+                    setTimeout(() => { panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 100);
                 }
             }
         }
 
-        // 가입신청 데이터 수집 및 전송 스크립트
+        // ★ 모바일 기기별 문자 메시지 생성 전용 함수
+        function triggerSmsRouting(e) {
+            e.preventDefault();
+            const targetPhone = "01064142444";
+            const smsBody = `[사거리 가입신청] ${currentSelectedString} 상담 요청합니다.`;
+            
+            // 아이폰(iOS)과 안드로이드의 sms 규격 파싱 통합 제어 기믹
+            const isTargetIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const smsLink = isTargetIos 
+                ? `sms:${targetPhone}&body=${encodeURIComponent(smsBody)}` 
+                : `sms:${targetPhone}?body=${encodeURIComponent(smsBody)}`;
+                
+            window.location.href = smsLink;
+        }
+
         function submitCalculateApplyForm() {
             const nameVal = document.getElementById('calc-apply-name').value.trim();
             const phoneVal = document.getElementById('calc-apply-phone').value.trim();
+            if(!nameVal) { alert('성함을 입력해 주세요!'); document.getElementById('calc-apply-name').focus(); return; }
+            if(!phoneVal) { alert('연락처를 입력해 주세요!'); document.getElementById('calc-apply-phone').focus(); return; }
             
-            if(!nameVal) {
-                alert('성함을 입력해 주세요!');
-                document.getElementById('calc-apply-name').focus();
-                return;
-            }
-            if(!phoneVal) {
-                alert('연락처를 입력해 주세요!');
-                document.getElementById('calc-apply-phone').focus();
-                return;
-            }
-            
-            // 기존 팝업 알림 시스템에 완벽 가인 바인딩 출력
             alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n성함: ${nameVal}\n연락처: ${phoneVal}\n\n사거리인터넷에서 확인 후 당일 신속하게 연락드리겠습니다!`);
-            
-            // 접수 후 깔끔하게 폼 초기화 및 닫기 마감
-            document.getElementById('calc-apply-name').value = "";
-            document.getElementById('calc-apply-phone').value = "";
+            document.getElementById('calc-apply-name').value = ""; document.getElementById('calc-apply-phone').value = "";
             document.getElementById('calc-apply-panel').style.display = "none";
             const triggerBtn = document.getElementById('calc-apply-btn');
             if(triggerBtn) triggerBtn.textContent = "🔥 내가 고른 조건으로 즉시 가입신청하기 (1초 완성) ▼";
         }
 
+        function createConfetti() {
+            const container = document.getElementById('boss-section'); if(!container) return;
+            const shapes = ['★', '✨', '🪙', '✦', '⭐'], colors = ['#FFD700', '#FFA500', '#FF4500', '#FFFF00'];
+            const confetti = document.createElement('div'); confetti.className = 'confetti';
+            confetti.textContent = shapes[Math.floor(Math.random() * shapes.length)];
+            confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * 95 + 'vw'; confetti.style.fontSize = Math.random() * 12 + 15 + 'px';
+            const duration = Math.random() * 3 + 2; confetti.style.animationDuration = duration + 's';
+            container.appendChild(confetti); setTimeout(() => { confetti.remove(); }, duration * 1000);
+        }
+
         function switchForm(type, el) {
             document.querySelectorAll('.c-tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.form-panel').forEach(panel => panel.classList.remove('active'));
-            el.classList.add('active');
-            document.getElementById('form-' + type).classList.add('active');
+            el.classList.add('active'); document.getElementById('form-' + type).classList.add('active');
         }
 
         window.onload = loadData;
