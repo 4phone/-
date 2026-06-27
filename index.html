@@ -135,52 +135,8 @@
         .review-stars { color: var(--gold-color); font-size: 15px; font-weight: bold; }
         .footer { text-align: center; padding: 50px 0; color: rgba(255,255,255,0.4); font-size: 14px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 80px; }
         
-        /* 💥 모바일 전용 고정 하단 플로팅 바 스타일 설계 파츠 (PC에서는 기본 숨김) */
-        .mobile-sticky-quick-bar {
-            display: none;
-            position: fixed;
-            bottom: -100px; /* 초기 상태는 화면 아래로 숨김 */
-            left: 0;
-            right: 0;
-            height: 64px;
-            background: #1A202C;
-            border-top: 3px solid var(--gold-color);
-            z-index: 2000;
-            padding: 8px 12px;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
-            transition: bottom 0.3s cubic-bezier(0.165, 0.84, 0.44, 1); /* 부드러운 전개 애니메이션 */
-        }
-        .mobile-sticky-quick-bar.show {
-            bottom: 0; /* 클래스가 붙으면 화면 하단에 고정 출현 */
-        }
-        .sticky-input-box {
-            flex: 1;
-            height: 45px;
-            padding: 0 10px;
-            border-radius: 8px;
-            border: 1px solid #4A5568;
-            background: #2D3748;
-            color: #fff;
-            font-size: 13px;
-            font-weight: 700;
-        }
-        .sticky-input-box::placeholder { color: #A0AEC0; font-weight: 500; }
-        .sticky-input-box:focus { border-color: var(--gold-color); outline: none; }
-        .sticky-submit-btn {
-            background: linear-gradient(135deg, var(--fire-orange) 0%, #E64A19 100%);
-            color: #fff;
-            border: none;
-            padding: 0 14px;
-            height: 45px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 900;
-            cursor: pointer;
-            white-space: nowrap;
-            box-shadow: 0 2px 5px rgba(255,87,34,0.3);
-        }
+        /* 기본 상태 (PC) 팝업 히든 제어 */
+        .mobile-sticky-quick-bar { display: none; }
 
         /* ===================================================
            모바일 전용 반응형 & 스와이프 터치 패치
@@ -251,9 +207,52 @@
             .apply-input-row input { width: 100%; padding: 13px; font-size: 14px; }
             .apply-submit-final-btn { padding: 15px; font-size: 15px; }
 
-            /* 💥 하단 팝업 고정 장치 활성화 (모바일에서 뷰포트 정렬) */
-            .mobile-sticky-quick-bar { display: flex; }
-            body { padding-bottom: 64px; } /* 하단 바에 내용이 가려지지 않도록 안전 마진 공간 설정 */
+            /* 💥 [밀림 해결 마감 패치] 모바일 하단 플로팅 고정 바 최적화 정렬 구조 */
+            .mobile-sticky-quick-bar { 
+                display: flex; 
+                position: fixed; 
+                bottom: -100px; 
+                left: 0; 
+                right: 0; 
+                height: 64px; 
+                background: #1A202C; 
+                border-top: 3px solid var(--gold-color); 
+                z-index: 2000; 
+                padding: 8px 10px; 
+                align-items: center; 
+                gap: 6px; 
+                box-shadow: 0 -4px 15px rgba(0,0,0,0.3); 
+                transition: bottom 0.3s ease;
+            }
+            .sticky-input-box {
+                flex: 1; /* 남은 빈 공간 균등 배분 */
+                min-width: 0; /* 강제 너비 터짐 제어 핵심 코드 */
+                height: 45px;
+                padding: 0 8px;
+                border-radius: 8px;
+                border: 1px solid #4A5568;
+                background: #2D3748;
+                color: #fff;
+                font-size: 13px;
+                font-weight: 700;
+            }
+            .sticky-input-box::placeholder { color: #A0AEC0; font-weight: 500; }
+            .sticky-input-box:focus { border-color: var(--gold-color); outline: none; }
+            .sticky-submit-btn {
+                flex: 0 0 auto; /* 버튼의 크기 비율 고정 보존 */
+                background: linear-gradient(135deg, var(--fire-orange) 0%, #E64A19 100%);
+                color: #fff;
+                border: none;
+                padding: 0 12px;
+                height: 45px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 900;
+                cursor: pointer;
+                white-space: nowrap; /* 줄바꿈 절대 방지 */
+                box-shadow: 0 2px 5px rgba(255,87,34,0.3);
+            }
+            body { padding-bottom: 64px; }
         }
     </style>
 </head>
@@ -275,7 +274,7 @@
         </div>
     </div>
 
-    <!-- 💥 새로 구축된 모바일 전용 고정형 간편 빠른상담 팝업 바 컴포넌트 파츠 -->
+    <!-- 모바일 전용 고정형 간편 빠른상담 팝업 바 컴포넌트 -->
     <div class="mobile-sticky-quick-bar" id="mobileStickyBar">
         <input type="text" id="sticky-fast-name" class="sticky-input-box" placeholder="성함 입력">
         <input type="text" id="sticky-fast-phone" class="sticky-input-box" placeholder="연락처 입력">
@@ -290,7 +289,6 @@
                 <div class="sub-headline">인터넷 + TV 가입하면 화끈한 지원금에 프리미엄 고급 가전 사은품까지 아낌없이 다 드립니다!</div>
             </div>
             <div class="main-right" id="mainCardTriggerPoint">
-                <!-- 원본 상단 접수 메인 카드 영역 -->
                 <div class="consult-main-card">
                     <div class="consult-tabs">
                         <button class="c-tab-btn active" onclick="switchForm('fast', this)">⚡ 간편 빠른상담</button>
@@ -486,7 +484,7 @@
             } catch(eRegion) { console.error("가용지역 데이터 로드 오류", eRegion); }
             updateOptions();
             initLiveReviews();
-            setupStickyScrollSpy(); /* 스크롤 관측 엔진 가동 */
+            setupStickyScrollSpy();
         }
 
         function scrollCarrierSlider(direction) {
@@ -498,7 +496,6 @@
             container.scrollBy({ left: moveX, behavior: 'smooth' });
         }
 
-        /* 💥 모바일 스마트 고정형 팝업 제어 스크롤 트래커 로직 */
         function setupStickyScrollSpy() {
             const stickyBar = document.getElementById('mobileStickyBar');
             const triggerPoint = document.getElementById('mainCardTriggerPoint');
@@ -509,19 +506,15 @@
                     stickyBar.classList.remove('show');
                     return;
                 }
-                /* 첫 화면의 메인 입력 카드 최하단 좌표를 계산 */
                 const triggerBottom = triggerPoint.getBoundingClientRect().bottom + window.pageYOffset;
-                
-                /* 상단 카드 영역이 스크롤되어 화면 밖으로 완전히 사라지면 하단 고정바 출현 */
                 if (window.pageYOffset > triggerBottom - 60) {
                     stickyBar.classList.add('show');
                 } else {
                     stickyBar.classList.remove('show');
                 }
-            }, { passive: true }); /* 렌더링 스크롤 성능 가속 보정 */
+            }, { passive: true });
         }
 
-        /* 💥 하단 고정형 팝업 접수 처리 함수 */
         function submitStickyFastForm() {
             const nameVal = document.getElementById('sticky-fast-name').value.trim();
             const phoneVal = document.getElementById('sticky-fast-phone').value.trim();
@@ -635,6 +628,7 @@
             if(panel && arrow) { panel.classList.toggle('open'); arrow.classList.toggle('open'); }
         }
 
+        // 이하 마스터 비즈니스 로직 생략 (기존 마스터 완전 수용 상태 유지)
         function updateOptions() {
             const speedBox = document.getElementById('speed-box'); if (!speedBox) return; speedBox.innerHTML = '';
             const step3Title = document.getElementById('step3-title');
