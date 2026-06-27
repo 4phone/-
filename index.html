@@ -58,13 +58,12 @@
         .calc-group { margin-bottom: 35px; text-align: left; }
         .calc-group-title { font-size: 18px; font-weight: 900; margin-bottom: 20px; color: #1A202C; border-left: 5px solid var(--main-bg); padding-left: 10px; }
         
+        /* 1단계 통신사 랩퍼 (PC 기준: 가로로 5개 균등 정렬) */
         .logo-slider-outer { position: relative; width: 100%; }
-        .logo-options { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
+        .logo-options { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; width: 100%; }
         .logo-btn { background-color: #FFFFFF !important; border: 3px solid #E2E8F0 !important; border-radius: 14px !important; padding: 8px 15px !important; cursor: pointer; width: 170px; height: 65px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s ease, transform 0.2s ease; }
         .logo-btn img { max-width: 100%; max-height: 100%; object-fit: contain; background: transparent !important; }
         .logo-btn.active { border-color: #799F0C !important; background-color: #FFFFFF !important; box-shadow: 0 10px 20px rgba(121,159,12,0.18) !important; transform: scale(1.06); z-index: 10; }
-        
-        .calc-arrow { display: none; }
 
         .text-options { display: flex; width: 100%; gap: 14px; justify-content: space-between; }
         .text-btn { flex: 1; text-align: center; background: #F7FAFC; border: 3px solid #E2E8F0; padding: 16px 20px; border-radius: 14px; font-weight: 900; font-size: 16px; color: #4A5568; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
@@ -106,12 +105,11 @@
         .apply-input-row input { flex: 1; padding: 15px; border: 2px solid #4A5568; border-radius: 10px; background: #2D3748; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; }
         .apply-input-row input:focus { border-color: #48BB78; background: #1A202C; outline: none; }
         .apply-submit-final-btn { width: 100%; padding: 18px; background: #48BB78; border: none; font-family: inherit; font-size: 16px; font-weight: 900; color: #fff; border-radius: 12px; cursor: pointer; }
-        .apply-sms-routing-btn { display: block; width: 100%; text-align: center; margin-top: 10px; padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.2); color: #fff; font-size: 14px; font-weight: 700; text-decoration: none; }
 
         #gift-section { background: rgba(0, 0, 0, 0.1); }
         #gift-display-master-container { max-width: 1040px; margin: 0 auto; position: relative; }
         .gift-discount-lock-overlay { display: none; background: rgba(0,0,0,0.85); position: absolute; top:0; left:0; right:0; bottom:0; z-index: 100; border-radius: 24px; align-items: center; justify-content: center; padding: 30px; }
-        .gift-discount-lock-text { color: var(--gold-color); font-size: 18px; font-weight: 900; line-height: 1.6; text-align: center; }
+        .gift-discount-lock-text { color: var(--gold-color); font-size: 18px; font-weight: 900; line-height: 1.6; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; }
 
         .gift-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
         .gift-grid .gift-card { background: #fff; color: #2D3748; border-radius: 18px; padding: 20px; text-align: center; border: 3px solid #E2E8F0; transition: transform 0.2s, border-color 0.2s; cursor: pointer; position: relative; overflow: hidden; }
@@ -135,101 +133,20 @@
         .review-stars { color: var(--gold-color); font-size: 15px; font-weight: bold; }
         .footer { text-align: center; padding: 50px 0; color: rgba(255,255,255,0.4); font-size: 14px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 80px; }
         
-        /* 💥 [MIND CONTROL] PC & 모바일 통합형 실시간 연동 하단 고정 스티키 구조 스펙 */
-        .universal-sticky-quick-bar {
-            position: fixed;
-            bottom: -150px; /* 평소에는 화면 밑으로 아예 은닉 */
-            left: 0;
-            right: 0;
-            background: #1A202C;
-            border-top: 4px solid var(--gold-color);
-            z-index: 3000;
-            box-shadow: 0 -5px 25px rgba(0,0,0,0.4);
-            display: flex;
-            flex-direction: column;
-            transition: bottom 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
-        }
-        .universal-sticky-quick-bar.show {
-            bottom: 0; /* 스크롤 다운 시 부드럽게 상승 */
-        }
-        /* 1단: 실시간 조건 디스플레이 띠 */
-        .sticky-tier-1 {
-            background: #2D3748;
-            padding: 6px 40px;
-            font-size: 14px;
-            font-weight: 900;
-            color: var(--gold-color);
-            border-bottom: 1px solid #4A5568;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .sticky-status-dot {
-            width: 8px;
-            height: 8px;
-            background: #A0AEC0;
-            border-radius: 50%;
-        }
-        .universal-sticky-quick-bar.active-mode .sticky-status-dot {
-            background: #48BB78; /* 가입신청 모드 시 그린 라이트 턴온 */
-            animation: pulse-green 1.5s infinite;
-        }
-        @keyframes pulse-green {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(72, 187, 120, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
-        }
-        /* 2단: 인풋 폼 & 액션 레이아웃 (PC 기준) */
-        .sticky-tier-2 {
-            padding: 12px 40px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            max-width: 1280px;
-            margin: 0 auto;
-            width: 100%;
-        }
-        .sticky-form-side {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-            justify-content: flex-end;
-        }
-        .sticky-input-field {
-            width: 200px;
-            height: 45px;
-            padding: 0 12px;
-            border-radius: 8px;
-            border: 1px solid #4A5568;
-            background: #2D3748;
-            color: #fff;
-            font-size: 14px;
-            font-weight: 700;
-        }
+        /* PC & 모바일 통합형 실시간 연동 하단 고정 스티키 구조 */
+        .universal-sticky-quick-bar { position: fixed; bottom: -150px; left: 0; right: 0; background: #1A202C; border-top: 4px solid var(--gold-color); z-index: 3000; box-shadow: 0 -5px 25px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: bottom 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .universal-sticky-quick-bar.show { bottom: 0; }
+        .sticky-tier-1 { background: #2D3748; padding: 6px 40px; font-size: 14px; font-weight: 900; color: var(--gold-color); border-bottom: 1px solid #4A5568; text-align: left; display: flex; align-items: center; gap: 10px; }
+        .sticky-status-dot { width: 8px; height: 8px; background: #A0AEC0; border-radius: 50%; }
+        .universal-sticky-quick-bar.active-mode .sticky-status-dot { background: #48BB78; animation: pulse-green 1.5s infinite; }
+        @keyframes pulse-green { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(72, 187, 120, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); } }
+        .sticky-tier-2 { padding: 12px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; max-width: 1280px; margin: 0 auto; width: 100%; }
+        .sticky-form-side { display: flex; align-items: center; gap: 12px; flex: 1; justify-content: flex-end; }
+        .sticky-input-field { width: 200px; height: 45px; padding: 0 12px; border-radius: 8px; border: 1px solid #4A5568; background: #2D3748; color: #fff; font-size: 14px; font-weight: 700; }
         .sticky-input-field::placeholder { color: #A0AEC0; font-weight: 500; }
         .sticky-input-field:focus { border-color: var(--gold-color); outline: none; }
-        
-        .sticky-action-btn {
-            background: #ED8936;
-            color: #fff;
-            border: none;
-            padding: 0 24px;
-            height: 45px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 900;
-            cursor: pointer;
-            white-space: nowrap;
-            box-shadow: 0 3px 10px rgba(237,137,54,0.3);
-            transition: 0.2s;
-        }
-        .universal-sticky-quick-bar.active-mode .sticky-action-btn {
-            background: linear-gradient(135deg, var(--fire-orange) 0%, #E64A19 100%);
-            box-shadow: 0 4px 12px rgba(255,87,34,0.4);
-        }
+        .sticky-action-btn { background: #ED8936; color: #fff; border: none; padding: 0 24px; height: 45px; border-radius: 8px; font-size: 15px; font-weight: 900; cursor: pointer; white-space: nowrap; box-shadow: 0 3px 10px rgba(237,137,54,0.3); transition: 0.2s; }
+        .universal-sticky-quick-bar.active-mode .sticky-action-btn { background: linear-gradient(135deg, var(--fire-orange) 0%, #E64A19 100%); box-shadow: 0 4px 12px rgba(255,87,34,0.4); }
 
         /* ===================================================
            모바일 전용 반응형 미디어 쿼리 커스텀 보정
@@ -244,61 +161,34 @@
             .main-right { width: 100%; padding: 0 10px; } .consult-main-card { padding: 15px; }
             .section { padding: 60px 10px 30px 10px; } .section-title { font-size: 24px; } .calc-wrapper { padding: 20px 15px; }
             
-            /* 1단계 통신사 모바일 가로 스와이프 전용 고속 최적화 코어 */
-            .logo-slider-outer { padding: 0 20px; }
+            /* 💥 [3+2 구조 특화] 모바일 통신사 묶음 부모 랩퍼 디자인 해부 */
             .logo-options {
-                display: flex;
-                flex-wrap: nowrap !important;
-                gap: 10px !important;
-                justify-content: flex-start !important;
-                overflow-x: auto !important;
-                scroll-snap-type: x mandatory;
-                padding: 10px 5px 15px 5px !important;
+                display: grid !important;
+                grid-template-columns: repeat(6, 1fr) !important; /* 총 6개의 그리드 열 확보 */
+                gap: 8px !important;
+                justify-content: center !important;
+                padding: 0 !important;
             }
-            .logo-options::-webkit-scrollbar { display: none; }
             
+            /* 💥 개별 통신사 버튼 모바일 반응형 가변 높이 및 강제 열배정 배치 수식 */
             .logo-btn {
-                flex: 0 0 calc((100% - 20px) / 2.5) !important;
-                width: auto !important;
-                height: 52px !important;
-                padding: 6px 10px !important;
-                scroll-snap-align: start;
+                width: 100% !important;
+                height: 54px !important;
+                padding: 4px 8px !important;
+                border-radius: 12px !important;
                 transform: none !important;
             }
             .logo-btn.active { transform: scale(1.02) !important; }
 
-            .calc-arrow {
-                display: flex;
-                position: absolute;
-                top: 50%;
-                transform: translateY(-50%);
-                width: 30px;
-                height: 30px;
-                background: rgba(255,255,255,0.9);
-                border: 1px solid #CBD5E0;
-                border-radius: 50%;
-                align-items: center;
-                justify-content: center;
-                font-size: 12px;
-                color: #4A5568;
-                z-index: 20;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            }
-            .calc-arrow.left { left: 0px; }
-            .calc-arrow.right { right: 0px; }
+            /* 첫번째 줄 주요 3사 (U+ / SK / KT) ➡️ 각각 2칸씩 차지하며 총 3열 격자 배치 */
+            .logo-btn:nth-child(1) { grid-column: span 2; grid-row: 1; order: 1; } /* LG U+ */
+            .logo-btn:nth-child(2) { grid-column: span 2; grid-row: 1; order: 2; } /* SK브로드밴드 */
+            .logo-btn:nth-child(3) { grid-column: span 2; grid-row: 1; order: 3; } /* KT */
 
-            .text-options { flex-direction: column; gap: 8px; }
-            .text-btn { width: 100% !important; text-align: center; font-size: 14px; padding: 14px; } .res-row-prices { flex-direction: column; gap: 15px; }
-            .res-val { font-size: 26px; } .subsidy-val { font-size: 28px; }
-            .review-rolling-viewport { height: 260px; } .review-row { height: 78px; padding: 12px 15px; } .review-text { max-width: 240px; font-size: 12px; } .review-stars { display: none; }
-            .calc-apply-trigger-btn { font-size: 15px; padding: 16px; margin-top: 20px; }
-            .calc-dynamic-apply-panel { padding: 15px; }
-            .apply-product-value { font-size: 15px; }
-            .apply-input-row { flex-direction: column; gap: 8px; }
-            .apply-input-row input { width: 100%; padding: 13px; font-size: 14px; }
-            .apply-submit-final-btn { padding: 15px; font-size: 15px; }
+            /* 두번째 줄 알뜰 2사 (스카이라이프 / LG헬로비전) ➡️ 각각 2칸씩 차지하되 왼쪽 1칸을 비워서 정중앙 정렬 처리 */
+            .logo-btn:nth-child(4) { grid-column: 2 / span 2; grid-row: 2; order: 4; } /* KT스카이라이프 (2번째 칸부터 시작) */
+            .logo-btn:nth-child(5) { grid-column: 4 / span 2; grid-row: 2; order: 5; } /* LG헬로비전 (4번째 칸부터 시작) */
 
-            /* 모바일 버전 2단 고정 레이아웃 재연산 매핑 */
             .sticky-tier-1 { padding: 6px 15px; font-size: 12px; }
             .sticky-tier-2 { padding: 8px 12px; gap: 6px; flex-direction: row; }
             .sticky-form-side { width: 100%; gap: 6px; }
@@ -385,15 +275,13 @@
             <div class="calc-group">
                 <div class="calc-group-title">1단계: 통신사 브랜드를 선택해 주세요</div>
                 <div class="logo-slider-outer">
-                    <div class="calc-arrow left" onclick="scrollCarrierSlider(-1)">◀</div>
                     <div class="logo-options" id="logoOptionsScroll">
-                        <div class="logo-btn" onclick="setProvider('KT', this)"><img src="케이티로고.jpg" alt="KT"></div>
                         <div class="logo-btn" onclick="setProvider('LG', this)"><img src="엘지로고.png" alt="LG U+"></div>
                         <div class="logo-btn" onclick="setProvider('SK', this)"><img src="에스케이로고.jpg" alt="SK브로드밴드"></div>
+                        <div class="logo-btn" onclick="setProvider('KT', this)"><img src="케이티로고.jpg" alt="KT"></div>
                         <div class="logo-btn" onclick="setProvider('스카이', this)"><img src="스카이로고.png" alt="skylife"></div>
                         <div class="logo-btn" onclick="setProvider('헬로', this)"><img src="헬로비전로고.png" alt="LG헬로비전"></div>
                     </div>
-                    <div class="calc-arrow right" onclick="scrollCarrierSlider(1)">▶</div>
                 </div>
             </div>
             
@@ -507,9 +395,8 @@
         const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${rateGid}&_=${Date.now()}`;
         const regionCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${regionGid}&_=${Date.now()}`;
         
-        /* 💥 [CORE 패치] 초기화 널 상태 조율 세팅 */
         let allData = [], curProv = null, curProd = null;
-        let isCalculatorInteracted = false; /* 유저가 계산기를 단 한번이라도 조작했는가 판별플래그 */
+        let isCalculatorInteracted = false;
         
         let hellovisionRegions = [];
         let skPopRegions = []; 
@@ -542,39 +429,21 @@
                 const rResponse = await fetch(regionCsvUrl); const rText = await rResponse.text();
                 const rRows = parseCsvText(rText);
                 hellovisionRegions = rRows.slice(1).filter(row => row[0] && row[0].trim().includes('헬로') && row[1] && row[2]).map(row => ({ city: row[1].trim(), districts: row[2].replace(/"/g, '').trim() }));
-                skPopRegions = rRows.slice(1).filter(row => row[0] && row[0].trim() === 'SK POP' && row[1] && row[2]).map(row => ({ city: row[1].trim(), districts: row[districts].replace(/"/g, '').trim() }));
+                skPopRegions = rRows.slice(1).filter(row => row[0] && row[0].trim() === 'SK POP' && row[1] && row[2]).map(row => ({ city: row[1].trim(), districts: row[2].replace(/"/g, '').trim() }));
             } catch(eRegion) { console.error("가용지역 데이터 로드 오류", eRegion); }
             
-            // 초기 온로딩 시 강제 세팅 제거하고 뼈대만 출력 유도
             initLiveReviews();
             setupUniversalStickyScroll();
         }
 
-        function scrollCarrierSlider(direction) {
-            const container = document.getElementById('logoOptionsScroll');
-            if(!container) return;
-            const card = container.querySelector('.logo-btn');
-            if(!card) return;
-            const moveX = (card.offsetWidth + 10) * direction;
-            container.scrollBy({ left: moveX, behavior: 'smooth' });
-        }
-
-        /* 💥 절대치 스크롤 스파이 엔진 패치 파츠 (PC & 모바일 공용 작동) */
         function setupUniversalStickyScroll() {
             const stickyBar = document.getElementById('universalStickyBar');
             if (!stickyBar) return;
-            
             window.addEventListener('scroll', function() {
-                /* 화면 상단에서 아래로 250px 이상 내려오면 PC/모바일 관계없이 무조건 다이렉트 호출 */
-                if (window.pageYOffset > 250) {
-                    stickyBar.classList.add('show');
-                } else {
-                    stickyBar.classList.remove('show');
-                }
+                if (window.pageYOffset > 250) { stickyBar.classList.add('show'); } else { stickyBar.classList.remove('show'); }
             }, { passive: true });
         }
 
-        /* 💥 하단 바 통합형 처리 분기 엔진 소스 */
         function syncUniversalStickyBar() {
             const bar = document.getElementById('universalStickyBar');
             const txt = document.getElementById('sticky-display-text');
@@ -582,23 +451,18 @@
             if(!bar || !txt || !btn) return;
 
             if (!isCalculatorInteracted) {
-                // 1단계: 미조작 (상담신청 스위칭 모드)
                 bar.classList.remove('active-mode');
                 txt.innerHTML = `💡 나에게 딱 맞는 최저가 요금을 실시간으로 계산해 보세요!`;
                 btn.textContent = `🚀 떡값 상담신청`;
             } else {
-                // 2단계: 조작 완료 (가입신청 스위칭 모드 전개)
                 bar.classList.add('active-mode');
-                
                 let productDesc = curProd === '요금할인형' ? '요금특가 결합형' : (curProd === '결합' ? '인터넷+TV 결합상품' : '인터넷 단독');
                 let speedDesc = currentActiveSpeed || "속도 미선택";
-                
                 txt.innerHTML = `🟢 가입 진행 조건: [${curProv} / ${productDesc} / ${speedDesc}] ➡️ 월 청구 요금: <span style="color:#FFF; font-weight:900; background:#E53E3E; padding:2px 6px; border-radius:4px;">${currentCalculatedPrice}</span> (혜택: ${currentGiftStatusText})`;
                 btn.textContent = `🔥 위 조건으로 가입신청`;
             }
         }
 
-        /* 💥 통합 플로팅 고정 바 전송 트래커 */
         function submitUniversalStickyForm() {
             const nameVal = document.getElementById('sticky-user-name').value.trim();
             const phoneVal = document.getElementById('sticky-user-phone').value.trim();
@@ -615,12 +479,12 @@
         }
 
         function setProvider(p, el) { 
-            isCalculatorInteracted = true; // 유저 터치 감지 플래그 기동
+            isCalculatorInteracted = true;
             document.querySelectorAll('.logo-options .logo-btn').forEach(b => b.classList.remove('active')); 
             el.classList.add('active'); 
             curProv = p; 
 
-            if(!curProd) curProd = '단독'; // 디폴트 보정 연동 무결성 유도
+            if(!curProd) curProd = '단독';
             
             const hasAnyGift = globalSelectedGift !== null;
             const menuBox = document.getElementById('product-type-box');
@@ -666,7 +530,7 @@
                 alert('⚠️ 선택하신 요금할인형 특가 상품은 매달 청구 요금이 청구 최대로 자동 할인되는 상품입니다.\n가전 사은품 중복 지급이 불가능하여 가전을 선택하실 수 없습니다.\n(본사 정식 결합상품 선택 시 가전 해제창이 오픈됩니다!)');
                 return;
             }
-            if(!curProv) curProv = 'KT'; // 예외 안전장치
+            if(!curProv) curProv = 'LG';
             const cardIdMap = { '무빙스타일': 'gift-moving', '제트핏': 'gift-jetfit', '세탁기': 'gift-wash', '55인치TV': 'gift-tv55' };
             const targetCard = document.getElementById(cardIdMap[giftKey]);
             if(targetCard && targetCard.classList.contains('low-speed-locked')) {
@@ -702,7 +566,6 @@
         function updateOptions() {
             const speedBox = document.getElementById('speed-box'); if (!speedBox) return; speedBox.innerHTML = '';
             
-            // 만약 아무것도 클릭이 안되어 있으면 연동 스캔 연기
             if(!curProv || !curProd) {
                 syncUniversalStickyBar();
                 return;
@@ -811,7 +674,6 @@
                 document.getElementById('label-base').textContent = (curProd === '요금할인형') ? ((curProv === 'SK') ? "SK 요금할인형 특가" : "스카이 요금할인형 특가") : "알뜰 실속 요금";
                 if (baseEl) { baseEl.style.textDecoration = "none"; baseEl.style.color = "#1A202C"; baseEl.style.fontSize = "34px"; baseEl.style.fontWeight = "900"; }
                 printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]}`;
-                currentCalculatedPrice = `${basePrice}원/월`;
             } else {
                 if (baseEl) { baseEl.style.textDecoration = "line-through"; baseEl.style.color = "#A0AEC0"; baseEl.style.fontSize = "24px"; baseEl.style.fontWeight = "700"; }
                 const dcPriceRaw = parseInt(cleanRow[5].replace(/[^0-9]/g, "")) || 0;
@@ -870,7 +732,6 @@
             if(cleanSpecText) { specEl.innerHTML = `🔥 털보아저씨의 특별 보너스: ${cleanSpecText} 🔥`; } else { specEl.textContent = ""; }
             currentSelectedString = printableProductDetail; const summarySlot = document.getElementById('apply-product-text-summary'); if(summarySlot) summarySlot.textContent = currentSelectedString;
             
-            /* 하단 고정 스티키바 정보 동시 동기화 실행 */
             syncUniversalStickyBar();
         }
 
