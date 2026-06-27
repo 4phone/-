@@ -7,7 +7,7 @@
     <link rel="icon" href="사거리로고.png" type="image/png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght=500;700;900&family=Noto+Sans+KR:wght=500;700;900&display=swap">
     <style>
-        :root { --main-bg: #3E441E; --point-color: #2D3214; --gold-color: #FFD700; --fire-orange: #FF5722; }
+        :root { --main-bg: #3E441E; --point-color: #2D3214; --gold-color: #FFD700; --fire-orange: #FF5722; --footer-bg: #EAEFE9; --footer-text: #555555; }
         *, *::before, *::after { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
         body { margin: 0; padding: 0; font-family: 'Gmarket Sans', 'Noto Sans KR', sans-serif; background-color: var(--main-bg); color: #fff; letter-spacing: -0.5px; overflow-x: hidden; padding-bottom: 90px; }
@@ -43,6 +43,13 @@
         .c-tab-btn.active { background: var(--gold-color); color: #111; border-color: var(--gold-color); }
         .form-panel { display: none; } .form-panel.active { display: block; }
         .form-group input { width: 100%; padding: 13px; border-radius: 8px; border: 2px solid #E2E8F0; margin-bottom: 12px; font-size: 14px; font-family: inherit; }
+        
+        /* 개인정보 고지용 체크박스 컴포넌트 */
+        .privacy-agree-zone { text-align: left; padding: 4px 2px 12px 2px; font-family: 'Noto Sans KR', sans-serif; }
+        .privacy-label { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #CBD5E0; cursor: pointer; line-height: 1.4; }
+        .privacy-label input { margin-top: 2px; cursor: pointer; }
+        .privacy-notice-txt { font-size: 11px; color: #A0AEC0; margin-top: 4px; padding-left: 20px; display: block; line-height: 1.3; }
+
         .submit-btn { width: 100%; padding: 15px; background: var(--gold-color); border: none; font-weight: 900; font-size: 16px; border-radius: 8px; cursor: pointer; color: #111; transition: 0.2s; }
         .submit-btn:hover { background: #F6C200; }
         
@@ -58,12 +65,13 @@
         .calc-group { margin-bottom: 35px; text-align: left; }
         .calc-group-title { font-size: 18px; font-weight: 900; margin-bottom: 20px; color: #1A202C; border-left: 5px solid var(--main-bg); padding-left: 10px; }
         
-        /* 1단계 통신사 랩퍼 (PC 기준: 가로로 5개 균등 정렬) */
         .logo-slider-outer { position: relative; width: 100%; }
-        .logo-options { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; width: 100%; }
+        .logo-options { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
         .logo-btn { background-color: #FFFFFF !important; border: 3px solid #E2E8F0 !important; border-radius: 14px !important; padding: 8px 15px !important; cursor: pointer; width: 170px; height: 65px; display: flex; align-items: center; justify-content: center; transition: border-color 0.2s ease, transform 0.2s ease; }
         .logo-btn img { max-width: 100%; max-height: 100%; object-fit: contain; background: transparent !important; }
         .logo-btn.active { border-color: #799F0C !important; background-color: #FFFFFF !important; box-shadow: 0 10px 20px rgba(121,159,12,0.18) !important; transform: scale(1.06); z-index: 10; }
+        
+        .calc-arrow { display: none; }
 
         .text-options { display: flex; width: 100%; gap: 14px; justify-content: space-between; }
         .text-btn { flex: 1; text-align: center; background: #F7FAFC; border: 3px solid #E2E8F0; padding: 16px 20px; border-radius: 14px; font-weight: 900; font-size: 16px; color: #4A5568; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
@@ -109,7 +117,7 @@
         #gift-section { background: rgba(0, 0, 0, 0.1); }
         #gift-display-master-container { max-width: 1040px; margin: 0 auto; position: relative; }
         .gift-discount-lock-overlay { display: none; background: rgba(0,0,0,0.85); position: absolute; top:0; left:0; right:0; bottom:0; z-index: 100; border-radius: 24px; align-items: center; justify-content: center; padding: 30px; }
-        .gift-discount-lock-text { color: var(--gold-color); font-size: 18px; font-weight: 900; line-height: 1.6; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); text-align: center; }
+        .gift-discount-lock-text { color: var(--gold-color); font-size: 18px; font-weight: 900; line-height: 1.6; text-align: center; }
 
         .gift-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
         .gift-grid .gift-card { background: #fff; color: #2D3748; border-radius: 18px; padding: 20px; text-align: center; border: 3px solid #E2E8F0; transition: transform 0.2s, border-color 0.2s; cursor: pointer; position: relative; overflow: hidden; }
@@ -131,15 +139,15 @@
         .review-user span { color: #A0AEC0; font-size: 12px; }
         .review-text { font-size: 14px; color: #E2E8F0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 680px; }
         .review-stars { color: var(--gold-color); font-size: 15px; font-weight: bold; }
-        .footer { text-align: center; padding: 50px 0; color: rgba(255,255,255,0.4); font-size: 14px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 80px; }
         
-        /* PC & 모바일 통합형 실시간 연동 하단 고정 스티키 구조 */
+        /* 🗺️ 상시 고정형 실시간 연동 하단 플로팅 바 레이아웃 패치 */
         .universal-sticky-quick-bar { position: fixed; bottom: -150px; left: 0; right: 0; background: #1A202C; border-top: 4px solid var(--gold-color); z-index: 3000; box-shadow: 0 -5px 25px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: bottom 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); }
         .universal-sticky-quick-bar.show { bottom: 0; }
         .sticky-tier-1 { background: #2D3748; padding: 6px 40px; font-size: 14px; font-weight: 900; color: var(--gold-color); border-bottom: 1px solid #4A5568; text-align: left; display: flex; align-items: center; gap: 10px; }
         .sticky-status-dot { width: 8px; height: 8px; background: #A0AEC0; border-radius: 50%; }
         .universal-sticky-quick-bar.active-mode .sticky-status-dot { background: #48BB78; animation: pulse-green 1.5s infinite; }
         @keyframes pulse-green { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(72, 187, 120, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); } }
+        
         .sticky-tier-2 { padding: 12px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; max-width: 1280px; margin: 0 auto; width: 100%; }
         .sticky-form-side { display: flex; align-items: center; gap: 12px; flex: 1; justify-content: flex-end; }
         .sticky-input-field { width: 200px; height: 45px; padding: 0 12px; border-radius: 8px; border: 1px solid #4A5568; background: #2D3748; color: #fff; font-size: 14px; font-weight: 700; }
@@ -147,6 +155,26 @@
         .sticky-input-field:focus { border-color: var(--gold-color); outline: none; }
         .sticky-action-btn { background: #ED8936; color: #fff; border: none; padding: 0 24px; height: 45px; border-radius: 8px; font-size: 15px; font-weight: 900; cursor: pointer; white-space: nowrap; box-shadow: 0 3px 10px rgba(237,137,54,0.3); transition: 0.2s; }
         .universal-sticky-quick-bar.active-mode .sticky-action-btn { background: linear-gradient(135deg, var(--fire-orange) 0%, #E64A19 100%); box-shadow: 0 4px 12px rgba(255,87,34,0.4); }
+
+        /* 🧾 이미지 [붙임2] 기반: 실시간 실제 정보 매핑형 명품 푸터 마감 서식 */
+        .footer { background: #1B1E0C; color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.8; text-align: left; padding: 40px 40px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 80px; font-family: 'Noto Sans KR', sans-serif; }
+        .footer-container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+        .footer-row-links { display: flex; gap: 20px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; }
+        .footer-row-links a { color: #fff; text-decoration: none; cursor: pointer; }
+        .footer-row-links a.policy-btn { color: var(--gold-color); }
+        .footer-row-info { display: flex; flex-wrap: wrap; gap: 10px 24px; color: #A0AEC0; }
+        .footer-row-info span b { color: #fff; font-weight: 500; }
+        .footer-copyright { color: #718096; font-size: 12px; margin-top: 8px; }
+
+        /* 법적 의무 고지 및 권리 보호용 모달 창 스타일 */
+        .privacy-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 5000; align-items: center; justify-content: center; padding: 20px; }
+        .privacy-modal-card { background: #ffffff; color: #2D3748; width: 100%; max-width: 640px; border-radius: 16px; display: flex; flex-direction: column; max-height: 85vh; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .privacy-modal-header { padding: 20px; border-bottom: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: space-between; }
+        .privacy-modal-header h3 { margin: 0; font-size: 18px; font-weight: 900; color: #1A202C; }
+        .privacy-modal-close { background: none; border: none; font-size: 24px; font-weight: bold; cursor: pointer; color: #A0AEC0; }
+        .privacy-modal-close:hover { color: #4A5568; }
+        .privacy-modal-body { padding: 20px; overflow-y: auto; font-size: 13px; line-height: 1.6; text-align: left; }
+        .privacy-modal-body h4 { font-size: 14px; font-weight: 900; margin: 15px 0 6px 0; color: #1A202C; }
 
         /* ===================================================
            모바일 전용 반응형 미디어 쿼리 커스텀 보정
@@ -161,40 +189,40 @@
             .main-right { width: 100%; padding: 0 10px; } .consult-main-card { padding: 15px; }
             .section { padding: 60px 10px 30px 10px; } .section-title { font-size: 24px; } .calc-wrapper { padding: 20px 15px; }
             
-            /* 💥 [3+2 구조 특화] 모바일 통신사 묶음 부모 랩퍼 디자인 해부 */
-            .logo-options {
-                display: grid !important;
-                grid-template-columns: repeat(6, 1fr) !important; /* 총 6개의 그리드 열 확보 */
-                gap: 8px !important;
-                justify-content: center !important;
-                padding: 0 !important;
-            }
-            
-            /* 💥 개별 통신사 버튼 모바일 반응형 가변 높이 및 강제 열배정 배치 수식 */
-            .logo-btn {
-                width: 100% !important;
-                height: 54px !important;
-                padding: 4px 8px !important;
-                border-radius: 12px !important;
-                transform: none !important;
-            }
+            /* 3+2 구조 특화 모바일 통신사 배치 */
+            .logo-options { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 8px !important; justify-content: center !important; padding: 0 !important; }
+            .logo-btn { width: 100% !important; height: 54px !important; padding: 4px 8px !important; border-radius: 12px !important; transform: none !important; }
             .logo-btn.active { transform: scale(1.02) !important; }
+            .logo-btn:nth-child(1) { grid-column: span 2; grid-row: 1; order: 1; } 
+            .logo-btn:nth-child(2) { grid-column: span 2; grid-row: 1; order: 2; } 
+            .logo-btn:nth-child(3) { grid-column: span 2; grid-row: 1; order: 3; } 
+            .logo-btn:nth-child(4) { grid-column: 2 / span 2; grid-row: 2; order: 4; } 
+            .logo-btn:nth-child(5) { grid-column: 4 / span 2; grid-row: 2; order: 5; } 
 
-            /* 첫번째 줄 주요 3사 (U+ / SK / KT) ➡️ 각각 2칸씩 차지하며 총 3열 격자 배치 */
-            .logo-btn:nth-child(1) { grid-column: span 2; grid-row: 1; order: 1; } /* LG U+ */
-            .logo-btn:nth-child(2) { grid-column: span 2; grid-row: 1; order: 2; } /* SK브로드밴드 */
-            .logo-btn:nth-child(3) { grid-column: span 2; grid-row: 1; order: 3; } /* KT */
+            .text-options { flex-direction: column; gap: 8px; }
+            .text-btn { width: 100% !important; text-align: center; font-size: 14px; padding: 14px; } .res-row-prices { flex-direction: column; gap: 15px; }
+            .res-val { font-size: 26px; } .subsidy-val { font-size: 28px; }
+            .review-rolling-viewport { height: 260px; } .review-row { height: 78px; padding: 12px 15px; } .review-text { max-width: 240px; font-size: 12px; } .review-stars { display: none; }
+            .calc-apply-trigger-btn { font-size: 15px; padding: 16px; margin-top: 20px; }
+            .calc-dynamic-apply-panel { padding: 15px; }
+            .apply-product-value { font-size: 15px; }
+            .apply-input-row { flex-direction: column; gap: 8px; }
+            .apply-input-row input { width: 100%; padding: 13px; font-size: 14px; }
+            .apply-submit-final-btn { padding: 15px; font-size: 15px; }
 
-            /* 두번째 줄 알뜰 2사 (스카이라이프 / LG헬로비전) ➡️ 각각 2칸씩 차지하되 왼쪽 1칸을 비워서 정중앙 정렬 처리 */
-            .logo-btn:nth-child(4) { grid-column: 2 / span 2; grid-row: 2; order: 4; } /* KT스카이라이프 (2번째 칸부터 시작) */
-            .logo-btn:nth-child(5) { grid-column: 4 / span 2; grid-row: 2; order: 5; } /* LG헬로비전 (4번째 칸부터 시작) */
-
+            /* 모바일 버전 2단 고정 레이아웃 재연산 매핑 */
             .sticky-tier-1 { padding: 6px 15px; font-size: 12px; }
-            .sticky-tier-2 { padding: 8px 12px; gap: 6px; flex-direction: row; }
+            .sticky-tier-2 { padding: 8px 12px; gap: 8px; flex-direction: column; }
             .sticky-form-side { width: 100%; gap: 6px; }
             .sticky-input-field { flex: 1; min-width: 0; width: auto; height: 45px; font-size: 13px; padding: 0 8px; }
-            .sticky-action-btn { flex: 0 0 auto; height: 45px; padding: 0 10px; font-size: 13px; }
-            body { padding-bottom: 100px; }
+            .sticky-action-btn { flex: 0 0 auto; height: 45px; padding: 0 10px; font-size: 13px; width: 100%; margin-top: 4px; }
+            
+            /* 모바일 전용 고지 서식 마진 */
+            .mobile-sticky-privacy { width: 100%; order: -1; margin-bottom: 2px; }
+            
+            .footer { padding: 30px 20px; font-size: 12px; }
+            .footer-row-info { flex-direction: column; gap: 6px; }
+            body { padding-bottom: 160px; }
         }
     </style>
 </head>
@@ -216,13 +244,23 @@
         </div>
     </div>
 
+    <!-- PC & 모바일 전용 카멜레온 연동형 2단 하단 고정 플로팅 바 컴포넌트 -->
     <div class="universal-sticky-quick-bar" id="universalStickyBar">
+        <!-- 1단: 실시간 조건 스캔 라인 -->
         <div class="sticky-tier-1">
             <div class="sticky-status-dot"></div>
             <span id="sticky-display-text">💡 나에게 딱 맞는 최저가 요금을 실시간으로 계산해 보세요!</span>
         </div>
+        <!-- 2단: 성함/연락처 인풋 및 가변형 버튼 폼 구역 -->
         <div class="sticky-tier-2">
             <div class="sticky-form-side">
+                <!-- 모바일 전용 동의 영역 위치 보정용 wrapper 분기 -->
+                <div class="privacy-agree-zone mobile-sticky-privacy" style="padding:0; margin-right:auto;">
+                    <label class="privacy-label">
+                        <input type="checkbox" id="sticky-privacy-check">
+                        <span>개인정보 수집 및 동의 (필수)</span>
+                    </label>
+                </div>
                 <input type="text" id="sticky-user-name" class="sticky-input-field" placeholder="성함 입력">
                 <input type="text" id="sticky-user-phone" class="sticky-input-field" placeholder="연락처 입력">
                 <button id="sticky-main-btn" class="sticky-action-btn" onclick="submitUniversalStickyForm()">🚀 떡값 상담신청</button>
@@ -244,19 +282,41 @@
                         <button class="c-tab-btn" onclick="switchForm('full', this)">📝 원스톱 다이렉트접수</button>
                         <button class="c-tab-btn" onclick="window.open('http://pf.kakao.com/_PxjsKG/chat', '_blank')">💬 카톡 1:1상담</button>
                     </div>
+                    
+                    <!-- 그물망 1: 간편 빠른상담 개인정보 규격 보완 파츠 -->
                     <div class="form-panel active" id="form-fast">
                         <div class="form-group"><input type="text" id="main-fast-name" placeholder="성함을 적어주세요"></div>
                         <div class="form-group"><input type="text" id="main-fast-phone" placeholder="연락처를 적어주세요"></div>
-                        <button class="submit-btn" onclick="alert('접수 완료!')">화끈하게 빠른 상담 신청</button>
+                        
+                        <div class="privacy-agree-zone">
+                            <label class="privacy-label">
+                                <input type="checkbox" id="fast-privacy-check">
+                                <b>개인정보 수집 및 이용 동의 (필수)</b>
+                            </label>
+                            <span class="privacy-notice-txt">※ 목적: 가입 상담 및 접수 안내 / 항목: 성명, 연락처 / 기간: 목적 달성 즉시 파기</span>
+                        </div>
+
+                        <button class="submit-btn" onclick="submitMainFastForm()">화끈하게 빠른 상담 신청</button>
                         <a href="tel:18332440" class="phone-call-btn">📞 직통 전화걸기: 1833-2440</a>
                         <a href="#" class="main-sms-routing-btn" onclick="triggerMainFastSms(event)">💬 문자로 상담 접수: 010-6414-2444</a>
                     </div>
+                    
+                    <!-- 그물망 2: 원스톱 다이렉트접수 개인정보 규격 보완 파츠 -->
                     <div class="form-panel" id="form-full">
-                        <div class="form-group"><input type="text" placeholder="성함 입력"></div>
+                        <div class="form-group"><input type="text" id="main-full-name" placeholder="성함 입력"></div>
                         <div class="form-group"><input type="text" placeholder="주민등록번호 입력 [RRN Omitted]"></div>
-                        <div class="form-group"><input type="text" placeholder="연락처 및 설치 희망 상세 주소"></div>
-                        <div class="form-group"><input type="text" placeholder="희망 통신사 / 가입 상품명"></div>
-                        <button class="submit-btn" onclick="alert('다이렉트 접수 완료!')">다이렉트 즉시 접수하기</button>
+                        <div class="form-group"><input type="text" id="main-full-addr" placeholder="연락처 및 설치 희망 상세 주소"></div>
+                        <div class="form-group"><input type="text" id="main-full-prod" placeholder="희망 통신사 / 가입 상품명"></div>
+                        
+                        <div class="privacy-agree-zone">
+                            <label class="privacy-label">
+                                <input type="checkbox" id="full-privacy-check">
+                                <b>개인정보 수집 및 이용 동의 (필수)</b>
+                            </label>
+                            <span class="privacy-notice-txt">※ 목적: 개통 다이렉트 전산 접수 / 항목: 성명, 주소, 희망상품 / 기간: 목적 달성 즉시 파기</span>
+                        </div>
+
+                        <button class="submit-btn" onclick="submitMainFullForm()">다이렉트 즉시 접수하기</button>
                     </div>
                 </div>
             </div>
@@ -326,6 +386,8 @@
             <div id="res-special" style="margin-top:25px; font-weight:900; color:var(--fire-orange); font-size:18px;"></div>
             
             <a href="#gift-section" class="calc-to-gift-route-btn">🎁 지금 고르신 요금제로 가져갈 수 있는 가전 사은품 라인업 보기 ▲</a>
+            
+            <!-- 계산기 내부 다이렉트 신청 컴포넌트 개인정보 패치 -->
             <button class="calc-apply-trigger-btn" id="calc-apply-btn" onclick="openCalculateApplyForm()">
                 🔥 내가 고른 조건으로 즉시 가입신청하기 (1초 완성) ▼
             </button>
@@ -339,6 +401,15 @@
                     <input type="text" id="calc-apply-name" placeholder="성함을 적어주세요">
                     <input type="text" id="calc-apply-phone" placeholder="연락처를 적어주세요">
                 </div>
+                
+                <div class="privacy-agree-zone">
+                    <label class="privacy-label">
+                        <input type="checkbox" id="calc-privacy-check">
+                        <b>개인정보 수집 및 이용 동의 (필수)</b>
+                    </label>
+                    <span class="privacy-notice-txt">※ 목적: 계산기 조건 맞춤 가입 접수 / 항목: 성명, 연락처, 선택조건 / 기간: 목적 달성 즉시 파기</span>
+                </div>
+
                 <button class="apply-submit-final-btn" onclick="submitCalculateApplyForm()">
                     🚀 위 조건 그대로 화끈하게 가입 신청하기
                 </button>
@@ -386,7 +457,63 @@
         <div class="review-rolling-viewport"><div class="review-movable-belt" id="rolling-belt"></div></div>
     </div>
 
-    <div class="footer">© 사거리인터넷 ALL RIGHTS RESERVED. | 실시간 단가표 데이터 마스터 연동 COMPLETION.</div>
+    <!-- 🧾 이미지 image_5538dc.png 기준 실제 운영사 정보 완벽 동기화 및 2단 구조 명품 푸터 파츠 적용 완료 -->
+    <div class="footer">
+        <div class="footer-container">
+            <div class="footer-row-links">
+                <a onclick="openPrivacyModal()" class="policy-btn">개인정보 처리방침</a>
+                <a href="#calculator-section">요금계산기</a>
+                <a href="#gift-section">사은품 라인업</a>
+            </div>
+            <div class="footer-row-info">
+                <span>주소 : <b>경기도 안산시 단원구 화정로1길 6, 1층</b></span>
+                <span>대표번호 : <b>1833-2440</b> / 핸드폰 : <b>010-6414-2444</b></span>
+                <span>이메일 : <b>4phone1@naver.com</b></span>
+                <span>상호 : <b>사거리인터넷</b></span>
+                <span>대표 : <b>전상민</b></span>
+                <span>사업자등록번호 : <b>603-54-00909</b></span>
+                <span>통신판매업 : <b>제 2025-경기안산-2500호</b></span>
+                <span>팩스 : <b>0508-936-1800</b></span>
+            </div>
+            <div style="margin-top: 10px; color:#A0AEC0;">
+                <span style="font-size: 16px; font-weight: 900; color: #fff; display: block; margin-bottom: 4px;">고객센터 : 1833-2440</span>
+                <span>AM 10:00 ~ PM 19:30 | 전산 휴무일 순차연락드립니다</span>
+            </div>
+            <div class="footer-copyright">© 사거리인터넷 ALL RIGHTS RESERVED. | 실시간 단가표 데이터 마스터 연동 COMPLETION.</div>
+        </div>
+    </div>
+
+    <!-- 🔒 법적 의무 고지 충족용 개인정보 처리방침 전문 모달 컴포넌트 -->
+    <div class="privacy-modal-overlay" id="privacyModal">
+        <div class="privacy-modal-card">
+            <div class="privacy-modal-header">
+                <h3>개인정보 처리방침 (공식 고지 전문)</h3>
+                <button class="privacy-modal-close" onclick="closePrivacyModal()">✕</button>
+            </div>
+            <div class="privacy-modal-body">
+                <h4>1. 수집하는 개인정보의 항목 및 이용 목적</h4>
+                <p>사거리인터넷은 유선통신 가입 상담, 개통 신청 접수, 상품 안내를 목적으로 정보주체의 동의를 받아 성명, 연락처, 설치 주소 등을 수집하고 있습니다.</p>
+                
+                <h4>2. 개인정보의 보유 및 이용기간</h4>
+                <p><b>수집된 개인정보는 가입 상담 완료 및 개통 전산 처리 등 목적이 달성된 후 지체 없이 안전한 방법으로 즉시 파기합니다.</b> 정보주체가 파기를 요청하는 경우에도 즉시 파기 처리됩니다.</p>
+                
+                <h4>3. 개인정보의 파기절차 및 방법</h4>
+                <p>전자적 파일 형태의 정보는 기록을 재생할 수 없는 기술적 방법을 사용하여 삭제하며, 종이 문서에 출력된 개인정보는 분쇄기로 분쇄하여 파기합니다.</p>
+                
+                <h4>4. 정보주체의 권리·의무 및 행사방법</h4>
+                <p>정보주체는 언제든지 자신의 개인정보에 대한 열람, 정정, 삭제 및 처리정지를 요구할 수 있으며, 사거리인터넷은 이에 대해 지체 없이 조치합니다.</p>
+                
+                <h4>5. 개인정보 안전성 확보 조치</h4>
+                <p>사거리인터넷은 수집된 정보의 분실, 도난, 유출을 방지하기 위하여 암호화 통신 적용, 접근 권한의 제한적 부여 등 기술적·관리적 안전성 확보 조치를 취하고 있습니다.</p>
+                
+                <h4>6. 개인정보 보호책임자 및 담당부서</h4>
+                <p>사거리인터넷은 개인정보를 보호하고 관련 불만을 처리하기 위하여 아래와 같이 보호책임자를 지정하고 있습니다.<br>
+                - 개인정보 보호책임자 : 전상민 대표<br>
+                - 문의 직통처 : 1833-2440 / 010-6414-2444<br>
+                - 이메일 브릿지 : 4phone1@naver.com</p>
+            </div>
+        </div>
+    </div>
 
     <script>
         const sheetId = '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
@@ -436,6 +563,9 @@
             setupUniversalStickyScroll();
         }
 
+        function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'flex'; }
+        function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
+
         function setupUniversalStickyScroll() {
             const stickyBar = document.getElementById('universalStickyBar');
             if (!stickyBar) return;
@@ -463,19 +593,64 @@
             }
         }
 
+        /* 💥 개인정보 안전 인터록 결합형 폼 전송 모듈 */
+        function submitMainFastForm() {
+            const name = document.getElementById('main-fast-name').value.trim();
+            const phone = document.getElementById('main-fast-phone').value.trim();
+            const checked = document.getElementById('fast-privacy-check').checked;
+            
+            if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('main-fast-name').focus(); return; }
+            if(!phone) { alert('연락처를 입력해 주세요!'); document.getElementById('main-fast-phone').focus(); return; }
+            if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 상담 신청이 가능합니다.'); return; }
+            
+            alert(`[간편 빠른상담 접수 성공]\n\n성함: ${name}\n연락처: ${phone}\n\n당일 신속하게 연락드리겠습니다!`);
+            document.getElementById('main-fast-name').value = ""; document.getElementById('main-fast-phone').value = ""; document.getElementById('fast-privacy-check').checked = false;
+        }
+
+        function submitMainFullForm() {
+            const name = document.getElementById('main-full-name').value.trim();
+            const addr = document.getElementById('main-full-addr').value.trim();
+            const prod = document.getElementById('main-full-prod').value.trim();
+            const checked = document.getElementById('full-privacy-check').checked;
+            
+            if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('main-full-name').focus(); return; }
+            if(!addr) { alert('설치 주소를 입력해 주세요!'); document.getElementById('main-full-addr').focus(); return; }
+            if(!prod) { alert('희망 통신사 및 상품을 입력해 주세요!'); document.getElementById('main-full-prod').focus(); return; }
+            if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 다이렉트 접수가 가능합니다.'); return; }
+            
+            alert(`[다이렉트 원스톱 접수 성공]\n\n성함: ${name}\n\n전산 즉시 배정 처리 모드가 가동됩니다.`);
+            document.getElementById('main-full-name').value = ""; document.getElementById('main-full-addr').value = ""; document.getElementById('main-full-prod').value = ""; document.getElementById('full-privacy-check').checked = false;
+        }
+
+        function submitCalculateApplyForm() {
+            const name = document.getElementById('calc-apply-name').value.trim();
+            const phone = document.getElementById('calc-apply-phone').value.trim();
+            const checked = document.getElementById('calc-privacy-check').checked;
+            
+            if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('calc-apply-name').focus(); return; }
+            if(!phone) { alert('연락처를 입력해 주세요!'); document.getElementById('calc-apply-phone').focus(); return; }
+            if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 가입 신청이 가능합니다.'); return; }
+            
+            alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요금: ${currentCalculatedPrice}\n성함: ${name}\n연락처: ${phone}\n\n사거리인터넷에서 확인 후 신속하게 연락드리겠습니다!`);
+            document.getElementById('calc-apply-name').value = ""; document.getElementById('calc-apply-phone').value = ""; document.getElementById('calc-apply-panel').style.display = "none"; document.getElementById('calc-privacy-check').checked = false;
+            const triggerBtn = document.getElementById('calc-apply-btn'); if(triggerBtn) triggerBtn.textContent = "🔥 내가 고른 조건으로 즉시 가입신청하기 (1초 완성) ▼";
+        }
+
         function submitUniversalStickyForm() {
-            const nameVal = document.getElementById('sticky-user-name').value.trim();
-            const phoneVal = document.getElementById('sticky-user-phone').value.trim();
-            if(!nameVal) { alert('성함을 입력해 주세요!'); document.getElementById('sticky-user-name').focus(); return; }
-            if(!phoneVal) { alert('연락처를 입력해 주세요!'); document.getElementById('sticky-user-phone').focus(); return; }
+            const name = document.getElementById('sticky-user-name').value.trim();
+            const phone = document.getElementById('sticky-user-phone').value.trim();
+            const checked = document.getElementById('sticky-privacy-check').checked;
+            
+            if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('sticky-user-name').focus(); return; }
+            if(!phone) { alert('연락처를 입력해 주세요!'); document.getElementById('sticky-user-phone').focus(); return; }
+            if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 신청이 가능합니다.'); return; }
             
             if(!isCalculatorInteracted) {
-                alert(`[간편 빠른상담 접수 완료]\n\n성함: ${nameVal}\n연락처: ${phoneVal}\n\n사거리인터넷에서 즉시 전화드려 맞춤형 요금 컨설팅을 도와드리겠습니다!`);
+                alert(`[간편 빠른상담 접수 완료]\n\n성함: ${name}\n연락처: ${phone}`);
             } else {
-                alert(`[다이렉트 가입신청 성공]\n\n신청 내역: ${currentSelectedString}\n월 요금: ${currentCalculatedPrice}\n성함: ${nameVal}\n연락처: ${phoneVal}\n\n위 맞춤 설계 조건 그대로 확정하여 당일 신속 배정 전화를 드리겠습니다!`);
+                alert(`[다이렉트 가입신청 성공]\n\n신청 내역: ${currentSelectedString}\n월 요금: ${currentCalculatedPrice}\n성함: ${name}\n연락처: ${phone}`);
             }
-            document.getElementById('sticky-user-name').value = "";
-            document.getElementById('sticky-user-phone').value = "";
+            document.getElementById('sticky-user-name').value = ""; document.getElementById('sticky-user-phone').value = ""; document.getElementById('sticky-privacy-check').checked = false;
         }
 
         function setProvider(p, el) { 
@@ -565,11 +740,7 @@
 
         function updateOptions() {
             const speedBox = document.getElementById('speed-box'); if (!speedBox) return; speedBox.innerHTML = '';
-            
-            if(!curProv || !curProd) {
-                syncUniversalStickyBar();
-                return;
-            }
+            if(!curProv || !curProd) { syncUniversalStickyBar(); return; }
             
             const step3Title = document.getElementById('step3-title');
             const step4Title = document.getElementById('step4-title');
@@ -746,14 +917,6 @@
             e.preventDefault(); const targetPhone = "01064142444"; const smsBody = `[사거리인터넷] 인터넷 가입 빠른 상담 요청합니다.`;
             const isTargetIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             const smsLink = isTargetIos ? `sms:${targetPhone}&body=${encodeURIComponent(smsBody)}` : `sms:${targetPhone}?body=${encodeURIComponent(smsBody)}`; window.location.href = smsLink;
-        }
-        function submitCalculateApplyForm() {
-            const nameVal = document.getElementById('calc-apply-name').value.trim(); const phoneVal = document.getElementById('calc-apply-phone').value.trim();
-            if(!nameVal) { alert('성함을 입력해 주세요!'); document.getElementById('calc-apply-name').focus(); return; }
-            if(!phoneVal) { alert('연락처를 입력해 주세요!'); document.getElementById('calc-apply-phone').focus(); return; }
-            alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요금: ${currentCalculatedPrice}\n성함: ${nameVal}\n연락처: ${phoneVal}\n\n사거리인터넷에서 확인 후 당일 신속하게 연락드리겠습니다!`);
-            document.getElementById('calc-apply-name').value = ""; document.getElementById('calc-apply-phone').value = ""; document.getElementById('calc-apply-panel').style.display = "none";
-            const triggerBtn = document.getElementById('calc-apply-btn'); if(triggerBtn) triggerBtn.textContent = "🔥 내가 고른 조건으로 즉시 가입신청하기 (1초 완성) ▼";
         }
         function initLiveReviews() {
             const belt = document.getElementById('rolling-belt'); if(!belt) return;
