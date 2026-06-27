@@ -3,149 +3,523 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사거리인터넷 - 사장님전용 단체 가입 특별관</title>
-    <link rel="icon" href="사거리 로고.png" type="image/png">
+    <title>사거리인터넷 - 사장님전용 독점 결합 단가표</title>
+    <link rel="icon" href="사거리로고.png" type="image/png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gmarket+Sans:wght=500;700;900&family=Noto+Sans+KR:wght=500;700;900&display=swap">
     <style>
-        :root { 
-            /* 🎨 메인 화면(index.html)과 100% 일치하는 오리지널 국방색으로 완전 통일 */
-            --main-bg: #3E441E; 
-            --point-color: #2D3214; 
-            --gold-color: #FFD700;
-            --fire-orange: #FF5722;
+        :root { --main-bg: #3E441E; --point-color: #2D3214; --gold-color: #FFD700; --fire-orange: #FF5722; --footer-bg: #1B1E0C; --text-dark: #2D3748; }
+        *, *::before, *::after { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { margin: 0; padding: 0; font-family: 'Gmarket Sans', 'Noto Sans KR', sans-serif; background-color: var(--main-bg); color: #fff; letter-spacing: -0.5px; overflow-x: hidden; padding-bottom: 100px; }
+        
+        /* 헤더 영역 */
+        .navbar { position: fixed; top: 0; left: 0; right: 0; height: 80px; background: #FFFFFF; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; z-index: 1000; border-bottom: 3px solid var(--gold-color); box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .nav-logo-group { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .nav-logo-group img { height: 50px; display: block; object-fit: contain; background: #FFFFFF; }
+        .nav-logo-text { font-size: 24px; font-weight: 900; color: #111111; letter-spacing: -1px; }
+        .nav-phone-btn { display: flex; align-items: center; gap: 6px; background: var(--point-color); color: var(--gold-color); text-decoration: none; padding: 10px 18px; border-radius: 30px; font-weight: 900; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+        /* 타이틀 섹션 (타겟 최적화 텍스트 기동) */
+        .title-zone { padding: 140px 20px 20px 20px; text-align: center; }
+        .main-title { font-size: 42px; font-weight: 900; margin: 0 0 12px 0; text-shadow: 3px 3px 0px rgba(0,0,0,0.3); }
+        .main-title span { color: var(--gold-color); }
+        .sub-title { font-size: 18px; font-weight: 700; color: #E2E8F0; margin: 0; letter-spacing: -0.8px; }
+
+        /* ☕ [NEW] 업종별 큐레이션 서클 카드 그리드 컨테이너 (PC 4열 / 모바일 2열) */
+        .business-grid-section { max-width: 1100px; margin: 30px auto; padding: 0 20px; text-align: center; }
+        .business-grid-title { font-size: 20px; font-weight: 900; color: var(--gold-color); margin-bottom: 25px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+        .business-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; width: 100%; }
+        .business-card { background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px 15px; cursor: pointer; transition: all 0.25s ease; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .business-card:hover { transform: translateY(-6px); background: rgba(255,255,255,0.12); border-color: var(--gold-color); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .business-circle-icon { width: 90px; height: 90px; border-radius: 50%; background: #ffffff; border: 4px solid var(--gold-color); display: flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 14px; box-shadow: 0 6px 15px rgba(0,0,0,0.2); }
+        .business-card-name { font-size: 18px; font-weight: 900; color: #ffffff; margin: 0; }
+
+        /* 기존 속도별 요금표 랩퍼 */
+        .table-section { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+        .table-group-title { font-size: 22px; font-weight: 900; text-align: left; margin-bottom: 15px; color: var(--gold-color); border-left: 5px solid #fff; padding-left: 10px; }
+        .rate-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 16px; overflow: hidden; color: #333; margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .rate-table th { background: var(--point-color); color: #fff; font-weight: 900; padding: 15px; font-size: 15px; }
+        .rate-table td { padding: 15px; border-bottom: 1px solid #E2E8F0; text-align: center; font-weight: 700; font-size: 14px; }
+        .price-txt { color: #1A202C; font-weight: 900; font-size: 16px; }
+        .gift-txt { color: var(--fire-orange); font-weight: 900; font-size: 14px; display: block; margin-top: 4px; }
+        
+        .bottom-notice-box { background: rgba(0,0,0,0.2); border: 2px dashed rgba(255,255,255,0.2); border-radius: 14px; padding: 25px; max-width: 1000px; margin: 0 auto; text-align: center; }
+        .bottom-call-btn { display: inline-block; background: var(--gold-color); color: #111; font-weight: 900; font-size: 16px; padding: 15px 35px; border-radius: 30px; text-decoration: none; margin-top: 15px; box-shadow: 0 4px 15px rgba(255,215,0,0.3); }
+
+        /* 🔒 [NEW] 업종별 맞춤형 락다운 모달 팝업 및 가입 신청 폼 확장 구조 */
+        .biz-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 6000; align-items: center; justify-content: center; padding: 20px; }
+        .biz-modal-card { background: #ffffff; color: var(--text-dark); width: 100%; max-width: 540px; border-radius: 20px; display: flex; flex-direction: column; max-height: 90vh; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .biz-modal-header { padding: 20px; border-bottom: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: space-between; background: #F7FAFC; border-radius: 20px 20px 0 0; }
+        .biz-modal-header h3 { margin: 0; font-size: 19px; font-weight: 900; color: #1A202C; display: flex; align-items: center; gap: 8px; }
+        .biz-modal-close { background: none; border: none; font-size: 26px; font-weight: bold; cursor: pointer; color: #A0AEC0; }
+        .biz-modal-body { padding: 22px; overflow-y: auto; text-align: left; }
+        
+        .biz-recommend-badge { background: #EBF8FF; border: 1px solid #BEE3F8; color: #2B6CB0; border-radius: 8px; padding: 12px; font-size: 13px; font-weight: 700; line-height: 1.5; margin-bottom: 20px; }
+        .biz-prod-selector-title { font-size: 14px; font-weight: 900; color: #4A5568; margin-bottom: 10px; }
+        
+        /* 상품 선택 무선 버튼형 카드 */
+        .biz-prod-option-card { border: 2px solid #E2E8F0; border-radius: 12px; padding: 15px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; position: relative; }
+        .biz-prod-option-card:hover { border-color: #CBD5E0; background: #F7FAFC; }
+        .biz-prod-option-card.selected { border-color: var(--fire-orange); background: #FFF5F5; }
+        .biz-prod-name { font-size: 16px; font-weight: 900; color: #1A202C; margin-bottom: 4px; }
+        .biz-prod-price-info { font-size: 14px; font-weight: 700; color: #718096; }
+        .biz-prod-price-info span { color: var(--fire-orange); font-weight: 900; }
+
+        /* 팝업 내부 인바운드 접수 폼 */
+        .biz-apply-form-layer { display: none; margin-top: 20px; border-top: 2px dashed #E2E8F0; padding-top: 20px; }
+        .biz-apply-form-layer.open { display: block; }
+        .popup-form-group { margin-bottom: 12px; }
+        .popup-form-group label { display: block; font-size: 13px; font-weight: 900; color: #4A5568; margin-bottom: 6px; }
+        .popup-input { width: 100%; height: 46px; padding: 0 12px; border-radius: 8px; border: 2px solid #CBD5E0; font-size: 14px; font-family: inherit; font-weight: 700; }
+        .popup-input:focus { border-color: var(--fire-orange); outline: none; }
+        
+        /* 💻 [NEW] 사무실 전용 PC 대수 순정 셀렉트 피커 */
+        .popup-select-picker { width: 100%; height: 46px; padding: 0 12px; border-radius: 8px; border: 2px solid #CBD5E0; font-size: 14px; font-family: inherit; font-weight: 700; background: #fff; cursor: pointer; }
+        
+        /* 📁 [NEW] 구비서류 콤팩트 고정 가이드 컴포넌트 */
+        .document-guide-bar { background: #FFFDF5; border: 1px solid #F6AD55; border-radius: 8px; padding: 10px 12px; margin-bottom: 15px; font-size: 12px; line-height: 1.4; color: #DD6B20; font-weight: 700; }
+
+        /* 개인정보보호 체크박스 단일 ID 격리 격벽 구축 */
+        .popup-privacy-zone { padding: 4px 2px 14px 2px; }
+        .popup-privacy-label { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: #4A5568; cursor: pointer; font-weight: 700; }
+        .popup-privacy-label input { margin-top: 2px; }
+        .popup-privacy-sub { font-size: 11px; color: #718096; display: block; margin-top: 4px; padding-left: 20px; font-weight: 500; }
+
+        .popup-submit-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--fire-orange) 0%, #E64A19 100%); border: none; border-radius: 10px; color: #fff; font-family: inherit; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 18px rgba(255,87,34,0.3); }
+
+        /* 상시 고정형 실시간 연동 하단 플로팅 바 레이아웃 패치 */
+        .universal-sticky-quick-bar { position: fixed; bottom: -200px; left: 0; right: 0; background: #1A202C; border-top: 4px solid var(--gold-color); z-index: 3000; box-shadow: 0 -5px 25px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: bottom 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .universal-sticky-quick-bar.show { bottom: 0; }
+        .sticky-tier-1 { background: #2D3748; padding: 6px 40px; font-size: 14px; font-weight: 900; color: var(--gold-color); border-bottom: 1px solid #4A5568; text-align: left; display: flex; align-items: center; gap: 10px; }
+        .sticky-status-dot { width: 8px; height: 8px; background: #A0AEC0; border-radius: 50%; }
+        .universal-sticky-quick-bar.active-mode .sticky-status-dot { background: #48BB78; animation: pulse-green 1.5s infinite; }
+        @keyframes pulse-green { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(72, 187, 120, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); } }
+        .sticky-tier-2 { padding: 12px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; max-width: 1280px; margin: 0 auto; width: 100%; }
+        .sticky-form-side { display: flex; align-items: center; gap: 12px; flex: 1; justify-content: flex-end; }
+        .sticky-input-field { width: 200px; height: 45px; padding: 0 12px; border-radius: 8px; border: 1px solid #4A5568; background: #2D3748; color: #fff; font-size: 14px; font-weight: 700; }
+        .sticky-input-field::placeholder { color: #A0AEC0; font-weight: 500; }
+        .sticky-action-btn { background: #ED8936; color: #fff; border: none; padding: 0 24px; height: 45px; border-radius: 8px; font-size: 15px; font-weight: 900; cursor: pointer; white-space: nowrap; box-shadow: 0 3px 10px rgba(237,137,54,0.3); transition: 0.2s; }
+        .universal-sticky-quick-bar.active-mode .sticky-action-btn { background: linear-gradient(135deg, var(--fire-orange) 0%, #E64A19 100%); box-shadow: 0 4px 12px rgba(255,87,34,0.4); }
+        .mobile-sticky-privacy { display: flex; align-items: center; }
+
+        /* 실제 운영사 정보 이미지 기반 오피셜 백엔드 푸터 서식 */
+        .footer { background: var(--footer-bg); color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.8; text-align: left; padding: 40px 40px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 80px; font-family: 'Noto Sans KR', sans-serif; }
+        .footer-container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+        .footer-row-links { display: flex; gap: 20px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; }
+        .footer-row-links a { color: #fff; text-decoration: none; cursor: pointer; }
+        .footer-row-links a.policy-btn { color: var(--gold-color); }
+        .footer-row-info { display: flex; flex-wrap: wrap; gap: 10px 24px; color: #A0AEC0; }
+        .footer-row-info span b { color: #fff; font-weight: 500; }
+        .footer-copyright { color: #718096; font-size: 12px; margin-top: 8px; }
+
+        /* 법적 고지 전용 전체 모달 도면 */
+        .privacy-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 7000; align-items: center; justify-content: center; padding: 20px; }
+        .privacy-modal-card { background: #ffffff; color: #2D3748; width: 100%; max-width: 640px; border-radius: 16px; display: flex; flex-direction: column; max-height: 85vh; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .privacy-modal-header { padding: 20px; border-bottom: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: space-between; }
+        .privacy-modal-header h3 { margin: 0; font-size: 18px; font-weight: 900; color: #1A202C; }
+        .privacy-modal-close { background: none; border: none; font-size: 24px; font-weight: bold; cursor: pointer; color: #A0AEC0; }
+        .privacy-modal-body { padding: 20px; overflow-y: auto; font-size: 13px; line-height: 1.6; text-align: left; }
+        .privacy-modal-body h4 { font-size: 14px; font-weight: 900; margin: 15px 0 6px 0; color: #1A202C; }
+
+        /* ===================================================
+           모바일 전용 반응형 미디어 쿼리 커스텀 보정
+           =================================================== */
+        @media (max-width: 950px) {
+            .navbar { padding: 0 15px; height: auto; flex-direction: column; gap: 10px; padding-bottom: 10px; } 
+            .nav-logo-group img { height: 36px; } .nav-logo-text { font-size: 18px; }
+            .title-zone { padding-top: 190px; } .main-title { font-size: 28px; } .sub-title { font-size: 14px; line-height: 1.4; }
+            
+            /* 💥 [3+2 구조 특화] 모바일 서클 카드 그리드 수식 */
+            .business-grid-title { font-size: 16px; margin-bottom: 15px; }
+            .business-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; padding: 0 !important; }
+            .business-card { width: 100% !important; padding: 12px 6px !important; border-radius: 14px !important; }
+            .business-circle-icon { width: 56px !important; height: 56px !important; font-size: 24px !important; border-width: 2px !important; margin-bottom: 8px !important; }
+            .business-card-name { font-size: 12px !important; font-weight: 700 !important; }
+            
+            /* 주요 업종 3사 선배정 및 알뜰 2사 하단 중앙 정렬 */
+            .business-card:nth-child(1) { grid-column: span 2; grid-row: 1; }
+            .business-card:nth-child(2) { grid-column: span 2; grid-row: 1; }
+            .business-card:nth-child(3) { grid-column: span 2; grid-row: 2; }
+            .business-card:nth-child(4) { grid-column: span 2; grid-row: 2; }
+            .business-card:nth-child(5) { grid-column: 2 / span 2; grid-row: 3; } /* 중앙 정렬 유도 */
+
+            .table-group-title { font-size: 17px; }
+            .rate-table th { padding: 10px 6px; font-size: 12px; }
+            .rate-table td { padding: 10px 6px; font-size: 12px; }
+            .price-txt { font-size: 13px; } .gift-txt { font-size: 11px; }
+            .bottom-notice-box { padding: 15px; font-size: 13px; } .bottom-call-btn { width: 100%; font-size: 14px; padding: 12px; }
+
+            /* 💥 시간차 하단바 모바일 4단 수직 레이아웃 */
+            .universal-sticky-quick-bar { height: auto !important; padding-bottom: 12px; }
+            .sticky-tier-1 { padding: 8px 15px; font-size: 12px; }
+            .sticky-tier-2 { padding: 10px 15px 4px 15px; gap: 0; flex-direction: column !important; width: 100%; }
+            .sticky-form-side { display: flex !important; flex-wrap: wrap !important; flex-direction: row !important; width: 100% !important; gap: 8px !important; justify-content: space-between !important; }
+            .sticky-input-field { display: block !important; flex: 1 !important; min-width: 0 !important; width: calc(50% - 4px) !important; height: 44px !important; font-size: 13px; padding: 0 10px; margin-bottom: 4px; }
+            .mobile-sticky-privacy { width: 100% !important; order: 3 !important; margin: 6px 0 !important; padding: 2px 0 !important; }
+            .sticky-action-btn { display: block !important; width: 100% !important; order: 4 !important; height: 46px !important; font-size: 14px; margin-top: 4px; }
+            
+            .footer { padding: 30px 20px; font-size: 12px; }
+            .footer-row-info { flex-direction: column; gap: 6px; }
+            body { padding-bottom: 190px; }
         }
-        body { 
-            margin: 0; padding: 0;
-            font-family: 'Gmarket Sans', 'Noto Sans KR', sans-serif; 
-            background-color: var(--main-bg); 
-            color: #fff; 
-            text-align: center;
-            letter-spacing: -0.5px;
-        }
-        
-        /* 헤더 박스 배경을 오리지널 국방색으로 일치시키고 여백 정돈 */
-        .header-box { 
-            padding: 60px 20px 40px 20px; 
-            background: var(--main-bg); 
-            border-bottom: 4px solid var(--gold-color); 
-        }
-        
-        h1 { font-size: 38px; font-weight: 900; margin: 0 0 15px 0; text-shadow: 2px 2px 6px rgba(0,0,0,0.4); }
-        h1 span { color: var(--gold-color); }
-        .sub-txt { font-size: 18px; color: #E2E8F0; font-weight: 700; margin-bottom: 0; }
-        
-        .container { max-width: 900px; margin: 20px auto 40px auto; padding: 0 20px; box-sizing: border-box; }
-        
-        /* 📊 프리미엄 웹 테이블 스타일링 */
-        .table-section-title { font-size: 24px; font-weight: 900; text-align: left; margin: 40px 0 15px 0; color: var(--gold-color); border-left: 5px solid var(--gold-color); padding-left: 10px; }
-        .premium-table { width: 100%; border-collapse: collapse; background: #fff; color: #2D3748; border-radius: 14px; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.3); margin-bottom: 10px; }
-        .premium-table th { background: #2D3214; color: #fff; font-size: 16px; font-weight: 900; padding: 15px; border: 1px solid #4A5568; }
-        .premium-table td { padding: 15px; border: 1px solid #E2E8F0; text-align: center; font-size: 15px; font-weight: 700; vertical-align: middle; }
-        .prod-name { background: #F7FAFC; font-weight: 900; color: #1A202C; width: 25%; }
-        
-        .price-text { color: #1A202C; font-size: 16px; margin-bottom: 4px; }
-        .price-sub { font-size: 12px; color: #718096; font-weight: normal; }
-        .gift-text { color: var(--fire-orange); font-weight: 900; font-size: 15px; margin-top: 4px; background: #FFF5F5; padding: 4px; border-radius: 6px; display: inline-block; }
-        .no-service { color: #A0AEC0; font-weight: normal; }
-        
-        .action-box { background: rgba(0,0,0,0.3); border-radius: 14px; padding: 30px; margin-top: 5px; border: 1px dashed rgba(255,215,0,0.3); }
-        .call-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--gold-color); color: #111; text-decoration: none; padding: 16px 35px; border-radius: 10px; font-size: 18px; font-weight: 900; box-shadow: 0 4px 15px rgba(255,215,0,0.3); transition: 0.2s; }
-        .call-btn:hover { background: #F6C200; transform: translateY(-2px); }
-        .close-txt { margin-top: 20px; font-size: 14px; color: rgba(255,255,255,0.5); cursor: pointer; text-decoration: underline; }
     </style>
 </head>
 <body>
-
-    <div class="header-box">
-        <h1>🏬 사거리인터넷 <span>사장님전용 요금표</span></h1>
-        <div class="sub-txt">원룸 · 상가 · 소상공인 사업장 전용 단체 가입 결합 단가표</div>
-    </div>
-
-    <div class="container">
-        
-        <div class="table-section-title">⚡ 100M 상품 라인업</div>
-        <table class="premium-table">
-            <thead>
-                <tr>
-                    <th>100M 상품</th>
-                    <th>SK 브로드밴드</th>
-                    <th>LG U+</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="prod-name">100M</td>
-                    <td><div class="price-text">23,100원</div><div class="gift-text">🎁 현금 150,000원</div></td>
-                    <td><div class="price-text">22,000원</div><div class="gift-text">🎁 현금 150,000원</div></td>
-                </tr>
-                <tr>
-                    <td class="prod-name">100M + 전화</td>
-                    <td><div class="price-text">24,200원</div><div class="gift-text">🎁 현금 150,000원</div></td>
-                    <td><div class="price-text">31,900원</div><div class="price-sub">(자유통화6)</div><div class="gift-text">🎁 현금 220,000원</div></td>
-                </tr>
-                <tr>
-                    <td class="prod-name">100M + TV</td>
-                    <td><div class="price-text">39,600원</div><div class="gift-text">🎁 현금 420,000원</div></td>
-                    <td><div class="price-text">39,600원</div><div class="price-sub">(실속형)</div><div class="gift-text">🎁 현금 400,000원</div></td>
-                </tr>
-                <tr>
-                    <td class="prod-name">100M + 전화 + TV</td>
-                    <td><div class="price-text">40,700원</div><div class="gift-text">🎁 현금 430,000원</div></td>
-                    <td><div class="price-text">49,500원</div><div class="gift-text">🎁 현금 450,000원</div></td>
-                </tr>
-                <tr>
-                    <td class="prod-name">100M + CCTV 1대</td>
-                    <td class="no-service">-</td>
-                    <td><div class="price-text">35,200원</div><div class="gift-text">🎁 현금 300,000원</div></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="table-section-title">🚀 500M 상품 라인업</div>
-        <table class="premium-table">
-            <thead>
-                <tr>
-                    <th>500M 상품</th>
-                    <th>SK 브로드밴드</th>
-                    <th>LG U+</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="prod-name">500M</td>
-                    <td><div class="price-text">34,100원</div><div class="gift-text">🎁 현금 170,000원</div></td>
-                    <td><div class="price-text">32,000원</div><div class="gift-text">🎁 현금 200,000원</div></td>
-                </tr>
-                <tr>
-                    <td class="prod-name">500M + 전화</td>
-                    <td><div class="price-text">35,200원</div><div class="gift-text">🎁 현금 180,000원</div></td>
-                    <td><div class="price-text">42,900원</div><div class="price-sub">(자유통화6)</div><div class="gift-text">🎁 현금 450,000원</div></td>
-                </tr>
-                <tr>
-                    <td class="prod-name">500M + TV</td>
-                    <td><div class="price-text">46,200원</div><div class="gift-text">🎁 현금 480,000원<br>+ 추가지원금</div></td>
-                    <td><div class="price-text">45,100원</div><div class="price-sub">(실속형)</div><div class="gift-text">🎁 현금 480,000원<br>+ 추가지원금</div></td>
-                </tr>
-                <tr>
-                    <td class="prod-name">500M + 전화 + TV</td>
-                    <td><div class="price-text">47,300원</div><div class="gift-text">🎁 현금 480,000원<br>+ 추가지원금</div></td>
-                    <td><div class="price-text">55,000원</div><div class="gift-text">🎁 현금 480,000원<br>+ 추가지원금</div></td>
-                </tr>
-                <tr>
-                    <td class="prod-name">500M + CCTV 1대</td>
-                    <td class="no-service">-</td>
-                    <td><div class="price-text">35,200원</div><div class="gift-text">🎁 현금 450,000원</div></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="action-box">
-            <p style="margin-top:0; font-weight:700; font-size:16px; color:#E2E8F0;">복수 회선 가입 및 추가 떡값 혜택은 유선상으로 더 크게 조율 가능합니다!</p>
-            <a href="tel:1833-2440" class="call-btn">📞 사장님 직통 가입 문의: 1833-2440</a>
+    
+    <div class="navbar">
+        <a href="#" class="nav-logo-group">
+            <img src="사거리로고.png" alt="사거리인터넷 로고">
+            <span class="nav-logo-text">사거리인터넷</span>
+        </a>
+        <div class="nav-phone-call-zone">
+            <a href="tel:18332440" class="nav-phone-btn">📞 가입센터: 1833-2440</a>
         </div>
-        
-        <div class="close-txt" onclick="window.close();">현재 창 닫기</div>
     </div>
 
+    <div class="title-zone">
+        <h1 class="main-title">4P 모바일 연동 <span>사거리인터넷 사장님전용</span> 요금표</h1>
+        <p class="sub-title">☕ 음식점·카페·학원·사무실·소상공인 매장 전용 단체 가입 결합 단가표</p>
+    </div>
+
+    <!-- ☕ [NEW] 업종별 큐레이션 서클 카드 그리드 섹션 (3+2 완벽 정중앙 매핑) -->
+    <div class="business-grid-section">
+        <div class="business-grid-title">💡 내 사업장 업종을 선택하시면 딱 맞는 맞춤 상품을 추천해 드립니다!</div>
+        <div class="business-grid">
+            <div class="business-card" onclick="openBizModal('카페', '☕', '손님용 와이파이 무료 제공 및 포스(POS) 안심 결제선 끊김 방지 최적화 요금제!', false)">
+                <div class="business-circle-icon">☕</div>
+                <h4 class="business-card-name">카페 / 디저트</h4>
+            </div>
+            <div class="business-card" onclick="openBizModal('음식점/술집', '🍳', '매장 안심 고화질 CCTV 모니터링 및 스포츠 중계용 TV 무제한 결합 요금제!', false)">
+                <div class="business-circle-icon">🍳</div>
+                <h4 class="business-card-name">음식점 / 술집</h4>
+            </div>
+            <div class="business-card" onclick="openBizModal('학원/교습소', '✍️', '학생인원 동시접속 부하 분산 및 원생 서류 출력/스캔 전용 안심 요금제!', true)">
+                <div class="business-circle-icon">✍️</div>
+                <h4 class="business-card-name">학원 / 교습소</h4>
+            </div>
+            <div class="business-card" onclick="openBizModal('사무실', '🖥️', '인터넷 인증수 제한 없음! 고속 1G 랜선 및 전용 인터넷 키폰 전화 결합 특가제!', true)">
+                <div class="business-circle-icon">🖥️</div>
+                <h4 class="business-card-name">일반 사무실</h4>
+            </div>
+            <div class="business-card" onclick="openBizModal('공방/뷰티샵', '🎨', '예약 장부 상시 가동 및 인스타그램 업로드용 최적 무선 와이파이 실속 요금제!', false)">
+                <div class="business-circle-icon">🎨</div>
+                <h4 class="business-card-name">공방 / 뷰티샵</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-section">
+        <div class="table-group-title">⚡ 100M 가성비 실속형 상품 라인업</div>
+        <table class="rate-table">
+            <thead>
+                <tr>
+                    <th>100M 세부 가입 구성</th>
+                    <th>SK 브로드밴드 월요금 및 지원금</th>
+                    <th>LG U+ 월요금 및 지원금</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>💻 인터넷 단독 (100M)</td>
+                    <td><div class="price-txt">23,100원</div><span class="gift-txt">🎁 현금 150,000원</span></td>
+                    <td><div class="price-txt">22,000원</div><span class="gift-txt">🎁 현금 150,000원</span></td>
+                </tr>
+                <tr>
+                    <td>📞 인터넷 + 전화팩</td>
+                    <td><div class="price-txt">24,200원</div><span class="gift-txt">🎁 현금 150,000원</span></td>
+                    <td><div class="price-txt">31,900원 (자유통화6)</div><span class="gift-txt">🎁 현금 220,000원</span></td>
+                </tr>
+                <tr>
+                    <td>📺 인터넷 + TV 결합형</td>
+                    <td><div class="price-txt">39,600원</div><span class="gift-txt">🎁 현금 420,000원</span></td>
+                    <td><div class="price-txt">39,600원 (베이직)</div><span class="gift-txt">🎁 현금 400,000원</span></td>
+                </tr>
+                <tr>
+                    <td>🔥 인터넷 + 전화 + TV 풀세트</td>
+                    <td><div class="price-txt">40,700원</div><span class="gift-txt">🎁 현금 430,000원</span></td>
+                    <td><div class="price-txt">49,500원</div><span class="gift-txt">🎁 현금 450,000원</span></td>
+                </tr>
+                <tr>
+                    <td>👁️ 인터넷 + 매장 CCTV 1대 패키지</td>
+                    <td><div class="price-txt">-</div></td>
+                    <td><div class="price-txt">35,200원</div><span class="gift-txt">🎁 현금 300,000원</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="table-group-title">🚀 500M 기가라이트 고속형 상품 라인업</div>
+        <table class="rate-table">
+            <thead>
+                <tr>
+                    <th>500M 세부 가입 구성</th>
+                    <th>SK 브로드밴드 월요금 및 지원금</th>
+                    <th>LG U+ 월요금 및 지원금</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>💻 인터넷 단독 (500M)</td>
+                    <td><div class="price-txt">34,100원</div><span class="gift-txt">🎁 현금 170,000원</span></td>
+                    <td><div class="price-txt">32,000원</div><span class="gift-txt">🎁 현금 200,000원</span></td>
+                </tr>
+                <tr>
+                    <td>📞 인터넷 + 전화팩</td>
+                    <td><div class="price-txt">35,200원</div><span class="gift-txt">🎁 현금 180,000원</span></td>
+                    <td><div class="price-txt">42,900원 (자유통화6)</div><span class="gift-txt">🎁 현금 450,000원</span></td>
+                </tr>
+                <tr>
+                    <td>📺 인터넷 + TV 결합형</td>
+                    <td><div class="price-txt">46,200원</div><span class="gift-txt">🎁 현금 480,000원<br>💥 + 추가 떡값 지원금</span></td>
+                    <td><div class="price-txt">45,100원 (베이직)</div><span class="gift-txt">🎁 현금 480,000원<br>💥 + 추가 떡값 지원금</span></td>
+                </tr>
+                <tr>
+                    <td>🔥 인터넷 + 전화 + TV 풀세트</td>
+                    <td><div class="price-txt">47,300원</div><span class="gift-txt">🎁 현금 480,000원<br>💥 + 추가 떡값 지원금</span></td>
+                    <td><div class="price-txt">55,000원</div><span class="gift-txt">🎁 현금 480,000원<br>💥 + 추가 떡값 지원금</span></td>
+                </tr>
+                <tr>
+                    <td>👁️ 인터넷 + 매장 CCTV 1대 패키지</td>
+                    <td><div class="price-txt">-</div></td>
+                    <td><div class="price-txt">35,200원</div><span class="gift-txt">🎁 현금 450,000원</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="bottom-notice-box">
+            <span style="font-weight:900; color:#fff; font-size:16px; display:block;">복수 회선 가입 및 추가 특별 떡값 혜택은 유선상으로 더 크게 조율 가능합니다!</span>
+            <a href="tel:18332440" class="bottom-call-btn">📞 사장님 직통 가입 문의: 1833-2440</a>
+        </div>
+    </div>
+
+    <!-- 💥 [MANDATORY] 고유 ID를 격리한 업종별 다이렉트 가입 신청 모달 컴포넌트 도면 -->
+    <div class="biz-modal-overlay" id="bizModal">
+        <div class="biz-modal-card">
+            <div class="biz-modal-header">
+                <h3><span id="modal-biz-icon"></span> <span id="modal-biz-title"></span> 맞춤 가입추천</h3>
+                <button class="biz-modal-close" onclick="closeBizModal()">✕</button>
+            </div>
+            <div class="biz-modal-body">
+                <div class="biz-recommend-badge" id="modal-biz-badge"></div>
+                
+                <div class="biz-prod-selector-title">원하시는 추천 상품 구성을 선택해 주세요</div>
+                <div class="biz-prod-option-card selected" id="opt-1" onclick="selectBizProduct(1, '실속형 기본 패키지')">
+                    <div class="biz-prod-name" id="modal-prod1-name">사거리 실속형 결합</div>
+                    <div class="biz-prod-price-info">당일 최대 사은품 지급 ➡️ <span>전산 마스터 즉시 우대</span></div>
+                </div>
+                <div class="biz-prod-option-card" id="opt-2" onclick="selectBizProduct(2, '최고속 풀패키지형')">
+                    <div class="biz-prod-name" id="modal-prod2-name">사거리 프리미엄 전용팩</div>
+                    <div class="biz-prod-price-info">복수회선/CCTV 결합 추가 ➡️ <span>추가 보너스 떡값 지급</span></div>
+                </div>
+
+                <!-- 2번 핵심 동선: 상품 누르면 자동으로 수직 전개되는 접수 양식 레이어 -->
+                <div class="biz-apply-form-layer open" id="bizApplyLayer">
+                    
+                    <!-- 📁 [NEW] 구비서류 상시 고정형 안전 가이드 바 (이탈 완화 문구 완비) -->
+                    <div class="document-guide-bar">
+                        📁 필수 구비서류: [사업자등록증 사본 + 사업자 통장사본]<br>
+                        <span style="font-size:11px; color:#C53030; font-weight:500;">(※ 현재 서류가 없으셔도 가입 신청 선접수가 가능합니다! 개통 시 제출 안내)</span>
+                    </div>
+
+                    <!-- 💻 [NEW] 학원/사무실 업종 선택 시에만 자바스크립트로 자동 노출될 실사용 PC 대수 셀렉터 -->
+                    <div class="popup-form-group" id="pc-count-selector-zone" style="display:none;">
+                        <label>🖥️ 사무실 내 실사용 PC 대수 선택</label>
+                        <select id="popup-pc-count" class="popup-select-picker">
+                            <option value="1대">1대</option>
+                            <option value="2대">2대</option>
+                            <option value="3대">3대</option>
+                            <option value="4대">4대</option>
+                            <option value="5대">5대</option>
+                            <option value="6대">6대</option>
+                            <option value="7대">7대</option>
+                            <option value="8대">8대</option>
+                            <option value="9대">9대</option>
+                            <option value="10대 이상">10대 이상</option>
+                        </select>
+                    </div>
+
+                    <div class="popup-form-group">
+                        <label>사장님 성함</label>
+                        <input type="text" id="popup-biz-name" class="popup-input" placeholder="성함을 적어주세요">
+                    </div>
+                    <div class="popup-form-group">
+                        <label>직통 연락처</label>
+                        <input type="text" id="popup-biz-phone" class="popup-input" placeholder="연락처를 적어주세요">
+                    </div>
+
+                    <!-- 법적 개인정보 수집 고유 격리 인터록 가이드라인 -->
+                    <div class="popup-privacy-zone">
+                        <label class="popup-privacy-label">
+                            <input type="checkbox" id="popup-privacy-check">
+                            <span>[필수] 개인정보 수집 및 이용 동의</span>
+                        </label>
+                        <span class="popup-privacy-sub">목적: 업종별 맞춤형 개통 접수 처리 / 기간: 목적 달성 시 즉시 파기</span>
+                    </div>
+
+                    <button class="popup-submit-btn" onclick="submitPopupBizForm()">🔥 위 조건으로 즉시 가입신청하기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 시간차 동적 인터록이 내장된 하단 실시간 통합형 고정 플로팅 바 -->
+    <div class="universal-sticky-quick-bar" id="universalStickyBar">
+        <div class="sticky-tier-1">
+            <div class="sticky-status-dot"></div>
+            <span id="sticky-display-text">💡 나에게 딱 맞는 최저가 요금을 실시간으로 계산해 보세요!</span>
+        </div>
+        <div class="sticky-tier-2">
+            <div class="sticky-form-side">
+                <input type="text" id="sticky-user-name" class="sticky-input-field" placeholder="성함 입력">
+                <input type="text" id="sticky-user-phone" class="sticky-input-field" placeholder="연락처 입력">
+                
+                <div class="privacy-agree-zone mobile-sticky-privacy">
+                    <label class="privacy-label">
+                        <input type="checkbox" id="sticky-privacy-check">
+                        <span>개인정보 수집 및 동의 (필수)</span>
+                    </label>
+                </div>
+                
+                <button id="sticky-main-btn" class="sticky-action-btn" onclick="submitUniversalStickyForm()">🚀 떡값 상담신청</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 오피셜 사업자 정보 푸터 스펙 -->
+    <div class="footer">
+        <div class="footer-container">
+            <div class="footer-row-links">
+                <a onclick="openPrivacyModal()" class="policy-btn">개인정보 처리방침</a>
+                <a href="#calculator-section" onclick="window.close();">요금계산기 홈으로</a>
+            </div>
+            <div class="footer-row-info">
+                <span>주소 : <b>경기도 안산시 단원구 화정로1길 6, 1층</b></span>
+                <span>대표번호 : <b>1833-2440</b> / 핸드폰 : <b>010-6414-2444</b></span>
+                <span>이메일 : <b>4phone1@naver.com</b></span>
+                <span>상호 : <b>사거리인터넷</b></span>
+                <span>대표 : <b>전상민</b></span>
+                <span>사업자등록번호 : <b>603-54-00909</b></span>
+                <span>통신판매업 : <b>제 2025-경기안산-2500호</b></span>
+                <span>팩스 : <b>0508-936-1800</b></span>
+            </div>
+            <div style="margin-top: 10px; color:#A0AEC0;">
+                <span style="font-size: 16px; font-weight: 900; color: #fff; display: block; margin-bottom: 4px;">고객센터 : 1833-2440</span>
+                <span>AM 10:00 ~ PM 19:30 | 전산 휴무일 순차연락드립니다</span>
+            </div>
+            <div class="footer-copyright">© 사거리인터넷 ALL RIGHTS RESERVED. | 사장님 비즈니스 정밀 필터링 시스템 COMPLETION.</div>
+        </div>
+    </div>
+
+    <!-- 법적 의무 처리방침 전문 모달 창 -->
+    <div class="privacy-modal-overlay" id="privacyModal">
+        <div class="privacy-modal-card">
+            <div class="privacy-modal-header">
+                <h3>개인정보 처리방침 (공식 고지 전문)</h3>
+                <button class="privacy-modal-close" onclick="closePrivacyModal()">✕</button>
+            </div>
+            <div class="privacy-modal-body">
+                <h4>1. 수집하는 개인정보의 항목 및 이용 목적</h4>
+                <p>사거리인터넷은 유선통신 가입 상담, 개통 신청 접수, 상품 안내를 목적으로 정보주체의 동의를 받아 성명, 연락처, 설치 주소 등을 수집하고 있습니다.</p>
+                <h4>2. 개인정보의 보유 및 이용기간</h4>
+                <p><b>수집된 개인정보는 가입 상담 완료 및 개통 전산 처리 등 목적이 달성된 후 지체 없이 안전한 방법으로 즉시 파기합니다.</b></p>
+                <h4>3. 개인정보 보호책임자 및 담당부서</h4>
+                <p>- 개인정보 보호책임자 : 전상민 대표<br>- 문의 직통처 : 1833-2440 / 010-6414-2444</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSelectedBizType = "";
+        let currentSelectedProductDetail = "실속형 기본 패키지";
+        let isStickyActiveMode = false;
+
+        // 💥 [TIME DELAY INTERLOCK] 사장님전용 독립형 새창 특성 반영 스크롤 타임차 감지 센서 연동
+        window.addEventListener('scroll', function() {
+            const stickyBar = document.getElementById('universalStickyBar');
+            if (!stickyBar) return;
+            // 400px 이상 스크롤을 의지치 있게 내렸을 때만 플로팅 인바운드 그물망 바 출현
+            if (window.pageYOffset > 400) { 
+                stickyBar.classList.add('show'); 
+            } else { 
+                stickyBar.classList.remove('show'); 
+            }
+        }, { passive: true });
+
+        // ☕ [NEW] 업종별 데이터 바인딩 및 PC 대수 선택 피커 표출 로직
+        function openBizModal(bizType, icon, badgeText, needPcCount) {
+            currentSelectedBizType = bizType;
+            currentSelectedProductDetail = "실속형 기본 패키지";
+            
+            document.getElementById('modal-biz-icon').textContent = icon;
+            document.getElementById('modal-biz-title').textContent = bizType;
+            document.getElementById('modal-biz-badge').textContent = badgeText;
+            
+            document.getElementById('modal-prod1-name').textContent = ` 사거리 [${bizType}] 전용 실속 결합팩`;
+            document.getElementById('modal-prod2-name').textContent = ` 사거리 [${bizType}] 독점 프리미엄팩`;
+            
+            document.querySelectorAll('.biz-prod-option-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('opt-1').classList.add('selected');
+
+            // 💻 [NEW] 학원이나 사무실인 경우에만 PC 대수 피커 조건 노출
+            const pcZone = document.getElementById('pc-count-selector-zone');
+            if(needPcCount) {
+                pcZone.style.display = "block";
+            } else {
+                pcZone.style.display = "none";
+            }
+
+            document.getElementById('bizModal').style.display = 'flex';
+        }
+
+        function closeBizModal() { document.getElementById('bizModal').style.display = 'none'; }
+        function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'flex'; }
+        function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
+
+        function selectBizProduct(index, prodName) {
+            currentSelectedProductDetail = prodName;
+            document.querySelectorAll('.biz-prod-option-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('opt-' + index).classList.add('selected');
+        }
+
+        // 💥 고유 ID 격벽 완비형 팝업 전용 접수 처리 엔진
+        function submitPopupBizForm() {
+            const name = document.getElementById('popup-biz-name').value.trim();
+            const phone = document.getElementById('popup-biz-phone').value.trim();
+            const checked = document.getElementById('popup-privacy-check').checked;
+            
+            let pcCountStr = "";
+            const pcZone = document.getElementById('pc-count-selector-zone');
+            if (pcZone.style.display === "block") {
+                pcCountStr = `/사용PC:${document.getElementById('popup-pc-count').value}`;
+            }
+
+            if(!name) { alert('사장님 성함을 입력해 주세요!'); document.getElementById('popup-biz-name').focus(); return; }
+            if(!phone) { alert('직통 연락처를 입력해 주세요!'); document.getElementById('popup-biz-phone').focus(); return; }
+            if(!checked) { alert('개인정보 수집 및 이용 동의에 체크해 주셔야 신청이 완료됩니다.'); return; }
+
+            const finalLogString = `[사거리 사장님접수] 업종:${currentSelectedBizType}/선택:${currentSelectedProductDetail}${pcCountStr}/서류안내완료`;
+            alert(`[접수 성공]\n\n신청 업종: ${currentSelectedBizType}\n조건: ${currentSelectedProductDetail}\n성함: ${name} 사장님\n\n최고 조건 조율을 위해 담당 실장이 즉시 연락드리겠습니다.`);
+            
+            // 초기화
+            document.getElementById('popup-biz-name').value = "";
+            document.getElementById('popup-biz-phone').value = "";
+            document.getElementById('popup-privacy-check').checked = false;
+            closeBizModal();
+        }
+
+        function submitUniversalStickyForm() {
+            const name = document.getElementById('sticky-user-name').value.trim();
+            const phone = document.getElementById('sticky-user-phone').value.trim();
+            const checked = document.getElementById('sticky-privacy-check').checked;
+            
+            if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('sticky-user-name').focus(); return; }
+            if(!phone) { alert('연락처를 입력해 주세요!'); document.getElementById('sticky-user-phone').focus(); return; }
+            if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 신청이 가능합니다.'); return; }
+            
+            alert(`[상담신청 성공]\n\n성함: ${name}\n연락처: ${phone}\n\n사거리인터넷 비즈니스 전담팀에서 연락드리겠습니다.`);
+            document.getElementById('sticky-user-name').value = "";
+            document.getElementById('sticky-user-phone').value = "";
+            document.getElementById('sticky-privacy-check').checked = false;
+        }
+    </script>
 </body>
 </html>
