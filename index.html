@@ -811,6 +811,7 @@
                 });
                 updateTvOptions(filteredRows, speeds[0]);
             }
+    updateGiftLockStatus(selectedSpeed, curProd);
         }
 
         function updateTvOptions(currentRows, selectedSpeed) {
@@ -835,6 +836,20 @@
                 });
                 if (finalRows.length > 0) showResult(finalRows[0], selectedSpeed);
             }
+       // 혜택 모드 전환
+function selectBenefitMode(mode) {
+    document.getElementById('mode-cash').classList.toggle('active', mode === 'cash');
+    document.getElementById('mode-gift').classList.toggle('active', mode === 'gift');
+    document.getElementById('gift-selection-area').style.display = (mode === 'gift') ? 'grid' : 'none';
+}
+
+// 가전 잠금 상태 업데이트
+function updateGiftLockStatus(speed, prod) {
+    const isLocked = !(prod === '결합' && (speed.includes('500M') || speed.includes('1G')));
+    document.querySelectorAll('.gift-item').forEach(item => {
+        item.classList.toggle('locked', isLocked);
+    });
+}
         }
 
         function showResult(row, activeSpeed) {
@@ -961,6 +976,20 @@
             document.querySelectorAll('.c-tab-btn').forEach(btn => btn.classList.remove('active')); document.querySelectorAll('.form-panel').forEach(panel => panel.classList.remove('active'));
             el.classList.add('active'); document.getElementById('form-' + type).classList.add('active');
         }
+        // 혜택 모드 전환
+function selectBenefitMode(mode) {
+    document.getElementById('mode-cash').classList.toggle('active', mode === 'cash');
+    document.getElementById('mode-gift').classList.toggle('active', mode === 'gift');
+    document.getElementById('gift-selection-area').style.display = (mode === 'gift') ? 'grid' : 'none';
+}
+
+// 등급별 잠금 제어
+function updateGiftLockStatus(speed, prod) {
+    const isLocked = !(prod === '결합' && (speed.includes('500M') || speed.includes('1G')));
+    document.querySelectorAll('.gift-item').forEach(item => {
+        item.classList.toggle('locked', isLocked);
+    });
+}
         window.onload = loadData;
     </script>
 </body>
