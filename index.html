@@ -865,7 +865,9 @@ async function loadGiftData() {
                     currentCalculatedPrice = `${basePrice}원/월`;
                 }
                 printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]} / ${cleanRow[3]}`;
-            }
+            }// 현재 선택된 조건을 바탕으로 사은품 필터링
+            const matchedGifts = getMatchingGifts(curProv, curProd, currentActiveSpeed, cleanRow[3].trim());
+            renderGiftCards(matchedGifts);
             if (baseEl) { baseEl.innerHTML = isAlthempone ? `${basePrice}<span>원/월</span>` : (basePrice.includes('원') ? basePrice : `${basePrice}<span>원</span>`); }
             const labelSlot = document.getElementById('subsidy-label-text');
             const subsidySlot = document.getElementById('res-subsidy');
