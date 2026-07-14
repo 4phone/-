@@ -972,6 +972,29 @@ function getMatchingGifts(prov, prod, speed, tv) {
                row[3].trim() === tv;
     });
 }
+           // 데이터를 받아서 화면에 카드 형태로 그려주는 함수
+    function renderGiftCards(gifts) {
+        const listElement = document.getElementById('calculator-gift-list');
+        const panel = document.getElementById('calculator-gift-panel');
+        
+        listElement.innerHTML = '';
+        
+        if (gifts.length > 0) {
+            panel.style.display = 'block';
+            gifts.forEach(gift => {
+                const card = document.createElement('div');
+                card.className = 'gift-card';
+                // gift[4]는 사은품명, gift[5]는 이미지 URL로 가정합니다
+                card.innerHTML = `
+                    <img src="${gift[5]}" alt="${gift[4]}">
+                    <div class="gift-name">${gift[4]}</div>
+                `;
+                listElement.appendChild(card);
+            });
+        } else {
+            panel.style.display = 'none';
+        }
+    }
        };
     </script>
 </body>
