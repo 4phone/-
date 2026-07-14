@@ -959,20 +959,38 @@ async function loadGiftData() {
             document.querySelectorAll('.c-tab-btn').forEach(btn => btn.classList.remove('active')); document.querySelectorAll('.form-panel').forEach(panel => panel.classList.remove('active'));
             el.classList.add('active'); document.getElementById('form-' + type).classList.add('active');
         }
-       window.onload = function() { 
-    loadData(); 
-    loadGiftData(); 
-// 선택 조건에 맞는 사은품을 골라내는 함수
+// [전역 스코프로 이동된 함수들]
 function getMatchingGifts(prov, prod, speed, tv) {
     return giftData.filter(row => {
-        // row[0]:통신사, row[1]:상품구분, row[2]:적용속도, row[3]:TV상품명
         return row[0].trim() === prov && 
                row[1].trim() === prod && 
                row[2].trim() === speed && 
                row[3].trim() === tv;
     });
 }
-       };
+
+function renderGiftCards(gifts) {
+    const listElement = document.getElementById('calculator-gift-list');
+    const panel = document.getElementById('calculator-gift-panel');
+    listElement.innerHTML = '';
+    if (gifts.length > 0) {
+        panel.style.display = 'block';
+        gifts.forEach(gift => {
+            const card = document.createElement('div');
+            card.className = 'gift-card';
+            card.innerHTML = `<img src="${gift[5]}" alt="${gift[4]}"><div class="gift-name">${gift[4]}</div>`;
+            listElement.appendChild(card);
+        });
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+// [초기화 실행부]
+window.onload = function() { 
+    loadData(); 
+    loadGiftData(); 
+};
     </script>
 </body>
 </html>
