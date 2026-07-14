@@ -686,21 +686,25 @@
             updateOptions(); 
         }
 
-        function selectGiftTier(giftKey) {
+       function selectGiftTier(giftKey) {
             isCalculatorInteracted = true;
-            if (curProd === '요금할인형') {
-                alert('⚠️ 선택하신 요금할인형 특가 상품은 매달 청구 요금이 청구 최대로 자동 할인되는 상품입니다.\n가전 사은품 중복 지급이 불가능하여 가전을 선택하실 수 없습니다.\n(본사 정식 결합상품 선택 시 가전 해제창이 오픈됩니다!)');
+            
+            // [수정 로직] '결합' 상품이 아니면(단독, 할인형 등) 사은품 선택 차단
+            if (curProd !== '결합') {
+                alert('⚠️ 가전 사은품은 [인터넷 + TV 결합상품]부터 선택 가능합니다.\nTV 결합 상품을 먼저 선택하시면 더 큰 혜택과 함께 가전 라인업이 해제됩니다!');
                 return;
             }
-            if(!curProv) curProv = 'LG';
+
+            if (!curProv) curProv = 'LG';
             const cardIdMap = { '무빙스타일': 'gift-moving', '제트핏': 'gift-jetfit', '세탁기': 'gift-wash', '55인치TV': 'gift-tv55' };
             const targetCard = document.getElementById(cardIdMap[giftKey]);
             
-            // 💥 [필터 파괴 마감] 사은품 클릭 시 락 걸리는 얼럿 및 차단 로직 전면 무력화
             globalSelectedGift = giftKey;
             document.querySelectorAll('.gift-card').forEach(c => c.classList.remove('selected'));
-            if(targetCard) targetCard.classList.add('selected')      
- }
+            if (targetCard) targetCard.classList.add('selected');
+            
+            updateOptions();
+        }
 
         function resetGiftFilter() {
             globalSelectedGift = null;
