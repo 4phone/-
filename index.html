@@ -558,6 +558,30 @@
             initLiveReviews();
             setupUniversalStickyScroll();
         }
+        // 사은품 데이터 변수 추가
+let giftData = []; 
+
+// 가전사은품 데이터 로드 함수
+async function loadGiftData() {
+    const giftGid = '1560982380';
+    const giftCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${giftGid}&_=${Date.now()}`;
+    
+    try {
+        const response = await fetch(giftCsvUrl);
+        const text = await response.text();
+        const rows = parseCsvText(text);
+        
+        // 헤더 제외 후 데이터 저장
+        giftData = rows.slice(1).filter(r => r[0] && r[0].trim() !== "");
+        
+        console.log("사은품 데이터 로드 완료:", giftData);
+        alert("사은품 데이터가 성공적으로 불러와졌습니다! (총 " + giftData.length + "개)");
+        
+    } catch(e) {
+        console.error("사은품 데이터 로드 실패", e);
+        alert("사은품 데이터를 불러오지 못했습니다. GID를 다시 확인해 주세요.");
+    }
+}
 
         function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'flex'; }
         function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
@@ -929,7 +953,10 @@
             document.querySelectorAll('.c-tab-btn').forEach(btn => btn.classList.remove('active')); document.querySelectorAll('.form-panel').forEach(panel => panel.classList.remove('active'));
             el.classList.add('active'); document.getElementById('form-' + type).classList.add('active');
         }
-        window.onload = loadData;
+       window.onload = function() { 
+    loadData(); 
+    loadGiftData(); 
+};
     </script>
 </body>
 </html>
