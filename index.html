@@ -382,10 +382,17 @@
                 </div>
                 <div class="subsidy-box">
                    <div class="res-label" id="subsidy-label-text" style="color:#DD6B20; font-weight:900; font-size:16px;">사거리 특별 독점 지원금 (설치당일입금)</div>
-                    <div class="res-val subsidy-val" id="res-subsidy">0원</div>
+                    <div class="res-val subsidy-val" id="res-subsidy">
+    <span id="res-subsidy-cash">0원</span>
+</div>
                 </div>
             </div>
             <div id="res-special" style="margin-top:25px; font-weight:900; color:var(--fire-orange); font-size:18px;"></div>
+<!-- 토글 버튼 영역 -->
+<div id="toggle-area" style="text-align: center; margin: 20px 0;">
+    <button id="btn-show-gift" class="text-btn" onclick="toggleGiftMode('gift')">🎁 현금 대신 가전 사은품으로 보기</button>
+    <button id="btn-show-cash" class="text-btn" onclick="toggleGiftMode('cash')" style="display: none; background: #E2E8F0;">↩ 현금 지원금 혜택으로 다시 보기</button>
+</div>
             <!-- 요금계산기 내 사은품 선택 영역 -->
            <div id="calculator-gift-panel" style="margin-top: 30px; display: none;">
     <div class="calc-group-title"style="border-left:none;">🎁 선택 가능한 가전 사은품</div>
@@ -993,6 +1000,24 @@ window.onload = function() {
     loadData(); 
     loadGiftData(); 
 };
+        function toggleGiftMode(mode) {
+    const cashText = document.getElementById('res-subsidy-cash');
+    const giftPanel = document.getElementById('calculator-gift-panel');
+    const btnGift = document.getElementById('btn-show-gift');
+    const btnCash = document.getElementById('btn-show-cash');
+
+    if (mode === 'gift') {
+        cashText.style.display = 'none';
+        giftPanel.style.display = 'block';
+        btnGift.style.display = 'none';
+        btnCash.style.display = 'inline-block';
+    } else {
+        cashText.style.display = 'inline';
+        giftPanel.style.display = 'none';
+        btnGift.style.display = 'inline-block';
+        btnCash.style.display = 'none';
+    }
+}
     </script>
 </body>
 </html>
