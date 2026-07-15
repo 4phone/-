@@ -752,6 +752,7 @@ async function loadGiftData() {
         }
 
         function updateOptions() {
+        resetToCashMode();
             const speedBox = document.getElementById('speed-box'); if (!speedBox) return; speedBox.innerHTML = '';
             if(!curProv || !curProd) { syncUniversalStickyBar(); return; }
             const step3Title = document.getElementById('step3-title');
@@ -996,24 +997,41 @@ window.onload = function() {
     loadGiftData(); 
 };
         // 현금/가전 모드 전환 로직
+// 현금/가전 모드 전환 및 초기화 로직
 let isGiftMode = false;
+
+// 모드를 강제로 '현금 모드'로 초기화하는 함수
+function resetToCashMode() {
+    isGiftMode = false;
+    const subsidyBox = document.querySelector('.subsidy-box');
+    const giftPanel = document.getElementById('calculator-gift-panel');
+    const toggleBtn = document.getElementById('btn-toggle-gift');
+    
+    if (subsidyBox) subsidyBox.style.display = 'block';
+    if (giftPanel) giftPanel.style.display = 'none';
+    if (toggleBtn) {
+        toggleBtn.textContent = '🎁 현금 대신 가전 사은품으로 보기';
+        toggleBtn.style.background = '#3182CE';
+    }
+}
+
 function toggleGiftMode() {
-    const subsidyBox = document.querySelector('.subsidy-box'); // 현금 정보 박스
-    const giftPanel = document.getElementById('calculator-gift-panel'); // 가전 정보 박스
-    const toggleBtn = document.getElementById('btn-toggle-gift'); // 전환 버튼
+    const subsidyBox = document.querySelector('.subsidy-box');
+    const giftPanel = document.getElementById('calculator-gift-panel');
+    const toggleBtn = document.getElementById('btn-toggle-gift');
 
     isGiftMode = !isGiftMode;
 
     if (isGiftMode) {
-        subsidyBox.style.display = 'none'; // 현금 박스 숨기기
-        giftPanel.style.display = 'block'; // 가전 박스 보여주기
+        subsidyBox.style.display = 'none';
+        giftPanel.style.display = 'block';
         toggleBtn.textContent = '↩️ 다시 현금 사은품으로 보기';
-        toggleBtn.style.background = '#DD6B20'; // 오렌지색으로 변경 (현금 느낌)
+        toggleBtn.style.background = '#DD6B20';
     } else {
-        subsidyBox.style.display = 'block'; // 현금 박스 보여주기
-        giftPanel.style.display = 'none'; // 가전 박스 숨기기
+        subsidyBox.style.display = 'block';
+        giftPanel.style.display = 'none';
         toggleBtn.textContent = '🎁 현금 대신 가전 사은품으로 보기';
-        toggleBtn.style.background = '#3182CE'; // 파란색으로 원복
+        toggleBtn.style.background = '#3182CE';
     }
 }
     </script>
