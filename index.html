@@ -976,9 +976,16 @@ function getMatchingGifts(prov, prod, speed, tv) {
 }
 function renderGiftCards(gifts) {
     const listElement = document.getElementById('calculator-gift-list');
+    const toggleArea = document.getElementById('gift-mode-toggle-area'); // 버튼 영역
     listElement.innerHTML = '';
-    
+
+    // [추가된 로직]: 데이터가 있으면 버튼 보이고, 없으면 버튼 숨겨라!
+    if (toggleArea) {
+        toggleArea.style.display = (gifts && gifts.length > 0) ? 'block' : 'none';
+    }
+
     gifts.forEach(gift => {
+        // ... (이 아래 기존 코드는 한 글자도 건드리지 않습니다!) ...
         const card = document.createElement('div');
         card.className = 'gift-card';
         card.innerHTML = `<img src="${gift[5]}" alt="${gift[4]}"><div class="gift-name">${gift[4]}</div>`;
