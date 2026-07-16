@@ -977,10 +977,15 @@ function getMatchingGifts(prov, prod, speed, tv) {
 function renderGiftCards(gifts) {
     const listElement = document.getElementById('calculator-gift-list');
     const panel = document.getElementById('calculator-gift-panel');
+    const toggleArea = document.getElementById('gift-mode-toggle-area'); // 전환 버튼 영역
+    
     listElement.innerHTML = '';
     
     if (gifts.length > 0) {
-        // [수정 포인트] 가전 모드일 때만 block, 아니면 none으로 유지
+        // 가전 데이터가 있을 때만 버튼 노출
+        if (toggleArea) toggleArea.style.display = 'block'; 
+        
+        // 가전 이미지 영역은 isGiftMode일 때만 노출
         panel.style.display = isGiftMode ? 'block' : 'none'; 
         
         gifts.forEach(gift => {
@@ -990,6 +995,8 @@ function renderGiftCards(gifts) {
             listElement.appendChild(card);
         });
     } else {
+        // 가전 데이터가 없으면 버튼과 이미지 모두 숨김
+        if (toggleArea) toggleArea.style.display = 'none';
         panel.style.display = 'none';
     }
 }
