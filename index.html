@@ -984,11 +984,24 @@ function renderGiftCards(gifts) {
         toggleArea.style.display = (gifts && gifts.length > 0) ? 'block' : 'none';
     }
 
-    gifts.forEach(gift => {
-        // ... (이 아래 기존 코드는 한 글자도 건드리지 않습니다!) ...
+gifts.forEach(gift => {
         const card = document.createElement('div');
         card.className = 'gift-card';
         card.innerHTML = `<img src="${gift[5]}" alt="${gift[4]}"><div class="gift-name">${gift[4]}</div>`;
+        
+        // [여기가 핵심!] 클릭했을 때 동작을 추가합니다
+        card.onclick = function() {
+            // 1. 모든 카드 테두리를 원래대로(없음) 돌리고
+            document.querySelectorAll('.gift-card').forEach(c => c.style.border = 'none');
+            
+            // 2. 내가 누른 카드에만 파란색 테두리를 줘서 선택된 걸 표시!
+            card.style.border = '2px solid #3182CE';
+            
+            // 3. 우리가 만든 그릇(selectedGift)에 클릭한 사은품 정보를 쏙 담아!
+            selectedGift = gift; 
+            console.log("선택된 사은품 정보:", selectedGift); // 확인용
+        };
+        
         listElement.appendChild(card);
     });
 }
