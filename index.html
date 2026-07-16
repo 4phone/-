@@ -387,15 +387,16 @@
             </div>
             <div id="res-special" style="margin-top:25px; font-weight:900; color:var(--fire-orange); font-size:18px;"></div>
             <!-- 요금계산기 내 사은품 선택 영역 -->
-           <div id="calculator-gift-panel" style="margin-top: 30px; display: none;">
+<div id="gift-mode-toggle-area" style="text-align: center; margin: 10px 0 25px 0;">
+    <button id="btn-toggle-gift" class="c-tab-btn" style="width: 100%; max-width: 760px; background: #3182CE; color: #fff; border: none; padding: 18px; font-size: 16px; font-weight: 900; border-radius: 12px; cursor: pointer;" onclick="toggleGiftMode()">🎁 현금 대신 가전 사은품으로 보기</button>
+</div>
+            <div id="calculator-gift-panel" style="margin-top: 30px; display: none;">
     <div class="calc-group-title"style="border-left:none;">🎁 선택 가능한 가전 사은품</div>
     <div id="calculator-gift-list" class="gift-grid">
         <!-- 이곳에 자바스크립트로 사은품 카드가 동적으로 생성됩니다 -->
     </div>
             <!-- 가전 사은품 전환 버튼 (길게 뻗은 디자인) -->
-<div id="gift-mode-toggle-area" style="text-align: center; margin: 10px 0 25px 0;">
-    <button id="btn-toggle-gift" class="c-tab-btn" style="width: 100%; max-width: 760px; background: #3182CE; color: #fff; border: none; padding: 18px; font-size: 16px; font-weight: 900; border-radius: 12px; cursor: pointer;" onclick="toggleGiftMode()">🎁 현금 대신 가전 사은품으로 보기</button>
-</div>
+
             <button class="calc-apply-trigger-btn" id="calc-apply-btn" onclick="openCalculateApplyForm()">
                 🔥 내가 고른 조건으로 즉시 가입신청하기 (1초 완성) ▼
             </button>
@@ -973,32 +974,16 @@ function getMatchingGifts(prov, prod, speed, tv) {
                row[3].trim() === tv;
     });
 }
-
 function renderGiftCards(gifts) {
     const listElement = document.getElementById('calculator-gift-list');
-    const panel = document.getElementById('calculator-gift-panel');
-    const toggleArea = document.getElementById('gift-mode-toggle-area'); // 전환 버튼 영역
-    
     listElement.innerHTML = '';
     
-    if (gifts.length > 0) {
-        // 가전 데이터가 있을 때만 버튼 노출
-        if (toggleArea) toggleArea.style.display = 'block'; 
-        
-        // 가전 이미지 영역은 isGiftMode일 때만 노출
-        panel.style.display = isGiftMode ? 'block' : 'none'; 
-        
-        gifts.forEach(gift => {
-            const card = document.createElement('div');
-            card.className = 'gift-card';
-            card.innerHTML = `<img src="${gift[5]}" alt="${gift[4]}"><div class="gift-name">${gift[4]}</div>`;
-            listElement.appendChild(card);
-        });
-    } else {
-        // 가전 데이터가 없으면 버튼과 이미지 모두 숨김
-        if (toggleArea) toggleArea.style.display = 'none';
-        panel.style.display = 'none';
-    }
+    gifts.forEach(gift => {
+        const card = document.createElement('div');
+        card.className = 'gift-card';
+        card.innerHTML = `<img src="${gift[5]}" alt="${gift[4]}"><div class="gift-name">${gift[4]}</div>`;
+        listElement.appendChild(card);
+    });
 }
 
 // [초기화 실행부]
@@ -1033,15 +1018,19 @@ function toggleGiftMode() {
     isGiftMode = !isGiftMode;
 
     if (isGiftMode) {
-        subsidyBox.style.display = 'none';
-        giftPanel.style.display = 'block';
-        toggleBtn.textContent = '↩️ 다시 현금 사은품으로 보기';
-        toggleBtn.style.background = '#DD6B20';
+        if (subsidyBox) subsidyBox.style.display = 'none';
+        if (giftPanel) giftPanel.style.display = 'block';
+        if (toggleBtn) {
+            toggleBtn.textContent = '↩️ 다시 현금 사은품으로 보기';
+            toggleBtn.style.background = '#DD6B20';
+        }
     } else {
-        subsidyBox.style.display = 'block';
-        giftPanel.style.display = 'none';
-        toggleBtn.textContent = '🎁 현금 대신 가전 사은품으로 보기';
-        toggleBtn.style.background = '#3182CE';
+        if (subsidyBox) subsidyBox.style.display = 'block';
+        if (giftPanel) giftPanel.style.display = 'none';
+        if (toggleBtn) {
+            toggleBtn.textContent = '🎁 현금 대신 가전 사은품으로 보기';
+            toggleBtn.style.background = '#3182CE';
+        }
     }
 }
     </script>
