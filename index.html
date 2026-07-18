@@ -218,7 +218,7 @@
             .sticky-tier-1 { padding: 8px 15px; font-size: 12px; }
             .sticky-tier-2 { padding: 10px 15px 4px 15px; gap: 0; flex-direction: column !important; width: 100%; }
             
-            /* 모바일 인풋창 가로 50% 분할 레이아웃 복원 마감 */
+            /* 모바일 인풋창 가로 50% 분할 레이아웃 복 복원 마감 */
             .sticky-form-side { display: flex !important; flex-wrap: wrap !important; flex-direction: row !important; width: 100% !important; gap: 8px !important; justify-content: space-between !important; }
             .sticky-input-field { display: block !important; flex: 1 !important; min-width: 0 !important; width: calc(50% - 4px) !important; height: 44px !important; font-size: 13px; padding: 0 10px; margin-bottom: 4px; }
             
@@ -567,30 +567,30 @@
             initLiveReviews();
             setupUniversalStickyScroll();
         }
+        
         // 사은품 데이터 변수 추가
-let giftData = []; 
+        let giftData = []; 
 
-// 가전사은품 데이터 로드 함수
-async function loadGiftData() {
-    const giftGid = '1560982380';
-    const giftCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${giftGid}&_=${Date.now()}`;
-    
-    try {
-        const response = await fetch(giftCsvUrl);
-        const text = await response.text();
-        const rows = parseCsvText(text);
-        
-        // 헤더 제외 후 데이터 저장
-        giftData = rows.slice(1).filter(r => r[0] && r[0].trim() !== "");
-        
-        console.log("사은품 데이터 로드 완료:", giftData);
-        //alert("사은품 데이터가 성공적으로 불러와졌습니다! (총 " + giftData.length + "개)");
-        
-    } catch(e) {
-        console.error("사은품 데이터 로드 실패", e);
-        alert("사은품 데이터를 불러오지 못했습니다. GID를 다시 확인해 주세요.");
-    }
-}
+        // 가전사은품 데이터 로드 함수
+        async function loadGiftData() {
+            const giftGid = '1560982380';
+            const giftCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${giftGid}&_=${Date.now()}`;
+            
+            try {
+                const response = await fetch(giftCsvUrl);
+                const text = await response.text();
+                const rows = parseCsvText(text);
+                
+                // 헤더 제외 후 데이터 저장
+                giftData = rows.slice(1).filter(r => r[0] && r[0].trim() !== "");
+                
+                console.log("사은품 데이터 로드 완료:", giftData);
+                
+            } catch(e) {
+                console.error("사은품 데이터 로드 실패", e);
+                alert("사은품 데이터를 불러오지 못했습니다. GID를 다시 확인해 주세요.");
+            }
+        }
 
         function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'flex'; }
         function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
@@ -654,11 +654,12 @@ async function loadGiftData() {
             if(!phone) { alert('연락처를 입력해 주세요!'); document.getElementById('calc-apply-phone').focus(); return; }
             if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 가입 신청이 가능합니다.'); return; }
            let giftMessage = isGiftMode && selectedGift ? `\n사은품: ${selectedGift[4]}` : "";
-alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요금: ${currentCalculatedPrice}${giftMessage}\n성함: ${name}\n연락처: ${phone}`);
+            alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요금: ${currentCalculatedPrice}${giftMessage}\n성함: ${name}\n연락처: ${phone}`);
             document.getElementById('calc-apply-name').value = ""; document.getElementById('calc-apply-phone').value = ""; document.getElementById('calc-apply-panel').style.display = "none"; document.getElementById('calc-privacy-check').checked = false;
             const triggerBtn = document.getElementById('calc-apply-btn'); if(triggerBtn) triggerBtn.textContent = "🔥 내가 고른 조건으로 즉시 가입신청하기 (1초 완성) ▼";
         }
 
+        // 🔥 [이곳이 수정된 하단 고정 바 신청 함수입니다!]
         function submitUniversalStickyForm() {
             const name = document.getElementById('sticky-user-name').value.trim();
             const phone = document.getElementById('sticky-user-phone').value.trim();
@@ -666,11 +667,15 @@ alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요
             if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('sticky-user-name').focus(); return; }
             if(!phone) { alert('연락처를 입력해 주세요!'); document.getElementById('sticky-user-phone').focus(); return; }
             if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 신청이 가능합니다.'); return; }
+            
             if(!isCalculatorInteracted) {
                 alert(`[간편 빠른상담 접수 완료]\n\n성함: ${name}\n연락처: ${phone}`);
             } else {
-                alert(`[다이렉트 가입신청 성공]\n\n신청 내역: ${currentSelectedString}\n월 요금: ${currentCalculatedPrice}\n성함: ${name}\n연락처: ${phone}`);
+                // 사은품이 선택되어 있다면 알림창에 포함시킵니다!
+                let stickyGiftMessage = isGiftMode && selectedGift ? `\n사은품: ${selectedGift[4]}` : "";
+                alert(`[다이렉트 가입신청 성공]\n\n신청 내역: ${currentSelectedString}\n월 요금: ${currentCalculatedPrice}${stickyGiftMessage}\n성함: ${name}\n연락처: ${phone}`);
             }
+            
             document.getElementById('sticky-user-name').value = ""; document.getElementById('sticky-user-phone').value = ""; document.getElementById('sticky-privacy-check').checked = false;
         }
 
@@ -681,7 +686,6 @@ alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요
             curProv = p; 
             if(!curProd) curProd = '단독';
             
-            // 💥 [필터 파괴 마감] 사은품 필터 유무와 무관하게 무조건 전체 선택지 오픈하도록 수정
             const hasAnyGift = false; 
             const menuBox = document.getElementById('product-type-box');
             if(menuBox) {
@@ -723,7 +727,6 @@ alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요
        function selectGiftTier(giftKey) {
             isCalculatorInteracted = true;
             
-            // [수정 로직] '결합' 상품이 아니면(단독, 할인형 등) 사은품 선택 차단
             if (curProd !== '결합') {
                 alert('⚠️ 가전 사은품은 [인터넷 + TV 결합상품]부터 선택 가능합니다.\nTV 결합 상품을 먼저 선택하시면 더 큰 혜택과 함께 가전 라인업이 해제됩니다!');
                 return;
@@ -754,7 +757,7 @@ alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요
         }
 
         function updateOptions() {
-        resetToCashMode();
+            resetToCashMode();
             const speedBox = document.getElementById('speed-box'); if (!speedBox) return; speedBox.innerHTML = '';
             if(!curProv || !curProd) { syncUniversalStickyBar(); return; }
             const step3Title = document.getElementById('step3-title');
@@ -765,7 +768,6 @@ alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요
             if(btnSingle) btnSingle.classList.remove('disabled');
             if(btnDiscount) btnDiscount.classList.remove('disabled');
             
-            // 💥 [필터 파괴 마감] 가전 선택 유무가 요금제 계산기 버튼 활성화/비활성화에 간섭하지 못하도록 로직 제거
             document.querySelectorAll('#product-type-box .text-btn').forEach(b => {
                 if(b.textContent.includes(curProd === '단독' ? '단독' : (curProd === '결합' ? '결합' : '요금할인형'))) { b.classList.add('active'); } else { b.classList.remove('active'); }
             });
@@ -791,7 +793,6 @@ alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요
             let speeds = [...new Set(filteredRows.map(row => row[2].trim()))];
             if(curProd !== '요금할인형') { speeds.sort((a, b) => (b.includes('1G') ? 1000 : parseInt(b) || 100) - (a.includes('1G') ? 1000 : parseInt(a) || 100)); }
             
-            // 💥 [필터 파괴 마감] 가전 선택 시 100M, 160M, 200M 속도가 필터링되어 사라지던 로직 완전 삭제 (모든 속도 상시 노출)
             const slot = document.getElementById('region-content-slot');
             if(slot) {
                 if(curProv === '헬로') {
@@ -870,7 +871,8 @@ alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요
                     currentCalculatedPrice = `${basePrice}원/월`;
                 }
                 printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]} / ${cleanRow[3]}`;
-            }// 현재 선택된 조건을 바탕으로 사은품 필터링
+            }
+            
             const matchedGifts = getMatchingGifts(curProv, curProd, currentActiveSpeed, cleanRow[3].trim());
             renderGiftCards(matchedGifts);
             if (baseEl) { baseEl.innerHTML = isAlthempone ? `${basePrice}<span>원/월</span>` : (basePrice.includes('원') ? basePrice : `${basePrice}<span>원</span>`); }
@@ -886,7 +888,6 @@ alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요
             } else {
                 if(overlayLayer) overlayLayer.style.display = "none";
                 if(isLowSpeed) {
-                    // 사은품이 활성화되지 않은 일반 저속 요금제 상태
                     globalSelectedGift = null; labelSlot.textContent = `사거리 특별 독점 지원금 (설치당일입금)`; subsidySlot.textContent = subsidy.includes('원') ? subsidy : subsidy + '원';
                     currentGiftStatusText = `현금 사은품 ${subsidy}원 증정`;
                 } else {
@@ -929,17 +930,7 @@ alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요
             const isTargetIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             const smsLink = isTargetIos ? `sms:${targetPhone}&body=${encodeURIComponent(smsBody)}` : `sms:${targetPhone}?body=${encodeURIComponent(smsBody)}`; window.location.href = smsLink;
         }
-        function submitCalculateApplyForm() {
-            const name = document.getElementById('calc-apply-name').value.trim();
-            const phone = document.getElementById('calc-apply-phone').value.trim();
-            const checked = document.getElementById('calc-privacy-check').checked;
-            if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('calc-apply-name').focus(); return; }
-            if(!phone) { alert('연락처를 입력해 주세요!'); document.getElementById('calc-apply-phone').focus(); return; }
-            if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 가입 신청이 가능합니다.'); return; }
-            alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요금: ${currentCalculatedPrice}\n성함: ${name}\n연락처: ${phone}`);
-            document.getElementById('calc-apply-name').value = ""; document.getElementById('calc-apply-phone').value = ""; document.getElementById('calc-apply-panel').style.display = "none"; document.getElementById('calc-privacy-check').checked = false;
-            const triggerBtn = document.getElementById('calc-apply-btn'); if(triggerBtn) triggerBtn.textContent = "🔥 내가 고른 조건으로 즉시 가입신청하기 (1초 완성) ▼";
-        }
+
         function initLiveReviews() {
             const belt = document.getElementById('rolling-belt'); if(!belt) return;
             const rawReviews = [
@@ -966,99 +957,102 @@ alert(`[가입신청 성공]\n\n신청 상품: ${currentSelectedString}\n월 요
             document.querySelectorAll('.c-tab-btn').forEach(btn => btn.classList.remove('active')); document.querySelectorAll('.form-panel').forEach(panel => panel.classList.remove('active'));
             el.classList.add('active'); document.getElementById('form-' + type).classList.add('active');
         }
-// [전역 스코프로 이동된 함수들]
-function getMatchingGifts(prov, prod, speed, tv) {
-    return giftData.filter(row => {
-        return row[0].trim() === prov && 
-               row[1].trim() === prod && 
-               row[2].trim() === speed && 
-               row[3].trim() === tv;
-    });
-}
-function renderGiftCards(gifts) {
-    const listElement = document.getElementById('calculator-gift-list');
-    const toggleArea = document.getElementById('gift-mode-toggle-area'); // 버튼 영역
-    listElement.innerHTML = '';
 
-    // [추가된 로직]: 데이터가 있으면 버튼 보이고, 없으면 버튼 숨겨라!
-    if (toggleArea) {
-        toggleArea.style.display = (gifts && gifts.length > 0) ? 'block' : 'none';
-    }
+        // [전역 스코프로 이동된 함수들]
+        function getMatchingGifts(prov, prod, speed, tv) {
+            return giftData.filter(row => {
+                return row[0].trim() === prov && 
+                       row[1].trim() === prod && 
+                       row[2].trim() === speed && 
+                       row[3].trim() === tv;
+            });
+        }
 
-gifts.forEach(gift => {
-        const card = document.createElement('div');
-        card.className = 'gift-card';
-        card.innerHTML = `<img src="${gift[5]}" alt="${gift[4]}"><div class="gift-name">${gift[4]}</div>`;
-        
-        // [여기가 핵심!] 클릭했을 때 동작을 추가합니다
-card.onclick = function() {
-            document.querySelectorAll('.gift-card').forEach(c => c.style.border = 'none');
-            card.style.border = '2px solid #3182CE';
-            selectedGift = gift; 
-            
-            // [추가] 하단 신청 란의 문구를 실시간으로 업데이트!
-            const summaryText = document.getElementById('apply-product-text-summary');
-            if (summaryText) {
-                summaryText.innerText = `[${currentSelectedString}] + 사은품: ${selectedGift[4]}`;
+        // 🔥 [이곳이 수정된 가전 카드 생성 함수입니다!]
+        function renderGiftCards(gifts) {
+            const listElement = document.getElementById('calculator-gift-list');
+            const toggleArea = document.getElementById('gift-mode-toggle-area');
+            listElement.innerHTML = '';
+
+            if (toggleArea) {
+                toggleArea.style.display = (gifts && gifts.length > 0) ? 'block' : 'none';
             }
-            
-            console.log("선택된 사은품 정보:", selectedGift);
+
+            gifts.forEach(gift => {
+                const card = document.createElement('div');
+                card.className = 'gift-card';
+                card.innerHTML = `<img src="${gift[5]}" alt="${gift[4]}"><div class="gift-name">${gift[4]}</div>`;
+                
+                card.onclick = function() {
+                    document.querySelectorAll('.gift-card').forEach(c => c.style.border = 'none');
+                    card.style.border = '2px solid #3182CE';
+                    selectedGift = gift; 
+                    
+                    const summaryText = document.getElementById('apply-product-text-summary');
+                    if (summaryText) {
+                        summaryText.innerText = `[${currentSelectedString}] + 사은품: ${selectedGift[4]}`;
+                    }
+                    
+                    // 👉 선택 시 하단 고정 바 실시간 업데이트 
+                    currentGiftStatusText = `🎁 가전: ${selectedGift[4]}`;
+                    syncUniversalStickyBar();
+                    
+                    console.log("선택된 사은품 정보:", selectedGift);
+                };
+                
+                listElement.appendChild(card);
+            });
+        }
+
+        // [초기화 실행부]
+        window.onload = function() { 
+            loadData(); 
+            loadGiftData(); 
+            const toggleArea = document.getElementById('gift-mode-toggle-area');
+            if (toggleArea) toggleArea.style.display = 'none';
         };
-        
-        listElement.appendChild(card);
-    });
-}
 
-// [초기화 실행부]
-window.onload = function() { 
-    loadData(); 
-    loadGiftData(); 
-    const toggleArea = document.getElementById('gift-mode-toggle-area');
-    if (toggleArea) toggleArea.style.display = 'none';
-};
-        // 현금/가전 모드 전환 로직
-// 현금/가전 모드 전환 및 초기화 로직
-let isGiftMode = false;
-let selectedGift = null; // 선택된 사은품을 담을 그릇 추가
+        // 현금/가전 모드 전환 및 초기화 로직
+        let isGiftMode = false;
+        let selectedGift = null;
 
-// 모드를 강제로 '현금 모드'로 초기화하는 함수
-function resetToCashMode() {
-    isGiftMode = false;
-    const subsidyBox = document.querySelector('.subsidy-box');
-    const giftPanel = document.getElementById('calculator-gift-panel');
-    const toggleBtn = document.getElementById('btn-toggle-gift');
-    
-    if (subsidyBox) subsidyBox.style.display = 'block';
-    if (giftPanel) giftPanel.style.display = 'none';
-    if (toggleBtn) {
-        toggleBtn.textContent = '🎁 현금 대신 가전 사은품으로 보기';
-        toggleBtn.style.background = '#3182CE';
-    }
-}
-
-function toggleGiftMode() {
-    const subsidyBox = document.querySelector('.subsidy-box');
-    const giftPanel = document.getElementById('calculator-gift-panel');
-    const toggleBtn = document.getElementById('btn-toggle-gift');
-
-    isGiftMode = !isGiftMode;
-
-    if (isGiftMode) {
-        if (subsidyBox) subsidyBox.style.display = 'none';
-        if (giftPanel) giftPanel.style.display = 'block';
-        if (toggleBtn) {
-            toggleBtn.textContent = '↩️ 다시 현금 사은품으로 보기';
-            toggleBtn.style.background = '#DD6B20';
+        function resetToCashMode() {
+            isGiftMode = false;
+            const subsidyBox = document.querySelector('.subsidy-box');
+            const giftPanel = document.getElementById('calculator-gift-panel');
+            const toggleBtn = document.getElementById('btn-toggle-gift');
+            
+            if (subsidyBox) subsidyBox.style.display = 'block';
+            if (giftPanel) giftPanel.style.display = 'none';
+            if (toggleBtn) {
+                toggleBtn.textContent = '🎁 현금 대신 가전 사은품으로 보기';
+                toggleBtn.style.background = '#3182CE';
+            }
         }
-    } else {
-        if (subsidyBox) subsidyBox.style.display = 'block';
-        if (giftPanel) giftPanel.style.display = 'none';
-        if (toggleBtn) {
-            toggleBtn.textContent = '🎁 현금 대신 가전 사은품으로 보기';
-            toggleBtn.style.background = '#3182CE';
+
+        function toggleGiftMode() {
+            const subsidyBox = document.querySelector('.subsidy-box');
+            const giftPanel = document.getElementById('calculator-gift-panel');
+            const toggleBtn = document.getElementById('btn-toggle-gift');
+
+            isGiftMode = !isGiftMode;
+
+            if (isGiftMode) {
+                if (subsidyBox) subsidyBox.style.display = 'none';
+                if (giftPanel) giftPanel.style.display = 'block';
+                if (toggleBtn) {
+                    toggleBtn.textContent = '↩️ 다시 현금 사은품으로 보기';
+                    toggleBtn.style.background = '#DD6B20';
+                }
+            } else {
+                if (subsidyBox) subsidyBox.style.display = 'block';
+                if (giftPanel) giftPanel.style.display = 'none';
+                if (toggleBtn) {
+                    toggleBtn.textContent = '🎁 현금 대신 가전 사은품으로 보기';
+                    toggleBtn.style.background = '#3182CE';
+                }
+            }
         }
-    }
-}
     </script>
 </body>
 </html>
