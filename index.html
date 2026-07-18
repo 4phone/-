@@ -631,25 +631,41 @@
             }, { passive: true });
         }
 
-        function syncUniversalStickyBar() {
+function syncUniversalStickyBar() {
             const bar = document.getElementById('universalStickyBar');
-            const txt = document.getElementById('sticky-display-text');
+            const defaultState = document.getElementById('sticky-default-state');
+            const activeState = document.getElementById('sticky-active-state');
             const btn = document.getElementById('sticky-main-btn');
-            if(!bar || !txt || !btn) return;
+            
+            if(!bar || !defaultState || !activeState || !btn) return;
 
             if (!isCalculatorInteracted) {
+                // 요금 계산 전
                 bar.classList.remove('active-mode');
-                txt.innerHTML = `💡 나에게 딱 맞는 최저가 요금을 실시간으로 계산해 보세요!`;
+                defaultState.style.display = 'flex';
+                activeState.style.display = 'none';
                 btn.textContent = `🚀 떡값 상담신청`;
             } else {
+                // 요금 계산 후 (3분할 데이터 삽입)
                 bar.classList.add('active-mode');
-                let productDesc = curProd === '요금할인형' ? '요금특가 결합형' : (curProd === '결합' ? '인터넷+TV 결합상품' : '인터넷 단독');
+                defaultState.style.display = 'none';
+                activeState.style.display = 'flex';
+                
+                let productDesc = curProd === '요금할인형' ? '요금특가 결합형' : (curProd === '결합' ? '인터넷+TV 결합' : '인터넷 단독');
                 let speedDesc = currentActiveSpeed || "속도 미선택";
-                txt.innerHTML = `🟢 가입 진행 조건: [${curProv} / ${productDesc} / ${speedDesc}] ➡️ 월 청구 요금: <span style="color:#FFF; font-weight:900; background:#E53E3E; padding:2px 6px; border-radius:4px;">${currentCalculatedPrice}</span> (혜택: ${currentGiftStatusText})`;
+                
+                // 통신사별 컬러 뱃지 생성
+                let provClass = `prov-${curProv}`;
+                let badgeHtml = `<span class="prov-badge ${provClass}">${curProv}</span>`;
+                
+                // 각 구역에 데이터 뿌리기
+                document.getElementById('sticky-out-product').innerHTML = `${badgeHtml} <span style="color:#E2E8F0; font-weight:700;">${productDesc} / ${speedDesc}</span>`;
+                document.getElementById('sticky-out-price').textContent = currentCalculatedPrice;
+                document.getElementById('sticky-out-gift').textContent = currentGiftStatusText;
+                
                 btn.textContent = `🔥 위 조건으로 가입신청`;
             }
         }
-
         function submitMainFastForm() {
             const name = document.getElementById('main-fast-name').value.trim();
             const phone = document.getElementById('main-fast-phone').value.trim();
