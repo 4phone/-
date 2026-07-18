@@ -842,7 +842,7 @@
             }
         }
 
-        function showResult(row, activeSpeed) {
+function showResult(row, activeSpeed) {
             currentActiveSpeed = activeSpeed || ""; 
             const cleanRow = row.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
             const basePriceRaw = cleanRow[4].replace(/[^0-9]/g, "") || "0";
@@ -851,11 +851,15 @@
             const isAlthempone = curProv === '스카이' || curProv === '헬로' || curProd === '요금할인형';
             const baseEl = document.getElementById('res-base');
             let printableProductDetail = "";
+            
             if (isAlthempone) {
                 document.getElementById('comb-display-area').style.display = "none";
                 document.getElementById('label-base').textContent = (curProd === '요금할인형') ? ((curProv === 'SK') ? "SK 요금할인형 특가" : "스카이 요금할인형 특가") : "알뜰 실속 요금";
                 if (baseEl) { baseEl.style.textDecoration = "none"; baseEl.style.color = "#1A202C"; baseEl.style.fontSize = "34px"; baseEl.style.fontWeight = "900"; }
                 printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]}`;
+                
+                // 🔥 [버그 수정 포인트] 스카이, 헬로비전의 요금도 하단 바 변수에 전달되도록 추가!
+                currentCalculatedPrice = `${basePrice}원/월`;
             } else {
                 if (baseEl) { baseEl.style.textDecoration = "line-through"; baseEl.style.color = "#A0AEC0"; baseEl.style.fontSize = "24px"; baseEl.style.fontWeight = "700"; }
                 const dcPriceRaw = parseInt(cleanRow[5].replace(/[^0-9]/g, "")) || 0;
@@ -880,6 +884,7 @@
             const subsidySlot = document.getElementById('res-subsidy');
             const isLowSpeed = currentActiveSpeed.includes('100M') || currentActiveSpeed.includes('160M') || currentActiveSpeed.includes('200M') || curProd === '단독';
             const overlayLayer = document.getElementById('gift-discount-lock-layer');
+            
             if(curProd === '요금할인형') {
                 if(overlayLayer) overlayLayer.style.display = "flex";
                 labelSlot.textContent = `사거리 특별 독점 지원금 (설치당일입금)`; subsidySlot.textContent = subsidy.includes('원') ? subsidy : subsidy + '원';
@@ -917,7 +922,6 @@
             
             syncUniversalStickyBar();
         }
-
         function openCalculateApplyForm() {
             const panel = document.getElementById('calc-apply-panel'); const triggerBtn = document.getElementById('calc-apply-btn');
             if(panel) {
