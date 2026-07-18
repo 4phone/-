@@ -1030,7 +1030,7 @@
             }
         }
 
-        function toggleGiftMode() {
+function toggleGiftMode() {
             const subsidyBox = document.querySelector('.subsidy-box');
             const giftPanel = document.getElementById('calculator-gift-panel');
             const toggleBtn = document.getElementById('btn-toggle-gift');
@@ -1044,6 +1044,14 @@
                     toggleBtn.textContent = '↩️ 다시 현금 사은품으로 보기';
                     toggleBtn.style.background = '#DD6B20';
                 }
+                
+                // [추가] 가전 모드로 다시 돌아왔을 때, 기존에 선택해둔 가전이 있다면 텍스트 다시 띄우기
+                if (selectedGift) {
+                    const summaryText = document.getElementById('apply-product-text-summary');
+                    if (summaryText) summaryText.innerText = `[${currentSelectedString}] + 사은품: ${selectedGift[4]}`;
+                    currentGiftStatusText = `🎁 가전: ${selectedGift[4]}`;
+                    syncUniversalStickyBar();
+                }
             } else {
                 if (subsidyBox) subsidyBox.style.display = 'block';
                 if (giftPanel) giftPanel.style.display = 'none';
@@ -1051,6 +1059,14 @@
                     toggleBtn.textContent = '🎁 현금 대신 가전 사은품으로 보기';
                     toggleBtn.style.background = '#3182CE';
                 }
+                
+                // 🔥 [추가] 현금 모드로 돌아왔을 때 텍스트를 원래 '현금 사은품'으로 완벽하게 복구
+                const summaryText = document.getElementById('apply-product-text-summary');
+                if (summaryText) summaryText.innerText = currentSelectedString; // 계산기 내부 텍스트 복구
+                
+                const subsidyText = document.getElementById('res-subsidy').innerText; // 현재 화면의 현금 지원금 텍스트 가져오기
+                currentGiftStatusText = `현금 사은품 ${subsidyText} 증정`; // 하단 바 텍스트 복구
+                syncUniversalStickyBar(); // 하단 바 새로고침
             }
         }
     </script>
