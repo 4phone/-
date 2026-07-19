@@ -643,11 +643,25 @@
         function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'flex'; }
         function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
 
-        function setupUniversalStickyScroll() {
+function setupUniversalStickyScroll() {
             const stickyBar = document.getElementById('universalStickyBar');
-            if (!stickyBar) return;
+            const navbar = document.querySelector('.navbar'); // 상단 바 요소 찾기
+            
             window.addEventListener('scroll', function() {
-                if (window.pageYOffset > 250) { stickyBar.classList.add('show'); } else { stickyBar.classList.remove('show'); }
+                // (1) 하단 바 올라오는 기존 로직
+                if (stickyBar) {
+                    if (window.pageYOffset > 250) { stickyBar.classList.add('show'); } 
+                    else { stickyBar.classList.remove('show'); }
+                }
+
+                // (2) 💥 상단 바 1줄 압축 로직 (모바일에서 스크롤 50px 이상 내리면 발동)
+                if (navbar) {
+                    if (window.pageYOffset > 50 && window.innerWidth <= 950) {
+                        navbar.classList.add('scrolled'); // 얇게 변신!
+                    } else {
+                        navbar.classList.remove('scrolled'); // 다시 맨 위로 가면 원상복구
+                    }
+                }
             }, { passive: true });
         }
 
