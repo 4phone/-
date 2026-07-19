@@ -768,24 +768,47 @@ function syncUniversalStickyBar() {
             const triggerBtn = document.getElementById('calc-apply-btn'); if(triggerBtn) triggerBtn.textContent = "🔥 내가 고른 조건으로 즉시 가입신청하기 (1초 완성) ▼";
         }
 
-        // 🔥 [이곳이 수정된 하단 고정 바 신청 함수입니다!]
+       // 🔥 [스마트 팝업 기능이 추가된 하단 고정 바 신청 함수]
         function submitUniversalStickyForm() {
-            const name = document.getElementById('sticky-user-name').value.trim();
-            const phone = document.getElementById('sticky-user-phone').value.trim();
-            const checked = document.getElementById('sticky-privacy-check').checked;
+            const hiddenForm = document.getElementById('mobile-hidden-form');
+            const mainSubmitBtn = document.getElementById('sticky-main-btn');
+
+            // 💥 [1] 스위치 로직: 팝업이 숨겨져 있다면? -> 전송을 멈추고 폼을 스르륵 위로 올린다!
+            if (window.innerWidth <= 950 && hiddenForm && !hiddenForm.classList.contains('show-popup')) {
+                hiddenForm.classList.add('show-popup'); // 투명 망토 벗기기 (팝업 등장)
+                if(mainSubmitBtn) mainSubmitBtn.textContent = "🚀 정보 입력하고 가입 완료하기"; // 버튼 글씨 변경
+                return; // 🛑 여기서 스톱! 알림창이 뜨지 않게 막아줍니다.
+            }
+
+            // 💥 [2] 원래 가입 제출 로직: (폼이 열린 상태에서 한 번 더 누르면 작동)
+            const name = document.getElementById('sticky-user-name') ? document.getElementById('sticky-user-name').value.trim() : "";
+            const phone = document.getElementById('sticky-user-phone') ? document.getElementById('sticky-user-phone').value.trim() : "";
+            const privacyCheck = document.getElementById('sticky-privacy-check');
+            const checked = privacyCheck ? privacyCheck.checked : false;
+            
             if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('sticky-user-name').focus(); return; }
             if(!phone) { alert('연락처를 입력해 주세요!'); document.getElementById('sticky-user-phone').focus(); return; }
             if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 신청이 가능합니다.'); return; }
             
-            if(!isCalculatorInteracted) {
+            if(typeof isCalculatorInteracted === 'undefined' || !isCalculatorInteracted) {
                 alert(`[간편 빠른상담 접수 완료]\n\n성함: ${name}\n연락처: ${phone}`);
             } else {
-                // 사은품이 선택되어 있다면 알림창에 포함시킵니다!
-                let stickyGiftMessage = isGiftMode && selectedGift ? `\n사은품: ${selectedGift[4]}` : "";
-                alert(`[다이렉트 가입신청 성공]\n\n신청 내역: ${currentSelectedString}\n월 요금: ${currentCalculatedPrice}${stickyGiftMessage}\n성함: ${name}\n연락처: ${phone}`);
+                let stickyGiftMessage = (typeof isGiftMode !== 'undefined' && isGiftMode && typeof selectedGift !== 'undefined' && selectedGift) ? `\n사은품: ${selectedGift[4]}` : "";
+                let calcPrice = typeof currentCalculatedPrice !== 'undefined' ? currentCalculatedPrice : "";
+                let calcString = typeof currentSelectedString !== 'undefined' ? currentSelectedString : "";
+                alert(`[다이렉트 가입신청 성공]\n\n신청 내역: ${calcString}\n월 요금: ${calcPrice}${stickyGiftMessage}\n성함: ${name}\n연락처: ${phone}`);
             }
             
-            document.getElementById('sticky-user-name').value = ""; document.getElementById('sticky-user-phone').value = ""; document.getElementById('sticky-privacy-check').checked = false;
+            // 전송 완료 후 입력창 비워주기
+            if(document.getElementById('sticky-user-name')) document.getElementById('sticky-user-name').value = ""; 
+            if(document.getElementById('sticky-user-phone')) document.getElementById('sticky-user-phone').value = ""; 
+            if(privacyCheck) privacyCheck.checked = false;
+            
+            // 가입 끝났으니 팝업 다시 예쁘게 숨겨주기
+            if (hiddenForm) {
+                hiddenForm.classList.remove('show-popup');
+                if(mainSubmitBtn) mainSubmitBtn.textContent = "🔥 위 조건으로 가입신청"; 
+            }
         }
 
         function setProvider(p, el) { 
