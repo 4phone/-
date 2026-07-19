@@ -1017,13 +1017,21 @@ function showResult(row, activeSpeed) {
         }
 
         // 🔥 [이곳이 수정된 가전 카드 생성 함수입니다!]
-        function renderGiftCards(gifts) {
+ function renderGiftCards(gifts) {
             const listElement = document.getElementById('calculator-gift-list');
             const toggleArea = document.getElementById('gift-mode-toggle-area');
             listElement.innerHTML = '';
 
+            // 가전 사은품이 있을 때만 토글 버튼 보여주기
             if (toggleArea) {
                 toggleArea.style.display = (gifts && gifts.length > 0) ? 'block' : 'none';
+            }
+
+            // 💥 [버그 해결 핵심 코드 추가] 
+            // 가전 모드를 켜둔 상태에서 100M 등 가전이 없는 요금제로 바꿨을 때,
+            // 빈 화면이 남지 않도록 즉시 '현금 사은품 모드'로 강제 복구시킵니다!
+            if (isGiftMode && (!gifts || gifts.length === 0)) {
+                resetToCashMode();
             }
 
             gifts.forEach(gift => {
