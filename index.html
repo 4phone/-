@@ -696,6 +696,20 @@
             .quick-card-list { flex-direction: row; justify-content: center; overflow: visible; gap: 20px; }
             .quick-plan-card { flex: 1; min-width: 220px; }
         }
+   /* ===================================================
+   💥 [추가 패치] 팝업 STEP 3 모바일 카드 찌그러짐 완벽 방지
+   =================================================== */
+.quick-plan-card {
+    flex-shrink: 0 !important; /* 부모 영역이 좁아져도 카드가 절대 압축되지 않고 원래 높이 유지 */
+}
+
+/* 모바일 전용 스크롤 여백 보정 */
+@media (max-width: 850px) {
+    .quick-card-list {
+        max-height: 60vh !important; /* 스크롤 가능 영역을 조금 더 길게 확보 */
+        padding-bottom: 20px !important; /* 맨 밑 카드 하단 여백 추가 */
+    }
+}
     </style>
 </head>
 <body>
@@ -1748,83 +1762,88 @@ function toggleGiftMode() {
                 window.location.href = '#calculator-section'; 
             }
 
-            // 🌟 [핵심] 구글 시트 데이터를 읽어서 3개의 카드를 실시간으로 그려주는 함수!
-            function renderQuickCards() {
-                const container = document.getElementById('quick-card-container');
-                container.innerHTML = ''; // 기존 찌꺼기 비우기
-                
-                // 선택한 통신사에 맞게 전체 카드 테마 컬러(SK/KT/LG/스카이) 자동 변경
-                container.className = `quick-card-list theme-${quickData.telecom}`;
-                
-                let mappedProd = (quickData.product === '인터넷만') ? '단독' : '결합';
-                let prov = quickData.telecom;
+           // 🌟 [핵심] 구글 시트 데이터를 읽어서 3개의 카드를 실시간으로 그려주는 함수!
+function renderQuickCards() {
+    const container = document.getElementById('quick-card-container');
+    container.innerHTML = ''; // 기존 찌꺼기 비우기
+    
+    // 선택한 통신사에 맞게 전체 카드 테마 컬러(SK/KT/LG/스카이) 자동 변경
+    container.className = `quick-card-list theme-${quickData.telecom}`;
+    
+    let mappedProd = (quickData.product === '인터넷만') ? '단독' : '결합';
+    let prov = quickData.telecom;
 
-                // ① 전체 데이터(allData)에서 내가 고른 통신사+상품만 싹 걸러내기
-                let filtered = allData.filter(row => {
-                    if(!row[0] || !row[1]) return false;
-                    let p = row[0].trim();
-                    let isMatch = false;
-                    if(prov === 'KT' && p.includes('KT')) isMatch = true;
-                    if(prov === 'LG' && p.includes('LG')) isMatch = true;
-                    if(prov === 'SK' && p.includes('SK')) isMatch = true;
-                    if(prov === '스카이' && p.includes('스카이')) isMatch = true;
-                    return isMatch && (row[1].trim() === mappedProd);
-                });
+    // ① 전체 데이터(allData)에서 내가 고른 통신사+상품만 싹 걸러내기
+    let filtered = allData.filter(row => {
+        if(!row[0] || !row[1]) return false;
+        let p = row[0].trim();
+        let isMatch = false;
+        if(prov === 'KT' && p.includes('KT')) isMatch = true;
+        if(prov === 'LG' && p.includes('LG')) isMatch = true;
+        if(prov === 'SK' && p.includes('SK')) isMatch = true;
+        if(prov === '스카이' && p.includes('스카이')) isMatch = true;
+        return isMatch && (row[1].trim() === mappedProd);
+    });
 
-                // ② 속도(1G, 500M, 100M)만 빼내서 높은 속도가 위로 오게 정렬 (내림차순)
-                let speeds = [...new Set(filtered.map(r => r[2].trim()))];
-                speeds.sort((a,b) => (b.includes('1G')?1000:parseInt(b)||0) - (a.includes('1G')?1000:parseInt(a)||0));
+    // ② 속도(1G, 500M, 100M)만 빼내서 높은 속도가 위로 오게 정렬 (내림차순)
+    let speeds = [...new Set(filtered.map(r => r[2].trim()))];
+    speeds.sort((a,b) => (b.includes('1G')?1000:parseInt(b)||0) - (a.includes('1G')?1000:parseInt(a)||0));
 
-                // ③ 각 속도별로 제일 싼 요금제 1개씩 찾아서 카드 만들기
-                speeds.forEach(speed => {
-                    let targetRows = filtered.filter(r => r[2].trim() === speed);
-                    
-                    // 요금 기준으로 정렬해서 제일 싼(가성비) 요금제를 0번째로 올림
-                    targetRows.sort((a, b) => {
-                        let priceA = parseInt(a[mappedProd==='결합'?6:4].replace(/[^0-9]/g, "")) || 0;
-                        let priceB = parseInt(b[mappedProd==='결합'?6:4].replace(/[^0-9]/g, "")) || 0;
-                        return priceA - priceB;
-                    });
-                    
-                    if(targetRows.length > 0) {
-                        let bestPlan = targetRows[0];
-                        // 시트에서 요금과 사은품 데이터 그대로 가져오기
-                        let priceStr = bestPlan[mappedProd==='결합'?6:4].trim(); 
-                        let giftStr = bestPlan[7] ? bestPlan[7].trim() : '0'; 
-                        
-                        let priceNum = parseInt(priceStr.replace(/[^0-9]/g, "")) || 0;
-                        let formatPrice = priceNum > 0 ? priceNum.toLocaleString() : priceStr;
-                        let formatGift = giftStr.includes('원') ? giftStr : giftStr + '원';
-                        
-                        // 사장님이 원하신 직관적 타이틀! (예: 1G 인터넷+TV)
-                        let titleName = `${speed} ${quickData.product}`;
-                        
-                        // 서버에 있는 사장님 전용 아이콘 불러오기!
-                        let iconsHtml = `<img src="wifi.svg" alt="인터넷">`;
-                        if(mappedProd === '결합') iconsHtml += ` <span>+</span> <img src="tv.svg" alt="TV">`;
+    // ③ 각 속도별로 제일 싼 요금제 1개씩 찾아서 카드 만들기
+    speeds.forEach(speed => {
+        let targetRows = filtered.filter(r => r[2].trim() === speed);
+        
+        // 요금 기준으로 정렬해서 제일 싼(가성비) 요금제를 0번째로 올림
+        targetRows.sort((a, b) => {
+            let priceA = parseInt(a[mappedProd==='결합'?6:4].replace(/[^0-9]/g, "")) || 0;
+            let priceB = parseInt(b[mappedProd==='결합'?6:4].replace(/[^0-9]/g, "")) || 0;
+            return priceA - priceB;
+        });
+        
+        if(targetRows.length > 0) {
+            let bestPlan = targetRows[0];
+            // 시트에서 요금과 사은품 데이터 그대로 가져오기
+            let priceStr = bestPlan[mappedProd==='결합'?6:4].trim(); 
+            let giftStr = bestPlan[7] ? bestPlan[7].trim() : '0'; 
+            
+            let priceNum = parseInt(priceStr.replace(/[^0-9]/g, "")) || 0;
+            let formatPrice = priceNum > 0 ? priceNum.toLocaleString() : priceStr;
+            let formatGift = giftStr.includes('원') ? giftStr : giftStr + '원';
+            
+            // 사장님이 원하신 직관적 타이틀! (예: 1G 인터넷+TV)
+            let titleName = `${speed} ${quickData.product}`;
+            
+            // 서버에 있는 사장님 전용 아이콘 불러오기!
+            let iconsHtml = `<img src="wifi.svg" alt="인터넷">`;
+            if(mappedProd === '결합') iconsHtml += ` <span>+</span> <img src="tv.svg" alt="TV">`;
 
-                        // 짠! 카드 HTML 생성 조립
-                        let cardHtml = `
-                            <div class="quick-plan-card">
-                                <div class="quick-plan-header">${titleName}</div>
-                                <div class="quick-plan-body">
-                                    <div class="quick-plan-icons">${iconsHtml}</div>
-                                    <div class="quick-plan-price">
-                                        <div class="price-val">${formatPrice}<span>원</span></div>
-                                        <div class="price-sub">3년 약정 / 부가세 포함</div>
-                                    </div>
-                                    <div class="quick-plan-gift">
-                                        <div class="gift-label">현금사은품</div>
-                                        <div class="gift-val">${formatGift}</div>
-                                    </div>
-                                    <button class="quick-plan-select-btn" onclick="selectQuickCard('${speed}', '${formatPrice}', '${formatGift}')">가입신청</button>
-                                </div>
-                            </div>
-                        `;
-                        container.innerHTML += cardHtml;
-                    }
-                });
-            }
+            // 💥 [추가된 핵심 미션 로직] 고객이 선택한 상품에 따라 하단 텍스트 자동 변환
+            let smartSubText = (quickData.product === '인터넷+TV') 
+                ? "결합 할인시 / 3년 약정 / 부가세 포함" 
+                : "3년 약정 / 부가세 포함";
+
+            // 짠! 카드 HTML 생성 조립
+            let cardHtml = `
+                <div class="quick-plan-card">
+                    <div class="quick-plan-header">${titleName}</div>
+                    <div class="quick-plan-body">
+                        <div class="quick-plan-icons">${iconsHtml}</div>
+                        <div class="quick-plan-price">
+                            <div class="price-val">${formatPrice}<span>원</span></div>
+                            <div class="price-sub">${smartSubText}</div>
+                        </div>
+                        <div class="quick-plan-gift">
+                            <div class="gift-label">현금사은품</div>
+                            <div class="gift-val">${formatGift}</div>
+                        </div>
+                        <button class="quick-plan-select-btn" onclick="selectQuickCard('${speed}', '${formatPrice}', '${formatGift}')">가입신청</button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += cardHtml;
+        }
+    });
+}
 
             // 7. [가입신청] 버튼 눌렀을 때 폼 화면(STEP 4)으로 순간이동!
             function selectQuickCard(speed, price, gift) {
