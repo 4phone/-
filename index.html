@@ -753,7 +753,7 @@
                 <a href="boss.html" target="_blank" class="boss-highlight-btn">사장님전용</a>
                 
                 <!-- 4. 사은품 (모바일에서는 스와이프해야 보임) -->
-                <a href="#gift-section">사은품</a>
+               <a href="#" onclick="openGiftPopup(event)">🎁 사은품 라인업</a>
             </div>
         <div class="nav-phone-call-zone">
             <a href="tel:18332440" class="nav-phone-btn">📞 직통전화: 1833-2440</a>
@@ -951,8 +951,6 @@
             </div>
     </div>
 
-<a href="#" onclick="openGiftPopup(event)">🎁 사은품 라인업</a>
-
     <div class="section" id="review-section">
         <div class="section-title">💬 사거리인터넷 솔직 가입 후기</div>
         <div class="review-rolling-viewport"><div class="review-movable-belt" id="rolling-belt"></div></div>
@@ -1094,26 +1092,35 @@
         
         // 1. 팝업 열기 & 리스트 렌더링
         function openGiftPopup(e) {
-            if(e) e.preventDefault();
-            document.getElementById('gift-popup-overlay').classList.add('active');
-            backToGiftList(); // 열 때마다 무조건 리스트 화면으로 시작
-            
-            const grid = document.getElementById('gift-popup-grid');
-            grid.innerHTML = '';
-            
-            giftDetailData.forEach((item, index) => {
-                let name = item[0] || '';
-                let img = item[1] || '';
-                grid.innerHTML += `
-                    <div class="gift-popup-card" onclick="showGiftDetail(${index})">
-                        <img src="${img}" alt="${name}">
-                        <div class="gift-popup-name">${name}</div>
-                        <div class="gift-popup-btn">🔍 상세 스펙 및 가격 보기</div>
-                    </div>
-                `;
-            });
+    if(e) e.preventDefault();
+    document.getElementById('gift-popup-overlay').classList.add('active');
+    backToGiftList(); 
+    
+    const grid = document.getElementById('gift-popup-grid');
+    grid.innerHTML = '';
+    
+    // 💥 가전 이름(item[0]) 기준 중복 제거 로직
+    let uniqueMap = new Map();
+    giftDetailData.forEach((item) => {
+        let name = item[0] ? item[0].trim() : '';
+        if(name && !uniqueMap.has(name)) {
+            uniqueMap.set(name, item); 
         }
+    });
 
+    uniqueMap.forEach((item, name) => {
+        let img = item[1] || '';
+        let originalIndex = giftDetailData.findIndex(r => r[0] && r[0].trim() === name);
+        
+        grid.innerHTML += `
+            <div class="gift-popup-card" onclick="showGiftDetail(${originalIndex})">
+                <img src="${img}" alt="${name}">
+                <div class="gift-popup-name">${name}</div>
+                <div class="gift-popup-btn">🔍 상세 스펙 및 가격 보기</div>
+            </div>
+        `;
+    });
+}
         // 2. 팝업 닫기
         function closeGiftPopup(e) {
             if(e) e.preventDefault();
