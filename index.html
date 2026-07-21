@@ -1666,5 +1666,102 @@ function toggleGiftMode() {
 
             </div>
         </div>
+<!-- ===================================================
+             ⚙️ [초간단신청] 자바스크립트 (기능 작동)
+             =================================================== -->
+        <script>
+            // 고객이 선택한 정보(통신사, 상품, 속도)를 임시로 저장할 장바구니
+            let quickData = { telecom: '', product: '', speed: '' };
+
+            // 1. ⚡초간단신청 버튼 누르면 팝업 열기
+            function openQuickPopup(e) {
+                if(e) e.preventDefault();
+                document.getElementById('quick-popup-overlay').classList.add('active');
+                goToStep(1); // 열 때마다 항상 첫 화면(통신사 선택)으로 리셋!
+            }
+
+            // 2. 팝업 닫기 (X버튼 누르거나, 바깥 어두운 배경 터치 시)
+            function closeQuickPopup(e) {
+                if(e) e.preventDefault();
+                // 배경을 눌렀거나, X버튼을 눌렀을 때만 닫히도록 설정 (내부 흰 박스 누를 땐 안 닫힘)
+                if (!e || e.target === document.getElementById('quick-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) {
+                    document.getElementById('quick-popup-overlay').classList.remove('active');
+                }
+            }
+
+            // 3. 화면 스르륵 넘기기 공통 기능
+            function goToStep(stepNum) {
+                // 일단 모든 화면을 다 숨기고
+                document.querySelectorAll('.quick-step').forEach(step => {
+                    step.classList.remove('active-step');
+                });
+                // 고객이 가야 할 다음 화면만 짠! 하고 보여주기
+                document.getElementById('quick-step-' + stepNum).classList.add('active-step');
+            }
+
+            // 4. 버튼 터치 시 데이터 저장하고 다음 스텝으로 이동
+            function nextStep(nextNum, value) {
+                if (nextNum === 2) quickData.telecom = value; // 통신사 저장
+                if (nextNum === 3) quickData.product = value; // 상품 저장
+                goToStep(nextNum);
+            }
+
+            // 5. 이전으로 돌아가기 버튼
+            function prevStep(prevNum) {
+                goToStep(prevNum);
+            }
+
+            // 6. [다른 상품 보기] 클릭 시 요금계산기로 순간이동
+            function goToCalculator() {
+                document.getElementById('quick-popup-overlay').classList.remove('active'); // 팝업 닫기
+                window.location.href = '#calculator-section'; // 요금계산기 구역으로 스크롤 쫙~ 내려가기
+            }
+
+            // 7. 마지막 터치! 결과 화면 계산해서 띄우기
+            function showFinalResult(speed) {
+                quickData.speed = speed; // 속도 저장
+                
+                // 고객이 고른 3가지를 요약해서 보여주기 (예: SK / 인터넷+TV / 500M)
+                document.getElementById('quick-selected-summary').innerText = 
+                    `${quickData.telecom} / ${quickData.product} / ${quickData.speed}`;
+                
+                // 💡 [사장님 참고!] 여기는 임시로 시선을 확 끄는 요금/사은품을 넣어뒀습니다. 
+                // 나중에 사장님의 진짜 요금표 로직을 연결하면 더 완벽해집니다!
+                let price = "38,500"; 
+                let gift = "48";
+                
+                // 알뜰형을 고르면 더 싸게 보이도록 임시 세팅
+                if (quickData.telecom === '알뜰형') {
+                    price = "20,900";
+                    gift = "30";
+                }
+
+                // 화면에 요금이랑 사은품 쾅! 박아주기
+                document.getElementById('quick-month-price').innerText = price;
+                document.getElementById('quick-gift-price').innerText = gift;
+
+                goToStep(4); // 마지막 결과 화면 띄우기
+            }
+
+            // 8. 이름/연락처 쓰고 [화끈하게 빠른 상담 신청] 눌렀을 때
+            function submitQuickApply() {
+                const name = document.getElementById('quick-name').value;
+                const phone = document.getElementById('quick-phone').value;
+                
+                if(!name || !phone) {
+                    alert('성함과 연락처를 모두 적어주셔야 떡값을 쏠 수 있습니다! 😎');
+                    return;
+                }
+                
+                // 💡 [사장님 참고!] 진짜 카톡 접수나 DB로 날리는 기능은 나중에 연결하면 됩니다!
+                // 지금은 고객에게 보여줄 성공 메시지 창입니다.
+                alert(`🎉 접수 완료!\n\n${name} 고객님!\n선택하신 [ ${quickData.telecom} / ${quickData.product} / ${quickData.speed} ]\n초간단 맞춤 상담 신청이 완료되었습니다.\n가장 빠른 시간 내에 떡값 챙겨서 연락드리겠습니다!`);
+                
+                // 접수 완료 후 팝업 닫고 입력칸 싹 비워주기
+                document.getElementById('quick-popup-overlay').classList.remove('active');
+                document.getElementById('quick-name').value = '';
+                document.getElementById('quick-phone').value = '';
+            }
+        </script>
 </body>
 </html>
