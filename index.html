@@ -541,24 +541,23 @@
         }
 
         /* 2. 📱 모바일 환경 최적화 (스와이프 가로 스크롤) */
+        /* 2. 📱 모바일 환경 최적화 (스와이프 가로 스크롤 - 초강력 덮어쓰기) */
         @media (max-width: 850px) {
             .nav-menu {
-                display: flex;
-                overflow-x: auto; /* 손가락으로 가로 밀기 허용 */
-                white-space: nowrap; /* 글씨 밑으로 떨어짐(두 줄) 완벽 방지 */
-                -webkit-overflow-scrolling: touch; /* 아이폰/갤럭시 부드러운 스와이프 */
-                padding: 10px 5px;
-                gap: 15px; /* 메뉴 사이 여백 */
-                align-items: center;
-                /* 지저분한 스크롤바 숨기기 */
-                -ms-overflow-style: none; 
-                scrollbar-width: none; 
+                display: flex !important;
+                justify-content: flex-start !important; /* 💡핵심: 기존 가운데 정렬을 강제로 깨야 스크롤이 됩니다! */
+                overflow-x: auto !important; 
+                white-space: nowrap !important; 
+                flex-wrap: nowrap !important; /* 줄바꿈 절대 차단 */
+                -webkit-overflow-scrolling: touch !important; /* 스마트폰 부드러운 터치 강제 활성화 */
+                padding: 10px 15px !important; /* 좌우 여백을 줘서 스와이프하기 편하게 */
+                gap: 12px !important;
             }
             .nav-menu::-webkit-scrollbar {
-                display: none; /* 크롬, 사파리 스크롤바 숨기기 */
+                display: none !important; /* 안 예쁜 스크롤바는 강제로 숨기기 */
             }
             .nav-menu a {
-                flex-shrink: 0; /* 좁은 공간에서도 메뉴가 찌그러지지 않게 보호 */
+                flex: 0 0 auto !important; /* 버튼이 찌그러지지 않고 빳빳하게 자기 크기 유지! */
             }
         }
     </style>
