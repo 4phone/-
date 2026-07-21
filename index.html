@@ -540,24 +540,34 @@
             100% { transform: scale(1.08); box-shadow: 0 0 12px rgba(255, 152, 0, 0.7); }
         }
 
-        /* 2. 📱 모바일 환경 최적화 (스와이프 가로 스크롤) */
-        /* 2. 📱 모바일 환경 최적화 (스와이프 가로 스크롤 - 초강력 덮어쓰기) */
+        /* 2. 📱 모바일 환경 최적화 (모든 브라우저 완벽 호환 스와이프) */
         @media (max-width: 850px) {
             .nav-menu {
                 display: flex !important;
-                justify-content: flex-start !important; /* 💡핵심: 기존 가운데 정렬을 강제로 깨야 스크롤이 됩니다! */
-                overflow-x: auto !important; 
-                white-space: nowrap !important; 
-                flex-wrap: nowrap !important; /* 줄바꿈 절대 차단 */
-                -webkit-overflow-scrolling: touch !important; /* 스마트폰 부드러운 터치 강제 활성화 */
-                padding: 10px 15px !important; /* 좌우 여백을 줘서 스와이프하기 편하게 */
+                justify-content: flex-start !important;
+                overflow-x: auto !important;
+                overflow-y: hidden !important; /* 위아래 흔들림 방지 */
+                white-space: nowrap !important;
+                flex-wrap: nowrap !important;
+                -webkit-overflow-scrolling: touch !important;
+                
+                /* 💡핵심: 스크롤 영역의 기준점 확실히 잡기 (폰 화면 꽉 채우기) */
+                width: 100% !important; 
+                max-width: 100vw !important;
+                
+                /* 💡핵심: 삼성/크롬 등 가로 스와이프 터치 강제 인식 */
+                touch-action: pan-x !important; 
+                
+                padding: 10px 15px !important;
                 gap: 12px !important;
+                box-sizing: border-box !important; /* 여백 때문에 화면 밖으로 밀리는 현상 방지 */
             }
             .nav-menu::-webkit-scrollbar {
-                display: none !important; /* 안 예쁜 스크롤바는 강제로 숨기기 */
+                display: none !important;
             }
             .nav-menu a {
-                flex: 0 0 auto !important; /* 버튼이 찌그러지지 않고 빳빳하게 자기 크기 유지! */
+                flex: 0 0 auto !important;
+                display: inline-block !important; /* 버튼들이 안 찌그러지고 자기 모양 유지 */
             }
         }
     </style>
