@@ -570,91 +570,49 @@
                 display: inline-block !important; /* 버튼들이 안 찌그러지고 자기 모양 유지 */
             }
         }
-        /* ===================================================
-           🎨 [초간단신청] 원터치 레이어 팝업 디자인 (앱 스타일)
+       /* ===================================================
+           🎨 [초간단신청] 팝업 완전판 (앱 스타일 + 로고 흰색 + PC 2배 확대)
            =================================================== */
         
         /* 1. 반투명 검은색 배경 */
-        .quick-popup-overlay {
-            display: none; /* 평소엔 숨김 */
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 99999; /* 사이트 제일 위로 띄우기 */
-            align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.3s ease; /* 부드럽게 나타나기 */
-        }
-        .quick-popup-overlay.active {
-            display: flex; opacity: 1;
-        }
+        .quick-popup-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 99999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+        .quick-popup-overlay.active { display: flex; opacity: 1; }
         
-        /* 2. 팝업창 본체 (하얀 박스) */
-        .quick-popup-content {
-            background: #fff;
-            width: 90%; max-width: 420px; /* 모바일에 꽉 차고 PC에선 아담하게 */
-            border-radius: 20px;
-            padding: 30px 20px;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transform: translateY(20px); transition: transform 0.3s ease;
-            text-align: center;
-            box-sizing: border-box;
-        }
-        .quick-popup-overlay.active .quick-popup-content {
-            transform: translateY(0); /* 아래에서 위로 살짝 올라오는 효과 */
-        }
+        /* 2. 팝업창 본체 */
+        .quick-popup-content { background: #fff; width: 90%; max-width: 420px; border-radius: 20px; padding: 30px 20px; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateY(20px); transition: transform 0.3s ease; text-align: center; box-sizing: border-box; }
+        .quick-popup-overlay.active .quick-popup-content { transform: translateY(0); }
+        .quick-close-btn { position: absolute; top: 15px; right: 18px; background: none; border: none; font-size: 24px; color: #999; cursor: pointer; padding: 5px; }
         
-        /* X 닫기 버튼 */
-        .quick-close-btn {
-            position: absolute; top: 15px; right: 18px;
-            background: none; border: none; font-size: 24px;
-            color: #999; cursor: pointer; padding: 5px;
-        }
-        
-        /* 3. 스텝바이스텝 화면 넘김 애니메이션 */
+        /* 3. 스텝 넘김 애니메이션 */
         .quick-step { display: none; animation: slideInRight 0.3s ease; }
         .quick-step.active-step { display: block; }
-        @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        .quick-step h3 { font-size: 22px; color: #111; margin-bottom: 25px; font-weight: 800; letter-spacing: -1px; }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        .quick-step h3 { font-size: 22px; color: #111; margin-bottom: 25px; font-weight: 900; letter-spacing: -1px; }
         
-        /* 4. 터치하기 편한 원터치 버튼들 */
+        /* 4. 공통 버튼 스타일 (✨배경을 완전 흰색으로 변경 완료!) */
         .quick-btn-grid { display: grid; gap: 12px; margin-bottom: 20px; }
-        .quick-btn-grid.col-2 { grid-template-columns: 1fr 1fr; } /* 2칸 바둑판 (통신사) */
-        .quick-btn-grid.col-1 { grid-template-columns: 1fr; }     /* 1칸 한줄 (상품/속도) */
+        .quick-btn-grid.col-2 { grid-template-columns: 1fr 1fr; } 
+        .quick-btn-grid.col-1 { grid-template-columns: 1fr; }
         
-        .quick-btn {
-            background: #f8f9fa; border: 2px solid #e9ecef;
-            padding: 16px 10px; border-radius: 14px;
-            font-size: 17px; font-weight: 700; color: #333;
-            cursor: pointer; transition: all 0.2s; line-height: 1.3;
-        }
-        .quick-btn:active { background: #e2e6ea; transform: scale(0.97); } /* 누를때 꾹 들어가는 효과 */
+        .quick-btn { background: #ffffff; border: 2px solid #E2E8F0; padding: 16px 10px; border-radius: 14px; font-size: 17px; font-weight: 700; color: #333; cursor: pointer; transition: all 0.2s; line-height: 1.3; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .quick-btn:active { background: #F7FAFC; transform: scale(0.97); border-color: #CBD5E0; }
         
-        /* 통신사별 컬러 포인트 */
-        .telecom-sk { color: #E60012; }
-        .telecom-kt { color: #00B1A0; }
-        .telecom-lg { color: #E50073; }
-        .telecom-alt { color: #FF9800; }
-        .telecom-alt small { font-size: 12px; font-weight: 500; color: #777; display: block; margin-top: 3px; }
+        /* 5. ✨ 통신사 4개 한 줄 나란히 배치 & 크기 고정 */
+        .quick-btn-grid.col-4 { grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
+        .telecom-btn { height: 65px !important; padding: 0 !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; }
+        .telecom-btn img { width: auto !important; height: 28px !important; max-width: 80% !important; object-fit: contain !important; margin: 0 auto !important; }
+        
+        /* 통신사별 컬러 & 텍스트 */
+        .telecom-sk { color: #E60012; } .telecom-kt { color: #00B1A0; } .telecom-lg { color: #E50073; }
+        .alt-btn .alt-title { font-size: 14px !important; font-weight: 800; color: #FF9800; line-height: 1.2; }
+        .alt-btn .alt-sub { font-size: 11px !important; color: #777; margin-top: 2px; }
 
-        /* 하단 이탈방지 및 이전 버튼 */
-        .quick-escape-btn {
-            background: none; border: none; color: #666;
-            font-size: 14px; text-decoration: underline;
-            margin-top: 15px; cursor: pointer; padding: 10px;
-        }
-        .quick-prev-btn {
-            background: none; border: none; color: #999;
-            font-size: 14px; margin-top: 10px; cursor: pointer; padding: 10px;
-        }
+        /* 하단 이전/이탈 버튼 */
+        .quick-escape-btn { background: none; border: none; color: #666; font-size: 14px; text-decoration: underline; margin-top: 15px; cursor: pointer; padding: 10px; }
+        .quick-prev-btn { background: none; border: none; color: #999; font-size: 14px; margin-top: 10px; cursor: pointer; padding: 10px; }
         
-        /* 5. 최종 결과창 (블랙 박스) */
-        .quick-result-box {
-            background: #1a1a1a; color: #fff; padding: 25px 20px;
-            border-radius: 16px; margin-bottom: 20px;
-        }
+        /* 6. 최종 결과창 (블랙 박스) */
+        .quick-result-box { background: #1a1a1a; color: #fff; padding: 25px 20px; border-radius: 16px; margin-bottom: 20px; }
         #quick-selected-summary { color: #aaa; font-size: 14px; margin-bottom: 12px; }
         .quick-price { font-size: 18px; margin-bottom: 8px; color: #ddd; }
         #quick-month-price { color: #FFEB3B; font-size: 28px; font-weight: 900; letter-spacing: -1px; margin: 0 4px; }
@@ -663,52 +621,42 @@
         .quick-result-box .bonus-text { color: #FFEB3B; font-size: 14px; font-weight: 700; }
 
         /* 입력 폼 */
-        .quick-form input {
-            width: 100%; padding: 14px; margin-bottom: 12px;
-            border: 1px solid #ddd; border-radius: 10px;
-            font-size: 16px; box-sizing: border-box; background: #f9f9f9;
-        }
-        .quick-submit-btn {
-            width: 100%; background: #FFEB3B; color: #111;
-            font-weight: 900; font-size: 18px; padding: 16px;
-            border: none; border-radius: 10px; cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 235, 59, 0.4);
-            transition: 0.2s;
-        }
+        .quick-form input { width: 100%; padding: 14px; margin-bottom: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; background: #f9f9f9; }
+        .quick-submit-btn { width: 100%; background: #FFEB3B; color: #111; font-weight: 900; font-size: 18px; padding: 16px; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 235, 59, 0.4); transition: 0.2s; }
         .quick-submit-btn:active { transform: scale(0.98); box-shadow: none; }
-  /* ===================================================
-           ✨ [완벽 수정] 통신사 4개 한 줄 나란히 배치 & 로고 크기 고정
+
+        /* ===================================================
+           💻 [PC 버전 전용] 팝업창 시원하게 2배 확대 미디어 쿼리
            =================================================== */
-        
-        /* 1. 무조건 4칸으로 나누기 (세로로 쌓이는 현상 원천 차단) */
-        .quick-btn-grid.col-4 { 
-            grid-template-columns: repeat(4, 1fr) !important; 
-            gap: 8px !important; 
+        @media (min-width: 851px) {
+            .quick-popup-content { max-width: 800px; padding: 50px 40px; border-radius: 30px; }
+            .quick-step h3 { font-size: 32px; margin-bottom: 35px; }
+            .quick-close-btn { font-size: 32px; top: 20px; right: 25px; }
+            
+            /* 일반 버튼 뻥튀기 */
+            .quick-btn { font-size: 22px; padding: 22px 15px; border-radius: 18px; border-width: 3px; }
+            
+            /* 통신사 로고 버튼 뻥튀기 */
+            .quick-btn-grid.col-4 { gap: 15px !important; }
+            .telecom-btn { height: 100px !important; }
+            .telecom-btn img { height: 42px !important; }
+            .alt-btn .alt-title { font-size: 20px !important; }
+            .alt-btn .alt-sub { font-size: 14px !important; margin-top: 4px; }
+            
+            /* 최종 결과창 글씨 뻥튀기 */
+            .quick-result-box { padding: 35px 30px; margin-bottom: 30px; }
+            #quick-selected-summary { font-size: 18px; margin-bottom: 16px; }
+            .quick-price { font-size: 22px; margin-bottom: 12px; }
+            #quick-month-price { font-size: 42px; }
+            .quick-gift { font-size: 22px; }
+            #quick-gift-price { font-size: 38px; }
+            .quick-result-box .bonus-text { font-size: 18px; }
+            
+            /* 입력 폼 뻥튀기 */
+            .quick-form input { font-size: 18px; padding: 18px; border-radius: 12px; }
+            .quick-submit-btn { font-size: 24px; padding: 22px; border-radius: 12px; }
+            .quick-escape-btn, .quick-prev-btn { font-size: 18px; margin-top: 20px; }
         }
-        
-        /* 2. 버튼 세로 크기 뻥튀기 방지 (딱 예쁜 65px 높이로 고정) */
-        .telecom-btn { 
-            height: 65px !important; 
-            padding: 0 !important; 
-            display: flex !important; 
-            flex-direction: column !important; 
-            align-items: center !important; 
-            justify-content: center !important;
-            aspect-ratio: auto !important; /* 👈 거대화 범인이었던 비율 강제 해제! */
-        }
-        
-        /* 3. 로고 사이즈 딱 예쁘게 고정 */
-        .telecom-btn img {
-            width: auto !important;
-            height: 28px !important; /* 👈 로고가 너무 작지 않게 살짝 키움! */
-            max-width: 80% !important;
-            object-fit: contain !important;
-            margin: 0 auto !important;
-        }
-        
-        /* 4. 알뜰형 글씨 최적화 */
-        .alt-btn .alt-title { font-size: 14px !important; font-weight: 800; color: #FF9800; line-height: 1.2; }
-        .alt-btn .alt-sub { font-size: 11px !important; color: #777; margin-top: 2px; }
     </style>
 </head>
 <body>
