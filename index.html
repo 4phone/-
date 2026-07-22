@@ -965,6 +965,7 @@
             });
         }
 
+// 💥 [4단계] 요금/사은품 확정 노출 및 가전 매칭 로직 💥
         function selectDirectSpeed(val, el) {
             document.querySelectorAll('#direct-speed-group .direct-option-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
@@ -981,10 +982,12 @@
             } else {
                 document.getElementById('direct-tv-layer').style.display = 'none';
                 document.getElementById('main-full-tvprod').value = '';
-                // ※ 요금 결과창 노출 로직은 4단계 퀘스트에서!
+                // 단독은 속도만 고르면 결과창 노출!
+                calcDirectResult(); 
             }
         }
 
+        // (기존 renderDirectTv 함수는 그대로 둡니다)
         function renderDirectTv() {
             const tel = document.getElementById('main-full-telecom').value;
             const speed = document.getElementById('main-full-speed').value;
@@ -997,7 +1000,6 @@
                 let isMatch = (tel === 'KT' && p.includes('KT')) || (tel === 'LG' && p.includes('LG')) || (tel === 'SK' && p.includes('SK')) || (tel === '스카이' && p.includes('스카이')) || (tel === '헬로' && p.includes('헬로'));
                 return isMatch && row[1].trim() === '결합' && row[2].trim() === speed;
             });
-            // 요금 비싼 순 정렬
             filtered.sort((a, b) => (parseInt(b[6].replace(/[^0-9]/g, "")) || 0) - (parseInt(a[6].replace(/[^0-9]/g, "")) || 0));
 
             let tvs = [...new Set(filtered.map(r => r[3].trim()))];
@@ -1010,10 +1012,102 @@
             document.querySelectorAll('#direct-tv-group .direct-option-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('main-full-tvprod').value = val;
-            // ※ 요금 결과창 노출 로직은 4단계 퀘스트에서!
+            // 결합은 TV까지 고르면 결과창 노출!
+            calcDirectResult(); 
         }
 
-        // 사은품 수령 방식 (현금/가전) 버튼 클릭 시 하단 계좌/가전 리스트 노출
+        // 💥 구글 시트 데이터 읽어서 결과창 띄우기
+        function calcDirectResult() {
+            const tel = document.getElementById('main-full-telecom').value;
+            const prod = document.getElementById('main-full-prodtype').value;
+            const speed = document.getElementById('main-full-speed').value;
+            const tv = document.getElementById('main-full-tvprod').value || '';
+            
+            let mappedProd = (prod === '단독') ? '단독' : '결합';
+            
+            // 데이터 찾기
+            let targetRow = allData.find(row => {
+                if(!row[0] || !row[1] || !row[2]) return false;
+                let p = row[0].trim(); let isMatch = false;
+                if(tel === 'KT' && p.includes('KT')) isMatch = true;
+                if(tel === 'LG' && p.includes('LG')) isMatch = true;
+                if(tel === 'SK' && p.includes('SK')) isMatch = true;
+                if(tel === '스카이' && p.includes('스카이')) isMatch = true;
+                if(tel === '헬로' && p.includes('헬로')) isMatch = true;
+                
+                let prodMatch = (row[1].trim() === mappedProd) && (row[2].trim() === speed);
+                if (mappedProd === '결합') {
+                    prodMatch = prodMatch && (row[3] ? row[3].trim() === tv : false);
+                }
+                return isMatch && prodMatch;
+            });
+
+            if (targetRow) {
+                // 요금과 사은품 추출
+                const cleanRow = targetRow.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
+                let priceRaw = (mappedProd === '결합') ? cleanRow[6] : cleanRow[4];
+                let priceNum = parseInt(priceRaw.replace(/[^0-9]/g, "")) || 0;
+                let formatPrice = priceNum > 0 ? priceNum.toLocaleString() + "원" : priceRaw;
+                let subsidy = cleanRow[7] || "0";
+                let formatSubsidy = subsidy.includes('원') ? subsidy : subsidy + '원';
+
+                // 결과창에 값 넣고 띄우기
+                document.getElementById('direct-result-price').innerText = `월 ${formatPrice}`;
+                document.getElementById('direct-result-gift').innerText = `🎁 현금 ${formatSubsidy} 지원!`;
+                document.getElementById('direct-result-layer').style.display = 'block';
+                
+                // 가전제품 리스트 매칭!
+                const matchedGifts = getMatchingGifts(tel, prod, speed, tv);
+                renderDirectGifts(matchedGifts);
+
+                // 계좌 입력 등 5단계 창 띄우기
+                document.getElementById('direct-final-layer').style.display = 'block';
+                
+                // 사은품/납부 선택 초기화
+                document.querySelectorAll('#direct-gifttype-group .direct-option-btn, #direct-paytype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('main-full-gifttype').value = '';
+                document.getElementById('main-full-paytype').value = '';
+                document.getElementById('direct-giftbank-layer').style.display = 'none';
+                document.getElementById('direct-appliance-layer').style.display = 'none';
+                document.getElementById('main-full-bank-layer').style.display = 'none';
+                document.getElementById('main-full-card-layer').style.display = 'none';
+            }
+        }
+
+        // 가전 사은품 리스트 그리기
+        function renderDirectGifts(gifts) {
+            const listEl = document.getElementById('direct-appliance-list');
+            listEl.innerHTML = '';
+            
+            // 가전제품이 없으면 가전 버튼 숨기기
+            const giftTypeGroup = document.getElementById('direct-gifttype-group');
+            if (!gifts || gifts.length === 0) {
+                giftTypeGroup.children[1].style.display = 'none'; // 가전 버튼 숨김
+            } else {
+                giftTypeGroup.children[1].style.display = 'block'; // 가전 버튼 노출
+                
+                gifts.forEach(gift => {
+                    const card = document.createElement('div'); 
+                    card.className = 'gift-card';
+                    card.style.padding = '10px'; // 좀 더 아담하게
+                    card.style.cursor = 'pointer';
+                    card.innerHTML = `<img src="${gift[5]}" alt="${gift[4]}" style="height:100px; margin-bottom:5px;"><div style="font-size:12px; font-weight:900; line-height:1.2;">${gift[4]}</div>`;
+                    
+                    card.onclick = function() {
+                        document.querySelectorAll('#direct-appliance-list .gift-card').forEach(c => {
+                            c.style.border = '2px solid #E2E8F0'; 
+                            c.style.background = '#fff';
+                        });
+                        card.style.border = '2px solid #3182CE';
+                        card.style.background = '#F7FAFC';
+                        document.getElementById('main-full-appliance').value = gift[4]; // 선택된 가전제품명 저장
+                    };
+                    listEl.appendChild(card);
+                });
+            }
+        }
+
+        // 사은품 수령 방식 (현금/가전)
         function selectDirectGiftType(val, el) {
             document.querySelectorAll('#direct-gifttype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
@@ -1022,13 +1116,14 @@
             if (val === '현금') {
                 document.getElementById('direct-giftbank-layer').style.display = 'block';
                 document.getElementById('direct-appliance-layer').style.display = 'none';
+                document.getElementById('main-full-appliance').value = ''; // 가전 선택 초기화
             } else if (val === '가전') {
                 document.getElementById('direct-giftbank-layer').style.display = 'none';
                 document.getElementById('direct-appliance-layer').style.display = 'block';
             }
         }
 
-        // 납부 방법 (계좌/카드) 버튼 클릭 시 하단 입력 폼 노출
+        // 납부 방법 (계좌/카드)
         function selectDirectPayType(val, el) {
             document.querySelectorAll('#direct-paytype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
@@ -1042,22 +1137,6 @@
                 document.getElementById('main-full-card-layer').style.display = 'grid';
             }
         }
-
-        // 사은품 현금 선택 시 하단 입금계좌 노출 토글
-        document.addEventListener("DOMContentLoaded", function() {
-            const giftTypeSel = document.getElementById('main-full-gifttype');
-            if (giftTypeSel) {
-                giftTypeSel.addEventListener('change', function() {
-                    const gVal = this.value;
-                    const giftBankLayer = document.getElementById('main-full-giftbank-layer');
-                    if (gVal === '현금') {
-                        giftBankLayer.style.display = 'grid';
-                    } else {
-                        giftBankLayer.style.display = 'none';
-                    }
-                });
-            }
-        });
 
         // 휴대폰 번호 자동 하이픈 & 010 필터링
         function autoHyphenMobile(target) {
