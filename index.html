@@ -906,34 +906,45 @@
             }).open();
         }
 
-        // --- 원스톱 바로접수 7단계 연쇄 셀렉트 박스 로직 ---
-        function onDirectTelecomChange() {
-            const tel = document.getElementById('main-full-telecom').value;
-            const pType = document.getElementById('main-full-prodtype').value;
-            updateDirectSpeedDropdown(tel, pType);
+        // 💥 [3단계] 원스톱 바로접수 오토 플로우 (버튼 연쇄 반응) 로직 💥
+        function selectDirectTelecom(val, el) {
+            document.querySelectorAll('#direct-telecom-group .direct-option-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('main-full-telecom').value = val;
+            checkDirectStep2();
         }
 
-        function onDirectProdTypeChange() {
+        function selectDirectProd(val, el) {
+            document.querySelectorAll('#direct-prodtype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('main-full-prodtype').value = val;
+            checkDirectStep2();
+        }
+
+        // 통신사와 상품이 둘 다 선택되면 '속도' 창을 스르륵 엽니다.
+        function checkDirectStep2() {
             const tel = document.getElementById('main-full-telecom').value;
-            const pType = document.getElementById('main-full-prodtype').value;
-            const tvLayer = document.getElementById('main-full-tv-layer');
+            const prod = document.getElementById('main-full-prodtype').value;
             
-            if (pType === '결합') {
-                tvLayer.style.display = 'block';
-                updateDirectTvDropdown(tel);
-            } else {
-                tvLayer.style.display = 'none';
-                document.getElementById('main-full-tvprod').innerHTML = '<option value="">TV 요금제 선택 *</option>';
+            // 다른 걸로 마음이 바뀌어 다시 누르면 밑에 창들을 싹 초기화
+            document.getElementById('direct-speed-layer').style.display = 'none';
+            document.getElementById('direct-tv-layer').style.display = 'none';
+            document.getElementById('direct-result-layer').style.display = 'none';
+            document.getElementById('direct-final-layer').style.display = 'none';
+            document.getElementById('main-full-speed').value = '';
+            document.getElementById('main-full-tvprod').value = '';
+
+            if (tel && prod) {
+                document.getElementById('direct-speed-layer').style.display = 'block';
+                renderDirectSpeed(tel, prod);
             }
-            updateDirectSpeedDropdown(tel, pType);
         }
 
-        function updateDirectSpeedDropdown(tel, pType) {
-            const speedSel = document.getElementById('main-full-speed');
-            speedSel.innerHTML = '<option value="">인터넷 속도 선택 *</option>';
-            if (!tel || !pType) return;
-
-            let mappedProd = (pType === '단독') ? '단독' : '결합';
+        function renderDirectSpeed(tel, prod) {
+            const speedGroup = document.getElementById('direct-speed-group');
+            speedGroup.innerHTML = '';
+            let mappedProd = (prod === '단독') ? '단독' : '결합';
+            
             let filtered = allData.filter(row => {
                 if(!row[0] || !row[1]) return false;
                 let p = row[0].trim(); let isMatch = false;
@@ -946,44 +957,89 @@
             });
 
             let speeds = [...new Set(filtered.map(r => r[2].trim()))];
+            // 속도 내림차순 정렬 (1G -> 500M -> 100M)
+            speeds.sort((a,b) => (b.includes('1G')?1000:parseInt(b)||0) - (a.includes('1G')?1000:parseInt(a)||0));
+            
             speeds.forEach(s => {
-                speedSel.innerHTML += `<option value="${s}">${s}</option>`;
+                speedGroup.innerHTML += `<div class="direct-option-btn" onclick="selectDirectSpeed('${s}', this)">🚀 ${s}</div>`;
             });
         }
 
-        function updateDirectTvDropdown(tel) {
-            const tvSel = document.getElementById('main-full-tvprod');
-            tvSel.innerHTML = '<option value="">TV 요금제 선택 *</option>';
+        function selectDirectSpeed(val, el) {
+            document.querySelectorAll('#direct-speed-group .direct-option-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('main-full-speed').value = val;
+            
+            const prod = document.getElementById('main-full-prodtype').value;
+            document.getElementById('direct-result-layer').style.display = 'none';
+            document.getElementById('direct-final-layer').style.display = 'none';
+            
+            if (prod === '결합') {
+                document.getElementById('direct-tv-layer').style.display = 'block';
+                document.getElementById('main-full-tvprod').value = '';
+                renderDirectTv();
+            } else {
+                document.getElementById('direct-tv-layer').style.display = 'none';
+                document.getElementById('main-full-tvprod').value = '';
+                // ※ 요금 결과창 노출 로직은 4단계 퀘스트에서!
+            }
+        }
+
+        function renderDirectTv() {
+            const tel = document.getElementById('main-full-telecom').value;
+            const speed = document.getElementById('main-full-speed').value;
+            const tvGroup = document.getElementById('direct-tv-group');
+            tvGroup.innerHTML = '';
+
             let filtered = allData.filter(row => {
                 if(!row[0] || !row[1] || !row[3]) return false;
                 let p = row[0].trim();
                 let isMatch = (tel === 'KT' && p.includes('KT')) || (tel === 'LG' && p.includes('LG')) || (tel === 'SK' && p.includes('SK')) || (tel === '스카이' && p.includes('스카이')) || (tel === '헬로' && p.includes('헬로'));
-                return isMatch && row[1].trim() === '결합';
+                return isMatch && row[1].trim() === '결합' && row[2].trim() === speed;
             });
+            // 요금 비싼 순 정렬
+            filtered.sort((a, b) => (parseInt(b[6].replace(/[^0-9]/g, "")) || 0) - (parseInt(a[6].replace(/[^0-9]/g, "")) || 0));
+
             let tvs = [...new Set(filtered.map(r => r[3].trim()))];
             tvs.forEach(t => {
-                tvSel.innerHTML += `<option value="${t}">${t}</option>`;
+                tvGroup.innerHTML += `<div class="direct-option-btn" onclick="selectDirectTv('${t}', this)">📺 ${t}</div>`;
             });
         }
 
-        function onDirectGiftTypeChange() {
-            // 사은품 혜택 선택 시 추가 로직 필요시 확장
+        function selectDirectTv(val, el) {
+            document.querySelectorAll('#direct-tv-group .direct-option-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('main-full-tvprod').value = val;
+            // ※ 요금 결과창 노출 로직은 4단계 퀘스트에서!
         }
 
-        function onDirectPayTypeChange() {
-            const pVal = document.getElementById('main-full-paytype').value;
-            const bankLayer = document.getElementById('main-full-bank-layer');
-            const cardLayer = document.getElementById('main-full-card-layer');
+        // 사은품 수령 방식 (현금/가전) 버튼 클릭 시 하단 계좌/가전 리스트 노출
+        function selectDirectGiftType(val, el) {
+            document.querySelectorAll('#direct-gifttype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('main-full-gifttype').value = val;
+            
+            if (val === '현금') {
+                document.getElementById('direct-giftbank-layer').style.display = 'block';
+                document.getElementById('direct-appliance-layer').style.display = 'none';
+            } else if (val === '가전') {
+                document.getElementById('direct-giftbank-layer').style.display = 'none';
+                document.getElementById('direct-appliance-layer').style.display = 'block';
+            }
+        }
 
-            if (pVal === '계좌') {
-                bankLayer.style.display = 'grid';
-                cardLayer.style.display = 'none';
-            } else if (pVal === '카드') {
-                bankLayer.style.display = 'none';
-                cardLayer.style.display = 'grid';
-            } else {
-                bankLayer.style.display = 'none';
-                cardLayer.style.display = 'none';
+        // 납부 방법 (계좌/카드) 버튼 클릭 시 하단 입력 폼 노출
+        function selectDirectPayType(val, el) {
+            document.querySelectorAll('#direct-paytype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('main-full-paytype').value = val;
+            
+            if (val === '계좌') {
+                document.getElementById('main-full-bank-layer').style.display = 'grid';
+                document.getElementById('main-full-card-layer').style.display = 'none';
+            } else if (val === '카드') {
+                document.getElementById('main-full-bank-layer').style.display = 'none';
+                document.getElementById('main-full-card-layer').style.display = 'grid';
             }
         }
 
