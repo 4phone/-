@@ -1359,7 +1359,7 @@
             document.getElementById('fast-privacy-check').checked = false;
         }
 
-        // 💥 [신규] 7단계 원스톱 바로 접수 최종 검증 및 제출 함수
+        // 💥 [5단계 최종] 7단계 원스톱 바로 접수 최종 검증 및 제출 함수 💥
         function submitMainFullForm() {
             const name = document.getElementById('main-full-name').value.trim();
             const birth = document.getElementById('main-full-birth').value.trim();
@@ -1375,56 +1375,82 @@
             const paytype = document.getElementById('main-full-paytype').value;
             const checked = document.getElementById('full-privacy-check').checked;
 
+            // 1. 기본 정보 꼼꼼하게 검증!
             if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('main-full-name').focus(); return; }
             if(!birth || birth.length !== 8) { alert('생년월일 8자리를 정확히 입력해 주세요 (예: 19901010)'); document.getElementById('main-full-birth').focus(); return; }
-            if(!postcode || !addr1 || !addr2) { alert('설치 주소(우편번호 및 상세주소)를 모두 입력해 주세요!'); return; }
+            if(!postcode || !addr1 || !addr2) { alert('설치 주소(우편번호 및 상세주소)를 모두 입력해 주세요!'); document.getElementById('main-full-addr2').focus(); return; }
             if(phone.length !== 13 || !phone.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('main-full-phone').focus(); return; }
             if(!telecom) { alert('통신사를 선택해 주세요!'); return; }
             if(!prodtype) { alert('상품 구분을 선택해 주세요!'); return; }
             if(!speed) { alert('인터넷 속도를 선택해 주세요!'); return; }
             if(prodtype === '결합' && !tvprod) { alert('TV 요금제 상품을 선택해 주세요!'); return; }
-            if(!gifttype) { alert('사은품 혜택을 선택해 주세요!'); return; }
-            if(!paytype) { alert('납부 방법을 선택해 주세요!'); return; }
+            if(!gifttype) { alert('사은품 수령 방식을 선택해 주세요!'); return; }
 
-            // 납부방법 상세 검증
+            // 2. 🎁 사은품 상세 검증
+            let giftResult = "";
+            if(gifttype === '현금') {
+                const gBankName = document.getElementById('main-full-giftbankname').value;
+                const gBankNum = document.getElementById('main-full-giftbanknum').value.trim();
+                if(!gBankName || !gBankNum) { alert('사은품을 입금받으실 은행과 계좌번호를 입력해 주세요!'); return; }
+                giftResult = `현금 입금계좌 (${gBankName} ${gBankNum})`;
+            } else if(gifttype === '가전') {
+                const appliance = document.getElementById('main-full-appliance').value;
+                if(!appliance) { alert('원하시는 프리미엄 가전 사은품을 목록에서 클릭하여 선택해 주세요!'); return; }
+                giftResult = `가전 사은품 (${appliance})`;
+            }
+
+            if(!paytype) { alert('통신요금 납부 방법을 선택해 주세요!'); return; }
+
+            // 3. 💳 납부방법 상세 검증
+            let payResult = "";
             if(paytype === '계좌') {
                 const bName = document.getElementById('main-full-bankname').value;
                 const bNum = document.getElementById('main-full-banknum').value.trim();
                 if(!bName || !bNum) { alert('자동이체 하실 은행과 계좌번호를 입력해 주세요!'); return; }
+                payResult = `계좌이체 (${bName} ${bNum})`;
             } else if(paytype === '카드') {
                 const cName = document.getElementById('main-full-cardname').value;
                 const cNum = document.getElementById('main-full-cardnum').value.trim();
                 const cValid = document.getElementById('main-full-cardvalid').value.trim();
                 if(!cName || !cNum || !cValid) { alert('신용카드 정보를 모두 입력해 주세요!'); return; }
-            }
-
-            // 현금 사은품 선택 시 사은품 계좌 검증
-            if(gifttype === '현금') {
-                const gBankName = document.getElementById('main-full-giftbankname').value;
-                const gBankNum = document.getElementById('main-full-giftbanknum').value.trim();
-                if(!gBankName || !gBankNum) { alert('사은품을 입금받으실 은행과 계좌번호를 입력해 주세요!'); return; }
+                payResult = `신용카드 (${cName} ${cNum} / ${cValid})`;
             }
 
             if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 다이렉트 접수가 가능합니다.'); return; }
 
-            alert(`[원스톱 바로접수 성공! 🎉]\n\n성함: ${name}\n통신사: ${telecom} (${prodtype})\n인터넷 속도: ${speed}\n연락처: ${phone}\n주소: ${addr1} ${addr2}\n\n신속하게 개통 및 혜택 지급을 도와드리겠습니다!`);
+            // 4. 최종 성공 알림창! (DB 전송 데이터 확인)
+            alert(`[원스톱 바로접수 성공! 🎉]\n\n성함: ${name}\n생년월일: ${birth}\n연락처: ${phone}\n설치주소: ${addr1} ${addr2}\n\n[가입 상품]\n통신사: ${telecom}\n상품: ${prodtype} (${speed}${prodtype === '결합' ? ' / ' + tvprod : ''})\n\n[선택 혜택 및 납부]\n사은품: ${giftResult}\n납부방법: ${payResult}\n\n신속하게 개통 및 혜택 지급을 도와드리겠습니다!`);
             
-            // 폼 초기화
+            // 5. 폼 싹 다 초기화 (새로고침 안 해도 백지상태로 짠!)
             document.getElementById('main-full-name').value = "";
             document.getElementById('main-full-birth').value = "";
             document.getElementById('main-full-postcode').value = "";
             document.getElementById('main-full-addr1').value = "";
             document.getElementById('main-full-addr2').value = "";
             document.getElementById('main-full-phone').value = "";
+            
+            document.querySelectorAll('.direct-option-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('main-full-telecom').value = "";
             document.getElementById('main-full-prodtype').value = "";
-            document.getElementById('main-full-speed').innerHTML = '<option value="">인터넷 속도 선택 *</option>';
-            document.getElementById('main-full-tv-layer').style.display = 'none';
+            document.getElementById('main-full-speed').value = "";
+            document.getElementById('main-full-tvprod').value = "";
             document.getElementById('main-full-gifttype').value = "";
+            document.getElementById('main-full-appliance').value = "";
             document.getElementById('main-full-paytype').value = "";
-            document.getElementById('main-full-bank-layer').style.display = 'none';
-            document.getElementById('main-full-card-layer').style.display = 'none';
-            document.getElementById('main-full-giftbank-layer').style.display = 'none';
+            
+            document.getElementById('direct-speed-layer').style.display = 'none';
+            document.getElementById('direct-tv-layer').style.display = 'none';
+            document.getElementById('direct-result-layer').style.display = 'none';
+            document.getElementById('direct-final-layer').style.display = 'none';
+            
+            document.getElementById('main-full-giftbankname').value = "";
+            document.getElementById('main-full-giftbanknum').value = "";
+            document.getElementById('main-full-bankname').value = "";
+            document.getElementById('main-full-banknum').value = "";
+            document.getElementById('main-full-cardname').value = "";
+            document.getElementById('main-full-cardnum').value = "";
+            document.getElementById('main-full-cardvalid').value = "";
+            
             document.getElementById('full-privacy-check').checked = false;
         }
         
