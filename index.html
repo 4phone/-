@@ -395,13 +395,14 @@
     <div class="form-group"><input type="text" id="main-fast-name" placeholder="성함을 적어주세요"></div>
     <div class="form-group"><input type="tel" id="main-fast-phone" placeholder="연락처를 적어주세요 (- 제외)"></div>
     
-    <!-- 💥 [신규] 희망상품 선택 좌우 버튼 -->
+ <!-- 💥 [교체] 희망상품 선택 좌우 버튼 (초기 상태 모두 비활성화) -->
     <div class="fast-prod-select">
-        <div class="fast-prod-btn active" onclick="selectFastProd('인터넷만(단독)', this)">💻 인터넷만 (단독)</div>
+        <!-- active 클래스 삭제됨 -->
+        <div class="fast-prod-btn" onclick="selectFastProd('인터넷만(단독)', this)">💻 인터넷만 (단독)</div>
         <div class="fast-prod-btn" onclick="selectFastProd('인터넷+TV(결합)', this)">📺 인터넷+TV (결합)</div>
     </div>
-    <input type="hidden" id="main-fast-prod" value="인터넷만(단독)"> <!-- 선택값 전송용 숨김필드 -->
-
+    <!-- value 값을 "" 로 비워둠 -->
+    <input type="hidden" id="main-fast-prod" value="">
     <div class="privacy-agree-zone">
         <label class="privacy-label">
             <input type="checkbox" id="fast-privacy-check">
@@ -1000,14 +1001,36 @@ function submitMainFastForm() {
             }, { passive: true });
         }
         
+        // 💥 [신규] 간편상담 희망상품 토글 함수 (추가됨)
+        function selectFastProd(val, el) {
+            document.querySelectorAll('.fast-prod-btn').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('main-fast-prod').value = val;
+        }
+
+        // 💥 [교체] 기존 간편상담 제출 함수를 이걸로 덮어쓰기!
         function submitMainFastForm() {
-            const name = document.getElementById('main-fast-name').value.trim(); const phone = document.getElementById('main-fast-phone').value.trim(); const checked = document.getElementById('fast-privacy-check').checked;
+            const name = document.getElementById('main-fast-name').value.trim(); 
+            const phone = document.getElementById('main-fast-phone').value.trim(); 
+            const prod = document.getElementById('main-fast-prod').value; // 희망상품 값
+            const checked = document.getElementById('fast-privacy-check').checked;
+            
             if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('main-fast-name').focus(); return; } 
-            // 💥 [신규] 전송 전 휴대폰번호 자릿수 검증
             if(phone.length !== 13 || !phone.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('main-fast-phone').focus(); return; }
+            
+            // 희망상품 안 고르고 넘어가려 할 때 컷!
+            if(!prod) { alert('단독 / 결합 중 희망하시는 상품을 콕! 눌러서 선택해 주세요!'); return; }
             if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 상담 신청이 가능합니다.'); return; }
             
-            alert(`[간편 빠른상담 접수 성공]\n\n성함: ${name}\n연락처: ${phone}`); document.getElementById('main-fast-name').value = ""; document.getElementById('main-fast-phone').value = ""; document.getElementById('fast-privacy-check').checked = false;
+            // DB 전송용 데이터 확인창
+            alert(`[간편 빠른상담 접수 성공]\n\n성함: ${name}\n연락처: ${phone}\n희망상품: ${prod}`); 
+            
+            // 폼 싹 비우기 (버튼 색상 리셋 포함)
+            document.getElementById('main-fast-name').value = ""; 
+            document.getElementById('main-fast-phone').value = ""; 
+            document.getElementById('main-fast-prod').value = ""; 
+            document.querySelectorAll('.fast-prod-btn').forEach(btn => btn.classList.remove('active')); 
+            document.getElementById('fast-privacy-check').checked = false;
         }
         function submitMainFullForm() {
             const name = document.getElementById('main-full-name').value.trim(); const addr = document.getElementById('main-full-addr').value.trim(); const prod = document.getElementById('main-full-prod').value.trim(); const checked = document.getElementById('full-privacy-check').checked;
