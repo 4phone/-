@@ -1422,10 +1422,32 @@
 
             if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 다이렉트 접수가 가능합니다.'); return; }
 
-            // 4. 최종 성공 알림창! (DB 전송 데이터 확인)
+            // 4. 🚀 구글 서버(GAS)로 데이터 전송 및 네이버 메일 알림 발송!
+            const scriptURL = "https://script.google.com/macros/s/AKfycby_1x_FqN2kW6FJyoHDXw7IF_-Rgl4lD1n_msdM48sgXG7Ch1lMCnTKz5ytcylQAy-P/exec";
+            
+            const formData = {
+                type: "원스톱 다이렉트 접수",
+                name: name,
+                phone: phone,
+                summary: `생년월일: ${birth} / 설치주소: ${addr1} ${addr2}\n통신사: ${telecom} / 상품: ${prodtype} (${speed}${prodtype === '결합' ? ' / ' + tvprod : ''})\n사은품: ${giftResult}\n납부방법: ${payResult}`
+            };
+
+            // 서버로 데이터 쏘기 (비동기 전송)
+            fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            }).then(() => {
+                console.log('접수 데이터 전송 완료!');
+            }).catch(error => {
+                console.error('전송 에러:', error);
+            });
+
+            // 5. 최종 성공 알림창!
             alert(`[원스톱 바로접수 성공! 🎉]\n\n성함: ${name}\n생년월일: ${birth}\n연락처: ${phone}\n설치주소: ${addr1} ${addr2}\n\n[가입 상품]\n통신사: ${telecom}\n상품: ${prodtype} (${speed}${prodtype === '결합' ? ' / ' + tvprod : ''})\n\n[선택 혜택 및 납부]\n사은품: ${giftResult}\n납부방법: ${payResult}\n\n신속하게 개통 및 혜택 지급을 도와드리겠습니다!`);
             
-            // 5. 폼 싹 다 초기화 (새로고침 안 해도 백지상태로 짠!)
+            // 6. 폼 싹 다 초기화 (새로고침 안 해도 백지상태로 짠!)
             document.getElementById('main-full-name').value = "";
             document.getElementById('main-full-birth').value = "";
             document.getElementById('main-full-postcode').value = "";
