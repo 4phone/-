@@ -438,140 +438,136 @@
                         <a href="#" class="main-sms-routing-btn" onclick="triggerMainFastSms(event)">💬 문자로 상담 접수: 010-6414-2444</a>
                     </div>
                     
-                    <!-- 💥 [교체완료] 7단계 정석 다이렉트 접수 폼 (PC 2단 / 모바일 1단 반응형) -->
                     <div class="form-panel" id="form-full">
-                        <div class="direct-form-grid">
-                            <div class="form-group"><input type="text" id="main-full-name" placeholder="성함 입력"></div>
-                            <div class="form-group"><input type="text" id="main-full-birth" maxlength="8" placeholder="생년월일 8자리 (예: 19901010)"></div>
-                        </div>
-                        
-                        <div class="direct-form-full">
-                            <div class="address-flex">
-                                <input type="text" id="main-full-postcode" placeholder="우편번호" readonly style="background:#edf2f7; max-width:110px;">
-                                <input type="text" id="main-full-addr1" placeholder="설치 주소 검색" readonly onclick="execDaumPostcode('main-full')" style="cursor:pointer; background:#fff;">
-                                <button type="button" class="addr-search-btn" onclick="execDaumPostcode('main-full')">주소검색</button>
-                            </div>
-                            <input type="text" id="main-full-addr2" placeholder="상세 주소를 입력해 주세요">
-                        </div>
+    <!-- 1. 기본 정보 영역 (2단/1단 반응형) -->
+    <div class="direct-form-grid">
+        <div class="form-group"><input type="text" id="main-full-name" placeholder="성함 입력"></div>
+        <div class="form-group"><input type="text" id="main-full-birth" maxlength="8" placeholder="생년월일 8자리 (예: 19901010)"></div>
+    </div>
+    
+    <div class="direct-form-full">
+        <div class="address-flex">
+            <input type="text" id="main-full-postcode" placeholder="우편번호" readonly style="background:#edf2f7; max-width:110px;">
+            <input type="text" id="main-full-addr1" placeholder="설치 주소 검색" readonly onclick="execDaumPostcode('main-full')" style="cursor:pointer; background:#fff;">
+            <button type="button" class="addr-search-btn" onclick="execDaumPostcode('main-full')">주소검색</button>
+        </div>
+        <input type="text" id="main-full-addr2" placeholder="상세 주소를 입력해 주세요">
+    </div>
 
-                        <div class="direct-form-grid">
-                            <div class="form-group"><input type="tel" id="main-full-phone" maxlength="13" placeholder="연락처 (- 제외)"></div>
-                            <div class="form-group">
-                                <select id="main-full-telecom" onchange="onDirectTelecomChange()">
-                                    <option value="">통신사 선택 *</option>
-                                    <option value="SK">SK브로드밴드</option>
-                                    <option value="KT">KT</option>
-                                    <option value="LG">LG U+</option>
-                                    <option value="스카이">KT스카이라이프</option>
-                                    <option value="헬로">LG헬로비전</option>
-                                </select>
-                            </div>
-                        </div>
+    <div class="direct-form-full">
+        <input type="tel" id="main-full-phone" maxlength="13" placeholder="연락처 입력 (- 제외)">
+    </div>
 
-                        <div class="direct-form-grid">
-                            <div class="form-group">
-                                <select id="main-full-prodtype" onchange="onDirectProdTypeChange()">
-                                    <option value="">상품 구분 *</option>
-                                    <option value="단독">인터넷 단독</option>
-                                    <option value="결합">인터넷 + TV 결합</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <select id="main-full-speed">
-                                    <option value="">인터넷 속도 선택 *</option>
-                                </select>
-                            </div>
-                        </div>
+    <!-- 2. 통신사 및 상품 선택 (버튼형 UI) -->
+    <div class="direct-step-title">1. 통신사 선택</div>
+    <div class="direct-option-group" id="direct-telecom-group">
+        <div class="direct-option-btn" onclick="selectDirectTelecom('SK', this)">SK</div>
+        <div class="direct-option-btn" onclick="selectDirectTelecom('KT', this)">KT</div>
+        <div class="direct-option-btn" onclick="selectDirectTelecom('LG', this)">LG</div>
+        <div class="direct-option-btn" onclick="selectDirectTelecom('스카이', this)">스카이</div>
+        <div class="direct-option-btn" onclick="selectDirectTelecom('헬로', this)">헬로</div>
+    </div>
+    <input type="hidden" id="main-full-telecom" value="">
 
-                        <div class="direct-form-full" id="main-full-tv-layer" style="display:none;">
-                            <select id="main-full-tvprod">
-                                <option value="">TV 요금제 선택 *</option>
-                            </select>
-                        </div>
+    <div class="direct-step-title">2. 상품 구분</div>
+    <div class="direct-option-group" id="direct-prodtype-group">
+        <div class="direct-option-btn" onclick="selectDirectProd('단독', this)">💻 인터넷만 (단독)</div>
+        <div class="direct-option-btn" onclick="selectDirectProd('결합', this)">📺 인터넷+TV (결합)</div>
+    </div>
+    <input type="hidden" id="main-full-prodtype" value="">
 
-                        <div class="direct-form-grid">
-                            <div class="form-group">
-                                <select id="main-full-gifttype" onchange="onDirectGiftTypeChange()">
-                                    <option value="">사은품 혜택 선택 *</option>
-                                    <option value="현금">현금 사은품</option>
-                                    <option value="가전">가전 사은품</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <select id="main-full-paytype" onchange="onDirectPayTypeChange()">
-                                    <option value="">납부 방법 선택 *</option>
-                                    <option value="계좌">자동이체 (계좌)</option>
-                                    <option value="카드">신용카드</option>
-                                </select>
-                            </div>
-                        </div>
+    <!-- 3. 속도 및 TV 선택 (초기 숨김) -->
+    <div id="direct-speed-layer" style="display:none;">
+        <div class="direct-step-title">3. 인터넷 속도</div>
+        <div class="direct-option-group" id="direct-speed-group"></div>
+        <input type="hidden" id="main-full-speed" value="">
+    </div>
 
-                        <!-- 자동이체 계좌 입력 레이어 -->
-                        <div class="direct-form-grid" id="main-full-bank-layer" style="display:none;">
-                            <div class="form-group">
-                                <select id="main-full-bankname">
-                                    <option value="">은행 선택 *</option>
-                                    <option value="국민은행">국민은행</option>
-                                    <option value="신한은행">신한은행</option>
-                                    <option value="우리은행">우리은행</option>
-                                    <option value="하나은행">하나은행</option>
-                                    <option value="농협은행">농협은행</option>
-                                    <option value="기업은행">기업은행</option>
-                                    <option value="카카오뱅크">카카오뱅크</option>
-                                    <option value="토스뱅크">토스뱅크</option>
-                                </select>
-                            </div>
-                            <div class="form-group"><input type="text" id="main-full-banknum" placeholder="계좌번호 (- 없이)"></div>
-                        </div>
+    <div id="direct-tv-layer" style="display:none;">
+        <div class="direct-step-title">4. TV 요금제</div>
+        <div class="direct-option-group" id="direct-tv-group"></div>
+        <input type="hidden" id="main-full-tvprod" value="">
+    </div>
 
-                        <!-- 신용카드 입력 레이어 -->
-                        <div class="direct-form-grid" id="main-full-card-layer" style="display:none;">
-                            <div class="form-group">
-                                <select id="main-full-cardname">
-                                    <option value="">카드사 선택 *</option>
-                                    <option value="신한카드">신한카드</option>
-                                    <option value="국민카드">국민카드</option>
-                                    <option value="삼성카드">삼성카드</option>
-                                    <option value="현대카드">현대카드</option>
-                                    <option value="롯데카드">롯데카드</option>
-                                    <option value="하나카드">하나카드</option>
-                                    <option value="우리카드">우리카드</option>
-                                    <option value="NH카드">NH카드</option>
-                                </select>
-                            </div>
-                            <div class="form-group"><input type="text" id="main-full-cardnum" placeholder="신용카드 번호 (- 없이)"></div>
-                            <div class="direct-form-full" style="margin-bottom:12px;">
-                                <input type="text" id="main-full-cardvalid" placeholder="카드 유효기간 (MM/YY)">
-                            </div>
-                        </div>
+    <!-- 4. 🌟 요금 및 사은품 확정 노출 패널 (초기 숨김) -->
+    <div id="direct-result-layer" style="display:none; background:#F7FAFC; border:2px solid #3182CE; border-radius:12px; padding:20px; margin:20px 0; text-align:center;">
+        <div style="font-size:14px; color:#4A5568; font-weight:700; margin-bottom:10px;">🎉 고객님의 확정 혜택 🎉</div>
+        <div id="direct-result-price" style="font-size:26px; font-weight:900; color:#1A202C; margin-bottom:5px;">월 0원</div>
+        <div id="direct-result-gift" style="font-size:18px; font-weight:900; color:#E53E3E;">🎁 현금 0원 지원</div>
+    </div>
 
-                        <!-- 사은품 입금 계좌 레이어 (현금 선택 시에만 노출) -->
-                        <div class="direct-form-grid" id="main-full-giftbank-layer" style="display:none;">
-                            <div class="form-group">
-                                <select id="main-full-giftbankname">
-                                    <option value="">사은품 받을 은행 *</option>
-                                    <option value="국민은행">국민은행</option>
-                                    <option value="신한은행">신한은행</option>
-                                    <option value="우리은행">우리은행</option>
-                                    <option value="하나은행">하나은행</option>
-                                    <option value="농협은행">농협은행</option>
-                                    <option value="기업은행">기업은행</option>
-                                    <option value="카카오뱅크">카카오뱅크</option>
-                                    <option value="토스뱅크">토스뱅크</option>
-                                </select>
-                            </div>
-                            <div class="form-group"><input type="text" id="main-full-giftbanknum" placeholder="사은품 계좌번호 (- 없이)"></div>
-                        </div>
+    <!-- 5. 사은품 수령 방식 및 납부 정보 (결과 패널 확정 후 등장) -->
+    <div id="direct-final-layer" style="display:none;">
+        <div class="direct-step-title">5. 사은품 수령 방식</div>
+        <div class="direct-option-group" id="direct-gifttype-group">
+            <div class="direct-option-btn" onclick="selectDirectGiftType('현금', this)">💰 현금 사은품</div>
+            <div class="direct-option-btn" onclick="selectDirectGiftType('가전', this)">📺 가전 사은품</div>
+        </div>
+        <input type="hidden" id="main-full-gifttype" value="">
 
-                        <div class="privacy-agree-zone">
-                            <label class="privacy-label">
-                                <input type="checkbox" id="full-privacy-check">
-                                <b>개인정보 수집 및 이용 동의 (필수)</b>
-                            </label>
-                            <span class="privacy-notice-txt">※ 목적: 개통 다이렉트 전산 접수 / 항목: 성명, 생년월일, 주소, 연락처, 납부정보 / 기간: 목적 달성 즉시 파기</span>
-                        </div>
-                        <button class="submit-btn" onclick="submitMainFullForm()">원스톱 가입 접수 완료하기</button>
-                    </div>
+        <!-- 가전 사은품 리스트 노출 영역 -->
+        <div id="direct-appliance-layer" style="display:none; margin-bottom:15px;">
+            <div style="font-size:13px; color:#E53E3E; font-weight:900; margin-bottom:8px;">※ 원하시는 프리미엄 가전을 선택해주세요!</div>
+            <div class="gift-grid" id="direct-appliance-list" style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px;"></div>
+            <input type="hidden" id="main-full-appliance" value="">
+        </div>
+
+        <!-- 현금 수령 계좌 -->
+        <div id="direct-giftbank-layer" style="display:none; margin-bottom:15px; background:#fff; padding:15px; border-radius:10px; border:1px dashed #A0AEC0;">
+            <div style="font-size:13px; font-weight:900; margin-bottom:8px; color:#2D3748;">💰 사은품 입금 계좌</div>
+            <div class="direct-form-grid" style="margin-bottom:0;">
+                <select id="main-full-giftbankname" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+                    <option value="">은행 선택 *</option>
+                    <option value="국민은행">국민은행</option><option value="신한은행">신한은행</option><option value="우리은행">우리은행</option>
+                    <option value="하나은행">하나은행</option><option value="농협은행">농협은행</option><option value="기업은행">기업은행</option>
+                    <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option>
+                </select>
+                <input type="text" id="main-full-giftbanknum" placeholder="계좌번호 (- 없이)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+            </div>
+        </div>
+
+        <div class="direct-step-title">6. 통신요금 납부 방법</div>
+        <div class="direct-option-group" id="direct-paytype-group">
+            <div class="direct-option-btn" onclick="selectDirectPayType('계좌', this)">🏦 자동이체 (계좌)</div>
+            <div class="direct-option-btn" onclick="selectDirectPayType('카드', this)">💳 신용카드</div>
+        </div>
+        <input type="hidden" id="main-full-paytype" value="">
+
+        <!-- 요금 납부 계좌 -->
+        <div class="direct-form-grid" id="main-full-bank-layer" style="display:none; margin-bottom:15px;">
+            <select id="main-full-bankname" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+                <option value="">은행 선택 *</option>
+                <option value="국민은행">국민은행</option><option value="신한은행">신한은행</option><option value="우리은행">우리은행</option>
+                <option value="하나은행">하나은행</option><option value="농협은행">농협은행</option><option value="기업은행">기업은행</option>
+                <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option>
+            </select>
+            <input type="text" id="main-full-banknum" placeholder="요금납부 계좌번호 (- 없이)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+        </div>
+
+        <!-- 요금 납부 카드 -->
+        <div id="main-full-card-layer" style="display:none; margin-bottom:15px;">
+            <div class="direct-form-grid" style="margin-bottom:8px;">
+                <select id="main-full-cardname" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+                    <option value="">카드사 선택 *</option>
+                    <option value="신한카드">신한카드</option><option value="국민카드">국민카드</option><option value="삼성카드">삼성카드</option>
+                    <option value="현대카드">현대카드</option><option value="롯데카드">롯데카드</option><option value="하나카드">하나카드</option>
+                    <option value="우리카드">우리카드</option><option value="NH카드">NH카드</option>
+                </select>
+                <input type="text" id="main-full-cardnum" placeholder="신용카드 번호 (- 없이)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+            </div>
+            <input type="text" id="main-full-cardvalid" placeholder="카드 유효기간 (MM/YY)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+        </div>
+
+        <div class="privacy-agree-zone">
+            <label class="privacy-label">
+                <input type="checkbox" id="full-privacy-check">
+                <b>개인정보 수집 및 이용 동의 (필수)</b>
+            </label>
+            <span class="privacy-notice-txt">※ 목적: 개통 다이렉트 전산 접수 / 항목: 성명, 생년월일, 주소, 연락처, 납부정보 / 기간: 목적 달성 즉시 파기</span>
+        </div>
+        <button class="submit-btn" onclick="submitMainFullForm()">원스톱 가입 접수 완료하기</button>
+    </div>
+</div>
                 </div>
             </div>
         </div>
