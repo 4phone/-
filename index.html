@@ -1045,7 +1045,11 @@
             if (targetRow) {
                 // 요금과 사은품 추출
                 const cleanRow = targetRow.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
-                let priceRaw = (mappedProd === '결합') ? cleanRow[6] : cleanRow[4];
+                
+                // 💥 수정: 단독/결합 상관없이 구글 시트에 할인액(5열)이 있으면 무조건 결합요금(6열) 적용!
+                let dcPriceRaw = parseInt(cleanRow[5] ? cleanRow[5].replace(/[^0-9]/g, "") : "0") || 0;
+                let priceRaw = (dcPriceRaw > 0) ? cleanRow[6] : cleanRow[4];
+                
                 let priceNum = parseInt(priceRaw.replace(/[^0-9]/g, "")) || 0;
                 let formatPrice = priceNum > 0 ? priceNum.toLocaleString() + "원" : priceRaw;
                 let subsidy = cleanRow[7] || "0";
