@@ -372,6 +372,44 @@
         .direct-option-btn { background: #fff; border: 2px solid #E2E8F0; color: #4A5568; padding: 14px 4px; border-radius: 10px; font-size: 14px; font-weight: 900; cursor: pointer; text-align: center; transition: all 0.2s; word-break: keep-all; }
         .direct-option-btn.active { background: var(--gold-color); color: #111; border-color: var(--gold-color); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
         .direct-option-btn img { height: 20px; vertical-align: middle; margin-bottom: 2px; }
+
+/* 📱 모바일 하단 고정 버튼바 */
+        .mobile-bottom-bar { display: none; } /* PC에서는 아예 숨김! */
+
+        @media (max-width: 950px) {
+            .mobile-bottom-bar {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 75px; /* 터치하기 넉넉한 높이 */
+                background: #fff;
+                box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
+                z-index: 99999; /* 화면 맨 앞으로 강제 배치 */
+            }
+            .m-bar-btn {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                font-size: 14px;
+                font-weight: 900;
+                transition: 0.2s;
+            }
+            .m-icon { font-size: 22px; margin-bottom: 4px; display: block; }
+            
+            /* 버튼별 컬러 세팅 */
+            .m-btn-phone { background: #1B1E0C; color: #FFD700; border-right: 1px solid rgba(255,255,255,0.1); }
+            .m-btn-kakao { background: #FEE500; color: #111; border-right: 1px solid rgba(0,0,0,0.05); }
+            .m-btn-direct { background: #FF5722; color: #fff; }
+            
+            /* 하단바 두께만큼 페이지 맨 아래 여백 확보 (내용이 가려지지 않게) */
+            body { padding-bottom: 85px !important; }
+        }
+        
     </style>
 </head>
 <body>
@@ -891,8 +929,20 @@
             </div>
         </div>
     </div>
-
-    <!-- 통합된 단일 Javascript 영역 -->
+<!-- 📱 모바일 하단 고정 3분할 퀵메뉴 -->
+    <div class="mobile-bottom-bar">
+        <a href="tel:18332440" class="m-bar-btn m-btn-phone">
+            <span class="m-icon">📞</span>전화상담
+        </a>
+        <a href="http://pf.kakao.com/_PxjsKG/chat" target="_blank" class="m-bar-btn m-btn-kakao">
+            <span class="m-icon">💬</span>카톡상담
+        </a>
+        <a href="#" onclick="openMobileDirectForm(event)" class="m-bar-btn m-btn-direct">
+            <span class="m-icon">📝</span>다이렉트접수
+        </a>
+    </div>
+    
+        <!-- 통합된 단일 Javascript 영역 -->
     <script>
         const sheetId = '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
         const rateGid = '0'; 
@@ -1968,6 +2018,18 @@
             document.getElementById('pop-full-bankname').value = ''; document.getElementById('pop-full-banknum').value = '';
             document.getElementById('pop-full-cardname').value = ''; document.getElementById('pop-full-cardnum').value = ''; document.getElementById('pop-full-cardvalid').value = '';
             document.getElementById('pop-full-privacy').checked = false;
+        }
+    // 📱 모바일 하단바에서 다이렉트 접수 누를 때 동작
+        function openMobileDirectForm(e) {
+            e.preventDefault();
+            // 1. 최상단 폼 영역으로 부드럽게 스크롤 이동
+            document.getElementById('boss-section').scrollIntoView({ behavior: 'smooth' });
+            
+            // 2. '다이렉트 접수' 탭을 자동으로 찰칵! 눌러줌
+            const tabs = document.querySelectorAll('.consult-tabs .c-tab-btn');
+            if(tabs.length >= 2) {
+                switchForm('full', tabs[1]);
+            }
         }
     </script>
 </body>
