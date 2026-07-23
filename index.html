@@ -588,7 +588,11 @@
             </div>
         </div>
 
-        <div class="direct-step-title">6. 통신요금 납부 방법</div>
+        <div class="direct-step-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>6. 통신요금 납부 방법</span>
+            <!-- 🌟 사은품 계좌 복사 버튼 추가 -->
+            <button type="button" id="copy-gift-bank-btn" onclick="copyGiftBankToPayBank()" style="display: none; background: #FF5722; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 900; cursor: pointer;">🎁 사은품 계좌와 동일</button>
+        </div>
         <div class="direct-option-group" id="direct-paytype-group">
             <div class="direct-option-btn" onclick="selectDirectPayType('계좌', this)">🏦 자동이체 (계좌)</div>
             <div class="direct-option-btn" onclick="selectDirectPayType('카드', this)">💳 신용카드</div>
@@ -2171,6 +2175,46 @@
             if (!e || e.target === document.getElementById('pc-phone-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) { 
                 document.getElementById('pc-phone-popup-overlay').classList.remove('active'); 
                 document.body.style.overflow = ''; 
+            }
+        }
+    // 🎁 사은품 계좌 정보를 통신요금 납부 계좌로 복사하는 함수
+        function copyGiftBankToPayBank() {
+            const giftName = document.getElementById('main-full-giftbankname').value;
+            const giftNum = document.getElementById('main-full-giftbanknum').value;
+
+            if (!giftName || !giftNum) {
+                alert('먼저 위쪽에 사은품 입금 계좌(은행 및 계좌번호)를 입력해 주세요!');
+                return;
+            }
+
+            // 아래쪽 납부 계좌 칸에 값 꽂아넣기
+            document.getElementById('main-full-bankname').value = giftName;
+            document.getElementById('main-full-banknum').value = giftNum;
+
+            // 시각적 피드백
+            const btn = document.getElementById('copy-gift-bank-btn');
+            const originalText = btn.innerText;
+            btn.innerText = '✨ 복사 완료!';
+            btn.style.background = '#48BB78';
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.background = '#FF5722';
+            }, 1500);
+        }
+
+        // 🔄 자동이체(계좌)를 선택하거나 현금사은품일 때 복사 버튼 노출 여부 체크
+        function checkCopyGiftBankButtonVisibility() {
+            const isCashGift = document.querySelector('.direct-option-btn[onclick*="현금 사은품"]')?.classList.contains('active') || true; // 현금사은품 선택 여부
+            const payType = document.getElementById('main-full-paytype').value;
+            const copyBtn = document.getElementById('copy-gift-bank-btn');
+
+            // 현금사은품 상태이고, 납부방법을 '계좌'로 골랐을 때만 버튼 노출!
+            if (copyBtn) {
+                if (payType === '계좌') {
+                    copyBtn.style.display = 'inline-block';
+                } else {
+                    copyBtn.style.display = 'none';
+                }
             }
         }
     </script>
