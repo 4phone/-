@@ -1374,6 +1374,21 @@
             document.getElementById('direct-summary-prod').innerText = `[${curProv}] ${productDesc} / ${currentActiveSpeed}`;
             document.getElementById('direct-summary-price').innerText = currentCalculatedPrice;
             document.getElementById('direct-summary-gift').innerText = currentGiftStatusText;
+
+            // 🌟 추가된 로직: 가전 사은품 선택 시 팝업창 안의 '입금 계좌' 싹 숨기기!
+            const giftTitle = document.getElementById('pop-full-gift-title');
+            const giftLayer = document.getElementById('pop-full-gift-layer');
+            if (giftTitle && giftLayer) {
+                if (isGiftMode && selectedGift) {
+                    // 가전 선택 시 계좌 입력란 숨김
+                    giftTitle.style.display = 'none';
+                    giftLayer.style.display = 'none';
+                } else {
+                    // 현금 선택 시 계좌 입력란 노출
+                    giftTitle.style.display = 'block';
+                    giftLayer.style.display = 'grid'; 
+                }
+            }
         }
         function closeDirectPopup(e) {
             if(e) e.preventDefault();
