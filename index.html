@@ -1267,17 +1267,7 @@
             });
         }
         function selectQuickCard(speed, price, gift) { quickData.speed = speed; quickData.price = price; quickData.gift = gift; goToStep(4); }
-        function submitQuickApply() {
-            const name = document.getElementById('quick-name').value; const phone = document.getElementById('quick-phone').value;
-            if(!name || !phone) { alert('성함과 연락처를 모두 적어주셔야 떡값을 쏠 수 있습니다! 😎'); return; }
-            if(phone.length !== 13 || !phone.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('quick-phone').focus(); return; }
-            
-            alert(`🎉 빠른 접수 완료!\n\n${name} 고객님!\n선택하신 [ ${quickData.telecom} / ${quickData.product} / ${quickData.speed} ]\n(월 ${quickData.price}원 / 사은품 ${quickData.gift})\n\n가장 빠른 시간 내에 연락드리겠습니다!`);
-            document.getElementById('quick-popup-overlay').classList.remove('active'); 
-            document.body.style.overflow = ''; 
-            document.getElementById('quick-name').value = ''; document.getElementById('quick-phone').value = '';
-        }
-
+        
         function openDirectPopup() {
             if(!isCalculatorInteracted || !curProv || !curProd) {
                 alert("먼저 위에서 통신사와 요금제를 선택해 주세요! 😎");
@@ -1303,31 +1293,7 @@
             document.querySelectorAll('#direct-popup-overlay .quick-step').forEach(s => { s.classList.remove('active-step'); });
             document.getElementById('direct-step-' + step).classList.add('active-step');
         }
-        function submitDirectQuick() {
-            const n = document.getElementById('direct-quick-name').value.trim();
-            const p = document.getElementById('direct-quick-phone').value.trim();
-            const chk = document.getElementById('direct-quick-privacy').checked;
-            if(!n || !p) { alert("성함과 연락처를 입력해주세요!"); return; }
-            if(p.length !== 13 || !p.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('direct-quick-phone').focus(); return; }
-            if(!chk) { alert("개인정보 동의에 체크해주세요!"); return; }
-            
-            alert(`[즉시 상담신청 완료]\n상품: ${document.getElementById('direct-summary-prod').innerText}\n요금: ${currentCalculatedPrice}\n혜택: ${currentGiftStatusText}\n성함: ${n}\n연락처: ${p}`);
-            closeDirectPopup();
-            document.getElementById('direct-quick-name').value = ''; document.getElementById('direct-quick-phone').value = ''; document.getElementById('direct-quick-privacy').checked = false;
-        }
-        function submitDirectFull() {
-            const n = document.getElementById('direct-full-name').value.trim();
-            const p = document.getElementById('direct-full-phone').value.trim();
-            const chk = document.getElementById('direct-full-privacy').checked;
-            if(!n || !p) { alert("성함과 연락처를 입력해주세요!"); return; }
-            if(p.length !== 13 || !p.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('direct-full-phone').focus(); return; }
-            if(!chk) { alert("개인정보 동의에 체크해주세요!"); return; }
-            
-            alert(`[원스톱 바로접수 완료]\n성함: ${n}\n연락처: ${p}`);
-            closeDirectPopup();
-            document.getElementById('direct-full-name').value = ''; document.getElementById('direct-full-phone').value = ''; document.getElementById('direct-full-privacy').checked = false;
-        }
-
+        
         function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'flex'; }
         function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
         function setupUniversalStickyScroll() {
@@ -1343,26 +1309,7 @@
             document.getElementById('main-fast-prod').value = val;
         }
 
-        function submitMainFastForm() {
-            const name = document.getElementById('main-fast-name').value.trim(); 
-            const phone = document.getElementById('main-fast-phone').value.trim(); 
-            const prod = document.getElementById('main-fast-prod').value; 
-            const checked = document.getElementById('fast-privacy-check').checked;
-            
-            if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('main-fast-name').focus(); return; } 
-            if(phone.length !== 13 || !phone.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('main-fast-phone').focus(); return; }
-            if(!prod) { alert('단독 / 결합 중 희망하시는 상품을 콕! 눌러서 선택해 주세요!'); return; }
-            if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 상담 신청이 가능합니다.'); return; }
-            
-            alert(`[간편 빠른상담 접수 성공]\n\n성함: ${name}\n연락처: ${phone}\n희망상품: ${prod}`); 
-            
-            document.getElementById('main-fast-name').value = ""; 
-            document.getElementById('main-fast-phone').value = ""; 
-            document.getElementById('main-fast-prod').value = ""; 
-            document.querySelectorAll('.fast-prod-btn').forEach(btn => btn.classList.remove('active')); 
-            document.getElementById('fast-privacy-check').checked = false;
-        }
-
+        
         // 💥 [5단계 최종] 7단계 원스톱 바로 접수 최종 검증 및 제출 함수 💥
         function submitMainFullForm() {
             const name = document.getElementById('main-full-name').value.trim();
@@ -1692,6 +1639,119 @@
                 const subsidyText = document.getElementById('res-subsidy').innerText; 
                 currentGiftStatusText = `현금 사은품 ${subsidyText} 증정`; 
             }
+        }
+    // 🚀 1. 간편 빠른상담 폼 제출
+        function submitMainFastForm() {
+            const name = document.getElementById('main-fast-name').value.trim(); 
+            const phone = document.getElementById('main-fast-phone').value.trim(); 
+            const prod = document.getElementById('main-fast-prod').value; 
+            const checked = document.getElementById('fast-privacy-check').checked;
+            
+            if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('main-fast-name').focus(); return; } 
+            if(phone.length !== 13 || !phone.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('main-fast-phone').focus(); return; }
+            if(!prod) { alert('단독 / 결합 중 희망하시는 상품을 콕! 눌러서 선택해 주세요!'); return; }
+            if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 상담 신청이 가능합니다.'); return; }
+            
+            // 데이터 포장 및 구글 서버 전송
+            const scriptURL = "https://script.google.com/macros/s/AKfycby_1x_FqN2kW6FJyoHDXw7IF_-Rgl4lD1n_msdM48sgXG7Ch1lMCnTKz5ytcylQAy-P/exec";
+            const formData = { type: "간편 빠른상담", name: name, phone: phone, summary: `희망상품: ${prod}` };
+            
+            fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+                .then(() => console.log('간편 빠른상담 전송 완료'))
+                .catch(error => console.error('전송 에러:', error));
+
+            alert(`[간편 빠른상담 접수 성공! 🎉]\n\n성함: ${name}\n연락처: ${phone}\n희망상품: ${prod}\n\n가장 빠른 시간 내에 연락드리겠습니다!`); 
+            
+            // 초기화
+            document.getElementById('main-fast-name').value = ""; 
+            document.getElementById('main-fast-phone').value = ""; 
+            document.getElementById('main-fast-prod').value = ""; 
+            document.querySelectorAll('.fast-prod-btn').forEach(btn => btn.classList.remove('active')); 
+            document.getElementById('fast-privacy-check').checked = false;
+        }
+
+        // 🚀 2. 초간단신청 팝업 제출
+        function submitQuickApply() {
+            const name = document.getElementById('quick-name').value.trim(); 
+            const phone = document.getElementById('quick-phone').value.trim();
+            
+            if(!name || !phone) { alert('성함과 연락처를 모두 적어주셔야 떡값을 쏠 수 있습니다! 😎'); return; }
+            if(phone.length !== 13 || !phone.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('quick-phone').focus(); return; }
+            
+            // 데이터 포장 및 구글 서버 전송
+            const scriptURL = "https://script.google.com/macros/s/AKfycby_1x_FqN2kW6FJyoHDXw7IF_-Rgl4lD1n_msdM48sgXG7Ch1lMCnTKz5ytcylQAy-P/exec";
+            const formData = { 
+                type: "초간단신청", 
+                name: name, 
+                phone: phone, 
+                summary: `통신사: ${quickData.telecom}\n상품: ${quickData.product} / 속도: ${quickData.speed}\n요금: 월 ${quickData.price}원\n사은품: ${quickData.gift}` 
+            };
+            
+            fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+                .then(() => console.log('초간단신청 전송 완료'))
+                .catch(error => console.error('전송 에러:', error));
+
+            alert(`[초간단신청 접수 성공! 🎉]\n\n${name} 고객님!\n선택하신 [ ${quickData.telecom} / ${quickData.product} / ${quickData.speed} ]\n(월 ${quickData.price}원 / 사은품 ${quickData.gift})\n\n가장 빠른 시간 내에 연락드리겠습니다!`);
+            
+            document.getElementById('quick-popup-overlay').classList.remove('active'); 
+            document.body.style.overflow = ''; 
+            document.getElementById('quick-name').value = ''; document.getElementById('quick-phone').value = '';
+        }
+
+        // 🚀 3. 셀프요금설계 - 즉시 상담신청 제출
+        function submitDirectQuick() {
+            const n = document.getElementById('direct-quick-name').value.trim();
+            const p = document.getElementById('direct-quick-phone').value.trim();
+            const chk = document.getElementById('direct-quick-privacy').checked;
+            
+            if(!n || !p) { alert("성함과 연락처를 입력해주세요!"); return; }
+            if(p.length !== 13 || !p.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('direct-quick-phone').focus(); return; }
+            if(!chk) { alert("개인정보 동의에 체크해주세요!"); return; }
+            
+            const prod = document.getElementById('direct-summary-prod').innerText;
+            const price = currentCalculatedPrice;
+            const gift = currentGiftStatusText;
+
+            // 데이터 포장 및 구글 서버 전송
+            const scriptURL = "https://script.google.com/macros/s/AKfycby_1x_FqN2kW6FJyoHDXw7IF_-Rgl4lD1n_msdM48sgXG7Ch1lMCnTKz5ytcylQAy-P/exec";
+            const formData = { type: "셀프요금설계 (즉시 상담신청)", name: n, phone: p, summary: `상품: ${prod}\n요금: ${price}\n혜택: ${gift}` };
+            
+            fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+                .then(() => console.log('셀프요금설계 즉시상담 전송 완료'))
+                .catch(error => console.error('전송 에러:', error));
+
+            alert(`[즉시 상담신청 접수 성공! 🎉]\n\n상품: ${prod}\n요금: ${price}\n혜택: ${gift}\n성함: ${n}\n연락처: ${p}\n\n빠르게 연락드리겠습니다!`);
+            
+            closeDirectPopup();
+            document.getElementById('direct-quick-name').value = ''; document.getElementById('direct-quick-phone').value = ''; document.getElementById('direct-quick-privacy').checked = false;
+        }
+
+        // 🚀 4. 셀프요금설계 - 바로 접수(원스톱) 제출
+        function submitDirectFull() {
+            const n = document.getElementById('direct-full-name').value.trim();
+            const p = document.getElementById('direct-full-phone').value.trim();
+            const chk = document.getElementById('direct-full-privacy').checked;
+            
+            if(!n || !p) { alert("성함과 연락처를 입력해주세요!"); return; }
+            if(p.length !== 13 || !p.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('direct-full-phone').focus(); return; }
+            if(!chk) { alert("개인정보 동의에 체크해주세요!"); return; }
+            
+            const prod = document.getElementById('direct-summary-prod').innerText;
+            const price = currentCalculatedPrice;
+            const gift = currentGiftStatusText;
+
+            // 데이터 포장 및 구글 서버 전송
+            const scriptURL = "https://script.google.com/macros/s/AKfycby_1x_FqN2kW6FJyoHDXw7IF_-Rgl4lD1n_msdM48sgXG7Ch1lMCnTKz5ytcylQAy-P/exec";
+            const formData = { type: "셀프요금설계 (바로 접수)", name: n, phone: p, summary: `상세정보 입력 전 빠른 원스톱 접수입니다.\n\n상품: ${prod}\n요금: ${price}\n혜택: ${gift}` };
+            
+            fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
+                .then(() => console.log('셀프요금설계 바로접수 전송 완료'))
+                .catch(error => console.error('전송 에러:', error));
+
+            alert(`[셀프 다이렉트 접수 성공! 🎉]\n\n상품: ${prod}\n요금: ${price}\n혜택: ${gift}\n성함: ${n}\n연락처: ${p}\n\n꼼꼼히 확인 후 신속하게 개통해 드리겠습니다!`);
+            
+            closeDirectPopup();
+            document.getElementById('direct-full-name').value = ''; document.getElementById('direct-full-phone').value = ''; document.getElementById('direct-full-privacy').checked = false;
         }
     </script>
 </body>
