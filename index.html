@@ -382,7 +382,7 @@
             <span class="nav-logo-text">사거리인터넷</span>
         </a>
        <div class="nav-menu">
-            <a href="#" onclick="openQuickPopup(event)">초간단신청</a>
+            <a href="#" onclick="openQuickPopup(event)">간단요금표</a>
             <a href="#calculator-section">셀프요금설계</a>
             <a href="boss.html" target="_blank" class="boss-highlight-btn">사장님전용</a>
             <a href="#" onclick="openGiftPopup(event)">사은품 라인업</a>
@@ -701,7 +701,7 @@
         </div>
     </div>
 
-    <!-- 초간단신청 팝업 -->
+    <!-- 간단요금표 팝업 -->
     <div id="quick-popup-overlay" class="quick-popup-overlay" onclick="closeQuickPopup(event)">
         <div class="quick-popup-content" onclick="event.stopPropagation()">
             <button class="quick-close-btn" onclick="closeQuickPopup(event)">✕ 닫기</button>
@@ -1732,7 +1732,7 @@
             document.getElementById('fast-privacy-check').checked = false;
         }
 
-        // 🚀 2. 초간단신청 팝업 제출
+        // 🚀 2. 간단요금표 팝업 제출
         function submitQuickApply() {
             const name = document.getElementById('quick-name').value.trim(); 
             const phone = document.getElementById('quick-phone').value.trim();
@@ -1743,17 +1743,17 @@
             // 데이터 포장 및 구글 서버 전송
             const scriptURL = "https://script.google.com/macros/s/AKfycby_1x_FqN2kW6FJyoHDXw7IF_-Rgl4lD1n_msdM48sgXG7Ch1lMCnTKz5ytcylQAy-P/exec";
             const formData = { 
-                type: "초간단신청", 
+                type: "간단요금표", 
                 name: name, 
                 phone: phone, 
                 summary: `통신사: ${quickData.telecom}\n상품: ${quickData.product} / 속도: ${quickData.speed}\n요금: 월 ${quickData.price}원\n사은품: ${quickData.gift}` 
             };
             
             fetch(scriptURL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
-                .then(() => console.log('초간단신청 전송 완료'))
+                .then(() => console.log('간단요금표 전송 완료'))
                 .catch(error => console.error('전송 에러:', error));
 
-            alert(`[초간단신청 접수 성공! 🎉]\n\n${name} 고객님!\n선택하신 [ ${quickData.telecom} / ${quickData.product} / ${quickData.speed} ]\n(월 ${quickData.price}원 / 사은품 ${quickData.gift})\n\n가장 빠른 시간 내에 연락드리겠습니다!`);
+            alert(`[간단요금표 접수 성공! 🎉]\n\n${name} 고객님!\n선택하신 [ ${quickData.telecom} / ${quickData.product} / ${quickData.speed} ]\n(월 ${quickData.price}원 / 사은품 ${quickData.gift})\n\n가장 빠른 시간 내에 연락드리겠습니다!`);
             
             document.getElementById('quick-popup-overlay').classList.remove('active'); 
             document.body.style.overflow = ''; 
