@@ -223,11 +223,11 @@
 .text-btn.locked { opacity: 0.4; cursor: not-allowed; position: relative; border-color: #E2E8F0 !important; background: #EDF2F7 !important; color: #A0AEC0 !important; }
 .text-btn.locked::after { content: '🔒'; position: absolute; right: 10px; font-size: 16px; }
         .gift-popup-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .gift-popup-card { border: 2px solid #E2E8F0; border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; background: #fff; }
+        .gift-popup-card { border: 2px solid #E2E8F0; border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; background: #fff; display: flex; flex-direction: column; height: 100%; }
         .gift-popup-card:hover { border-color: #3182CE; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         .gift-popup-card img { width: 100%; height: 140px; object-fit: contain; margin-bottom: 12px; }
-        .gift-popup-name { font-weight: 900; font-size: 16px; color: #1A202C; margin-bottom: 10px; word-break: keep-all; line-height: 1.3; }
-        .gift-popup-btn { background: #EBF8FF; color: #2B6CB0; font-size: 13px; font-weight: 900; padding: 10px; border-radius: 8px; transition: 0.2s; }
+        .gift-popup-name { font-weight: 900; font-size: 16px; color: #1A202C; margin-bottom: 10px; word-break: keep-all; line-height: 1.3; flex-grow: 1; }
+        .gift-popup-btn { background: #EBF8FF; color: #2B6CB0; font-size: 13px; font-weight: 900; padding: 10px; border-radius: 8px; transition: 0.2s; margin-top: auto; }
         .gift-popup-card:hover .gift-popup-btn { background: #3182CE; color: #fff; }
         .gift-detail-img { width: 100%; height: 250px; object-fit: contain; margin-bottom: 20px; }
         .gift-detail-title { font-size: 24px; font-weight: 900; color: #111; margin-bottom: 15px; border-bottom: 2px solid #E2E8F0; padding-bottom: 12px; }
@@ -352,14 +352,19 @@
         }
 
         @media (max-width: 650px) {
-            .gift-popup-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; } 
-            .gift-popup-card { padding: 12px 8px !important; }
-            .gift-popup-card img { height: 90px !important; margin-bottom: 8px !important; }
-            .gift-popup-name { font-size: 13px !important; line-height: 1.2 !important; margin-bottom: 8px !important; word-break: keep-all; }
-            .gift-popup-btn { font-size: 11px !important; padding: 8px 4px !important; word-break: keep-all; }
+            /* 💥 3. 요금계산기 사은품도 팝업과 동일하게 2줄 배열로 통일! */
+            .gift-popup-grid, .gift-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; } 
+            .gift-popup-card, .gift-card { padding: 12px 8px !important; display: flex; flex-direction: column; height: 100%; }
+            .gift-popup-card img, .gift-card img { height: 90px !important; margin-bottom: 8px !important; }
+            .gift-popup-name, .gift-title { font-size: 13px !important; line-height: 1.2 !important; margin-bottom: 8px !important; word-break: keep-all; flex-grow: 1; }
+            .gift-popup-btn { font-size: 11px !important; padding: 8px 4px !important; word-break: keep-all; margin-top: auto; }
             .gift-popup-header { padding: 15px !important; }
             .gift-popup-header h3 { font-size: 18px !important; }
             .gift-detail-img { height: 200px; }
+            
+            /* 💥 4. 팝업 하단 버튼이 짤리지 않도록 스크롤 맨 밑에 투명 여백 확보! */
+            #gift-popup-list-view, #gift-popup-detail-view { padding-bottom: 90px !important; }
+            
             #btn-direct-apply-trigger { font-size: 18px !important; padding: 16px !important; }
             #direct-btn-group button { padding: 12px 2px !important; }
             #direct-btn-group button span:first-child { font-size: 15px !important; }
@@ -1818,22 +1823,33 @@ function copyAccountInfoPop() {
 
             gifts.forEach(gift => {
                 const card = document.createElement('div'); card.className = 'gift-card';
-                card.style.padding = '12px 10px'; 
                 card.style.cursor = 'pointer';
                 card.style.position = 'relative'; 
-                card.style.border = '2px solid #E2E8F0';
-                card.style.borderRadius = '14px';
-                card.style.background = '#fff';
                 card.style.transition = 'all 0.2s ease-in-out'; 
 
+                // 💥 1. 양쪽 텍스트의 미세한 공백을 .trim()으로 제거하여 완벽하게 이름 매칭!
+                const isAlreadySelected = (selectedGift && selectedGift[4].trim() === gift[4].trim());
+                
+                if (isAlreadySelected) {
+                    card.style.border = '3px solid #E53E3E'; 
+                    card.style.background = '#FFF5F5'; 
+                    card.style.boxShadow = '0 10px 20px rgba(229, 62, 62, 0.15)'; 
+                    card.style.transform = 'translateY(-4px)'; 
+                } else {
+                    card.style.border = '2px solid #E2E8F0';
+                    card.style.background = '#fff';
+                    card.style.boxShadow = 'none';
+                    card.style.transform = 'translateY(0)';
+                }
+
                 card.innerHTML = `
-                    <div class="gift-check-badge" style="display:none; position:absolute; top:-12px; right:-12px; background:#E53E3E; color:#fff; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:900; box-shadow:0 4px 10px rgba(229, 62, 62, 0.3); z-index:10; border:2px solid #fff; letter-spacing:-0.5px;">✓ 선택완료</div>
+                    <div class="gift-check-badge" style="display:${isAlreadySelected ? 'block' : 'none'}; position:absolute; top:-12px; right:-12px; background:#E53E3E; color:#fff; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:900; box-shadow:0 4px 10px rgba(229, 62, 62, 0.3); z-index:10; border:2px solid #fff; letter-spacing:-0.5px;">✓ 선택완료</div>
                     <img src="${gift[5]}" alt="${gift[4]}" style="height:120px; margin-bottom:8px; pointer-events:none;">
-                    <div class="gift-title" style="font-size:14px; font-weight:500; line-height:1.3; color:#4A5568; word-break:keep-all; pointer-events:none;">${gift[4]}</div>
+                    <div class="gift-title" style="font-size:14px; font-weight:${isAlreadySelected ? '900' : '500'}; line-height:1.3; color:${isAlreadySelected ? '#1A202C' : '#4A5568'}; word-break:keep-all; pointer-events:none;">${gift[4]}</div>
                 `;
 
                 card.onclick = function() {
-                    const isAlreadySelected = (selectedGift && selectedGift[4] === gift[4]);
+                    const currentlySelected = (selectedGift && selectedGift[4].trim() === gift[4].trim());
                     document.querySelectorAll('#calculator-gift-list .gift-card').forEach(c => {
                         c.style.border = '2px solid #E2E8F0'; 
                         c.style.background = '#fff';
@@ -1844,7 +1860,7 @@ function copyAccountInfoPop() {
                         c.querySelector('.gift-title').style.color = '#4A5568';
                     });
 
-                    if (isAlreadySelected) {
+                    if (currentlySelected) {
                         selectedGift = null; 
                         const subsidyText = document.getElementById('res-subsidy').innerText;
                         currentGiftStatusText = `현금 사은품 ${subsidyText} 증정`; 
