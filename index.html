@@ -588,7 +588,10 @@
             </div>
         </div>
 
-        <div class="direct-step-title">6. 통신요금 납부 방법</div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 8px;">
+    <div class="direct-step-title" style="margin-top: 0; margin-bottom: 0;">6. 통신요금 납부 방법</div>
+    <button type="button" id="btn-copy-account" style="display: none; background: var(--gold-color); color: #111; border: none; padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15);" onclick="copyAccountInfo()" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">🎁 사은품 계좌와 동일</button>
+</div>
         <div class="direct-option-group" id="direct-paytype-group">
             <div class="direct-option-btn" onclick="selectDirectPayType('계좌', this)">🏦 자동이체 (계좌)</div>
             <div class="direct-option-btn" onclick="selectDirectPayType('카드', this)">💳 신용카드</div>
@@ -1282,6 +1285,8 @@
                 document.getElementById('direct-appliance-layer').style.display = 'none';
                 document.getElementById('main-full-bank-layer').style.display = 'none';
                 document.getElementById('main-full-card-layer').style.display = 'none';
+           const copyBtn = document.getElementById('btn-copy-account');
+        if (copyBtn) copyBtn.style.display = 'none';
             }
         }
 
@@ -1362,6 +1367,7 @@
                 document.getElementById('direct-giftbank-layer').style.display = 'none';
                 document.getElementById('direct-appliance-layer').style.display = 'block';
             }
+       checkCopyButtonVisibility();
         }
 
         // 납부 방법 (계좌/카드)
@@ -1377,6 +1383,7 @@
                 document.getElementById('main-full-bank-layer').style.display = 'none';
                 document.getElementById('main-full-card-layer').style.display = 'grid';
             }
+        checkCopyButtonVisibility();
         }
 
         // 휴대폰 번호 자동 하이픈 & 010 필터링
@@ -1661,6 +1668,9 @@
             document.getElementById('main-full-gifttype').value = "";
             document.getElementById('main-full-appliance').value = "";
             document.getElementById('main-full-paytype').value = "";
+
+const copyBtn2 = document.getElementById('btn-copy-account');
+        if (copyBtn2) copyBtn2.style.display = 'none';
             
             document.getElementById('direct-speed-layer').style.display = 'none';
             document.getElementById('direct-tv-layer').style.display = 'none';
@@ -2173,6 +2183,46 @@
                 document.body.style.overflow = ''; 
             }
         }
+    // 💥 [신규] '계좌 복사' 버튼 표시 조건 체크 함수
+function checkCopyButtonVisibility() {
+    const giftType = document.getElementById('main-full-gifttype').value;
+    const payType = document.getElementById('main-full-paytype').value;
+    const copyBtn = document.getElementById('btn-copy-account');
+
+    if (copyBtn) {
+        // 사은품=현금 && 납부방법=계좌 일 때만 버튼 노출!
+        if (giftType === '현금' && payType === '계좌') {
+            copyBtn.style.display = 'block';
+        } else {
+            copyBtn.style.display = 'none';
+        }
+    }
+}
+
+// 💥 [신규] 계좌 정보 복사 실행 함수
+function copyAccountInfo() {
+    const giftBankName = document.getElementById('main-full-giftbankname').value;
+    const giftBankNum = document.getElementById('main-full-giftbanknum').value.trim();
+
+    // 값이 비어있는지 체크
+    if (!giftBankName || !giftBankNum) {
+        alert("위쪽 💰 '사은품 입금 계좌'의 은행명과 계좌번호를 먼저 입력해 주세요!");
+        document.getElementById('main-full-giftbanknum').focus();
+        return;
+    }
+
+    // 값 복사
+    document.getElementById('main-full-bankname').value = giftBankName;
+    document.getElementById('main-full-banknum').value = giftBankNum;
+
+    // 시각적 피드백 (고객이 복사된 걸 인지할 수 있게 배경색 살짝 깜빡임)
+    const payBankLayer = document.getElementById('main-full-bank-layer');
+    payBankLayer.style.transition = "background-color 0.3s";
+    payBankLayer.style.backgroundColor = "#FFFDF5"; // 연한 노란색
+    setTimeout(() => {
+        payBankLayer.style.backgroundColor = "transparent";
+    }, 600);
+}
     </script>
 </body>
 </html>
