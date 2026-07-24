@@ -215,8 +215,13 @@
         .theme-LG .quick-plan-header { background: #E50073; } .theme-LG .quick-plan-card:hover { border-color: #E50073; } .theme-LG .quick-plan-gift .gift-label, .theme-LG .quick-plan-gift .gift-val { color: #E50073; } .theme-LG .quick-plan-card:hover .quick-plan-select-btn { background: #E50073; border-color: #E50073; color: #fff; }
         .theme-스카이 .quick-plan-header { background: #FF9800; } .theme-스카이 .quick-plan-card:hover { border-color: #FF9800; } .theme-스카이 .quick-plan-gift .gift-label, .theme-스카이 .quick-plan-gift .gift-val { color: #FF9800; } .theme-스카이 .quick-plan-card:hover .quick-plan-select-btn { background: #FF9800; border-color: #FF9800; color: #fff; }
 
-        .gift-popup-header { background: #1A202C; color: #fff; padding: 20px; text-align: center; position: relative; border-radius: 20px 20px 0 0; }
-        .gift-popup-header h3 { margin: 0; font-size: 22px; font-weight: 900; }
+        .gift-popup-header { display: flex; align-items: center; justify-content: space-between; background: #1A202C; color: #fff; padding: 20px; border-radius: 20px 20px 0 0; }
+.gift-popup-header h3 { margin: 0; font-size: 22px; font-weight: 900; text-align: left; flex: 1; word-break: keep-all; line-height: 1.3; }
+.gift-popup-header .quick-close-btn { position: static !important; margin-left: 10px; flex-shrink: 0; }
+
+/* 💥 [신규] 사은품 선택 시 불가 옵션 자물쇠(잠금) 스타일 */
+.text-btn.locked { opacity: 0.4; cursor: not-allowed; position: relative; border-color: #E2E8F0 !important; background: #EDF2F7 !important; color: #A0AEC0 !important; }
+.text-btn.locked::after { content: '🔒'; position: absolute; right: 10px; font-size: 16px; }
         .gift-popup-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .gift-popup-card { border: 2px solid #E2E8F0; border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; background: #fff; }
         .gift-popup-card:hover { border-color: #3182CE; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
@@ -347,8 +352,13 @@
         }
 
         @media (max-width: 650px) {
-            .gift-popup-grid { grid-template-columns: 1fr; } 
-            .gift-popup-card img { height: 180px; }
+            .gift-popup-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; } 
+            .gift-popup-card { padding: 12px 8px !important; }
+            .gift-popup-card img { height: 90px !important; margin-bottom: 8px !important; }
+            .gift-popup-name { font-size: 13px !important; line-height: 1.2 !important; margin-bottom: 8px !important; word-break: keep-all; }
+            .gift-popup-btn { font-size: 11px !important; padding: 8px 4px !important; word-break: keep-all; }
+            .gift-popup-header { padding: 15px !important; }
+            .gift-popup-header h3 { font-size: 18px !important; }
             .gift-detail-img { height: 200px; }
             #btn-direct-apply-trigger { font-size: 18px !important; padding: 16px !important; }
             #direct-btn-group button { padding: 12px 2px !important; }
@@ -617,9 +627,12 @@
                 <button id="btn-toggle-gift" class="c-tab-btn" style="width: 100%; max-width: 760px; background: #3182CE; color: #fff; border: none; padding: 18px; font-size: 16px; font-weight: 900; border-radius: 12px; cursor: pointer;" onclick="toggleGiftMode()">🎁 현금 대신 가전 사은품으로 보기</button>
             </div>
             <div id="calculator-gift-panel" style="margin-top: 30px; display: none;">
-                <div class="calc-group-title" style="border-left:none;">🎁 선택 가능한 가전 사은품</div>
-                <div id="calculator-gift-list" class="gift-grid"></div>
-            </div>
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px;">
+        <div class="calc-group-title" style="border-left:none; margin-bottom: 0;">🎁 선택 가능한 가전 사은품</div>
+        <button onclick="resetGiftSelection()" style="background: #F7FAFC; color: #4A5568; border: 2px solid #E2E8F0; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 900; cursor: pointer; transition: 0.2s;">🔄 가전 초기화</button>
+    </div>
+    <div id="calculator-gift-list" class="gift-grid"></div>
+</div>
 
             <div style="margin-top: 55px; text-align: center;">
     <button id="btn-direct-apply-trigger" class="quick-submit-btn" style="font-size: 26px; padding: 26px 20px; background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%); color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); border-radius: 18px; width: 100%; max-width: 760px; margin: 0 auto; letter-spacing: -1px; animation: trigger-pulse 1.8s ease-in-out infinite alternate;" onclick="openDirectPopup()">🚀 위 조건으로 가입 신청하기</button>
@@ -966,7 +979,7 @@
         let giftDetailData = []; 
         let isGiftMode = false;
         let selectedGift = null;
-
+        let currentViewedPopupGiftName = ""; // 👈 [신규] 방금 본 팝업 가전 이름 기억용
         function parseCsvText(text) {
             const rows = []; let currentRow = []; let currentCell = ''; let inQuotes = false;
             for (let i = 0; i < text.length; i++) {
@@ -1401,6 +1414,7 @@ function copyAccountInfoPop() {
 
         function showGiftDetail(index) {
             const item = giftDetailData[index]; const name = item[0] || ''; const img = item[1] || '';
+            currentViewedPopupGiftName = name; // 👈 [추가] 팝업 열릴 때 이 가전 이름을 내장 메모리에 찜!
             let rawDesc = item[2] || '상세 설명이 등록되지 않았습니다.';
             let styledDesc = rawDesc.replace(/\[제품 설명\]/g, '<br><br><span style="color:#3182CE; font-weight:900; display:block; margin-bottom:5px;">🔹 제품 설명</span>').replace(/\[가격\]/g, '<br><br><span style="color:#E53E3E; font-weight:900; display:block; margin-bottom:5px;">💰 혜택 정보</span>');
             document.getElementById('gift-popup-list-view').style.display = 'none'; document.getElementById('gift-popup-detail-view').style.display = 'block';
@@ -1415,6 +1429,48 @@ function copyAccountInfoPop() {
             window.location.href = '#calculator-section';
             const calcWrapper = document.querySelector('.calc-wrapper');
             if(calcWrapper) { calcWrapper.style.boxShadow = "0 0 30px rgba(255,152,0,0.8)"; setTimeout(() => { calcWrapper.style.boxShadow = "0 15px 40px rgba(0,0,0,0.4)"; }, 1500); }
+
+            // 💥 [매직 UX 로직] 💥
+            if (!isGiftMode) {
+                isGiftMode = true; 
+                const toggleBtn = document.getElementById('btn-toggle-gift');
+                const subsidyBox = document.querySelector('.subsidy-box'); 
+                const giftPanel = document.getElementById('calculator-gift-panel');
+                if (subsidyBox) subsidyBox.style.display = 'none'; 
+                if (giftPanel) giftPanel.style.display = 'block';
+                if (toggleBtn) { toggleBtn.textContent = '↩️ 다시 현금 사은품으로 보기'; toggleBtn.style.background = '#DD6B20'; }
+            }
+
+            if (currentViewedPopupGiftName) {
+                selectedGift = { 4: currentViewedPopupGiftName }; // 가전 찜하기
+                currentGiftStatusText = `🎁 가전: ${currentViewedPopupGiftName}`; 
+                
+                curProd = "결합"; // 무조건 '결합'으로 강제 이동
+                
+                if (curProv) {
+                    if (!currentActiveSpeed || currentActiveSpeed === "100M") {
+                        currentActiveSpeed = "500M"; // 100M면 500M로 강제 격상
+                    }
+                    updateOptions(); // 자물쇠 걸린 상태로 버튼 렌더링
+                    calcDirectResult(); // 결과창 갱신
+                } else {
+                    updateOptions(); 
+                    setTimeout(() => {
+                        alert(`[🎁 ${currentViewedPopupGiftName}]\n혜택 조건(결합/500M 이상)으로 자동 세팅되었습니다!\n\n위쪽에서 원하시는 '통신사 브랜드'를 먼저 선택해 주세요.`);
+                    }, 300);
+                }
+            }
+        }
+
+        // 💥 [신규] 초기화 리셋 함수
+        function resetGiftSelection() {
+            selectedGift = null;
+            currentGiftStatusText = "현금 사은품 대기 중";
+            updateOptions(); // 자물쇠 풀린 상태로 재렌더링
+            if (curProv && curProd) {
+                calcDirectResult(); 
+            }
+            alert("🔄 가전 선택이 초기화되었습니다. 모든 상품을 자유롭게 선택 가능합니다.");
         }
 
         function openQuickPopup(e) { 
@@ -1546,18 +1602,32 @@ function copyAccountInfoPop() {
 
         function setProduct(p, el) { 
             isCalculatorInteracted = true;
-            if(el.classList.contains('disabled')) { alert('⚠️ 선택하신 가전 사은품은 본사 정식 [인터넷 + TV 결합상품] 가입 시에만 지급이 가능합니다!\n요금할인형 및 인터넷 단독 상품은 결합 마진이 제외되어 가전 사은품 혜택을 받으실 수 없습니다.'); return; }
+            // 💥 가전 선택 상태에서 '단독' 누르면 차단!
+            if (selectedGift && p === '단독') {
+                alert("⚠️ 선택하신 프리미엄 가전은 '인터넷+TV 결합' 가입 시에만 증정됩니다.\n단독 상품을 원하시면 우측 상단의 [🔄 가전 초기화] 버튼을 눌러주세요!");
+                return;
+            }
+            if(el.classList.contains('disabled')) { alert('⚠️ 선택하신 가전 사은품은 본사 정식 [인터넷 + TV 결합상품] 가입 시에만 지급이 가능합니다!'); return; }
             document.querySelectorAll('#product-type-box .text-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); curProd = p; updateOptions(); 
         }
 
-        function toggleRegionAccordion() { const panel = document.getElementById('region-list-panel'); const arrow = document.getElementById('accordion-arrow'); if(panel && arrow) { panel.classList.toggle('open'); arrow.classList.toggle('open'); } }
-        
         function updateOptions() {
-            resetToCashMode();
+            // resetToCashMode(); 👈 삭제됨! 통신사 바꿔도 가전모드 유지!
             const speedBox = document.getElementById('speed-box'); if (!speedBox) return; speedBox.innerHTML = '';
             if(!curProv || !curProd) { return; }
+            
             const step3Title = document.getElementById('step3-title'); const step4Title = document.getElementById('step4-title');
-            document.querySelectorAll('#product-type-box .text-btn').forEach(b => { if(b.textContent.includes(curProd === '단독' ? '단독' : (curProd === '결합' ? '결합' : '요금할인형'))) { b.classList.add('active'); } else { b.classList.remove('active'); } });
+            
+            // 상품 탭(단독/결합) 자물쇠 처리
+            document.querySelectorAll('#product-type-box .text-btn').forEach(b => { 
+                b.classList.remove('active', 'locked'); 
+                if(b.textContent.includes(curProd === '단독' ? '단독' : (curProd === '결합' ? '결합' : '요금할인형'))) { 
+                    b.classList.add('active'); 
+                }
+                if (selectedGift && (b.textContent.includes('단독') || b.textContent.includes('요금할인형'))) {
+                    b.classList.add('locked'); // 단독에 자물쇠 걸기
+                }
+            });
             
             if(curProd === '요금할인형') {
                 step3Title.textContent = (curProv === 'SK') ? "3단계: SK 자회사 독점! 결합 특가 라인업을 골라주세요" : "3단계: 스카이라이프 독점! 결합 특가 라인업을 골라주세요";
@@ -1565,6 +1635,7 @@ function copyAccountInfoPop() {
             } else {
                 step3Title.textContent = "3단계: 희망하시는 인터넷 속도를 골라주세요"; if(step4Title) step4Title.textContent = "4단계: TV 요금제 상품을 선택해 주세요";
             }
+            
             const filteredRows = allData.filter(row => {
                 if (!row[0] || !row[1]) return false;
                 const sProv = row[0].trim(), sProd = row[1].trim(); let isMatch = false;
@@ -1584,13 +1655,35 @@ function copyAccountInfoPop() {
                     slot.innerHTML = `<div class="accordion-wrapper"><button class="accordion-trigger" onclick="toggleRegionAccordion()"><span style="font-weight:900; color:#E53E3E;">[SK POP 전용]</span><span style="margin-left:5px;">📍 설치 가능 지역 확인 ▼</span><span class="accordion-arrow" id="accordion-arrow">▼</span></button><div class="accordion-panel" id="region-list-panel"><div class="panel-scroll-box"><table class="region-table"><thead><tr><th style="width:70px;">시/도</th><th>상세 구역 명칭</th></tr></thead><tbody>${tableRowsHtml}</tbody></table></div></div></div>`;
                 } else { slot.innerHTML = `<div class="normal-region-box">🏠 전국 어디서나<br>전지역 즉시 설치!</div>`; }
             }
+            
             if (speeds.length > 0) {
+                // 💥 속도 버튼 렌더링 시 자물쇠 처리
+                if (selectedGift && currentActiveSpeed === '100M') {
+                    currentActiveSpeed = speeds.includes('500M') ? '500M' : speeds[0];
+                } else if (!speeds.includes(currentActiveSpeed)) {
+                    currentActiveSpeed = speeds[0];
+                }
+
                 speeds.forEach((speed, i) => {
-                    const btn = document.createElement('div'); btn.className = 'text-btn' + (i === 0 ? ' active' : ''); btn.textContent = speed;
-                    btn.onclick = function() { document.querySelectorAll('#speed-box .text-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); updateTvOptions(filteredRows, speed); };
+                    const btn = document.createElement('div'); 
+                    const isLocked = (selectedGift && speed === '100M'); // 100M에 자물쇠 걸기
+                    
+                    btn.className = 'text-btn' + (speed === currentActiveSpeed ? ' active' : '') + (isLocked ? ' locked' : ''); 
+                    btn.textContent = speed;
+                    
+                    btn.onclick = function() { 
+                        if (isLocked) {
+                            alert("⚠️ 선택하신 프리미엄 가전은 '500M 이상' 요금제 가입 시에만 증정됩니다.\n100M 상품을 원하시면 우측 상단의 [🔄 가전 초기화] 버튼을 눌러주세요!");
+                            return;
+                        }
+                        currentActiveSpeed = speed;
+                        document.querySelectorAll('#speed-box .text-btn').forEach(b => b.classList.remove('active')); 
+                        this.classList.add('active'); 
+                        updateTvOptions(filteredRows, speed); 
+                    };
                     speedBox.appendChild(btn);
                 });
-                updateTvOptions(filteredRows, speeds[0]);
+                updateTvOptions(filteredRows, currentActiveSpeed);
             }
         }
 
