@@ -259,6 +259,13 @@
             .m-btn-direct { background: var(--gold-color); color: #111; }
             body { padding-bottom: 85px !important; }
         }
+    /* 💥 [신규] 영수증 내 가입 가능 통신사 역방향 필터링 로고 */
+        .receipt-telecoms { display: flex; justify-content: center; gap: 10px; margin-bottom: 12px; }
+        .t-logo { display: inline-block; padding: 4px 14px; border-radius: 8px; font-size: 13px; font-weight: 900; color: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.5); transition: all 0.3s ease; }
+        /* 활성화(Active) 되었을 때 각 통신사 고유 컬러로 빛남 */
+        .t-logo.active.sk { color: #fff; background: #E60012; border-color: #E60012; box-shadow: 0 0 15px rgba(230,0,18,0.4); }
+        .t-logo.active.kt { color: #fff; background: #00B1A0; border-color: #00B1A0; box-shadow: 0 0 15px rgba(0,177,160,0.4); }
+        .t-logo.active.lg { color: #fff; background: #E50073; border-color: #E50073; box-shadow: 0 0 15px rgba(229,0,115,0.4); }
     </style>
 </head>
 <body>
@@ -305,16 +312,18 @@
             </div>
         </div>
 
-        <!-- 2. 상세 옵션 패널들 (선택 시 아래로 펼쳐짐) -->
+<!-- 2. 상세 옵션 패널들 -->
         <div class="options-wrapper">
             <!-- 인터넷 옵션 -->
             <div id="panel-net" class="option-panel">
                 <div class="opt-row">
                     <div class="opt-title">인터넷 속도 선택</div>
                     <div class="opt-choices" id="opt-net-speed">
-                        <div class="opt-choice-btn active" onclick="selectOption('net-speed', '100M', this)">100M (가성비)</div>
-                        <div class="opt-choice-btn" onclick="selectOption('net-speed', '500M', this)">500M (권장)</div>
-                        <div class="opt-choice-btn" onclick="selectOption('net-speed', '1G', this)">1G (최고속)</div>
+                        <!-- 💡 시트의 '옵션명'과 정확히 일치하도록 세팅 -->
+                        <div class="opt-choice-btn active" onclick="selectOption('net-speed', '100M (가성비 일반형)', this)">100M (일반형)</div>
+                        <div class="opt-choice-btn" onclick="selectOption('net-speed', '100M (결제안심 포스형)', this)">100M (결제안심)</div>
+                        <div class="opt-choice-btn" onclick="selectOption('net-speed', '500M (사무실/다수PC)', this)">500M (권장)</div>
+                        <div class="opt-choice-btn" onclick="selectOption('net-speed', '1G (최고속 프리미엄)', this)">1G (최고속)</div>
                     </div>
                 </div>
                 <div class="opt-row">
@@ -335,7 +344,7 @@
                     <div class="opt-title">전화기 종류</div>
                     <div class="opt-choices" id="opt-phone-type">
                         <div class="opt-choice-btn active" onclick="selectOption('phone-type', '일반/키폰', this)">일반/키폰</div>
-                        <div class="opt-choice-btn" onclick="selectOption('phone-type', '팩스', this)">팩스 (FAX)</div>
+                        <div class="opt-choice-btn" onclick="selectOption('phone-type', '팩스 (FAX)', this)">팩스 (FAX)</div>
                     </div>
                 </div>
                 <div class="opt-row">
@@ -355,8 +364,8 @@
                 <div class="opt-row">
                     <div class="opt-title">TV 셋톱박스 화질</div>
                     <div class="opt-choices" id="opt-tv-type">
-                        <div class="opt-choice-btn active" onclick="selectOption('tv-type', '베이직', this)">베이직 (일반 화질)</div>
-                        <div class="opt-choice-btn" onclick="selectOption('tv-type', '프리미엄', this)">프리미엄 (UHD)</div>
+                        <div class="opt-choice-btn active" onclick="selectOption('tv-type', '베이직 (일반 화질)', this)">베이직 (일반 화질)</div>
+                        <div class="opt-choice-btn" onclick="selectOption('tv-type', '프리미엄 (UHD)', this)">프리미엄 (UHD)</div>
                     </div>
                 </div>
                 <div class="opt-row">
@@ -390,8 +399,8 @@
                 <div class="opt-row">
                     <div class="opt-title">보안 상품 선택</div>
                     <div class="opt-choices" id="opt-s1-type">
-                        <div class="opt-choice-btn active" onclick="selectOption('s1-type', '출동경비', this)">출동경비 (방범)</div>
-                        <div class="opt-choice-btn" onclick="selectOption('s1-type', '근태관리', this)">지문/근태관리</div>
+                        <div class="opt-choice-btn active" onclick="selectOption('s1-type', '출동경비 (방범)', this)">출동경비 (방범)</div>
+                        <div class="opt-choice-btn" onclick="selectOption('s1-type', '지문/근태관리', this)">지문/근태관리</div>
                         <div class="opt-choice-btn" onclick="selectOption('s1-type', '풀패키지', this)">풀패키지</div>
                     </div>
                 </div>
@@ -401,9 +410,17 @@
         <!-- 3. 실시간 영수증 -->
         <div class="live-receipt-box">
             <div class="receipt-header">📊 사장님 맞춤 설계 (표준 요금)</div>
-            <div class="receipt-price">월 <span id="live-price">0</span>원</div>
+            
+            <!-- 💡 역방향 필터링 통신사 로고 존 -->
+            <div class="receipt-telecoms" id="receipt-telecoms">
+                <span class="t-logo sk" id="t-sk">SK</span>
+                <span class="t-logo kt" id="t-kt">KT</span>
+                <span class="t-logo lg" id="t-lg">LG</span>
+            </div>
+
+            <div class="receipt-price" id="live-price-wrapper">월 <span id="live-price">0</span>원</div>
             <div class="receipt-gift" id="live-gift">🎁 상품을 선택해 주세요</div>
-            <button class="popup-submit-btn" style="max-width:400px; margin: 0 auto; display:block;" onclick="alert('2단계 구글시트 연동 후 작동할 접수 버튼입니다!')">🚀 이 조건으로 다이렉트 떡값 상담</button>
+            <button class="popup-submit-btn" style="max-width:400px; margin: 0 auto; display:block;" onclick="alert('폼 팝업 연동 예정입니다!')">🚀 이 조건으로 다이렉트 떡값 상담</button>
         </div>
     </div>
 
@@ -602,24 +619,56 @@
     </div>
 
     <script>
-        // --- 상태 관리 객체 ---
+        // --- 구글 시트 데이터 로드 및 파싱 ---
+        const sheetId = '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
+        const bossGid = '936278953'; // 사장님이 생성하신 탭 GID
+        const bossCsvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${bossGid}&_=${Date.now()}`;
+        
+        let bossData = [];
+
+        function parseCsvText(text) {
+            const rows = []; let currentRow = []; let currentCell = ''; let inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i]; const nextChar = text[i + 1];
+                if (char === '"') { if (inQuotes && nextChar === '"') { currentCell += '"'; i++; } else { inQuotes = !inQuotes; } } 
+                else if (char === ',' && !inQuotes) { currentRow.push(currentCell.trim()); currentCell = ''; }
+                else if ((char === '\r' || char === '\n') && !inQuotes) {
+                    if (char === '\r' && nextChar === '\n') { i++; }
+                    currentRow.push(currentCell.trim()); rows.push(currentRow); currentRow = []; currentCell = '';
+                } else { currentCell += char; }
+            }
+            if (currentCell !== '' || currentRow.length > 0) { currentRow.push(currentCell.trim()); rows.push(currentRow); }
+            return rows;
+        }
+
+        async function loadBossData() {
+            try { 
+                const response = await fetch(bossCsvUrl); 
+                const text = await response.text(); 
+                // 헤더(1행) 제외하고 데이터 저장
+                bossData = parseCsvText(text).slice(1).filter(r => r[0] && r[0].trim() !== ""); 
+                calculateReceipt(); // 로딩 끝나면 즉시 계산 1회 실행
+            } catch(e) { console.error("BOSS 요금표 로드 실패", e); }
+        }
+
+        window.onload = function() { loadBossData(); };
+
+        // --- 상태 관리 객체 (기본값 세팅) ---
         const state = {
             products: { net: false, phone: false, tv: false, cctv: false, s1: false },
             options: {
-                'net-speed': '100M', 'net-pc': 1,
+                'net-speed': '100M (가성비 일반형)', 'net-pc': 1,
                 'phone-type': '일반/키폰', 'phone-cnt': 1,
-                'tv-type': '베이직', 'tv-cnt': 1,
+                'tv-type': '베이직 (일반 화질)', 'tv-cnt': 1,
                 'cctv-cnt': 1,
-                's1-type': '출동경비'
+                's1-type': '출동경비 (방범)'
             }
         };
 
-        // --- 상품 버튼 토글 (열기/닫기) ---
         function toggleProduct(prodId) {
             const btn = document.getElementById('btn-' + prodId);
             const panel = document.getElementById('panel-' + prodId);
-            
-            state.products[prodId] = !state.products[prodId]; // 상태 반전
+            state.products[prodId] = !state.products[prodId]; 
             
             if (state.products[prodId]) {
                 btn.classList.add('active');
@@ -628,96 +677,146 @@
                 btn.classList.remove('active');
                 if(panel) panel.classList.remove('active');
             }
-            calculateReceipt(); // 켤때/끌때 즉시 계산
+            calculateReceipt(); 
         }
 
-        // --- 상세 옵션 버튼 선택 ---
         function selectOption(optKey, optValue, element) {
             state.options[optKey] = optValue;
-            
-            // 같은 그룹 내 버튼 active 클래스 리셋 후 현재 버튼 활성화
             const siblings = element.parentNode.querySelectorAll('.opt-choice-btn');
             siblings.forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
-            
             calculateReceipt();
         }
 
-        // --- 수량(대수) 카운터 조절 ---
         function updateCount(optKey, change) {
-            let current = state.options[optKey];
-            let next = current + change;
-            if (next < 1) next = 1; // 최소 1대 제한
-            if (next > 20) next = 20; // 최대 20대 제한
-            
+            let next = state.options[optKey] + change;
+            if (next < 1) next = 1; 
+            if (next > 20) next = 20; // 일단 UI 최대 20대
             state.options[optKey] = next;
             document.getElementById('cnt-' + optKey).textContent = next;
-            
             calculateReceipt();
         }
 
-        // --- 실시간 영수증 계산 엔진 (가짜 데이터 적용됨) ---
+        // --- 💥 실시간 영수증 & 역방향 필터링 엔진 💥 ---
         function calculateReceipt() {
-            let totalPrice = 0;
-            let giftMsg = "";
-            let selectedCount = 0;
+            if(bossData.length === 0) return; // 시트 로딩 전이면 대기
 
-            // 1. 인터넷 계산 (100M: 2만원, 500M: 3만원, 1G: 4만원 / PC 1대당 5천원 추가)
+            let totalPrice = 0;
+            let totalGift = 0;
+            let selectedCount = 0;
+            let availableTelecoms = ['SK', 'KT', 'LG']; // 기본 3사 교집합용
+
+            // 교집합 구하는 함수 (선택한 상품이 안되는 통신사는 탈락시킴)
+            const intersectTelecoms = (telecomStr) => {
+                if(!telecomStr) return;
+                const arr = telecomStr.split(',').map(s => s.trim().toUpperCase());
+                availableTelecoms = availableTelecoms.filter(t => arr.includes(t));
+            };
+
+            // 시트에서 행 찾기 함수
+            const getRow = (cat, opt) => bossData.find(r => r[0].trim() === cat && r[1].trim() === opt);
+
+            // 1. 인터넷 및 PC대수
             if (state.products.net) {
                 selectedCount++;
-                let base = state.options['net-speed'] === '100M' ? 20000 : (state.options['net-speed'] === '500M' ? 30000 : 40000);
-                let pcExtra = (state.options['net-pc'] - 1) * 5000;
-                totalPrice += (base + pcExtra);
-            }
-
-            // 2. 인터넷전화 계산 (대당 5천원)
-            if (state.products.phone) {
-                selectedCount++;
-                totalPrice += (state.options['phone-cnt'] * 5000);
-            }
-
-            // 3. TV 계산 (대당 베이직 1만, 프리미엄 1.5만)
-            if (state.products.tv) {
-                selectedCount++;
-                let tvBase = state.options['tv-type'] === '베이직' ? 10000 : 15000;
-                totalPrice += (state.options['tv-cnt'] * tvBase);
-            }
-
-            // 4. CCTV 계산 (대당 1.5만)
-            if (state.products.cctv) {
-                selectedCount++;
-                totalPrice += (state.options['cctv-cnt'] * 15000);
-            }
-
-            // 5. 에스원 계산 (고정 5만원)
-            if (state.products.s1) {
-                selectedCount++;
-                totalPrice += 50000;
-            }
-
-            // --- 화면에 렌더링 ---
-            const priceEl = document.getElementById('live-price');
-            const giftEl = document.getElementById('live-gift');
-
-            if (selectedCount === 0) {
-                priceEl.textContent = "0";
-                giftEl.textContent = "🎁 상품을 선택해 주세요";
-            } else {
-                // 천단위 콤마 찍기
-                priceEl.textContent = totalPrice.toLocaleString();
+                let row = getRow('인터넷', state.options['net-speed']);
+                if(row) {
+                    totalPrice += parseInt(row[2]) || 0;
+                    totalGift += parseInt(row[4]) || 0;
+                    intersectTelecoms(row[5]);
+                }
                 
-                // 가짜 혜택 메시지 로직 (많이 고를수록 혜택 텍스트 변경)
-                if (selectedCount >= 3) {
-                    giftEl.innerHTML = `🎁 <b>최대 48만원 혜택 + 떡값 폭격 대기중!</b>`;
-                } else if (selectedCount === 2) {
-                    giftEl.innerHTML = `🎁 <b>결합 기본 혜택 + 사장님 추가 떡값!</b>`;
-                } else {
-                    giftEl.innerHTML = `🎁 <b>가입 지원금 전액 당일 지급!</b>`;
+                // 💡 PC 대수 로직 (10대 이상 상담문의 처리)
+                let pcCount = state.options['net-pc'];
+                if(pcCount >= 10) {
+                    // 10대 이상이면 즉시 '상담문의' 모드로 영수증 렌더링 후 함수 종료!
+                    document.getElementById('live-price-wrapper').innerHTML = `<span style="font-size:32px;">기업 특판 별도 상담</span>`;
+                    document.getElementById('live-gift').innerHTML = `🎁 <b>최대 혜택 및 요금 조율 진행</b>`;
+                    renderTelecomLogos(availableTelecoms);
+                    return; 
+                } else if(pcCount >= 3) {
+                    let pcRow = getRow('PC대수', '3~10대 (안심보상서비스)');
+                    if(pcRow) {
+                        let extraFee = parseInt(pcRow[3]) || 5500;
+                        totalPrice += extraFee * (pcCount - 2); // 3대부터 1대당 5500원 추가
+                    }
                 }
             }
+
+            // 2. 인터넷전화 (기본요금 + (추가요금 * (대수-1)))
+            if (state.products.phone) {
+                selectedCount++;
+                let row = getRow('전화', state.options['phone-type']);
+                if(row) {
+                    let base = parseInt(row[2]) || 0;
+                    let extra = parseInt(row[3]) || 0;
+                    let cnt = state.options['phone-cnt'];
+                    totalPrice += base + (extra * (cnt - 1));
+                    totalGift += parseInt(row[4]) || 0;
+                    intersectTelecoms(row[5]);
+                }
+            }
+
+            // 3. TV
+            if (state.products.tv) {
+                selectedCount++;
+                let row = getRow('TV', state.options['tv-type']);
+                if(row) {
+                    let base = parseInt(row[2]) || 0;
+                    let extra = parseInt(row[3]) || 0;
+                    let cnt = state.options['tv-cnt'];
+                    totalPrice += base + (extra * (cnt - 1));
+                    totalGift += parseInt(row[4]) || 0;
+                    intersectTelecoms(row[5]);
+                }
+            }
+
+            // 4. CCTV
+            if (state.products.cctv) {
+                selectedCount++;
+                let row = getRow('CCTV', '매장 CCTV');
+                if(row) {
+                    let base = parseInt(row[2]) || 0;
+                    let extra = parseInt(row[3]) || 0;
+                    let cnt = state.options['cctv-cnt'];
+                    totalPrice += base + (extra * (cnt - 1));
+                    totalGift += parseInt(row[4]) || 0;
+                    intersectTelecoms(row[5]);
+                }
+            }
+
+            // 5. 에스원
+            if (state.products.s1) {
+                selectedCount++;
+                let row = getRow('에스원', state.options['s1-type']);
+                if(row) {
+                    totalPrice += parseInt(row[2]) || 0;
+                    totalGift += parseInt(row[4]) || 0;
+                    intersectTelecoms(row[5]);
+                }
+            }
+
+            // --- 최종 영수증 UI 업데이트 ---
+            if(selectedCount === 0) {
+                document.getElementById('live-price-wrapper').innerHTML = `월 <span id="live-price">0</span>원`;
+                document.getElementById('live-gift').textContent = "🎁 상품을 선택해 주세요";
+                renderTelecomLogos([]); // 아무것도 선택 안했을 땐 로고 모두 끄기
+            } else {
+                // 천단위 콤마 찍고 월 단위 표시
+                document.getElementById('live-price-wrapper').innerHTML = `월 <span id="live-price">${totalPrice.toLocaleString()}</span>원 <span style="font-size:14px; color:#A0AEC0;">(3사 최저가 기준)</span>`;
+                document.getElementById('live-gift').innerHTML = `🎁 <b>설치 당일 떡값 ${totalGift.toLocaleString()}원 지원!</b>`;
+                renderTelecomLogos(availableTelecoms); // 필터링 된 통신사만 불 켜기!
+            }
         }
-        
-        // --- 팝업 모달 제어 (하단 푸터용) ---
+
+        // 역방향 필터링된 통신사 로고 불 켜주는 함수
+        function renderTelecomLogos(arr) {
+            document.getElementById('t-sk').className = 't-logo sk' + (arr.includes('SK') ? ' active' : '');
+            document.getElementById('t-kt').className = 't-logo kt' + (arr.includes('KT') ? ' active' : '');
+            document.getElementById('t-lg').className = 't-logo lg' + (arr.includes('LG') ? ' active' : '');
+        }
+
+        // --- 팝업 모달 제어 (하단 푸터 개인정보처리방침용) ---
         function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'flex'; }
         function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
     </script>
