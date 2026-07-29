@@ -979,44 +979,40 @@ function updateCount(optKey, change) {
             calculateReceipt();
         }
 
-        // --- 💥 실시간 영수증 & 다중 요금 필터링 엔진 💥 ---
+// --- 💥 실시간 영수증 & 다중 요금 필터링 (결합할인 마스터) 엔진 💥 ---
         function calculateReceipt() {
             if(bossData.length === 0) return;
 
             let totalPrice = 0; let totalGift = 0; let selectedCount = 0;
             let availableTelecoms = ['SK', 'KT', 'LG']; 
 
-            // 선택된 항목들에 해당하는 통신사들만 남기는 교집합 필터
+            // 교집합 필터
             const intersectTelecoms = (telecomArray) => {
                 availableTelecoms = availableTelecoms.filter(t => telecomArray.includes(t));
             };
 
-            // 시트에서 카테고리와 옵션명이 일치하는 모든 줄(row)을 가져옴
+            // 카테고리/옵션명 매칭 행 찾기
             const getRows = (cat, opt) => bossData.filter(r => r[0].trim() === cat && r[1].trim() === opt);
 
-            // 💡 [핵심] 3사 최저가 탐색 및 통신사 생존 필터 모듈
+            // 💡 [기본 모듈] 3사 최저가 탐색 및 통신사 생존 필터
             const processOption = (cat, opt, count = 1, isPcExtra = false) => {
                 let rows = getRows(cat, opt);
-                
-                // 현재 살아남은 통신사로 개통 가능한 줄(row)만 추려냄
                 let validRows = rows.filter(r => {
                     let tArr = r[5].split(',').map(s => s.trim().toUpperCase());
                     return availableTelecoms.some(at => tArr.includes(at));
                 });
 
                 if (validRows.length > 0) {
-                    // 이 옵션을 선택했을 때 살아남는 통신사들만 모아서 업데이트
                     let unionTelecoms = new Set();
                     validRows.forEach(r => r[5].split(',').map(s=>s.trim().toUpperCase()).forEach(t => unionTelecoms.add(t)));
                     intersectTelecoms(Array.from(unionTelecoms));
 
-                    // 유효한 통신사들 중에서 [최저가 요금]과 [최대 지원금]을 찾아냄!
                     let minBase = Math.min(...validRows.map(r => parseInt(r[2]) || 0));
                     let minExtra = Math.min(...validRows.map(r => parseInt(r[3]) || 0));
                     let maxGift = Math.max(...validRows.map(r => parseInt(r[4]) || 0));
                     
                     if(isPcExtra) {
-                        totalPrice += minExtra; // PC 정액 추가요금은 D열(추가요금)을 1회만 더함
+                        totalPrice += minExtra; 
                     } else {
                         totalPrice += minBase + (minExtra * (count - 1));
                     }
@@ -1031,7 +1027,6 @@ function updateCount(optKey, change) {
                 
                 let pcOpt = state.options['net-pc'];
                 if(pcOpt === '10대 이상') {
-                    // 11대 이상이면 별도 상담 모드 렌더링 후 즉시 종료
                     document.getElementById('live-price-wrapper').innerHTML = `<span style="font-size:32px;">기업 특판 별도 상담</span>`;
                     document.getElementById('live-gift').innerHTML = `🎁 <b>최대 혜택 및 요금 조율 진행</b>`;
                     renderTelecomLogos(availableTelecoms);
@@ -1043,7 +1038,7 @@ function updateCount(optKey, change) {
                 }
             }
 
-            // 2. 인터넷전화
+            // 2. 전화
             if (state.products.phone) {
                 selectedCount++;
                 let keyCnt = state.options['phone-key-cnt'];
@@ -1071,6 +1066,55 @@ function updateCount(optKey, change) {
             if (state.products.s1) {
                 selectedCount++;
                 processOption('에스원', state.options['s1-type']);
+            }
+
+            // ==========================================
+            // 💥 [마스터 모듈] 결합할인 스나이퍼 탐색 시스템
+            // ==========================================
+            if (state.products.net) {
+                let speed = state.options['net-speed'];
+                let is100M = speed.includes('100M');
+                let is500MPlus = speed.includes('500M') || speed.includes('1G');
+
+                let comboNamesToApply = [];
+
+                // 인터넷 + 전화 결합
+                if (state.products.phone && (state.options['phone-key-cnt'] > 0 || state.options['phone-fax-cnt'] > 0)) {
+                    if (is500MPlus) comboNamesToApply.push('인터넷(500M이상)+전화 (SK,LG)');
+                    if (is100M) comboNamesToApply.push('인터넷(100M)+전화 (KT)');
+                    if (is500MPlus) comboNamesToApply.push('인터넷(500M이상)+전화 (KT)');
+                }
+
+                // 인터넷 + TV 결합
+                if (state.products.tv && state.options['tv-cnt'] > 0) {
+                    comboNamesToApply.push('인터넷+TV (SK,LG)'); 
+                    if (is100M) comboNamesToApply.push('인터넷(100M)+TV (KT)');
+                    if (is500MPlus) comboNamesToApply.push('인터넷(500M이상)+TV (KT)');
+                }
+
+                // 인터넷 + CCTV 결합
+                if (state.products.cctv && (state.options['cctv-in-cnt'] > 0 || state.options['cctv-out-cnt'] > 0)) {
+                    comboNamesToApply.push('인터넷+CCTV');
+                }
+
+                // 시트에서 수집된 결합 조건 검색 및 최저가(최대할인) 적용
+                comboNamesToApply.forEach(comboName => {
+                    let rows = getRows('결합할인', comboName);
+                    // 현재 살아남은 통신사에 유효한 결합만 추려냄
+                    let validComboRows = rows.filter(r => {
+                        let tArr = r[5].split(',').map(s => s.trim().toUpperCase());
+                        return availableTelecoms.some(at => tArr.includes(at));
+                    });
+
+                    if (validComboRows.length > 0) {
+                        // 할인이므로 음수(-)값이 가장 작은 것, 혜택은 양수(+)값이 가장 큰 것을 적용!
+                        let minDiscount = Math.min(...validComboRows.map(r => parseInt(r[2]) || 0));
+                        let maxComboGift = Math.max(...validComboRows.map(r => parseInt(r[4]) || 0));
+
+                        totalPrice += minDiscount; // 요금 차감(-)
+                        totalGift += maxComboGift; // 떡값 펌핑(+)
+                    }
+                });
             }
 
             // --- 최종 영수증 UI 업데이트 ---
