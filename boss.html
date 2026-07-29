@@ -540,28 +540,31 @@
                     </div>
                 </div>
 
-                <!-- 전화 옵션 -->
+ <!-- 전화 옵션 (키폰과 팩스로 완벽 분리) -->
                 <div id="panel-phone" class="option-panel">
                     <div class="opt-row">
-                        <div class="opt-title">전화기 종류</div>
-                        <div class="opt-choices" id="opt-phone-type">
-                            <div class="opt-choice-btn active" onclick="selectOption('phone-type', '일반/키폰', this)">일반/키폰</div>
-                            <div class="opt-choice-btn" onclick="selectOption('phone-type', '팩스 (FAX)', this)">팩스 (FAX)</div>
+                        <div class="opt-title">일반 / 키폰 대수</div>
+                        <div class="opt-choices">
+                            <div class="counter-box">
+                                <button class="counter-btn" onclick="updateCount('phone-key-cnt', -1)">-</button>
+                                <div class="counter-val" id="cnt-phone-key-cnt">1</div>
+                                <button class="counter-btn" onclick="updateCount('phone-key-cnt', 1)">+</button>
+                            </div>
                         </div>
                     </div>
                     <div class="opt-row">
-                        <div class="opt-title">필요한 대수</div>
+                        <div class="opt-title">결제용 팩스(FAX) 대수</div>
                         <div class="opt-choices">
                             <div class="counter-box">
-                                <button class="counter-btn" onclick="updateCount('phone-cnt', -1)">-</button>
-                                <div class="counter-val" id="cnt-phone-cnt">1</div>
-                                <button class="counter-btn" onclick="updateCount('phone-cnt', 1)">+</button>
+                                <button class="counter-btn" onclick="updateCount('phone-fax-cnt', -1)">-</button>
+                                <div class="counter-val" id="cnt-phone-fax-cnt">0</div>
+                                <button class="counter-btn" onclick="updateCount('phone-fax-cnt', 1)">+</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- TV 옵션 -->
+                <!-- TV 옵션 (그대로 유지) -->
                 <div id="panel-tv" class="option-panel">
                     <div class="opt-row">
                         <div class="opt-title">TV 셋톱박스 화질</div>
@@ -582,15 +585,25 @@
                     </div>
                 </div>
 
-                <!-- CCTV 옵션 -->
+                <!-- CCTV 옵션 (내부용과 외부용으로 완벽 분리) -->
                 <div id="panel-cctv" class="option-panel">
                     <div class="opt-row">
-                        <div class="opt-title">설치할 CCTV 대수</div>
+                        <div class="opt-title">내부용 CCTV 대수</div>
                         <div class="opt-choices">
                             <div class="counter-box">
-                                <button class="counter-btn" onclick="updateCount('cctv-cnt', -1)">-</button>
-                                <div class="counter-val" id="cnt-cctv-cnt">1</div>
-                                <button class="counter-btn" onclick="updateCount('cctv-cnt', 1)">+</button>
+                                <button class="counter-btn" onclick="updateCount('cctv-in-cnt', -1)">-</button>
+                                <div class="counter-val" id="cnt-cctv-in-cnt">1</div>
+                                <button class="counter-btn" onclick="updateCount('cctv-in-cnt', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="opt-row">
+                        <div class="opt-title">외부용 CCTV 대수</div>
+                        <div class="opt-choices">
+                            <div class="counter-box">
+                                <button class="counter-btn" onclick="updateCount('cctv-out-cnt', -1)">-</button>
+                                <div class="counter-val" id="cnt-cctv-out-cnt">0</div>
+                                <button class="counter-btn" onclick="updateCount('cctv-out-cnt', 1)">+</button>
                             </div>
                         </div>
                     </div>
@@ -956,10 +969,11 @@
             calculateReceipt();
         }
 
-        function updateCount(optKey, change) {
+function updateCount(optKey, change) {
             let next = state.options[optKey] + change;
-            if (next < 1) next = 1; 
-            if (next > 20) next = 20; // 일단 UI 최대 20대
+            let min = 0; // 💡 이제 팩스나 외부CCTV를 0대로 내릴 수 있습니다!
+            if (next < min) next = min; 
+            if (next > 20) next = 20; 
             state.options[optKey] = next;
             document.getElementById('cnt-' + optKey).textContent = next;
             calculateReceipt();
