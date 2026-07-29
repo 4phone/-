@@ -302,6 +302,58 @@
             .counter-btn { width: 50px; font-size: 22px; }
             .counter-val { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 18px; }
         }
+    /* 💥 [신규] 하이브리드 팝업 모달 (Bottom Sheet) CSS */
+        .mobile-modal-overlay { display: contents; } /* PC에서는 투명 인간 처리 */
+        .mobile-wrapper-header, .mobile-wrapper-footer { display: none; }
+
+        @media (max-width: 950px) {
+            /* 팝업 활성화 시 배경 스크롤 락 */
+            body.modal-open { overflow: hidden; }
+            
+            .mobile-modal-overlay {
+                display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+                background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 99990;
+                align-items: flex-end; /* 아래에서 위로 올라오는 바텀 시트 레이아웃 */
+            }
+            .mobile-modal-overlay.active { display: flex; }
+
+            .options-wrapper {
+                background: var(--point-color); border-radius: 24px 24px 0 0;
+                padding: 25px 20px; width: 100%; max-height: 85vh; overflow-y: auto;
+                box-shadow: 0 -10px 40px rgba(0,0,0,0.9); border-top: 2px solid var(--gold-color);
+                transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            }
+            .options-wrapper.modal-active { transform: translateY(0); }
+
+            .mobile-wrapper-header {
+                display: flex; justify-content: space-between; align-items: center;
+                border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 20px;
+            }
+            .mobile-wrapper-header h3 { margin: 0; font-size: 18px; color: var(--gold-color); font-weight: 900; letter-spacing: -0.5px;}
+            .mobile-close-icon { background: none; border: none; color: #A0AEC0; font-size: 26px; font-weight: 300; padding: 0; cursor: pointer; transition: 0.2s; }
+
+            .mobile-wrapper-footer {
+                display: flex; gap: 10px; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;
+            }
+            .mobile-btn-remove {
+                flex: 1; background: rgba(255,255,255,0.05); color: #E53E3E; border: 1px solid rgba(229,62,62,0.3);
+                border-radius: 12px; padding: 16px 10px; font-size: 15px; font-weight: 900; cursor: pointer;
+            }
+            .mobile-btn-apply {
+                flex: 2; background: var(--gold-color); color: #111; border: none;
+                border-radius: 12px; padding: 16px 10px; font-size: 16px; font-weight: 900; box-shadow: 0 4px 15px rgba(212,175,55,0.3); cursor: pointer;
+            }
+
+            /* 💡 모바일 문단 깨짐 방지 및 정렬 보정 */
+            .option-panel { padding: 0; border: none; background: transparent; }
+            .opt-row { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; margin-bottom: 20px !important; padding-bottom: 20px !important; }
+            .opt-title { font-size: 15px !important; color: var(--gold-light) !important; margin-bottom: 5px; }
+            .opt-choices { width: 100% !important; justify-content: flex-start !important; gap: 8px !important; }
+            .opt-choice-btn { flex: 1 1 calc(50% - 8px) !important; padding: 14px 5px !important; font-size: 13.5px !important; text-align: center !important; }
+            .counter-box { width: 100%; max-width: 160px; height: 48px; }
+            .counter-btn { width: 50px; font-size: 24px; }
+            .counter-val { flex: 1; font-size: 18px; }
+        }
     </style>
 </head>
 <body>
@@ -348,101 +400,116 @@
             </div>
         </div>
 
-<!-- 2. 상세 옵션 패널들 -->
-        <div class="options-wrapper">
-            <!-- 인터넷 옵션 -->
-            <div id="panel-net" class="option-panel">
-                <div class="opt-row">
-                    <div class="opt-title">인터넷 속도 선택</div>
-                    <div class="opt-choices" id="opt-net-speed">
-                        <!-- 💡 시트의 '옵션명'과 정확히 일치하도록 세팅 -->
-                        <div class="opt-choice-btn active" onclick="selectOption('net-speed', '100M (가성비 일반형)', this)">100M (일반형)</div>
-                        <div class="opt-choice-btn" onclick="selectOption('net-speed', '100M (결제안심 포스형)', this)">100M (결제안심)</div>
-                        <div class="opt-choice-btn" onclick="selectOption('net-speed', '500M (사무실/다수PC)', this)">500M (권장)</div>
-                        <div class="opt-choice-btn" onclick="selectOption('net-speed', '1G (최고속 프리미엄)', this)">1G (최고속)</div>
-                    </div>
+<!-- 2. 상세 옵션 패널들 (모바일 하이브리드 모달 래퍼) -->
+        <div id="mobile-modal-overlay" class="mobile-modal-overlay" onclick="closeMobileModal(event)">
+            <div id="options-wrapper" class="options-wrapper" onclick="event.stopPropagation()">
+                
+                <!-- 모바일에서만 보이는 팝업 헤더 -->
+                <div class="mobile-wrapper-header">
+                    <h3>⚙️ 상세 옵션 설정</h3>
+                    <button class="mobile-close-icon" onclick="closeMobileModal()">✕</button>
                 </div>
-                <div class="opt-row">
-                    <div class="opt-title">사무용 PC 연결 대수</div>
-                    <div class="opt-choices">
-                        <div class="counter-box">
-                            <button class="counter-btn" onclick="updateCount('net-pc', -1)">-</button>
-                            <div class="counter-val" id="cnt-net-pc">1</div>
-                            <button class="counter-btn" onclick="updateCount('net-pc', 1)">+</button>
+
+                <!-- 인터넷 옵션 -->
+                <div id="panel-net" class="option-panel">
+                    <div class="opt-row">
+                        <div class="opt-title">인터넷 속도 선택</div>
+                        <div class="opt-choices" id="opt-net-speed">
+                            <div class="opt-choice-btn active" onclick="selectOption('net-speed', '100M (가성비 일반형)', this)">100M (일반형)</div>
+                            <div class="opt-choice-btn" onclick="selectOption('net-speed', '100M (결제안심 포스형)', this)">100M (결제안심)</div>
+                            <div class="opt-choice-btn" onclick="selectOption('net-speed', '500M (사무실/다수PC)', this)">500M (권장)</div>
+                            <div class="opt-choice-btn" onclick="selectOption('net-speed', '1G (최고속 프리미엄)', this)">1G (최고속)</div>
+                        </div>
+                    </div>
+                    <div class="opt-row">
+                        <div class="opt-title">사무용 PC 연결 대수</div>
+                        <div class="opt-choices">
+                            <div class="counter-box">
+                                <button class="counter-btn" onclick="updateCount('net-pc', -1)">-</button>
+                                <div class="counter-val" id="cnt-net-pc">1</div>
+                                <button class="counter-btn" onclick="updateCount('net-pc', 1)">+</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 전화 옵션 -->
-            <div id="panel-phone" class="option-panel">
-                <div class="opt-row">
-                    <div class="opt-title">전화기 종류</div>
-                    <div class="opt-choices" id="opt-phone-type">
-                        <div class="opt-choice-btn active" onclick="selectOption('phone-type', '일반/키폰', this)">일반/키폰</div>
-                        <div class="opt-choice-btn" onclick="selectOption('phone-type', '팩스 (FAX)', this)">팩스 (FAX)</div>
+                <!-- 전화 옵션 -->
+                <div id="panel-phone" class="option-panel">
+                    <div class="opt-row">
+                        <div class="opt-title">전화기 종류</div>
+                        <div class="opt-choices" id="opt-phone-type">
+                            <div class="opt-choice-btn active" onclick="selectOption('phone-type', '일반/키폰', this)">일반/키폰</div>
+                            <div class="opt-choice-btn" onclick="selectOption('phone-type', '팩스 (FAX)', this)">팩스 (FAX)</div>
+                        </div>
                     </div>
-                </div>
-                <div class="opt-row">
-                    <div class="opt-title">필요한 대수</div>
-                    <div class="opt-choices">
-                        <div class="counter-box">
-                            <button class="counter-btn" onclick="updateCount('phone-cnt', -1)">-</button>
-                            <div class="counter-val" id="cnt-phone-cnt">1</div>
-                            <button class="counter-btn" onclick="updateCount('phone-cnt', 1)">+</button>
+                    <div class="opt-row">
+                        <div class="opt-title">필요한 대수</div>
+                        <div class="opt-choices">
+                            <div class="counter-box">
+                                <button class="counter-btn" onclick="updateCount('phone-cnt', -1)">-</button>
+                                <div class="counter-val" id="cnt-phone-cnt">1</div>
+                                <button class="counter-btn" onclick="updateCount('phone-cnt', 1)">+</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- TV 옵션 -->
-            <div id="panel-tv" class="option-panel">
-                <div class="opt-row">
-                    <div class="opt-title">TV 셋톱박스 화질</div>
-                    <div class="opt-choices" id="opt-tv-type">
-                        <div class="opt-choice-btn active" onclick="selectOption('tv-type', '베이직 (일반 화질)', this)">베이직 (일반 화질)</div>
-                        <div class="opt-choice-btn" onclick="selectOption('tv-type', '프리미엄 (UHD)', this)">프리미엄 (UHD)</div>
+                <!-- TV 옵션 -->
+                <div id="panel-tv" class="option-panel">
+                    <div class="opt-row">
+                        <div class="opt-title">TV 셋톱박스 화질</div>
+                        <div class="opt-choices" id="opt-tv-type">
+                            <div class="opt-choice-btn active" onclick="selectOption('tv-type', '베이직 (일반 화질)', this)">베이직 (일반 화질)</div>
+                            <div class="opt-choice-btn" onclick="selectOption('tv-type', '프리미엄 (UHD)', this)">프리미엄 (UHD)</div>
+                        </div>
                     </div>
-                </div>
-                <div class="opt-row">
-                    <div class="opt-title">TV 대수</div>
-                    <div class="opt-choices">
-                        <div class="counter-box">
-                            <button class="counter-btn" onclick="updateCount('tv-cnt', -1)">-</button>
-                            <div class="counter-val" id="cnt-tv-cnt">1</div>
-                            <button class="counter-btn" onclick="updateCount('tv-cnt', 1)">+</button>
+                    <div class="opt-row">
+                        <div class="opt-title">TV 대수</div>
+                        <div class="opt-choices">
+                            <div class="counter-box">
+                                <button class="counter-btn" onclick="updateCount('tv-cnt', -1)">-</button>
+                                <div class="counter-val" id="cnt-tv-cnt">1</div>
+                                <button class="counter-btn" onclick="updateCount('tv-cnt', 1)">+</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- CCTV 옵션 -->
-            <div id="panel-cctv" class="option-panel">
-                <div class="opt-row">
-                    <div class="opt-title">설치할 CCTV 대수</div>
-                    <div class="opt-choices">
-                        <div class="counter-box">
-                            <button class="counter-btn" onclick="updateCount('cctv-cnt', -1)">-</button>
-                            <div class="counter-val" id="cnt-cctv-cnt">1</div>
-                            <button class="counter-btn" onclick="updateCount('cctv-cnt', 1)">+</button>
+                <!-- CCTV 옵션 -->
+                <div id="panel-cctv" class="option-panel">
+                    <div class="opt-row">
+                        <div class="opt-title">설치할 CCTV 대수</div>
+                        <div class="opt-choices">
+                            <div class="counter-box">
+                                <button class="counter-btn" onclick="updateCount('cctv-cnt', -1)">-</button>
+                                <div class="counter-val" id="cnt-cctv-cnt">1</div>
+                                <button class="counter-btn" onclick="updateCount('cctv-cnt', 1)">+</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 에스원 옵션 -->
-            <div id="panel-s1" class="option-panel">
-                <div class="opt-row">
-                    <div class="opt-title">보안 상품 선택</div>
-                    <div class="opt-choices" id="opt-s1-type">
-                        <div class="opt-choice-btn active" onclick="selectOption('s1-type', '출동경비 (방범)', this)">출동경비 (방범)</div>
-                        <div class="opt-choice-btn" onclick="selectOption('s1-type', '지문/근태관리', this)">지문/근태관리</div>
-                        <div class="opt-choice-btn" onclick="selectOption('s1-type', '풀패키지', this)">풀패키지</div>
+                <!-- 에스원 옵션 -->
+                <div id="panel-s1" class="option-panel">
+                    <div class="opt-row">
+                        <div class="opt-title">보안 상품 선택</div>
+                        <div class="opt-choices" id="opt-s1-type">
+                            <div class="opt-choice-btn active" onclick="selectOption('s1-type', '출동경비 (방범)', this)">출동경비 (방범)</div>
+                            <div class="opt-choice-btn" onclick="selectOption('s1-type', '지문/근태관리', this)">지문/근태관리</div>
+                            <div class="opt-choice-btn" onclick="selectOption('s1-type', '풀패키지', this)">풀패키지</div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- 모바일에서만 보이는 팝업 하단 버튼 -->
+                <div class="mobile-wrapper-footer">
+                    <button class="mobile-btn-remove" onclick="removeProductMobile()">🗑️ 상품 빼기</button>
+                    <button class="mobile-btn-apply" onclick="closeMobileModal()">✅ 설정 완료</button>
+                </div>
+
             </div>
         </div>
-
+        
         <!-- 3. 실시간 영수증 -->
         <div class="live-receipt-box">
             <div class="receipt-header">📊 사장님 맞춤 설계 (표준 요금)</div>
@@ -701,19 +768,76 @@
             }
         };
 
+        // --- 💥 하이브리드 UX: 상품 버튼 제어 엔진 ---
         function toggleProduct(prodId) {
             const btn = document.getElementById('btn-' + prodId);
             const panel = document.getElementById('panel-' + prodId);
-            state.products[prodId] = !state.products[prodId]; 
-            
-            if (state.products[prodId]) {
-                btn.classList.add('active');
-                if(panel) panel.classList.add('active');
+            const isMobile = window.innerWidth <= 950; // 현재 모바일 환경인지 감지
+
+            if (isMobile) {
+                // 📱 [모바일 로직]
+                if (!state.products[prodId]) {
+                    // 1. 장바구니에 없으면 추가하고 팝업 열기
+                    state.products[prodId] = true;
+                    btn.classList.add('active');
+                    panel.classList.add('active');
+                    openMobileModal(prodId);
+                } else {
+                    // 2. 이미 장바구니에 있다면 수정을 위해 팝업 다시 열기
+                    openMobileModal(prodId);
+                }
             } else {
-                btn.classList.remove('active');
-                if(panel) panel.classList.remove('active');
+                // 💻 [PC 로직] 기존처럼 그 자리에서 스르륵 열고 닫기
+                state.products[prodId] = !state.products[prodId]; 
+                if (state.products[prodId]) {
+                    btn.classList.add('active');
+                    panel.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                    panel.classList.remove('active');
+                }
             }
             calculateReceipt(); 
+        }
+
+        // --- 모바일 전용 모달 열기 ---
+        function openMobileModal(prodId) {
+            // 다른 패널은 다 숨기고, 내가 누른 패널만 보여주기
+            document.querySelectorAll('.option-panel').forEach(p => p.style.display = 'none');
+            document.getElementById('panel-' + prodId).style.display = 'block';
+            
+            // 모달창 띄우고 스크롤 막기
+            document.getElementById('mobile-modal-overlay').classList.add('active');
+            document.getElementById('options-wrapper').classList.add('modal-active');
+            document.body.classList.add('modal-open');
+            
+            // 현재 열린 상품 아이디를 몰래 저장 (삭제 버튼 누를 때 쓰기 위함)
+            document.getElementById('mobile-modal-overlay').setAttribute('data-current-prod', prodId);
+        }
+
+        // --- 모바일 전용 모달 닫기 (설정 완료) ---
+        function closeMobileModal(e) {
+            if(e) e.preventDefault();
+            document.getElementById('mobile-modal-overlay').classList.remove('active');
+            document.getElementById('options-wrapper').classList.remove('modal-active');
+            document.body.classList.remove('modal-open');
+            
+            // 창이 내려간 후, PC 버전 스타일 꼬임 방지를 위해 display 속성 초기화
+            setTimeout(() => {
+                document.querySelectorAll('.option-panel').forEach(p => p.style.display = '');
+            }, 350);
+            calculateReceipt();
+        }
+
+        // --- 모바일 전용 상품 삭제 ---
+        function removeProductMobile() {
+            // 몰래 저장해둔 상품 아이디를 꺼내와서 장바구니에서 삭제
+            const prodId = document.getElementById('mobile-modal-overlay').getAttribute('data-current-prod');
+            state.products[prodId] = false;
+            document.getElementById('btn-' + prodId).classList.remove('active');
+            document.getElementById('panel-' + prodId).classList.remove('active');
+            
+            closeMobileModal(); // 삭제 후 팝업 닫기
         }
 
         function selectOption(optKey, optValue, element) {
