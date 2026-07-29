@@ -378,6 +378,61 @@
             /* 혜택 박스가 두 줄이 될 때를 대비해 알약 모양을 둥근 사각형으로 변경하고 글씨를 키움 */
             .receipt-gift { font-size: 16px !important; padding: 12px 15px !important; word-break: keep-all; line-height: 1.4; border-radius: 14px !important; }
         }
+    /* 💥 [STEP 2] 영수증 영역 시인성 극대화 (Pumping) */
+        
+        /* 1. 타이틀 텍스트 펌핑 */
+        .receipt-header { 
+            font-size: 22px !important; 
+            font-weight: 900 !important; 
+            color: #fff !important; 
+            margin-bottom: 25px !important; 
+            text-align: center; 
+            letter-spacing: -0.5px;
+        }
+
+        /* 2. 통신사 로고 강조 (크기 증가 및 네온 강화) */
+        .receipt-telecoms { gap: 15px !important; margin-bottom: 25px !important; }
+        .t-logo { 
+            padding: 8px 24px !important; /* 좌우 여백을 넓혀서 뱃지를 큼직하게 */
+            border-radius: 12px !important; 
+            font-size: 18px !important; /* 글씨 크기 펌핑 */
+            font-weight: 900 !important; 
+            border: 2px solid rgba(255,255,255,0.1) !important; /* 테두리 약간 두껍게 */
+            opacity: 0.3; /* 선택 안 된 건 확실히 어둡게 */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        /* 불 들어올 때 확 커지며 빛나게 */
+        .t-logo.active { opacity: 1; transform: scale(1.1); }
+        .t-logo.active.sk { background: #E60012 !important; border-color: #E60012 !important; box-shadow: 0 0 25px rgba(230,0,18,0.6) !important; }
+        .t-logo.active.kt { background: #00B1A0 !important; border-color: #00B1A0 !important; box-shadow: 0 0 25px rgba(0,177,160,0.6) !important; }
+        .t-logo.active.lg { background: #E50073 !important; border-color: #E50073 !important; box-shadow: 0 0 25px rgba(229,0,115,0.6) !important; }
+
+        /* 3. 혜택(떡값) 크기 극대화 & 컬러 포인트 */
+        .receipt-gift { 
+            background: rgba(212, 175, 55, 0.15) !important; /* 칙칙한 색 대신 VIP 골드 틴트 배경 */
+            border: 1px solid rgba(212, 175, 55, 0.4) !important; 
+            border-radius: 16px !important; 
+            padding: 20px !important; 
+            margin: 25px 0 30px 0 !important; 
+            font-size: 18px !important; 
+            color: #fff;
+        }
+        /* 금액 숫자만 압도적으로 돋보이게 하는 특수 클래스 */
+        .highlight-gift { 
+            color: #FFDF00; /* 쨍한 황금색 */
+            font-size: 28px; 
+            font-weight: 900; 
+            text-shadow: 0 0 15px rgba(255, 223, 0, 0.5);
+            line-height: 1.2;
+        }
+
+        /* 📱 모바일 화면 비율 맞춤 보정 */
+        @media (max-width: 950px) {
+            .receipt-header { font-size: 20px !important; margin-bottom: 20px !important; }
+            .t-logo { padding: 8px 18px !important; font-size: 16px !important; }
+            .receipt-gift { font-size: 16px !important; padding: 18px 15px !important; }
+            .highlight-gift { font-size: 24px; display: inline-block; margin: 4px 0; }
+        }
     </style>
 </head>
 <body>
@@ -988,7 +1043,8 @@
             } else {
                 // 천단위 콤마 찍고 월 단위 표시
 document.getElementById('live-price-wrapper').innerHTML = `월 <span id="live-price">${totalPrice.toLocaleString()}</span>원 <span class="price-sub-txt">(3사 최저가 기준)</span>`;
-                document.getElementById('live-gift').innerHTML = `🎁 <b>설치 당일 떡값 ${totalGift.toLocaleString()}원 지원!</b>`;
+                // 숫자 부분만 <span class="highlight-gift"> 로 감싸서 거대하게 펌핑!
+document.getElementById('live-gift').innerHTML = `🎁 <b>설치 당일 떡값 <span class="highlight-gift">${totalGift.toLocaleString()}원</span> 지원!</b>`;
                 renderTelecomLogos(availableTelecoms); // 필터링 된 통신사만 불 켜기!
             }
         }
