@@ -354,6 +354,30 @@
             .counter-btn { width: 50px; font-size: 24px; }
             .counter-val { flex: 1; font-size: 18px; }
         }
+    /* 💥 [수정] 영수증 디테일 보정 및 네온사인 신청 버튼 */
+        .price-sub-txt { display: inline-block; margin-left: 6px; font-size: 14px; color: #A0AEC0; font-weight: 500; }
+        
+        /* 메인 페이지 느낌의 심장박동(네온) 이펙트 - VIP 골드 버전 */
+        @keyframes gold-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+            100% { transform: scale(1.03); box-shadow: 0 0 25px rgba(212, 175, 55, 0.9); }
+        }
+        .btn-receipt-apply {
+            width: 100%; max-width: 400px; margin: 0 auto; display: block;
+            padding: 18px 10px; border-radius: 14px; border: none;
+            background: linear-gradient(135deg, #E6C55C 0%, #D4AF37 100%);
+            color: #111; font-size: 18px; font-weight: 900; letter-spacing: -0.5px;
+            animation: gold-pulse 1.5s ease-in-out infinite alternate; /* 네온 펄스 적용 */
+            cursor: pointer;
+        }
+
+        @media (max-width: 950px) {
+            .receipt-price { font-size: 36px !important; margin-bottom: 10px !important; }
+            /* 모바일에서는 (3사최저가) 문구를 찌그러지지 않게 아예 다음 줄로 예쁘게 내림 */
+            .price-sub-txt { display: block; margin-left: 0; margin-top: 6px; font-size: 13px; }
+            /* 혜택 박스가 두 줄이 될 때를 대비해 알약 모양을 둥근 사각형으로 변경하고 글씨를 키움 */
+            .receipt-gift { font-size: 16px !important; padding: 12px 15px !important; word-break: keep-all; line-height: 1.4; border-radius: 14px !important; }
+        }
     </style>
 </head>
 <body>
@@ -523,7 +547,7 @@
 
             <div class="receipt-price" id="live-price-wrapper">월 <span id="live-price">0</span>원</div>
             <div class="receipt-gift" id="live-gift">🎁 상품을 선택해 주세요</div>
-            <button class="popup-submit-btn" style="max-width:400px; margin: 0 auto; display:block;" onclick="alert('폼 팝업 연동 예정입니다!')">🚀 이 조건으로 다이렉트 떡값 상담</button>
+            <button class="btn-receipt-apply" onclick="alert('폼 팝업 연동 예정입니다!')">🚀 이 조건으로 다이렉트 떡값 상담</button>
         </div>
     </div>
 
@@ -963,7 +987,7 @@
                 renderTelecomLogos([]); // 아무것도 선택 안했을 땐 로고 모두 끄기
             } else {
                 // 천단위 콤마 찍고 월 단위 표시
-                document.getElementById('live-price-wrapper').innerHTML = `월 <span id="live-price">${totalPrice.toLocaleString()}</span>원 <span style="font-size:14px; color:#A0AEC0;">(3사 최저가 기준)</span>`;
+document.getElementById('live-price-wrapper').innerHTML = `월 <span id="live-price">${totalPrice.toLocaleString()}</span>원 <span class="price-sub-txt">(3사 최저가 기준)</span>`;
                 document.getElementById('live-gift').innerHTML = `🎁 <b>설치 당일 떡값 ${totalGift.toLocaleString()}원 지원!</b>`;
                 renderTelecomLogos(availableTelecoms); // 필터링 된 통신사만 불 켜기!
             }
