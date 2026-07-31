@@ -979,154 +979,197 @@ function updateCount(optKey, change) {
             calculateReceipt();
         }
 
-// --- 💥 실시간 영수증 & 다중 요금 필터링 (결합할인 마스터) 엔진 💥 ---
+// --- 💥 실시간 영수증 (세트 메뉴 + 토핑 엔진) 💥 ---
         function calculateReceipt() {
             if(bossData.length === 0) return;
 
-            let totalPrice = 0; let totalGift = 0; let selectedCount = 0;
-            let availableTelecoms = ['SK', 'KT', 'LG']; 
+            let selectedCount = 0;
+            if (state.products.net) selectedCount++;
+            if (state.products.phone) selectedCount++;
+            if (state.products.tv) selectedCount++;
+            if (state.products.cctv) selectedCount++;
+            if (state.products.s1) selectedCount++;
 
-            // 교집합 필터
-            const intersectTelecoms = (telecomArray) => {
-                availableTelecoms = availableTelecoms.filter(t => telecomArray.includes(t));
-            };
-
-            // 카테고리/옵션명 매칭 행 찾기
-            const getRows = (cat, opt) => bossData.filter(r => r[0].trim() === cat && r[1].trim() === opt);
-
-            // 💡 [기본 모듈] 3사 최저가 탐색 및 통신사 생존 필터
-            const processOption = (cat, opt, count = 1, isPcExtra = false) => {
-                let rows = getRows(cat, opt);
-                let validRows = rows.filter(r => {
-                    let tArr = r[5].split(',').map(s => s.trim().toUpperCase());
-                    return availableTelecoms.some(at => tArr.includes(at));
-                });
-
-                if (validRows.length > 0) {
-                    let unionTelecoms = new Set();
-                    validRows.forEach(r => r[5].split(',').map(s=>s.trim().toUpperCase()).forEach(t => unionTelecoms.add(t)));
-                    intersectTelecoms(Array.from(unionTelecoms));
-
-                    let minBase = Math.min(...validRows.map(r => parseInt(r[2]) || 0));
-                    let minExtra = Math.min(...validRows.map(r => parseInt(r[3]) || 0));
-                    let maxGift = Math.max(...validRows.map(r => parseInt(r[4]) || 0));
-                    
-                    if(isPcExtra) {
-                        totalPrice += minExtra; 
-                    } else {
-                        totalPrice += minBase + (minExtra * (count - 1));
-                    }
-                    totalGift += maxGift;
-                }
-            };
-
-            // 1. 인터넷 및 PC대수
-            if (state.products.net) {
-                selectedCount++;
-                processOption('인터넷', state.options['net-speed']);
-                
-                let pcOpt = state.options['net-pc'];
-                if(pcOpt === '10대 이상') {
-                    document.getElementById('live-price-wrapper').innerHTML = `<span style="font-size:32px;">기업 특판 별도 상담</span>`;
-                    document.getElementById('live-gift').innerHTML = `🎁 <b>최대 혜택 및 요금 조율 진행</b>`;
-                    renderTelecomLogos(availableTelecoms);
-                    return; 
-                } else if(pcOpt === '3~10대 (안심보상서비스)') {
-                    processOption('PC대수', '3~10대 (안심보상서비스)', 1, true);
-                } else {
-                    processOption('PC대수', '1~2대 (기본)'); 
-                }
-            }
-
-            // 2. 전화
-            if (state.products.phone) {
-                selectedCount++;
-                let keyCnt = state.options['phone-key-cnt'];
-                let faxCnt = state.options['phone-fax-cnt'];
-                if (keyCnt > 0) processOption('전화', '일반/키폰', keyCnt);
-                if (faxCnt > 0) processOption('전화', '팩스 (FAX)', faxCnt);
-            }
-
-            // 3. TV
-            if (state.products.tv) {
-                selectedCount++;
-                processOption('TV', state.options['tv-type'], state.options['tv-cnt']);
-            }
-
-            // 4. CCTV
-            if (state.products.cctv) {
-                selectedCount++;
-                let inCnt = state.options['cctv-in-cnt'];
-                let outCnt = state.options['cctv-out-cnt'];
-                if (inCnt > 0) processOption('CCTV', '내부용 CCTV', inCnt);
-                if (outCnt > 0) processOption('CCTV', '외부용 CCTV', outCnt);
-            }
-
-            // 5. 에스원
-            if (state.products.s1) {
-                selectedCount++;
-                processOption('에스원', state.options['s1-type']);
-            }
-
-            // ==========================================
-            // 💥 [마스터 모듈] 결합할인 스나이퍼 탐색 시스템
-            // ==========================================
-            if (state.products.net) {
-                let speed = state.options['net-speed'];
-                let is100M = speed.includes('100M');
-                let is500MPlus = speed.includes('500M') || speed.includes('1G');
-
-                let comboNamesToApply = [];
-
-                // 인터넷 + 전화 결합
-                if (state.products.phone && (state.options['phone-key-cnt'] > 0 || state.options['phone-fax-cnt'] > 0)) {
-                    if (is500MPlus) comboNamesToApply.push('인터넷(500M이상)+전화 (SK,LG)');
-                    if (is100M) comboNamesToApply.push('인터넷(100M)+전화 (KT)');
-                    if (is500MPlus) comboNamesToApply.push('인터넷(500M이상)+전화 (KT)');
-                }
-
-                // 인터넷 + TV 결합
-                if (state.products.tv && state.options['tv-cnt'] > 0) {
-                    comboNamesToApply.push('인터넷+TV (SK,LG)'); 
-                    if (is100M) comboNamesToApply.push('인터넷(100M)+TV (KT)');
-                    if (is500MPlus) comboNamesToApply.push('인터넷(500M이상)+TV (KT)');
-                }
-
-                // 인터넷 + CCTV 결합
-                if (state.products.cctv && (state.options['cctv-in-cnt'] > 0 || state.options['cctv-out-cnt'] > 0)) {
-                    comboNamesToApply.push('인터넷+CCTV');
-                }
-
-                // 시트에서 수집된 결합 조건 검색 및 최저가(최대할인) 적용
-                comboNamesToApply.forEach(comboName => {
-                    let rows = getRows('결합할인', comboName);
-                    // 현재 살아남은 통신사에 유효한 결합만 추려냄
-                    let validComboRows = rows.filter(r => {
-                        let tArr = r[5].split(',').map(s => s.trim().toUpperCase());
-                        return availableTelecoms.some(at => tArr.includes(at));
-                    });
-
-                    if (validComboRows.length > 0) {
-                        // 할인이므로 음수(-)값이 가장 작은 것, 혜택은 양수(+)값이 가장 큰 것을 적용!
-                        let minDiscount = Math.min(...validComboRows.map(r => parseInt(r[2]) || 0));
-                        let maxComboGift = Math.max(...validComboRows.map(r => parseInt(r[4]) || 0));
-
-                        totalPrice += minDiscount; // 요금 차감(-)
-                        totalGift += maxComboGift; // 떡값 펌핑(+)
-                    }
-                });
-            }
-
-            // --- 최종 영수증 UI 업데이트 ---
+            // 선택 항목이 없을 때 초기화
             if(selectedCount === 0) {
                 document.getElementById('live-price-wrapper').innerHTML = `월 <span id="live-price">0</span>원`;
                 document.getElementById('live-gift').textContent = "🎁 상품을 선택해 주세요";
                 renderTelecomLogos([]); 
-            } else {
-                document.getElementById('live-price-wrapper').innerHTML = `월 <span id="live-price">${totalPrice.toLocaleString()}</span>원 <span class="price-sub-txt">(3사 최저가 기준)</span>`;
-                document.getElementById('live-gift').innerHTML = `🎁 <b>설치 당일 떡값 <span class="highlight-gift">${totalGift.toLocaleString()}원</span> 지원!</b>`;
-                renderTelecomLogos(availableTelecoms); 
+                return;
             }
+
+            // PC 특판 별도 상담
+            if (state.products.net && state.options['net-pc'] === '10대 이상') {
+                document.getElementById('live-price-wrapper').innerHTML = `<span style="font-size:32px;">기업 특판 별도 상담</span>`;
+                document.getElementById('live-gift').innerHTML = `🎁 <b>최대 혜택 및 요금 조율 진행</b>`;
+                renderTelecomLogos(['SK', 'KT', 'LG']);
+                return; 
+            }
+
+            const getRows = (cat, opt) => bossData.filter(r => r[0].trim() === cat && r[1].trim() === opt);
+
+            let telecomTotals = {
+                'SK': { price: 0, gift: 0, valid: true },
+                'KT': { price: 0, gift: 0, valid: true },
+                'LG': { price: 0, gift: 0, valid: true }
+            };
+            const telecomList = ['SK', 'KT', 'LG'];
+
+            // 🛒 1. 메인 세트 담기 함수 (C열 기본요금 적용)
+            const addOptionToCart = (cat, opt, count, telecom) => {
+                if(count <= 0) return;
+                let rows = getRows(cat, opt);
+                let validRow = rows.find(r => r[5].toUpperCase().includes(telecom));
+                if (!validRow) {
+                    telecomTotals[telecom].valid = false;
+                    return;
+                }
+                let base = parseInt(validRow[2]) || 0;
+                let gift = parseInt(validRow[4]) || 0;
+                
+                telecomTotals[telecom].price += base;
+                telecomTotals[telecom].gift += gift; // 메인 세트 혜택
+            };
+
+            // 🍕 2. 추가 토핑 담기 함수 (C열이든 D열이든 적힌 요금 X 대수)
+            const addTopping = (cat, opt, count, telecom) => {
+                if(count <= 0) return;
+                let rows = getRows(cat, opt);
+                let validRow = rows.find(r => r[5].toUpperCase().includes(telecom));
+                if (!validRow) {
+                    telecomTotals[telecom].valid = false;
+                    return;
+                }
+                // C열이나 D열 중 요금이 있는 것을 단가로 사용
+                let unitPrice = parseInt(validRow[2]) || parseInt(validRow[3]) || 0;
+                let unitGift = parseInt(validRow[4]) || 0;
+
+                telecomTotals[telecom].price += (unitPrice * count);
+                telecomTotals[telecom].gift += (unitGift * count);
+            };
+
+            // 🚀 3. 통신사 3사 장바구니 독립 계산 시작
+            telecomList.forEach(t => {
+                // 인터넷이 없으면 계산 중단 (모든 세트의 기본은 인터넷)
+                if (!state.products.net) {
+                    telecomTotals[t].valid = false;
+                    return;
+                }
+
+                let netSpeed = state.options['net-speed'];
+                let tvSelected = state.products.tv && state.options['tv-cnt'] > 0;
+                let cctvSelected = state.products.cctv && (state.options['cctv-in-cnt'] > 0 || state.options['cctv-out-cnt'] > 0);
+                let phoneSelected = state.products.phone && (state.options['phone-key-cnt'] > 0 || state.options['phone-fax-cnt'] > 0);
+
+                let mainSetCategory = '인터넷';
+                let mainSetOption = netSpeed;
+
+                // [우선순위 1] 인터넷 + TV 결합
+                if (tvSelected) {
+                    mainSetCategory = '결합상품';
+                    mainSetOption = `${netSpeed}+${state.options['tv-type']}`;
+                } 
+                // [우선순위 2] 인터넷 + CCTV 결합 (TV가 없을 때)
+                else if (cctvSelected) {
+                    mainSetCategory = '결합상품';
+                    let primaryCCTV = state.options['cctv-in-cnt'] > 0 ? '내부용 CCTV' : '외부용 CCTV';
+                    mainSetOption = `${netSpeed}+${primaryCCTV}`;
+                }
+                // [우선순위 3] 인터넷 + 전화 결합 (TV, CCTV가 없을 때)
+                else if (phoneSelected) {
+                    mainSetCategory = '결합상품';
+                    let primaryPhone = state.options['phone-key-cnt'] > 0 ? '일반/키폰' : '팩스 (FAX)';
+                    mainSetOption = `${netSpeed}+${primaryPhone}`;
+                }
+
+                // ① 메인 세트 결제
+                addOptionToCart(mainSetCategory, mainSetOption, 1, t);
+
+                // ② PC 대수 결제 (항상 독립 요금)
+                let pcOpt = state.options['net-pc'];
+                if (pcOpt !== '1~2대 (기본)' && pcOpt !== '10대 이상') {
+                    addTopping('PC대수', pcOpt, 1, t); 
+                }
+
+                // ③ 전화 토핑 계산
+                if (phoneSelected) {
+                    let keyCnt = state.options['phone-key-cnt'];
+                    let faxCnt = state.options['phone-fax-cnt'];
+                    let phoneIsMain = (mainSetCategory === '결합상품' && !tvSelected && !cctvSelected);
+
+                    if (phoneIsMain) {
+                        // 전화가 메인 세트에 포함된 경우 1대 차감
+                        if (keyCnt > 0) keyCnt--;
+                        else if (faxCnt > 0) faxCnt--;
+                    } else {
+                        // [1안 적용] TV가 메인이라 전화가 첫 대부터 '토핑'이 될 때
+                        if (keyCnt > 0) {
+                            addTopping('추가장비', '일반/키폰 (1대 기본)', 1, t);
+                            keyCnt--;
+                        } else if (faxCnt > 0) {
+                            addTopping('추가장비', '팩스 (FAX) (1대 기본)', 1, t);
+                            faxCnt--;
+                        }
+                    }
+                    // 나머지 전화는 전부 2대째부터 요금 적용
+                    addTopping('추가장비', '일반/키폰 2대째부터', keyCnt, t);
+                    addTopping('추가장비', '팩스 (FAX) 2대째부터', faxCnt, t);
+                }
+
+                // ④ TV 토핑 계산 (TV는 항상 메인 세트에 1대 포함됨)
+                if (tvSelected) {
+                    let tvCnt = state.options['tv-cnt'];
+                    if (tvCnt > 1) {
+                        addTopping('추가장비', `${state.options['tv-type']} 2대째부터`, tvCnt - 1, t);
+                    }
+                }
+
+                // ⑤ CCTV 토핑 계산
+                if (cctvSelected) {
+                    let inCnt = state.options['cctv-in-cnt'];
+                    let outCnt = state.options['cctv-out-cnt'];
+                    let cctvIsMain = (mainSetCategory === '결합상품' && !tvSelected);
+
+                    if (cctvIsMain) {
+                        if (inCnt > 0) inCnt--;
+                        else if (outCnt > 0) outCnt--;
+                    } else {
+                        // [1안 적용] TV가 메인이라 CCTV가 첫 대부터 '토핑'이 될 때
+                        if (inCnt > 0) {
+                            addTopping('추가장비', '내부용 CCTV (1대 기본)', 1, t);
+                            inCnt--;
+                        } else if (outCnt > 0) {
+                            addTopping('추가장비', '외부용 CCTV (1대 기본)', 1, t);
+                            outCnt--;
+                        }
+                    }
+                    addTopping('추가장비', '내부용 CCTV 2대째부터', inCnt, t);
+                    addTopping('추가장비', '외부용 CCTV 2대째부터', outCnt, t);
+                }
+
+                // ⑥ 에스원 계산 (독립 요금)
+                if (state.products.s1 && telecomTotals[t].valid) {
+                    addOptionToCart('에스원', state.options['s1-type'], 1, t);
+                }
+            });
+
+            // 🏆 4. 최종 생존 통신사 및 최저가 산출
+            let validTelecoms = telecomList.filter(t => telecomTotals[t].valid);
+
+            if (validTelecoms.length === 0) {
+                document.getElementById('live-price-wrapper').innerHTML = `월 <span id="live-price">0</span>원`;
+                document.getElementById('live-gift').textContent = "⚠️ 해당 조합은 개통 불가입니다";
+                renderTelecomLogos([]); 
+                return;
+            }
+
+            let minPrice = Math.min(...validTelecoms.map(t => telecomTotals[t].price));
+            let bestTelecoms = validTelecoms.filter(t => telecomTotals[t].price === minPrice);
+            let maxGift = Math.max(...bestTelecoms.map(t => telecomTotals[t].gift));
+
+            document.getElementById('live-price-wrapper').innerHTML = `월 <span id="live-price">${minPrice.toLocaleString()}</span>원 <span class="price-sub-txt">(3사 최저가 기준)</span>`;
+            document.getElementById('live-gift').innerHTML = `🎁 <b>설치 당일 떡값 <span class="highlight-gift">${maxGift.toLocaleString()}원</span> 지원!</b>`;
+            renderTelecomLogos(bestTelecoms); 
         }
 
         // 역방향 필터링된 통신사 로고 불 켜주는 함수
