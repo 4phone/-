@@ -252,6 +252,55 @@
             .mobile-btn-apply { flex: 2; background: var(--gold-color); color: #111; border: none; border-radius: 12px; padding: 16px 10px; font-size: 16px; font-weight: 900; box-shadow: 0 4px 15px rgba(212,175,55,0.3); cursor: pointer; }
             .option-panel { padding: 0; border: none; background: transparent; }
         }
+    /* ===================================================
+           💡 [신규] 메인 히어로 섹션 (PC 좌/우 2단 배치 레이아웃)
+           =================================================== */
+        .hero-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 150px auto 40px auto; /* 상단 탭 여백 고려 */
+            padding: 0 40px;
+            gap: 40px;
+        }
+
+        /* PC 기준: 좌측 문구 영역 (왼쪽 정렬) */
+        .hero-section .title-zone {
+            flex: 1;
+            padding: 0; 
+            text-align: left;
+        }
+        .hero-section .title-zone .main-title { text-align: left; }
+        .hero-section .title-zone .sub-title { text-align: left; margin: 0; }
+
+        /* PC 기준: 우측 접수 폼 영역 (고정 너비) */
+        .hero-section .main-form-section {
+            flex: 0 0 500px; 
+            margin: 0; 
+            padding: 0;
+        }
+
+        /* 📱 모바일 기준: 다시 위/아래 세로 배치 (가운데 정렬)로 원상복구 */
+        @media (max-width: 950px) {
+            .hero-section {
+                flex-direction: column;
+                margin-top: 135px; /* 모바일 헤더 여백 고려 */
+                padding: 0 12px;
+                gap: 20px;
+            }
+            .hero-section .title-zone {
+                text-align: center;
+            }
+            .hero-section .title-zone .main-title { text-align: center; }
+            .hero-section .title-zone .sub-title { text-align: center; margin: 0 auto; }
+            
+            .hero-section .main-form-section {
+                flex: none;
+                width: 100%;
+                margin: 0 0 30px 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -273,67 +322,72 @@
         <button class="nav-tab-btn" id="tab-custom" onclick="switchTab('custom')">🧮 셀프 요금 설계</button>
     </div>
 
-    <!-- 3. 메인 타이틀 섹션 -->
-    <div class="title-zone">
-        <h1 class="main-title">사거리인터넷 <span>THE LOUNGE</span><br>사장님 전용 프라이빗 단가표</h1>
-        <p class="sub-title">본 창구는 <b>실제 사업자등록증 소지 사장님</b>만 입장 가능한 비즈니스 전용 특별 우대 구역입니다.<br>(오직 대표님의 비즈니스 환경에 맞춘 1:1 프라이빗 통신 설계)</p>
-    </div>
-
-    <!-- 4. 사장님 전용 메인 간편 상담 접수 폼 카드 -->
-    <div class="main-form-section">
-        <div class="b2b-form-card">
-            
-            <div class="status-toggle-group">
-                <button type="button" class="status-btn active" id="btn-status-new" onclick="setStatus('신규 매장 준비 중')">신규 매장 준비 중</button>
-                <button type="button" class="status-btn" id="btn-status-run" onclick="setStatus('매장 운영 중')">매장 운영 중</button>
-            </div>
-
-            <form id="mainB2bForm" onsubmit="handleMainFormSubmit(event)">
-                <input type="hidden" id="storeStatus" value="신규 매장 준비 중">
-
-                <div class="form-input-group">
-                    <label>사장님 성함</label>
-                    <input type="text" class="b2b-input" id="mainName" placeholder="성함을 입력해 주세요" required>
-                </div>
-
-                <div class="form-input-group">
-                    <label>휴대폰 번호</label>
-                    <input type="tel" class="b2b-input" id="mainPhone" placeholder="010-0000-0000" required>
-                </div>
-
-                <div class="form-input-group">
-                    <label>업종 선택</label>
-                    <select class="b2b-select" id="mainCategory" required>
-                        <option value="" disabled selected>업종을 선택해 주세요</option>
-                        <option value="카페 / 요식업">카페 / 요식업 / 매장</option>
-                        <option value="사무실 / 기업체">사무실 / 일반 기업체</option>
-                        <option value="병원 / 약국 / 의원">병원 / 약국 / 의원</option>
-                        <option value="학원 / 교습소">학원 / 교습소 / 스터디카페</option>
-                        <option value="숙박 / 리조트 / 피트니스">숙박 / 피트니스 / 뷰티</option>
-                        <option value="기타 사업장">기타 비즈니스 사업장</option>
-                    </select>
-                </div>
-
-                <div class="form-input-group">
-                    <label>사업자번호 <span style="color:var(--text-muted); font-weight:400;">(선택)</span></label>
-                    <input type="text" class="b2b-input" id="mainBizNum" placeholder="사업자등록번호 (선택 기입)">
-                </div>
-
-                <div class="b2b-privacy-box">
-                    <label class="privacy-check-item">
-                        <input type="checkbox" id="mainAgreeReq" checked required>
-                        <span><span class="req">[필수]</span> 개인정보 수집 및 이용 동의</span>
-                    </label>
-                    <label class="privacy-check-item">
-                        <input type="checkbox" id="mainAgreeOpt" checked>
-                        <span><span class="opt">[선택]</span> 특별 혜택 및 프로모션 안내 수신 동의</span>
-                    </label>
-                </div>
-
-                <button type="submit" class="b2b-submit-btn">⚡ 빠르게 프라이빗 상담받기</button>
-            </form>
+    <!-- 💡 [신규] 메인 히어로 섹션 (PC 좌/우 2단 배치를 위한 래퍼 상자) -->
+    <div class="hero-section">
+        
+        <!-- 좌측: 메인 타이틀 영역 -->
+        <div class="title-zone">
+            <h1 class="main-title">사거리인터넷 <span>THE LOUNGE</span><br>사장님 전용 프라이빗 단가표</h1>
+            <p class="sub-title">본 창구는 <b>실제 사업자등록증 소지 사장님</b>만 입장 가능한 비즈니스 전용 특별 우대 구역입니다.<br>(오직 대표님의 비즈니스 환경에 맞춘 1:1 프라이빗 통신 설계)</p>
         </div>
-    </div>
+
+        <!-- 우측: 사장님 전용 메인 간편 상담 접수 폼 카드 -->
+        <div class="main-form-section">
+            <div class="b2b-form-card">
+                
+                <div class="status-toggle-group">
+                    <button type="button" class="status-btn active" id="btn-status-new" onclick="setStatus('신규 매장 준비 중')">신규 매장 준비 중</button>
+                    <button type="button" class="status-btn" id="btn-status-run" onclick="setStatus('매장 운영 중')">매장 운영 중</button>
+                </div>
+
+                <form id="mainB2bForm" onsubmit="handleMainFormSubmit(event)">
+                    <input type="hidden" id="storeStatus" value="신규 매장 준비 중">
+
+                    <div class="form-input-group">
+                        <label>사장님 성함</label>
+                        <input type="text" class="b2b-input" id="mainName" placeholder="성함을 입력해 주세요" required>
+                    </div>
+
+                    <div class="form-input-group">
+                        <label>휴대폰 번호</label>
+                        <input type="tel" class="b2b-input" id="mainPhone" placeholder="010-0000-0000" required>
+                    </div>
+
+                    <div class="form-input-group">
+                        <label>업종 선택</label>
+                        <select class="b2b-select" id="mainCategory" required>
+                            <option value="" disabled selected>업종을 선택해 주세요</option>
+                            <option value="카페 / 요식업">카페 / 요식업 / 매장</option>
+                            <option value="사무실 / 기업체">사무실 / 일반 기업체</option>
+                            <option value="병원 / 약국 / 의원">병원 / 약국 / 의원</option>
+                            <option value="학원 / 교습소">학원 / 교습소 / 스터디카페</option>
+                            <option value="숙박 / 리조트 / 피트니스">숙박 / 피트니스 / 뷰티</option>
+                            <option value="기타 사업장">기타 비즈니스 사업장</option>
+                        </select>
+                    </div>
+
+                    <div class="form-input-group">
+                        <label>사업자번호 <span style="color:var(--text-muted); font-weight:400;">(선택)</span></label>
+                        <input type="text" class="b2b-input" id="mainBizNum" placeholder="사업자등록번호 (선택 기입)">
+                    </div>
+
+                    <div class="b2b-privacy-box">
+                        <label class="privacy-check-item">
+                            <input type="checkbox" id="mainAgreeReq" checked required>
+                            <span><span class="req">[필수]</span> 개인정보 수집 및 이용 동의</span>
+                        </label>
+                        <label class="privacy-check-item">
+                            <input type="checkbox" id="mainAgreeOpt" checked>
+                            <span><span class="opt">[선택]</span> 특별 혜택 및 프로모션 안내 수신 동의</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="b2b-submit-btn">⚡ 빠르게 프라이빗 상담받기</button>
+                </form>
+            </div>
+        </div>
+        
+    </div> <!-- // hero-section 끝 -->
 
     <!-- 5. 셀프 골라담기 컨피규레이터 영역 -->
     <div class="business-grid-section" id="configurator-zone">
