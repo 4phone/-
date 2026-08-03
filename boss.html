@@ -21,6 +21,7 @@
         html { scroll-behavior: smooth; }
     body { margin: 0; padding: 0; font-family: 'Pretendard', sans-serif !important; background-color: var(--main-bg); color: var(--text-main); letter-spacing: -0.3px; overflow-x: hidden; padding-bottom: 100px; }
         * { font-family: 'Pretendard', sans-serif !important; }
+        
         /* 헤더 영역 (블랙 & 골드 럭셔리 톤) */
         .navbar { position: fixed; top: 0; left: 0; right: 0; height: 80px; background: rgba(17, 19, 23, 0.95); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: space-between; padding: 0 40px; z-index: 1000; border-bottom: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 4px 30px rgba(0,0,0,0.5); }
         .nav-logo-group { display: flex; align-items: center; gap: 12px; text-decoration: none; background: transparent !important; }
@@ -30,9 +31,8 @@
             height: 46px; 
             display: block; 
             object-fit: contain; 
-            background: transparent !important; /* 흰색 배경 박스 전면 투명화 제거 */
+            background: transparent !important; 
             border-radius: 0 !important;
-            /* 혹시 이미지 내 텍스트가 어두울 경우, 배경에 묻히지 않고 흰색으로 선명하게 도드라지게 만드는 고급 그래픽 필터 장치 */
             filter: drop-shadow(0px 0px 1px rgba(255,255,255,0.8)) brightness(1.2); 
         } 
         .nav-logo-text { font-size: 22px; font-weight: 900; color: #fff; letter-spacing: -1px; }
@@ -69,66 +69,6 @@
         .bottom-notice-box { background: linear-gradient(145deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.02) 100%); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 16px; padding: 35px; max-width: 1000px; margin: 0 auto; text-align: center; }
         .bottom-call-btn { display: inline-block; background: var(--gold-color); color: #111; font-weight: 900; font-size: 16px; padding: 16px 40px; border-radius: 40px; text-decoration: none; margin-top: 20px; transition: 0.3s; }
         .bottom-call-btn:hover { background: #E6C55C; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); transform: scale(1.02); }
-
-        /* 🔒 업종별 맞춤형 프라이빗 라운지 모달 팝업 */
-        .biz-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 6000; align-items: center; justify-content: center; padding: 20px; }
-        .biz-modal-card { background: var(--point-color); color: var(--text-main); width: 100%; max-width: 540px; border-radius: 24px; display: flex; flex-direction: column; max-height: 90vh; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 30px 60px rgba(0,0,0,0.8); }
-        .biz-modal-header { padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.2); border-radius: 24px 24px 0 0; }
-        .biz-modal-header h3 { margin: 0; font-size: 19px; font-weight: 700; color: var(--gold-color); display: flex; align-items: center; gap: 10px; }
-        .biz-modal-close { background: none; border: none; font-size: 26px; font-weight: 300; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
-        .biz-modal-close:hover { color: #fff; transform: rotate(90deg); }
-        .biz-modal-body { padding: 25px; overflow-y: auto; text-align: left; }
-        
-        .biz-prod-selector-title { font-size: 14px; font-weight: 500; color: var(--text-muted); margin-bottom: 12px; }
-        
-        /* 팝업 내 상품 선택 카드 */
-        .biz-prod-option-card { border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 18px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; background: rgba(0,0,0,0.2); }
-        .biz-prod-option-card:hover { border-color: rgba(212, 175, 55, 0.4); background: rgba(212, 175, 55, 0.03); }
-        .biz-prod-option-card.selected { border-color: var(--gold-color); background: rgba(212, 175, 55, 0.08); box-shadow: inset 0 0 0 1px var(--gold-color); }
-        .biz-prod-name { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
-        .biz-prod-price-info { font-size: 13px; font-weight: 400; color: var(--text-muted); }
-        .biz-prod-price-info span { color: var(--gold-light); font-weight: 700; }
-
-        /* 팝업 내부 인바운드 접수 폼 */
-        .biz-apply-form-layer { display: none; margin-top: 25px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 25px; }
-        .biz-apply-form-layer.open { display: block; }
-        .popup-form-group { margin-bottom: 16px; }
-        .popup-form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--gold-light); margin-bottom: 8px; }
-        .popup-input { width: 100%; height: 48px; padding: 0 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-family: inherit; font-weight: 500; transition: 0.2s; }
-        .popup-input:focus { border-color: var(--gold-color); outline: none; background: rgba(0,0,0,0.5); }
-        
-        /* 💻 사무실 전용 PC 대수 순정 셀렉트 피커 */
-        .popup-select-picker { width: 100%; height: 48px; padding: 0 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #fff; font-size: 14px; font-family: inherit; font-weight: 500; cursor: pointer; transition: 0.2s; appearance: none; }
-        .popup-select-picker option { background: var(--point-color); color: #fff; }
-        .popup-select-picker:focus { border-color: var(--gold-color); outline: none; }
-        
-        /* 📁 구비서류 콤팩트 고정 가이드 컴포넌트 */
-        .document-guide-bar { background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 10px; padding: 14px; margin-bottom: 20px; font-size: 12px; line-height: 1.5; color: var(--gold-light); font-weight: 400; }
-        .document-guide-bar b { font-weight: 700; color: var(--gold-color); }
-
-        /* 개인정보보호 체크박스 격리 컴포넌트 */
-        .popup-privacy-zone { padding: 4px 2px 20px 2px; }
-        .popup-privacy-label { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-main); cursor: pointer; font-weight: 500; }
-        .popup-privacy-label input { margin-top: 2px; accent-color: var(--gold-color); }
-        .popup-privacy-sub { font-size: 11px; color: var(--text-muted); display: block; margin-top: 6px; padding-left: 22px; line-height: 1.4; }
-
-        .popup-submit-btn { width: 100%; padding: 18px; background: var(--gold-color); border: none; border-radius: 12px; color: #111; font-family: inherit; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; }
-        .popup-submit-btn:hover { background: #E6C55C; box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
-
-        /* 상시 고정형 실시간 연동 하단 플로팅 바 레이아웃 패치 */
-        .universal-sticky-quick-bar { position: fixed; bottom: -200px; left: 0; right: 0; background: #1A202C; border-top: 4px solid var(--gold-color); z-index: 3000; box-shadow: 0 -5px 25px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: bottom 0.35s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        .universal-sticky-quick-bar.show { bottom: 0; }
-        .sticky-tier-1 { background: #2D3748; padding: 6px 40px; font-size: 14px; font-weight: 900; color: var(--gold-color); border-bottom: 1px solid #4A5568; text-align: left; display: flex; align-items: center; gap: 10px; }
-        .sticky-status-dot { width: 8px; height: 8px; background: #A0AEC0; border-radius: 50%; }
-        .universal-sticky-quick-bar.active-mode .sticky-status-dot { background: #48BB78; animation: pulse-green 1.5s infinite; }
-        @keyframes pulse-green { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(72, 187, 120, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); } }
-        .sticky-tier-2 { padding: 12px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; max-width: 1280px; margin: 0 auto; width: 100%; }
-        .sticky-form-side { display: flex; align-items: center; gap: 12px; flex: 1; justify-content: flex-end; }
-        .sticky-input-field { width: 200px; height: 45px; padding: 0 12px; border-radius: 8px; border: 1px solid #4A5568; background: #2D3748; color: #fff; font-size: 14px; font-weight: 700; }
-        .sticky-input-field::placeholder { color: #A0AEC0; font-weight: 500; }
-        .sticky-action-btn { background: #ED8936; color: #fff; border: none; padding: 0 24px; height: 45px; border-radius: 8px; font-size: 15px; font-weight: 900; cursor: pointer; white-space: nowrap; box-shadow: 0 3px 10px rgba(237,137,54,0.3); transition: 0.2s; }
-        .universal-sticky-quick-bar.active-mode .sticky-action-btn { background: linear-gradient(135deg, var(--fire-orange) 0%, #E64A19 100%); box-shadow: 0 4px 12px rgba(255,87,34,0.4); }
-        .mobile-sticky-privacy { display: flex; align-items: center; }
 
         /* 실제 운영사 정보 백엔드 푸터 서식 */
         .footer { background: var(--footer-bg); color: rgba(255,255,255,0.4); font-size: 13px; line-height: 1.8; text-align: left; padding: 50px 40px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 80px; font-family: 'Noto Sans KR', sans-serif; }
@@ -178,15 +118,6 @@
             .rate-table td { padding: 12px 6px; font-size: 12px; }
             .price-txt { font-size: 14px; } .gift-txt { font-size: 11px; margin-top: 4px; }
             .bottom-notice-box { padding: 20px; font-size: 13px; } .bottom-call-btn { width: 100%; font-size: 14px; padding: 14px; }
-
-            /* 시간차 하단바 모바일 4단 수직 레이아웃 */
-            .universal-sticky-quick-bar { height: auto !important; padding-bottom: 12px; }
-            .sticky-tier-1 { padding: 8px 15px; font-size: 12px; }
-            .sticky-tier-2 { padding: 10px 15px 4px 15px; gap: 0; flex-direction: column !important; width: 100%; }
-            .sticky-form-side { display: flex !important; flex-wrap: wrap !important; flex-direction: row !important; width: 100% !important; gap: 8px !important; justify-content: space-between !important; }
-            .sticky-input-field { display: block !important; flex: 1 !important; min-width: 0 !important; width: calc(50% - 4px) !important; height: 44px !important; font-size: 13px; padding: 0 10px; margin-bottom: 4px; }
-            .mobile-sticky-privacy { width: 100% !important; order: 3 !important; margin: 6px 0 !important; padding: 2px 0 !important; }
-            .sticky-action-btn { display: block !important; width: 100% !important; order: 4 !important; height: 46px !important; font-size: 14px; margin-top: 4px; }
             
             .footer { padding: 30px 20px; font-size: 12px; }
             .footer-row-info { flex-direction: column; gap: 6px; }
@@ -564,7 +495,7 @@
                     </div>
                 </div>
 
-                <!-- TV 옵션 (그대로 유지) -->
+                <!-- TV 옵션 -->
                 <div id="panel-tv" class="option-panel">
                     <div class="opt-row">
                         <div class="opt-title">TV 셋톱박스 화질</div>
@@ -707,70 +638,6 @@
         <div class="bottom-notice-box">
             <span style="font-weight:700; color:var(--text-main); font-size:15px; display:block;">복수 회선 가입 및 CCTV/포스기 결합 추가 특별 혜택은 유선상으로 더욱 유연하게 조율 가능합니다.</span>
             <a href="tel:18332440" class="bottom-call-btn">VIP 전담 직통 가입 문의: 1833-2440</a>
-        </div>
-    </div>
-
-    <div class="biz-modal-overlay" id="bizModal">
-        <div class="biz-modal-card">
-            <div class="biz-modal-header">
-                <h3><span id="modal-biz-icon"></span> <span id="modal-biz-title"></span> 전용 라운지</h3>
-                <button class="biz-modal-close" onclick="closeBizModal()">✕</button>
-            </div>
-            <div class="biz-modal-body">
-                <div class="biz-prod-selector-title">사장님 매장에 최적화된 상품 구성을 선택해 주세요.</div>
-                
-              <div class="biz-prod-option-card selected" id="opt-1" onclick="selectBizProduct(1, '사거리 실속형 결합')">
-                    <div class="biz-prod-name" id="modal-prod1-name">⚡ 콤팩트 스토어 (Compact Store)</div>
-                    <div class="biz-prod-price-info">"필수 기능으로 효율적인 시작" <br> ➡️ 포스기/기본 와이파이 전용 실속 구성</div>
-                </div>
-                <div class="biz-prod-option-card" id="opt-2" onclick="selectBizProduct(2, '사거리 프리미엄 전용팩')">
-                    <div class="biz-prod-name" id="modal-prod2-name">🛡️ 플래그십 스토어 (Flagship Store)</div>
-                    <div class="biz-prod-price-info">"보안과 고속 통신의 완성" <br> ➡️ CCTV/다수 PC/고속 인터넷 프리미엄 구성</div>
-                </div>
-
-                <div class="biz-apply-form-layer open" id="bizApplyLayer">
-                    
-                    <div class="document-guide-bar">
-                        📁 <b>[필수]</b> 사업자등록증 사본 + 대표자 신분증/통장사본<br>
-                        <span style="font-size:11px; color:var(--text-muted); font-weight:400; margin-top:2px; display:inline-block;">(※ 현재 서류가 준비되지 않으셨더라도 <b>우선 선접수가 가능</b>합니다.)</span>
-                    </div>
-
-                    <div class="popup-form-group" id="pc-count-selector-zone" style="display:none;">
-                        <label>사무실 내 실사용 PC 대수 선택</label>
-                        <select id="popup-pc-count" class="popup-select-picker">
-                            <option value="1대">1대</option>
-                            <option value="2대">2대</option>
-                            <option value="3대">3대</option>
-                            <option value="4대">4대</option>
-                            <option value="5대">5대</option>
-                            <option value="6대">6대</option>
-                            <option value="7대">7대</option>
-                            <option value="8대">8대</option>
-                            <option value="9대">9대</option>
-                            <option value="10대 이상">10대 이상</option>
-                        </select>
-                    </div>
-
-                    <div class="popup-form-group">
-                        <label>사장님 성함</label>
-                        <input type="text" id="popup-biz-name" class="popup-input" placeholder="성함을 적어주세요">
-                    </div>
-                    <div class="popup-form-group">
-                        <label>직통 연락처</label>
-                        <input type="text" id="popup-biz-phone" class="popup-input" placeholder="연락처를 적어주세요">
-                    </div>
-
-                    <div class="popup-privacy-zone">
-                        <label class="popup-privacy-label">
-                            <input type="checkbox" id="popup-privacy-check">
-                            <span>[필수] 개인정보 수집 및 이용 동의</span>
-                        </label>
-                        <span class="popup-privacy-sub">목적: 업종별 맞춤형 개통 접수 처리 / 기간: 목적 달성 시 즉시 파기</span>
-                    </div>
-
-                    <button class="popup-submit-btn" onclick="submitPopupBizForm()">프라이빗 다이렉트 가입신청</button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -969,7 +836,7 @@
             calculateReceipt();
         }
 
-function updateCount(optKey, change) {
+        function updateCount(optKey, change) {
             let next = state.options[optKey] + change;
             let min = 0; // 💡 이제 팩스나 외부CCTV를 0대로 내릴 수 있습니다!
             if (next < min) next = min; 
@@ -979,7 +846,7 @@ function updateCount(optKey, change) {
             calculateReceipt();
         }
 
-// --- 💥 실시간 영수증 (세트 메뉴 + 토핑 엔진) 💥 ---
+        // --- 💥 실시간 영수증 (세트 메뉴 + 토핑 엔진) 💥 ---
         function calculateReceipt() {
             if(bossData.length === 0) return;
 
