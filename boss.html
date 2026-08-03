@@ -54,7 +54,7 @@
         .b2b-form-card { background: linear-gradient(145deg, rgba(26,29,36,0.95) 0%, rgba(10,12,15,0.95) 100%); border: 1px solid var(--gold-color); border-radius: 24px; padding: 30px 25px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
         
         /* 매장 상태 토글 스위치 탭 */
-        .status-toggle-group { display: flex; background: rgba(0,0,0,0.4); pading: 4px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; pading: 4px; }
+        .status-toggle-group { display: flex; background: rgba(0,0,0,0.4); padding: 4px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
         .status-btn { flex: 1; padding: 14px 10px; border: none; border-radius: 10px; background: transparent; color: var(--text-muted); font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s; text-align: center; }
         .status-btn.active { background: #fff; color: #111; box-shadow: 0 4px 12px rgba(255,255,255,0.2); }
 
@@ -74,6 +74,9 @@
 
         .b2b-submit-btn { width: 100%; height: 56px; background: linear-gradient(135deg, #E6C55C 0%, #D4AF37 100%); color: #111; border: none; border-radius: 14px; font-size: 18px; font-weight: 900; cursor: pointer; transition: 0.3s; box-shadow: 0 6px 20px rgba(212,175,55,0.3); letter-spacing: -0.5px; }
         .b2b-submit-btn:hover { background: #E6C55C; transform: translateY(-2px); box-shadow: 0 10px 25px rgba(212,175,55,0.5); }
+        
+        .b2b-back-btn { width: 100%; height: 56px; background: transparent; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.2); border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .b2b-back-btn:hover { background: rgba(255,255,255,0.05); color: #fff; border-color: rgba(255,255,255,0.4); }
 
         /* 👑 PC/모바일 골라담기 컨피규레이터 섹션 */
         .business-grid-section { max-width: 1100px; margin: 40px auto; padding: 0 20px; text-align: center; }
@@ -129,17 +132,37 @@
         }
         .btn-receipt-apply { width: 100%; max-width: 400px; margin: 0 auto; display: block; padding: 18px 10px; border-radius: 14px; border: none; background: linear-gradient(135deg, #E6C55C 0%, #D4AF37 100%); color: #111; font-size: 18px; font-weight: 900; letter-spacing: -0.5px; animation: gold-pulse 1.5s ease-in-out infinite alternate; cursor: pointer; }
 
-        /* 💡 인터넷 속도 버튼 정렬 */
+        /* 인터넷 속도 버튼 정렬 */
         #opt-net-speed { display: grid; grid-template-columns: repeat(3, auto); justify-content: end; gap: 8px; }
 
-        /* 👑 간편 상담 팝업 모달 */
+        /* 👑 간편 상담 팝업 모달 (STEP 1 요금표 & STEP 2 폼) */
         .quick-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 100000; align-items: center; justify-content: center; padding: 20px; }
         .quick-modal-overlay.active { display: flex; }
-        .quick-modal-card { background: #1A1D24; width: 100%; max-width: 520px; border-radius: 24px; border: 1px solid var(--gold-color); box-shadow: 0 25px 60px rgba(0,0,0,0.9); padding: 30px 25px; position: relative; animation: modalPop 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .quick-modal-card { background: #1A1D24; width: 100%; max-width: 600px; border-radius: 24px; border: 1px solid var(--gold-color); box-shadow: 0 25px 60px rgba(0,0,0,0.9); padding: 30px 25px; position: relative; animation: modalPop 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); max-height: 90vh; overflow-y: auto; }
         @keyframes modalPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .quick-modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 26px; color: var(--text-muted); cursor: pointer; }
-        .quick-modal-title { font-size: 22px; font-weight: 900; color: var(--gold-color); margin: 0 0 6px 0; text-align: left; }
+        
+        /* 닫기 버튼을 카드 최상단 우측에 항상 고정 */
+        .quick-modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 26px; color: var(--text-muted); cursor: pointer; z-index: 10; transition: 0.2s; }
+        .quick-modal-close:hover { color: #fff; transform: rotate(90deg); }
+        
+        .quick-modal-title { font-size: 22px; font-weight: 900; color: var(--gold-color); margin: 0 0 6px 0; text-align: left; padding-right: 30px; }
         .quick-modal-sub { font-size: 13px; color: var(--text-muted); text-align: left; margin-bottom: 20px; }
+
+        /* 모달 내부 커스텀 요금표 리스트 디자인 */
+        .modal-plan-group { margin-bottom: 25px; }
+        .modal-plan-group h4 { font-size: 15px; font-weight: 800; color: var(--gold-light); margin: 0 0 10px 0; border-left: 3px solid var(--gold-color); padding-left: 10px; }
+        .modal-p-row { background: #0A0C0F; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .modal-p-row:hover { border-color: rgba(212,175,55,0.4); background: rgba(212,175,55,0.03); }
+        
+        .m-p-info { flex: 1; text-align: left; }
+        .m-p-title { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .m-p-prices { font-size: 13px; font-weight: 500; color: #A0AEC0; line-height: 1.5; }
+        .m-p-prices span.sk { color: #E60012; font-weight: 700; }
+        .m-p-prices span.lg { color: #E50073; font-weight: 700; }
+        
+        .m-p-action { margin-left: 15px; }
+        .m-p-btn { background: var(--gold-color); color: #111; border: none; padding: 10px 18px; border-radius: 8px; font-size: 14px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; box-shadow: 0 4px 10px rgba(212,175,55,0.3); }
+        .m-p-btn:hover { background: #E6C55C; transform: scale(1.05); }
 
         /* 💥 플로팅 퀵메뉴 (PC / 모바일) */
         .pc-quick-menu { display: none; }
@@ -196,6 +219,12 @@
             .main-form-section { margin-top: 15px; padding: 0 12px; }
             .b2b-form-card { padding: 22px 16px; border-radius: 20px; }
 
+            /* 팝업 모바일 최적화 */
+            .modal-p-row { flex-direction: column; align-items: flex-start; gap: 12px; padding: 18px 15px; }
+            .m-p-action { margin-left: 0; width: 100%; }
+            .m-p-btn { width: 100%; padding: 12px; font-size: 15px; }
+            .m-p-prices { font-size: 12px; }
+
             #opt-net-speed { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; width: 100% !important; }
             #opt-net-speed .opt-choice-btn:nth-child(1) { order: 1; }
             #opt-net-speed .opt-choice-btn:nth-child(4) { order: 2; }
@@ -230,7 +259,7 @@
             .footer-row-info { flex-direction: column; gap: 6px; }
         }
 
-        /* 📱 모바일 하이브리드 바텀시트 모달 래퍼 */
+        /* 📱 모바일 하이브리드 바텀시트 모달 래퍼 (상세옵션) */
         .mobile-modal-overlay { display: contents; }
         .mobile-wrapper-header, .mobile-wrapper-footer { display: none; }
 
@@ -279,7 +308,6 @@
     <div class="main-form-section">
         <div class="b2b-form-card">
             
-            <!-- 매장 상태 선택 (신규 준비 중 / 운영 중) -->
             <div class="status-toggle-group">
                 <button type="button" class="status-btn active" id="btn-status-new" onclick="setStatus('신규 매장 준비 중')">신규 매장 준비 중</button>
                 <button type="button" class="status-btn" id="btn-status-run" onclick="setStatus('매장 운영 중')">매장 운영 중</button>
@@ -287,6 +315,12 @@
 
             <form id="mainB2bForm" onsubmit="handleMainFormSubmit(event)">
                 <input type="hidden" id="storeStatus" value="신규 매장 준비 중">
+
+                <!-- 💡 요청사항 반영: 사장님 성함 추가 -->
+                <div class="form-input-group">
+                    <label>사장님 성함</label>
+                    <input type="text" class="b2b-input" id="mainName" placeholder="성함을 입력해 주세요" required>
+                </div>
 
                 <div class="form-input-group">
                     <label>휴대폰 번호</label>
@@ -331,7 +365,6 @@
     <div class="business-grid-section" id="configurator-zone">
         <div class="business-grid-title">💡 필요하신 상품을 골라담아 맞춤 견적을 확인해 보세요!</div>
         
-        <!-- 상품 선택 버튼들 -->
         <div class="config-grid">
             <div class="product-btn" id="btn-net" onclick="toggleProduct('net')">
                 <div class="product-btn-icon">💻</div>
@@ -355,7 +388,6 @@
             </div>
         </div>
 
-        <!-- 상세 옵션 패널들 (모바일 하이브리드 바텀시트 래퍼) -->
         <div id="mobile-modal-overlay" class="mobile-modal-overlay" onclick="closeMobileModal(event)">
             <div id="options-wrapper" class="options-wrapper" onclick="event.stopPropagation()">
                 
@@ -364,7 +396,6 @@
                     <button class="mobile-close-icon" onclick="closeMobileModal()">✕</button>
                 </div>
 
-                <!-- 인터넷 옵션 -->
                 <div id="panel-net" class="option-panel">
                     <div class="opt-row">
                         <div class="opt-title">인터넷 속도 선택</div>
@@ -388,7 +419,6 @@
                     </div>
                 </div>
 
-                <!-- 전화 옵션 -->
                 <div id="panel-phone" class="option-panel">
                     <div class="opt-row">
                         <div class="opt-title">일반 / 키폰 대수</div>
@@ -412,7 +442,6 @@
                     </div>
                 </div>
 
-                <!-- TV 옵션 -->
                 <div id="panel-tv" class="option-panel">
                     <div class="opt-row">
                         <div class="opt-title">TV 셋톱박스 화질</div>
@@ -433,7 +462,6 @@
                     </div>
                 </div>
 
-                <!-- CCTV 옵션 -->
                 <div id="panel-cctv" class="option-panel">
                     <div class="opt-row">
                         <div class="opt-title">내부용 CCTV 대수</div>
@@ -457,7 +485,6 @@
                     </div>
                 </div>
 
-                <!-- 에스원 옵션 -->
                 <div id="panel-s1" class="option-panel">
                     <div class="opt-row">
                         <div class="opt-title">보안 상품 선택</div>
@@ -477,7 +504,6 @@
             </div>
         </div>
         
-        <!-- 실시간 영수증 -->
         <div class="live-receipt-box">
             <div class="receipt-header">📊 사장님 맞춤 설계 (표준 요금)</div>
             
@@ -493,41 +519,116 @@
         </div>
     </div>
 
-    <!-- 6. 팝업 모달 (상단 탭 간편상담 / 영수증 상담 버튼 클릭 시 호출) -->
+    <!-- 6. 팝업 모달 (STEP 1: 요금표 리스트 -> STEP 2: 접수 폼) -->
     <div class="quick-modal-overlay" id="quickConsultModal">
         <div class="quick-modal-card">
+            <!-- 💡 안전장치: 모달 내내 항상 우측 상단에 닫기(X) 버튼 고정 노출 -->
             <button class="quick-modal-close" onclick="closeQuickModal()">✕</button>
-            <h3 class="quick-modal-title">⚡ 사장님 프라이빗 다이렉트 상담</h3>
-            <p class="quick-modal-sub">대표번호 기다림 없이 VIP 전담 실장이 직통 연락드립니다.</p>
             
-            <form onsubmit="handlePopupFormSubmit(event)">
-                <div class="form-input-group">
-                    <label>휴대폰 번호</label>
-                    <input type="tel" class="b2b-input" id="popPhone" placeholder="010-0000-0000" required>
+            <!-- STEP 1: 비즈니스 요금표 화면 -->
+            <div id="quick-step-1">
+                <h3 class="quick-modal-title">⚡ 사장님 프라이빗 다이렉트 상담</h3>
+                <p class="quick-modal-sub">원하시는 요금제의 <b>[상담신청]</b> 버튼을 눌러주세요.</p>
+                
+                <div class="modal-plan-group">
+                    <h4>비즈니스 베이직 (100M 실속형)</h4>
+                    <div class="modal-p-row">
+                        <div class="m-p-info">
+                            <div class="m-p-title">📡 인터넷 단독 (100M)</div>
+                            <div class="m-p-prices">월 <span class="sk">SK 23,100원</span> / <span class="lg">LG 22,000원</span><br><span style="color:#48BB78;">🎁 혜택 150,000원</span></div>
+                        </div>
+                        <div class="m-p-action">
+                            <button class="m-p-btn" onclick="goToQuickStep2('인터넷 단독 (100M)')">상담신청</button>
+                        </div>
+                    </div>
+                    <div class="modal-p-row">
+                        <div class="m-p-info">
+                            <div class="m-p-title">📡📞 인터넷 + 전화 팩</div>
+                            <div class="m-p-prices">월 <span class="sk">SK 24,200원</span> / <span class="lg">LG 31,900원(자유통화)</span><br><span style="color:#48BB78;">🎁 혜택 SK 15만 / LG 22만</span></div>
+                        </div>
+                        <div class="m-p-action">
+                            <button class="m-p-btn" onclick="goToQuickStep2('인터넷 + 전화 팩 (100M)')">상담신청</button>
+                        </div>
+                    </div>
+                    <div class="modal-p-row">
+                        <div class="m-p-info">
+                            <div class="m-p-title">📡📹 인터넷 + 매장 CCTV 1대</div>
+                            <div class="m-p-prices">월 <span class="lg">LG 35,200원</span> (SK 해당없음)<br><span style="color:#48BB78;">🎁 혜택 300,000원</span></div>
+                        </div>
+                        <div class="m-p-action">
+                            <button class="m-p-btn" onclick="goToQuickStep2('인터넷 + CCTV 1대 (100M)')">상담신청</button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-input-group">
-                    <label>업종 선택</label>
-                    <select class="b2b-select" id="popCategory" required>
-                        <option value="" disabled selected>업종을 선택해 주세요</option>
-                        <option value="카페 / 요식업">카페 / 요식업 / 매장</option>
-                        <option value="사무실 / 기업체">사무실 / 일반 기업체</option>
-                        <option value="병원 / 약국 / 의원">병원 / 약국 / 의원</option>
-                        <option value="학원 / 교습소">학원 / 교습소 / 스터디카페</option>
-                        <option value="숙박 / 리조트 / 피트니스">숙박 / 피트니스 / 뷰티</option>
-                        <option value="기타 사업장">기타 비즈니스 사업장</option>
-                    </select>
+                <div class="modal-plan-group">
+                    <h4>비즈니스 프리미엄 (500M 고속형)</h4>
+                    <div class="modal-p-row">
+                        <div class="m-p-info">
+                            <div class="m-p-title">🚀📞 인터넷 + 전화 팩</div>
+                            <div class="m-p-prices">월 <span class="sk">SK 35,200원</span> / <span class="lg">LG 42,900원(자유통화)</span><br><span style="color:#48BB78;">🎁 혜택 SK 18만 / LG 45만</span></div>
+                        </div>
+                        <div class="m-p-action">
+                            <button class="m-p-btn" onclick="goToQuickStep2('인터넷 + 전화 팩 (500M)')">상담신청</button>
+                        </div>
+                    </div>
+                    <div class="modal-p-row">
+                        <div class="m-p-info">
+                            <div class="m-p-title">🚀📺📞 인+TV+전화 풀결합</div>
+                            <div class="m-p-prices">월 <span class="sk">SK 47,300원</span> / <span class="lg">LG 55,000원</span><br><span style="color:#48BB78;">🎁 최대 혜택 + 추가 지원</span></div>
+                        </div>
+                        <div class="m-p-action">
+                            <button class="m-p-btn" onclick="goToQuickStep2('인+TV+전화 풀결합 (500M)')">상담신청</button>
+                        </div>
+                    </div>
+                    <div class="modal-p-row">
+                        <div class="m-p-info">
+                            <div class="m-p-title">🚀📹 인터넷 + 매장 CCTV 1대</div>
+                            <div class="m-p-prices">월 <span class="lg">LG 35,200원</span> (SK 해당없음)<br><span style="color:#48BB78;">🎁 혜택 450,000원</span></div>
+                        </div>
+                        <div class="m-p-action">
+                            <button class="m-p-btn" onclick="goToQuickStep2('인터넷 + CCTV 1대 (500M)')">상담신청</button>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <div class="b2b-privacy-box">
-                    <label class="privacy-check-item">
-                        <input type="checkbox" checked required>
-                        <span><span class="req">[필수]</span> 개인정보 수집 및 이용 동의</span>
-                    </label>
-                </div>
+            <!-- STEP 2: 인적사항 입력 폼 화면 (B안 덮어쓰기 방식) -->
+            <div id="quick-step-2" style="display:none;">
+                <h3 class="quick-modal-title">📝 상담 접수 정보 입력</h3>
+                <p class="quick-modal-sub" id="quick-selected-plan-text" style="font-size: 14px; margin-bottom: 25px;">선택하신 상품: </p>
+                
+                <form onsubmit="handlePopupFormSubmit(event)">
+                    <input type="hidden" id="popSelectedPlan" value="">
+                    
+                    <div class="form-input-group">
+                        <label>사장님 성함</label>
+                        <input type="text" class="b2b-input" id="popName" placeholder="성함을 입력해 주세요" required>
+                    </div>
 
-                <button type="submit" class="b2b-submit-btn">🚀 1:1 직통 상담 신청하기</button>
-            </form>
+                    <div class="form-input-group">
+                        <label>휴대폰 번호</label>
+                        <input type="tel" class="b2b-input" id="popPhone" placeholder="010-0000-0000" required>
+                    </div>
+
+                    <div class="form-input-group">
+                        <label>사업자번호 <span style="color:var(--text-muted); font-weight:400;">(선택)</span></label>
+                        <input type="text" class="b2b-input" id="popBizNum" placeholder="사업자등록번호 (선택 기입)">
+                    </div>
+
+                    <div class="b2b-privacy-box">
+                        <label class="privacy-check-item">
+                            <input type="checkbox" checked required>
+                            <span><span class="req">[필수]</span> 개인정보 수집 및 이용 동의</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="b2b-submit-btn" style="margin-top:10px;">🚀 접수 완료하기</button>
+                    <!-- 💡 안전장치: 뒤로가기 버튼 -->
+                    <button type="button" class="b2b-back-btn" onclick="backToQuickStep1()">⬅️ 다른 요금제 보기</button>
+                </form>
+            </div>
+
         </div>
     </div>
 
@@ -608,13 +709,12 @@
 
             if (tabType === 'quick') {
                 document.getElementById('tab-quick').classList.add('active');
-                openQuickModal(); // 간편상담 탭 누르면 팝업 열기
+                openQuickModal();
             } else if (tabType === 'custom') {
                 document.getElementById('tab-custom').classList.add('active');
-                // 셀프 요금 설계 클릭 시 '골라담기' 영역으로 스무스 스크롤
                 const configTarget = document.getElementById('configurator-zone');
                 if (configTarget) {
-                    const offset = 140; // 헤더 + 탭 높이 고려
+                    const offset = 140; 
                     const targetPos = configTarget.getBoundingClientRect().top + window.pageYOffset - offset;
                     window.scrollTo({ top: targetPos, behavior: 'smooth' });
                 }
@@ -636,18 +736,38 @@
             }
         }
 
-        // --- 모달 팝업 제어 ---
+        // --- 💥 간편상담 모달 팝업 제어 (STEP 1 <-> STEP 2) ---
         function openQuickModal() {
             document.getElementById('quickConsultModal').classList.add('active');
+            backToQuickStep1(); // 창을 열 때마다 무조건 요금표(STEP 1)부터 보이게 초기화
         }
         function closeQuickModal() {
             document.getElementById('quickConsultModal').classList.remove('active');
         }
 
+        function goToQuickStep2(planName) {
+            // 요금표 숨기고 입력 폼 보여주기
+            document.getElementById('quick-step-1').style.display = 'none';
+            document.getElementById('quick-step-2').style.display = 'block';
+            
+            // 선택한 상품 이름 세팅
+            document.getElementById('quick-selected-plan-text').innerHTML = `선택하신 상품: <b style="color:var(--gold-color);">${planName}</b>`;
+            document.getElementById('popSelectedPlan').value = planName;
+            
+            // 모달창 스크롤 맨 위로 올려주기 (UX 디테일)
+            document.querySelector('.quick-modal-card').scrollTop = 0;
+        }
+
+        function backToQuickStep1() {
+            // 폼 숨기고 다시 요금표 보여주기
+            document.getElementById('quick-step-2').style.display = 'none';
+            document.getElementById('quick-step-1').style.display = 'block';
+        }
+
         function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'flex'; }
         function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
 
-        // --- 폼 제출 핸들러 (연동용) ---
+        // --- 폼 제출 핸들러 ---
         function handleMainFormSubmit(e) {
             e.preventDefault();
             alert("프라이빗 다이렉트 상담 접수가 완료되었습니다! 담당 실장이 빠른 시간 내에 연락드립니다.");
@@ -657,7 +777,10 @@
 
         function handlePopupFormSubmit(e) {
             e.preventDefault();
-            alert("1:1 직통 상담 신청이 완료되었습니다!");
+            alert("선택하신 상품으로 1:1 직통 상담 신청이 완료되었습니다!");
+            document.getElementById('popName').value = '';
+            document.getElementById('popPhone').value = '';
+            document.getElementById('popBizNum').value = '';
             closeQuickModal();
         }
 
