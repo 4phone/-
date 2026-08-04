@@ -701,9 +701,9 @@
         </a>
     </div>
 
-    <!-- PC 우측 퀵메뉴 -->
+    <!-- 💻 PC 우측 퀵메뉴 (수정! 클릭 시 팝업 띄우기) -->
     <div class="pc-quick-menu">
-        <a href="tel:18332440" class="pc-q-btn pc-btn-phone">
+        <a href="#" onclick="openVipPhonePopup(event)" class="pc-q-btn pc-btn-phone">
             <span class="pc-q-icon">📞</span>VIP상담
         </a>
         <a href="http://pf.kakao.com/_PxjsKG/chat" target="_blank" class="pc-q-btn pc-btn-kakao">
@@ -757,6 +757,58 @@
         </div>
     </div>
 
+    <!-- 👑 1. 커스텀 접수 완료 알림창 (기본 Alert 대체) -->
+    <div id="custom-alert-modal" class="quick-modal-overlay" onclick="closeCustomAlert()">
+        <div class="quick-modal-card" style="max-width: 450px; text-align: center; padding: 40px 30px;" onclick="event.stopPropagation()">
+            <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
+            <h3 id="custom-alert-title" style="font-size: 22px; font-weight: 900; color: var(--gold-color); margin-bottom: 20px; letter-spacing: -0.5px;">접수 완료</h3>
+            <div id="custom-alert-message" style="font-size: 15px; color: var(--text-main); line-height: 1.6; margin-bottom: 30px; text-align: left; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); white-space: pre-wrap;">
+                메시지 내용
+            </div>
+            <button onclick="closeCustomAlert()" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #E6C55C 0%, #D4AF37 100%); border: none; border-radius: 12px; font-size: 16px; font-weight: 900; color: #111; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">확인 및 닫기</button>
+        </div>
+    </div>
+
+    <!-- 📞 2. VIP 프라이빗 직통 전화 팝업 -->
+    <div id="vip-phone-popup-overlay" class="quick-modal-overlay" onclick="closeVipPhonePopup(event)">
+        <div class="quick-modal-card" style="max-width: 450px; text-align: center; padding: 40px 30px;" onclick="event.stopPropagation()">
+            <button class="quick-modal-close" onclick="closeVipPhonePopup(event)">✕</button>
+            
+            <h3 style="font-size: 24px; font-weight: 900; margin-bottom: 15px; color: var(--gold-color); letter-spacing: -1px;">👑 사거리인터넷 VIP 프라이빗 데스크</h3>
+            
+            <!-- 마법의 주문 -->
+            <div style="background: rgba(212, 175, 55, 0.05); border: 1px dashed var(--gold-color); padding: 15px; border-radius: 12px; margin-bottom: 25px;">
+                <p style="font-size: 16px; color: var(--gold-light); font-weight: 900; margin: 0; line-height: 1.4;">
+                    "사장님 전용 라운지 보고 연락했습니다 🎩"<br>
+                    <span style="font-size: 13px; color: var(--text-muted); font-weight: 500; display: block; margin-top: 5px;">(라고 말씀해 주시면 더 빠르고 정밀한 B2B 견적 설계가 가능합니다)</span>
+                </p>
+            </div>
+
+            <!-- 연락처 리스트 (모바일에서도 누르면 바로 전화 걸리게 a 태그 적용) -->
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
+                <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 14px; color: var(--text-muted); font-weight: 700;">전국 대표 번호</div>
+                    <a href="tel:18332440" style="font-size: 20px; font-weight: 900; color: #fff; text-decoration: none;">1833-2440</a>
+                </div>
+                <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 14px; color: var(--text-muted); font-weight: 700;">B2B 전담 디렉터 김철종</div>
+                    <a href="tel:01064142444" style="font-size: 20px; font-weight: 900; color: var(--gold-color); text-decoration: none;">010-6414-2444</a>
+                </div>
+                <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 14px; color: var(--text-muted); font-weight: 700;">B2B 전담 디렉터 임찬양</div>
+                    <a href="tel:01024222444" style="font-size: 20px; font-weight: 900; color: var(--gold-color); text-decoration: none;">010-2422-2444</a>
+                </div>
+            </div>
+
+            <!-- 운영 시간 -->
+            <div style="font-size: 15px; color: var(--text-main); font-weight: 900; background: rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; line-height: 1.5; border: 1px solid rgba(255,255,255,0.05);">
+                🕰️ 프라이빗 데스크 운영 시간<br>
+                <span style="color: var(--gold-light); font-weight: 700;">AM 10:00 ~ PM 19:30</span><br>
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">(전산 휴무일은 확인 후 순차적으로 연락드립니다)</span>
+            </div>
+        </div>
+    </div>
+    
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_1x_FqN2kW6FJyoHDXw7IF_-Rgl4lD1n_msdM48sgXG7Ch1lMCnTKz5ytcylQAy-P/exec";
 
@@ -905,7 +957,8 @@
                 body: JSON.stringify(formData)
             })
             .then(() => {
-                alert(`[VIP 프라이빗 다이렉트 접수 완료! 🎉]\n\n성함: ${name}\n연락처: ${phone}\n업종: ${category}\n\n사장님을 위한 전담 프라이빗 디렉터 배정이 완료되었습니다.\n1:1 맞춤형 최대 혜택을 꼼꼼히 준비하여 가장 빠른 시간 내에 직통으로 연락드리겠습니다!`);
+                showCustomAlert((`["VIP 프라이빗 다이렉트 접수 완료"]\n\n`성함: ${name}\n연락처: ${phone}\n업종: ${category}\n\n사장님을 위한 전담 프라이빗 디렉터 배정이 완료되었습니다.\n1:1 맞춤형 최대 혜택을 꼼꼼히 준비하여 가장 빠른 시간 내에 직통으로 연락드리겠습니다!`
+);
                 document.getElementById('mainB2bForm').reset();
                 setStatus('신규 매장 준비 중'); 
             })
@@ -967,7 +1020,8 @@
                 body: JSON.stringify(formData)
             })
             .then(() => {
-                alert(`[VIP 빠른 상담 접수 완료! 🎉]\n\n선택상품: ${plan}\n성함: ${name}\n\n사장님을 위한 전담 프라이빗 디렉터 배정이 완료되었습니다.\n선택하신 조건에 맞춘 최고의 견적을 준비하여 가장 빠른 시간 내에 직통으로 연락드리겠습니다!`);
+                showCustomAlert(`["VIP 빠른 상담 접수 완료"]\n\n`선택상품: ${plan}\n성함: ${name}\n연락처: ${phone}\n\n사장님을 위한 전담 프라이빗 디렉터 배정이 완료되었습니다.\n선택하신 조건에 맞춘 최고의 견적을 준비하여 가장 빠른 시간 내에 직통으로 연락드리겠습니다!`
+);
                 document.getElementById('popName').value = '';
                 document.getElementById('popPhone').value = '';
                 document.getElementById('popBizNum').value = '';
@@ -1290,6 +1344,31 @@
             document.getElementById('t-lg').className = 't-logo lg' + (arr.includes('LG') ? ' active' : '');
         }
 
+        // 🚀 [신규 추가] 커스텀 접수 완료 알림창 제어 함수
+        function showCustomAlert(title, message) {
+            document.getElementById('custom-alert-title').innerText = title;
+            document.getElementById('custom-alert-message').innerText = message;
+            document.getElementById('custom-alert-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeCustomAlert() {
+            document.getElementById('custom-alert-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // 🚀 [신규 추가] VIP 직통 전화 팝업창 제어 함수
+        function openVipPhonePopup(e) {
+            e.preventDefault();
+            document.getElementById('vip-phone-popup-overlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeVipPhonePopup(e) {
+            if(e) e.preventDefault();
+            if (!e || e.target === document.getElementById('vip-phone-popup-overlay') || e.currentTarget.classList.contains('quick-modal-close')) { 
+                document.getElementById('vip-phone-popup-overlay').classList.remove('active'); 
+                document.body.style.overflow = ''; 
+            }
+        }
     </script>
 </body>
 </html>
