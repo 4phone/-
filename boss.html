@@ -840,14 +840,44 @@
             document.getElementById('quick-step-1').style.display = 'block';
         }
 
-        // --- 💡 [신규 추가] 실시간 영수증에서 폼(Step 2)으로 바로 꽂아주는 하이패스 함수 ---
+        // --- 💡 [수정] 실시간 영수증에서 폼(Step 2)으로 꽂아주는 똑똑한 하이패스 함수 ---
         function openCustomReceiptModal() {
-            // 1. 모달 전체 창 열기
-            document.getElementById('quickConsultModal').classList.add('active');
+            // 1. [안전장치] 선택된 상품이 하나라도 있는지 확인
+            let selectedCount = 0;
+            if (state.products.net) selectedCount++;
+            if (state.products.phone) selectedCount++;
+            if (state.products.tv) selectedCount++;
+            if (state.products.cctv) selectedCount++;
+            if (state.products.s1) selectedCount++;
+
+            if (selectedCount === 0) {
+                alert("원하시는 상품을 최소 1개 이상 선택해 주세요! 🎁");
+                return; // 여기서 멈춤 (팝업 안 열림)
+            }
+
+            // 2. [맞춤 텍스트 조립] 고객이 고른 상품을 텍스트로 예쁘게 요약하기
+            let details = [];
             
-            // 2. Step 1(리스트) 건너뛰고 바로 Step 2(폼) 강제 이동시키기 
-            // (이때 DB에 찍힐 상품명을 '셀프 맞춤 요금 설계'로 지정해줍니다)
-            goToQuickStep2('셀프 맞춤 요금 설계'); 
+            // 인터넷: '100M', '500M' 등 속도만 잘라서 표시
+            if (state.products.net) details.push(`인터넷(${state.options['net-speed'].split(' ')[0]})`);
+            
+            if (state.products.phone) details.push(`전화`);
+            
+            if (state.products.tv) details.push(`TV(${state.options['tv-cnt']}대)`);
+            
+            if (state.products.cctv) {
+                let totalCctv = state.options['cctv-in-cnt'] + state.options['cctv-out-cnt'];
+                details.push(`CCTV(${totalCctv}대)`);
+            }
+            
+            if (state.products.s1) details.push(`보안(${state.options['s1-type'].split(' ')[0]})`);
+
+            // 조립된 배열을 ' + ' 기호로 이어붙임 (예: 인터넷(500M) + TV(1대) + CCTV(2대))
+            let finalPlanName = details.join(' + ');
+
+            // 3. 모달 전체 창 열고 강제 이동
+            document.getElementById('quickConsultModal').classList.add('active');
+            goToQuickStep2(finalPlanName); 
         }
         
         function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'flex'; }
