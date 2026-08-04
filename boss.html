@@ -664,6 +664,13 @@
                 <form onsubmit="handlePopupFormSubmit(event)">
                     <input type="hidden" id="popSelectedPlan" value="">
                     
+                    <!-- 💡 [신규 추가] 팝업창 전용 매장 상태 토글 스위치 -->
+                    <input type="hidden" id="popStoreStatus" value="신규 매장 준비 중">
+                    <div class="status-toggle-group">
+                        <button type="button" class="status-btn active" id="pop-btn-status-new" onclick="setPopStatus('신규 매장 준비 중')">신규 매장 준비 중</button>
+                        <button type="button" class="status-btn" id="pop-btn-status-run" onclick="setPopStatus('매장 운영 중')">매장 운영 중</button>
+                    </div>
+                    
                     <div class="form-input-group">
                         <label>사장님 성함</label>
                         <input type="text" class="b2b-input" id="popName" placeholder="성함을 입력해 주세요" required>
@@ -796,6 +803,21 @@
             }
         }
 
+        // --- 팝업창 전용 매장 상태 토글 엔진 ---
+        function setPopStatus(statusText) {
+            document.getElementById('popStoreStatus').value = statusText;
+            const btnNew = document.getElementById('pop-btn-status-new');
+            const btnRun = document.getElementById('pop-btn-status-run');
+
+            if (statusText === '신규 매장 준비 중') {
+                btnNew.classList.add('active');
+                btnRun.classList.remove('active');
+            } else {
+                btnRun.classList.add('active');
+                btnNew.classList.remove('active');
+            }
+        }
+        
         function openQuickModal() {
             document.getElementById('quickConsultModal').classList.add('active');
             backToQuickStep1(); 
