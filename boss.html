@@ -882,6 +882,15 @@
                 return; 
             }
 
+            // 💥 [연타 방어막 & 로딩 멘트 작동!]
+            const submitBtn = e.target.querySelector('.b2b-submit-btn');
+            const originalBtnText = submitBtn.innerHTML; // 원래 버튼 글씨 기억해두기
+            submitBtn.disabled = true; // 버튼 꽁꽁 묶기 (연타 차단)
+            submitBtn.innerHTML = "⏳ 안전하게 접수 중입니다..."; // 안심 멘트로 변경
+            submitBtn.style.background = "#4A5568"; // 버튼을 차분한 회색으로 변경
+            submitBtn.style.boxShadow = "none";
+            submitBtn.style.cursor = "wait"; // 마우스 커서를 로딩(모래시계) 모양으로 변경
+
             const formData = {
                 type: "B2B 메인 접수", 
                 name: name,
@@ -903,6 +912,14 @@
             .catch(error => {
                 console.error('전송 에러:', error);
                 alert("전송 중 일시적인 오류가 발생했습니다. 직통 전화(1833-2440)로 문의 부탁드립니다.");
+            })
+            .finally(() => {
+                // 💥 [버튼 원상복구!] 성공하든 실패하든 전송이 끝나면 원래대로 돌려놓기
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.style.background = "";
+                submitBtn.style.boxShadow = "";
+                submitBtn.style.cursor = "pointer";
             });
         }
 
@@ -926,6 +943,15 @@
                 document.getElementById('popBizNum').focus(); 
                 return; 
             }
+
+            // 💥 [연타 방어막 & 로딩 멘트 작동!]
+            const submitBtn = e.target.querySelector('.b2b-submit-btn');
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true; 
+            submitBtn.innerHTML = "⏳ 안전하게 접수 중입니다..."; 
+            submitBtn.style.background = "#4A5568"; 
+            submitBtn.style.boxShadow = "none";
+            submitBtn.style.cursor = "wait"; 
 
             const formData = {
                 type: "B2B 팝업 접수",
@@ -951,6 +977,14 @@
             .catch(error => {
                 console.error('전송 에러:', error);
                 alert("전송 중 일시적인 오류가 발생했습니다. 직통 전화(1833-2440)로 문의 부탁드립니다.");
+            })
+            .finally(() => {
+                // 💥 [버튼 원상복구!]
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.style.background = "";
+                submitBtn.style.boxShadow = "";
+                submitBtn.style.cursor = "pointer";
             });
         }
 
