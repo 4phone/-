@@ -112,17 +112,23 @@
         .quick-modal-sub { font-size: 14px; color: var(--text-muted); text-align: left; margin-bottom: 20px; }
 
         /* 💡 팝업창 모달 내 SVG 아이콘 여백 & 골드 필터 마법 */
-        .biz-table-icon { width: 22px; height: 22px; filter: brightness(0) saturate(100%) invert(80%) sepia(30%) saturate(800%) hue-rotate(350deg) brightness(95%) contrast(90%); vertical-align: middle; margin-right: 8px; }
+        .biz-table-icon { width: 22px; height: 22px; filter: brightness(0) saturate(100%) invert(80%) sepia(30%) saturate(800%) hue-rotate(350deg) brightness(95%) contrast(90%); vertical-align: middle; margin-right: 8px; flex-shrink: 0; }
 
         /* 모달 내부 커스텀 요금표 리스트 디자인 */
         .modal-plan-group { margin-bottom: 25px; }
         .modal-p-row { background: #0A0C0F; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
         .modal-p-row:hover { border-color: rgba(212,175,55,0.4); background: rgba(212,175,55,0.03); }
-        .m-p-info { flex: 1; text-align: left; }
-        /* 금액 텍스트가 사라졌으므로 타이틀을 예쁘게 중앙 정렬 및 폰트업 */
-        .m-p-title { font-size: 17px; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; } 
         
-        .m-p-action { margin-left: 15px; }
+        /* 💡 텍스트가 짤리지 않고 강제로 한 줄로 고정되도록 설정! */
+        .m-p-info { flex: 1; min-width: 0; text-align: left; }
+        
+        .m-p-title { font-size: 17px; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } 
+        .m-p-title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* 💡 새로 추가된 사장님 마케팅 카피 (절대 두 줄 넘어가지 않게 방어막!) */
+        .m-p-sub-desc { font-size: 13.5px; font-weight: 600; color: var(--gold-light); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; padding-left: 30px; /* 아이콘 폭만큼 들여쓰기해서 텍스트 시작점 맞춤! */ }
+
+        .m-p-action { flex-shrink: 0; margin-left: 15px; }
         .m-p-btn { background: var(--gold-color); color: #111; border: none; padding: 12px 22px; border-radius: 8px; font-size: 15px; font-weight: 900; cursor: pointer; transition: 0.2s; white-space: nowrap; box-shadow: 0 4px 10px rgba(212,175,55,0.3); }
         .m-p-btn:hover { background: #E6C55C; transform: scale(1.05); }
 
@@ -220,6 +226,11 @@
 
             .modal-p-row { flex-direction: column !important; align-items: flex-start !important; padding: 16px 15px !important; gap: 12px !important; }
             .m-p-info { width: 100% !important; }
+            
+            /* 💡 모바일에서도 폰트 최적화 유지 */
+            .m-p-title { font-size: 15px !important; }
+            .m-p-sub-desc { font-size: 12.5px !important; padding-left: 28px !important; margin-top: 4px !important; }
+            
             .m-p-action { width: 100% !important; margin-left: 0 !important; display: flex; justify-content: flex-end; margin-top: 5px; }
             .m-p-btn { width: auto !important; padding: 10px 24px !important; font-size: 14px !important; }
         }
@@ -532,7 +543,7 @@
         </div>
     </div>
 
-    <!-- 💡 [완전 개편] 5. 간편상담 팝업 모달 (복잡한 요금표 삭제, 상품 7가지 팩 심플 나열) -->
+    <!-- 💡 [완전 개편] 5. 간편상담 팝업 모달 (절대 글씨 넘어가지 않음!) -->
     <div class="quick-modal-overlay" id="quickConsultModal">
         <div class="quick-modal-card">
             <button class="quick-modal-close" onclick="closeQuickModal()">✕</button>
@@ -547,7 +558,11 @@
                     <!-- 1. 인터넷 단독 -->
                     <div class="modal-p-row">
                         <div class="m-p-info">
-                            <div class="m-p-title"><img src="wifi.svg" class="biz-table-icon"> 인터넷 단독</div>
+                            <div class="m-p-title">
+                                <img src="wifi.svg" class="biz-table-icon"> 
+                                <span class="m-p-title-text">인터넷 단독</span>
+                            </div>
+                            <span class="m-p-sub-desc">(최저가 실속형!)</span>
                         </div>
                         <div class="m-p-action">
                             <button class="m-p-btn" onclick="goToQuickStep2('인터넷 단독')">상담신청</button>
@@ -557,7 +572,11 @@
                     <!-- 2. 인터넷 + 전화팩 -->
                     <div class="modal-p-row">
                         <div class="m-p-info">
-                            <div class="m-p-title"><img src="wifi.svg" class="biz-table-icon"><img src="phone.svg" class="biz-table-icon"> 인터넷 + 전화 팩</div>
+                            <div class="m-p-title">
+                                <img src="wifi.svg" class="biz-table-icon"><img src="phone.svg" class="biz-table-icon"> 
+                                <span class="m-p-title-text">인터넷 + 전화 팩</span>
+                            </div>
+                            <span class="m-p-sub-desc">(배달전문 필수팩!)</span>
                         </div>
                         <div class="m-p-action">
                             <button class="m-p-btn" onclick="goToQuickStep2('인터넷 + 전화 팩')">상담신청</button>
@@ -567,7 +586,11 @@
                     <!-- 3. 인터넷 + TV팩 -->
                     <div class="modal-p-row">
                         <div class="m-p-info">
-                            <div class="m-p-title"><img src="wifi.svg" class="biz-table-icon"><img src="tv.svg" class="biz-table-icon"> 인터넷 + TV 팩</div>
+                            <div class="m-p-title">
+                                <img src="wifi.svg" class="biz-table-icon"><img src="tv.svg" class="biz-table-icon"> 
+                                <span class="m-p-title-text">인터넷 + TV 팩</span>
+                            </div>
+                            <span class="m-p-sub-desc">(음식점/미용실 추천팩!)</span>
                         </div>
                         <div class="m-p-action">
                             <button class="m-p-btn" onclick="goToQuickStep2('인터넷 + TV 팩')">상담신청</button>
@@ -577,7 +600,11 @@
                     <!-- 4. 인터넷 + 전화 + TV팩 -->
                     <div class="modal-p-row">
                         <div class="m-p-info">
-                            <div class="m-p-title"><img src="wifi.svg" class="biz-table-icon"><img src="phone.svg" class="biz-table-icon"><img src="tv.svg" class="biz-table-icon"> 인터넷 + 전화 + TV 팩</div>
+                            <div class="m-p-title">
+                                <img src="wifi.svg" class="biz-table-icon"><img src="phone.svg" class="biz-table-icon"><img src="tv.svg" class="biz-table-icon"> 
+                                <span class="m-p-title-text">인터넷 + 전화 + TV 팩</span>
+                            </div>
+                            <span class="m-p-sub-desc">(사장님전용 풀패키지팩!)</span>
                         </div>
                         <div class="m-p-action">
                             <button class="m-p-btn" onclick="goToQuickStep2('인터넷 + 전화 + TV 팩')">상담신청</button>
@@ -587,7 +614,11 @@
                     <!-- 5. 인터넷 + CCTV팩 -->
                     <div class="modal-p-row">
                         <div class="m-p-info">
-                            <div class="m-p-title"><img src="wifi.svg" class="biz-table-icon"><img src="cctv.svg" class="biz-table-icon"> 인터넷 + 매장 CCTV 팩</div>
+                            <div class="m-p-title">
+                                <img src="wifi.svg" class="biz-table-icon"><img src="cctv.svg" class="biz-table-icon"> 
+                                <span class="m-p-title-text">인터넷 + 매장 CCTV 팩</span>
+                            </div>
+                            <span class="m-p-sub-desc">(카페/네일샵 등 1인업장 추천팩!)</span>
                         </div>
                         <div class="m-p-action">
                             <button class="m-p-btn" onclick="goToQuickStep2('인터넷 + 매장 CCTV 팩')">상담신청</button>
@@ -597,7 +628,11 @@
                     <!-- 6. 인터넷 + CCTV + 에스원프리미엄팩 -->
                     <div class="modal-p-row">
                         <div class="m-p-info">
-                            <div class="m-p-title"><img src="wifi.svg" class="biz-table-icon"><img src="cctv.svg" class="biz-table-icon"><span style="font-size:18px; margin-right:6px;">🛡️</span> 인터넷 + CCTV + 에스원 프리미엄 팩</div>
+                            <div class="m-p-title">
+                                <img src="wifi.svg" class="biz-table-icon"><img src="cctv.svg" class="biz-table-icon"><img src="shield.svg" class="biz-table-icon"> 
+                                <span class="m-p-title-text">인터넷 + CCTV + 에스원 프리미엄 팩</span>
+                            </div>
+                            <span class="m-p-sub-desc">(1인업장 LGU+ 프리미엄보안팩!)</span>
                         </div>
                         <div class="m-p-action">
                             <button class="m-p-btn" onclick="goToQuickStep2('인터넷 + CCTV + 에스원 프리미엄 팩')">상담신청</button>
@@ -607,7 +642,11 @@
                     <!-- 7. 인터넷 + CCTV + ADT캡스팩 -->
                     <div class="modal-p-row">
                         <div class="m-p-info">
-                            <div class="m-p-title"><img src="wifi.svg" class="biz-table-icon"><img src="cctv.svg" class="biz-table-icon"><span style="font-size:18px; margin-right:6px;">🛡️</span> 인터넷 + CCTV + ADT캡스 팩</div>
+                            <div class="m-p-title">
+                                <img src="wifi.svg" class="biz-table-icon"><img src="cctv.svg" class="biz-table-icon"><img src="shield.svg" class="biz-table-icon"> 
+                                <span class="m-p-title-text">인터넷 + CCTV + ADT캡스 팩</span>
+                            </div>
+                            <span class="m-p-sub-desc">(1인업장 SK 프리미엄보안팩!)</span>
                         </div>
                         <div class="m-p-action">
                             <button class="m-p-btn" onclick="goToQuickStep2('인터넷 + CCTV + ADT캡스 팩')">상담신청</button>
