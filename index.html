@@ -179,6 +179,7 @@
         .quick-step { display: none; animation: slideInRight 0.3s ease; }
         .quick-step.active-step { display: block; }
         @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
         .quick-step h3 { font-size: 22px; color: #111; margin-bottom: 25px; font-weight: 700; letter-spacing: -1px; }
         
         .quick-btn-grid { display: grid; gap: 12px; margin-bottom: 20px; }
@@ -564,13 +565,18 @@
                             <div id="direct-giftbank-layer" style="display:none; margin-bottom:15px; background:#fff; padding:15px; border-radius:10px; border:1px dashed #A0AEC0;">
                                 <div style="font-size:13px; font-weight:900; margin-bottom:8px; color:#2D3748;">💰 사은품 입금 계좌</div>
                                 <div class="direct-form-grid" style="margin-bottom:0;">
-                                    <select id="main-full-giftbankname" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+                                    <select id="main-full-giftbankname" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;" onchange="toggleDirectBankInput(this, 'main-full-giftbankname-direct')">
                                         <option value="">은행 선택 *</option>
-                                        <option value="국민은행">국민은행</option><option value="신한은행">신한은행</option><option value="우리은행">우리은행</option>
-                                        <option value="하나은행">하나은행</option><option value="농협은행">농협은행</option><option value="기업은행">기업은행</option>
-                                        <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option>
+                                        <option value="농협은행">농협은행</option><option value="국민은행">국민은행</option><option value="신한은행">신한은행</option>
+                                        <option value="우리은행">우리은행</option><option value="하나은행">하나은행</option><option value="기업은행">기업은행</option>
+                                        <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option><option value="케이뱅크">케이뱅크</option>
+                                        <option value="우체국">우체국</option><option value="새마을금고">새마을금고</option><option value="신협">신협</option>
+                                        <option value="수협">수협</option><option value="부산은행">부산은행</option><option value="대구은행">대구은행</option>
+                                        <option value="광주은행">광주은행</option><option value="경남은행">경남은행</option><option value="전북은행">전북은행</option>
+                                        <option value="직접입력">그 외 은행 (직접 입력)</option>
                                     </select>
-                                    <input type="text" id="main-full-giftbanknum" placeholder="계좌번호 (- 없이)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+                                    <input type="text" id="main-full-giftbanknum" placeholder="계좌번호 (- 없이 숫자만)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;" oninput="autoCleanAccount(this)" maxlength="16">
+                                    <input type="text" id="main-full-giftbankname-direct" placeholder="은행/증권사명을 직접 입력해 주세요" style="display:none; grid-column: span 2; width:100%; padding:13px; border-radius:8px; border:2px solid #3182CE; font-size:14px; background:#F7FAFC; animation: fadeIn 0.3s;">
                                 </div>
                             </div>
 
@@ -586,13 +592,18 @@
                             <input type="hidden" id="main-full-paytype" value="">
 
                             <div class="direct-form-grid" id="main-full-bank-layer" style="display:none; margin-bottom:15px;">
-                                <select id="main-full-bankname" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+                                <select id="main-full-bankname" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;" onchange="toggleDirectBankInput(this, 'main-full-bankname-direct')">
                                     <option value="">은행 선택 *</option>
-                                    <option value="국민은행">국민은행</option><option value="신한은행">신한은행</option><option value="우리은행">우리은행</option>
-                                    <option value="하나은행">하나은행</option><option value="농협은행">농협은행</option><option value="기업은행">기업은행</option>
-                                    <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option>
+                                    <option value="농협은행">농협은행</option><option value="국민은행">국민은행</option><option value="신한은행">신한은행</option>
+                                    <option value="우리은행">우리은행</option><option value="하나은행">하나은행</option><option value="기업은행">기업은행</option>
+                                    <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option><option value="케이뱅크">케이뱅크</option>
+                                    <option value="우체국">우체국</option><option value="새마을금고">새마을금고</option><option value="신협">신협</option>
+                                    <option value="수협">수협</option><option value="부산은행">부산은행</option><option value="대구은행">대구은행</option>
+                                    <option value="광주은행">광주은행</option><option value="경남은행">경남은행</option><option value="전북은행">전북은행</option>
+                                    <option value="직접입력">그 외 은행 (직접 입력)</option>
                                 </select>
-                                <input type="text" id="main-full-banknum" placeholder="요금납부 계좌번호 (- 없이)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+                                <input type="text" id="main-full-banknum" placeholder="계좌번호 (- 없이 숫자만)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;" oninput="autoCleanAccount(this)" maxlength="16">
+                                <input type="text" id="main-full-bankname-direct" placeholder="은행/증권사명을 직접 입력해 주세요" style="display:none; grid-column: span 2; width:100%; padding:13px; border-radius:8px; border:2px solid #3182CE; font-size:14px; background:#F7FAFC; animation: fadeIn 0.3s;">
                             </div>
 
                             <div id="main-full-card-layer" style="display:none; margin-bottom:15px;">
@@ -908,15 +919,19 @@
                     </div>
 
                     <div id="pop-full-gift-title" class="direct-step-title" style="margin-top:15px; color:#111;">💰 사은품 입금 계좌 (현금 사은품 선택시)</div>
-                    <div id="pop-full-gift-layer" class="direct-form-grid" style="margin-bottom:15px;">
-                        <select id="pop-full-giftbankname" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
-                            <option value="">은행 선택</option>
-                            <option value="국민은행">국민은행</option><option value="신한은행">신한은행</option>
-                            <option value="우리은행">우리은행</option><option value="하나은행">하나은행</option>
-                            <option value="농협은행">농협은행</option><option value="기업은행">기업은행</option>
-                            <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option>
+                    <div id="pop-full-gift-layer" class="direct-form-grid" style="margin-bottom:15px; position:relative;">
+                        <select id="pop-full-giftbankname" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;" onchange="toggleDirectBankInput(this, 'pop-full-giftbankname-direct')">
+                            <option value="">은행 선택 *</option>
+                            <option value="농협은행">농협은행</option><option value="국민은행">국민은행</option><option value="신한은행">신한은행</option>
+                            <option value="우리은행">우리은행</option><option value="하나은행">하나은행</option><option value="기업은행">기업은행</option>
+                            <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option><option value="케이뱅크">케이뱅크</option>
+                            <option value="우체국">우체국</option><option value="새마을금고">새마을금고</option><option value="신협">신협</option>
+                            <option value="수협">수협</option><option value="부산은행">부산은행</option><option value="대구은행">대구은행</option>
+                            <option value="광주은행">광주은행</option><option value="경남은행">경남은행</option><option value="전북은행">전북은행</option>
+                            <option value="직접입력">그 외 은행 (직접 입력)</option>
                         </select>
-                        <input type="text" id="pop-full-giftbanknum" placeholder="계좌번호 (- 없이)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px; background:#f9f9f9;">
+                        <input type="text" id="pop-full-giftbanknum" placeholder="계좌번호 (- 없이 숫자만)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px; background:#f9f9f9;" oninput="autoCleanAccount(this)" maxlength="16">
+                        <input type="text" id="pop-full-giftbankname-direct" placeholder="은행/증권사명을 직접 입력해 주세요" style="display:none; grid-column: span 2; width:100%; padding:13px; border-radius:8px; border:2px solid #3182CE; font-size:14px; background:#F7FAFC; animation: fadeIn 0.3s;">
                     </div>
 
                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; margin-bottom: 8px;">
@@ -930,15 +945,19 @@
                     <input type="hidden" id="pop-full-paytype" value="">
 
                     <!-- 요금 납부 - 계좌 -->
-                    <div class="direct-form-grid" id="pop-full-bank-layer" style="display:none; margin-bottom:15px;">
-                        <select id="pop-full-bankname" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;">
+                    <div class="direct-form-grid" id="pop-full-bank-layer" style="display:none; margin-bottom:15px; position:relative;">
+                        <select id="pop-full-bankname" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px;" onchange="toggleDirectBankInput(this, 'pop-full-bankname-direct')">
                             <option value="">은행 선택 *</option>
-                            <option value="국민은행">국민은행</option><option value="신한은행">신한은행</option>
-                            <option value="우리은행">우리은행</option><option value="하나은행">하나은행</option>
-                            <option value="농협은행">농협은행</option><option value="기업은행">기업은행</option>
-                            <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option>
+                            <option value="농협은행">농협은행</option><option value="국민은행">국민은행</option><option value="신한은행">신한은행</option>
+                            <option value="우리은행">우리은행</option><option value="하나은행">하나은행</option><option value="기업은행">기업은행</option>
+                            <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option><option value="케이뱅크">케이뱅크</option>
+                            <option value="우체국">우체국</option><option value="새마을금고">새마을금고</option><option value="신협">신협</option>
+                            <option value="수협">수협</option><option value="부산은행">부산은행</option><option value="대구은행">대구은행</option>
+                            <option value="광주은행">광주은행</option><option value="경남은행">경남은행</option><option value="전북은행">전북은행</option>
+                            <option value="직접입력">그 외 은행 (직접 입력)</option>
                         </select>
-                        <input type="text" id="pop-full-banknum" placeholder="계좌번호 (- 없이)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px; background:#f9f9f9;">
+                        <input type="text" id="pop-full-banknum" placeholder="계좌번호 (- 없이 숫자만)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px; background:#f9f9f9;" oninput="autoCleanAccount(this)" maxlength="16">
+                        <input type="text" id="pop-full-bankname-direct" placeholder="은행/증권사명을 직접 입력해 주세요" style="display:none; grid-column: span 2; width:100%; padding:13px; border-radius:8px; border:2px solid #3182CE; font-size:14px; background:#F7FAFC; animation: fadeIn 0.3s;">
                     </div>
 
                     <!-- 요금 납부 - 카드 -->
@@ -951,7 +970,7 @@
                                 <option value="롯데카드">롯데카드</option><option value="하나카드">하나카드</option>
                                 <option value="우리카드">우리카드</option><option value="NH카드">NH카드</option>
                             </select>
-                            <input type="text" id="pop-full-cardnum" placeholder="신용카드 번호 (- 없이)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px; background:#f9f9f9;">
+                            <input type="text" id="pop-full-cardnum" placeholder="신용카드 번호 (- 없이 숫자만)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px; background:#f9f9f9;" oninput="autoCleanAccount(this)" maxlength="16">
                         </div>
                         <input type="text" id="pop-full-cardvalid" placeholder="유효기간 (MM/YY)" style="width:100%; padding:13px; border-radius:8px; border:2px solid #E2E8F0; font-size:14px; background:#f9f9f9;">
                     </div>
@@ -1109,6 +1128,32 @@
                     document.getElementById(prefix + '-addr2').focus();
                 }
             }).open();
+        }
+
+        // 💥 [신규] 계좌번호 숫자만 남기기 (스마트 방어막)
+        function autoCleanAccount(target) {
+            target.value = target.value.replace(/[^0-9]/g, '');
+        }
+
+        // 💥 [신규] 은행 직접입력 텍스트 창 토글 (스르륵 나타나는 효과)
+        function toggleDirectBankInput(selectEl, targetId) {
+            const targetEl = document.getElementById(targetId);
+            if (selectEl.value === '직접입력') {
+                targetEl.style.display = 'block';
+                targetEl.focus();
+            } else {
+                targetEl.style.display = 'none';
+                targetEl.value = '';
+            }
+        }
+
+        // 💥 [신규] 최종 은행명 추출기 (드롭다운 OR 직접입력 판별)
+        function getBankName(selectId, directId) {
+            const selectVal = document.getElementById(selectId).value;
+            if (selectVal === '직접입력') {
+                return document.getElementById(directId).value.trim();
+            }
+            return selectVal;
         }
 
         // 💥 [3단계] 원스톱 바로접수 오토 플로우 (버튼 연쇄 반응) 로직
@@ -1331,7 +1376,7 @@
             }
         }
 
-        // 💥 [신규] '계좌 복사' 버튼 표시 조건 체크 함수
+        // 💥 [신규] '계좌 복사' 버튼 표시 조건 체크 함수 (메인)
         function checkCopyButtonVisibility() {
             const giftType = document.getElementById('main-full-gifttype').value;
             const payType = document.getElementById('main-full-paytype').value;
@@ -1345,17 +1390,24 @@
             }
         }
 
-        // 💥 [신규] 계좌 정보 복사 실행 함수
+        // 💥 [신규] 계좌 정보 복사 실행 함수 (메인)
         function copyAccountInfo() {
-            const giftBankName = document.getElementById('main-full-giftbankname').value;
+            const selectVal = document.getElementById('main-full-giftbankname').value;
+            const directVal = document.getElementById('main-full-giftbankname-direct').value.trim();
             const giftBankNum = document.getElementById('main-full-giftbanknum').value.trim();
 
-            if (!giftBankName || !giftBankNum) {
-                alert("위쪽 💰 '사은품 입금 계좌'의 은행명과 계좌번호를 먼저 입력해 주세요!");
+            if (!selectVal || !giftBankNum || (selectVal === '직접입력' && !directVal)) {
+                alert("위쪽 💰 '사은품 입금 계좌'의 은행명과 계좌번호를 먼저 정확히 입력해 주세요!");
                 document.getElementById('main-full-giftbanknum').focus();
                 return;
             }
-            document.getElementById('main-full-bankname').value = giftBankName;
+            
+            const paySelect = document.getElementById('main-full-bankname');
+            paySelect.value = selectVal;
+            toggleDirectBankInput(paySelect, 'main-full-bankname-direct');
+            if (selectVal === '직접입력') {
+                document.getElementById('main-full-bankname-direct').value = directVal;
+            }
             document.getElementById('main-full-banknum').value = giftBankNum;
 
             const payBankLayer = document.getElementById('main-full-bank-layer');
@@ -1365,45 +1417,47 @@
                 payBankLayer.style.backgroundColor = "transparent";
             }, 600);
         }
-        // 💥 [신규] 팝업용 '계좌 복사' 버튼 표시 조건 체크 함수
-function checkCopyButtonVisibilityPop() {
-    const payType = document.getElementById('pop-full-paytype').value;
-    const copyBtnPop = document.getElementById('btn-copy-account-pop');
 
-    if (copyBtnPop) {
-        // 팝업에서는 isGiftMode(가전사은품 모드)가 아닐 때가 '현금' 사은품 상태입니다.
-        if (!isGiftMode && payType === '계좌') {
-            copyBtnPop.style.display = 'block';
-        } else {
-            copyBtnPop.style.display = 'none';
+        // 💥 [신규] '계좌 복사' 버튼 표시 조건 체크 함수 (팝업)
+        function checkCopyButtonVisibilityPop() {
+            const payType = document.getElementById('pop-full-paytype').value;
+            const copyBtnPop = document.getElementById('btn-copy-account-pop');
+            if (copyBtnPop) {
+                if (!isGiftMode && payType === '계좌') {
+                    copyBtnPop.style.display = 'block';
+                } else {
+                    copyBtnPop.style.display = 'none';
+                }
+            }
         }
-    }
-}
 
-// 💥 [신규] 팝업용 계좌 정보 복사 실행 함수
-function copyAccountInfoPop() {
-    const giftBankName = document.getElementById('pop-full-giftbankname').value;
-    const giftBankNum = document.getElementById('pop-full-giftbanknum').value.trim();
+        // 💥 [신규] 계좌 정보 복사 실행 함수 (팝업)
+        function copyAccountInfoPop() {
+            const selectVal = document.getElementById('pop-full-giftbankname').value;
+            const directVal = document.getElementById('pop-full-giftbankname-direct').value.trim();
+            const giftBankNum = document.getElementById('pop-full-giftbanknum').value.trim();
 
-    // 값이 비어있는지 체크
-    if (!giftBankName || !giftBankNum) {
-        alert("위쪽 💰 '사은품 입금 계좌'의 은행명과 계좌번호를 먼저 입력해 주세요!");
-        document.getElementById('pop-full-giftbanknum').focus();
-        return;
-    }
+            if (!selectVal || !giftBankNum || (selectVal === '직접입력' && !directVal)) {
+                alert("위쪽 💰 '사은품 입금 계좌'의 은행명과 계좌번호를 먼저 정확히 입력해 주세요!");
+                document.getElementById('pop-full-giftbanknum').focus();
+                return;
+            }
 
-    // 값 복사
-    document.getElementById('pop-full-bankname').value = giftBankName;
-    document.getElementById('pop-full-banknum').value = giftBankNum;
+            const paySelect = document.getElementById('pop-full-bankname');
+            paySelect.value = selectVal;
+            toggleDirectBankInput(paySelect, 'pop-full-bankname-direct');
+            if (selectVal === '직접입력') {
+                document.getElementById('pop-full-bankname-direct').value = directVal;
+            }
+            document.getElementById('pop-full-banknum').value = giftBankNum;
 
-    // 시각적 피드백 (배경색 살짝 깜빡임)
-    const payBankLayer = document.getElementById('pop-full-bank-layer');
-    payBankLayer.style.transition = "background-color 0.3s";
-    payBankLayer.style.backgroundColor = "#FFFDF5"; 
-    setTimeout(() => {
-        payBankLayer.style.backgroundColor = "transparent";
-    }, 600);
-}
+            const payBankLayer = document.getElementById('pop-full-bank-layer');
+            payBankLayer.style.transition = "background-color 0.3s";
+            payBankLayer.style.backgroundColor = "#FFFDF5"; 
+            setTimeout(() => {
+                payBankLayer.style.backgroundColor = "transparent";
+            }, 600);
+        }
 
         function selectDirectGiftType(val, el) {
             document.querySelectorAll('#direct-gifttype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
@@ -1688,7 +1742,6 @@ function copyAccountInfoPop() {
         }
 
         function updateOptions() {
-            // resetToCashMode(); 👈 삭제됨! 통신사 바꿔도 가전모드 유지!
             const speedBox = document.getElementById('speed-box'); if (!speedBox) return; speedBox.innerHTML = '';
             if(!curProv || !curProd) { return; }
             
@@ -2084,8 +2137,12 @@ function copyAccountInfoPop() {
             if(!post || !addr1 || !addr2) { alert("설치 주소를 모두 입력해주세요!"); document.getElementById('pop-full-addr2').focus(); return; }
             if(p.length !== 13 || !p.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('pop-full-phone').focus(); return; }
             
-            const gBank = document.getElementById('pop-full-giftbankname').value;
+            const gBank = getBankName('pop-full-giftbankname', 'pop-full-giftbankname-direct');
             const gNum = document.getElementById('pop-full-giftbanknum').value.trim();
+            if (gBank || gNum) {
+                if(!gBank) { alert('사은품을 입금받으실 은행을 선택 또는 입력해 주세요!'); return; }
+                if(!gNum || gNum.length < 10 || gNum.length > 16) { alert('사은품 입금 계좌번호는 10~16자리 숫자로 정확히 입력해 주세요!'); document.getElementById('pop-full-giftbanknum').focus(); return; }
+            }
             let giftInfo = (gBank && gNum) ? `${gBank} ${gNum}` : "입력 안 함 (또는 가전 선택)";
             
             const payType = document.getElementById('pop-full-paytype').value;
@@ -2093,9 +2150,10 @@ function copyAccountInfoPop() {
             let payResult = "";
             
             if(payType === '계좌') {
-                const bName = document.getElementById('pop-full-bankname').value;
+                const bName = getBankName('pop-full-bankname', 'pop-full-bankname-direct');
                 const bNum = document.getElementById('pop-full-banknum').value.trim();
-                if(!bName || !bNum) { alert('자동이체 하실 계좌정보를 입력해주세요!'); return; }
+                if(!bName) { alert('자동이체 하실 은행을 선택 또는 입력해 주세요!'); return; }
+                if(!bNum || bNum.length < 10 || bNum.length > 16) { alert('자동이체 계좌번호는 10~16자리 숫자로 정확히 입력해 주세요!'); document.getElementById('pop-full-banknum').focus(); return; }
                 payResult = `계좌이체 (${bName} ${bNum})`;
             } else {
                 const cName = document.getElementById('pop-full-cardname').value;
@@ -2126,10 +2184,12 @@ function copyAccountInfoPop() {
             document.getElementById('pop-full-postcode').value = ''; document.getElementById('pop-full-addr1').value = ''; document.getElementById('pop-full-addr2').value = '';
             document.getElementById('pop-full-phone').value = '';
             document.getElementById('pop-full-giftbankname').value = ''; document.getElementById('pop-full-giftbanknum').value = '';
+            document.getElementById('pop-full-giftbankname-direct').value = ""; document.getElementById('pop-full-giftbankname-direct').style.display = "none";
             document.getElementById('pop-btn-bank').classList.remove('active'); document.getElementById('pop-btn-card').classList.remove('active');
             document.getElementById('pop-full-paytype').value = '';
             document.getElementById('pop-full-bank-layer').style.display = 'none'; document.getElementById('pop-full-card-layer').style.display = 'none';
             document.getElementById('pop-full-bankname').value = ''; document.getElementById('pop-full-banknum').value = '';
+            document.getElementById('pop-full-bankname-direct').value = ""; document.getElementById('pop-full-bankname-direct').style.display = "none";
             document.getElementById('pop-full-cardname').value = ''; document.getElementById('pop-full-cardnum').value = ''; document.getElementById('pop-full-cardvalid').value = '';
             document.getElementById('pop-full-privacy').checked = false;
             const copyBtnPop = document.getElementById('btn-copy-account-pop');
@@ -2164,9 +2224,10 @@ function copyAccountInfoPop() {
 
             let giftResult = "";
             if(gifttype === '현금') {
-                const gBankName = document.getElementById('main-full-giftbankname').value;
+                const gBankName = getBankName('main-full-giftbankname', 'main-full-giftbankname-direct');
                 const gBankNum = document.getElementById('main-full-giftbanknum').value.trim();
-                if(!gBankName || !gBankNum) { alert('사은품을 입금받으실 은행과 계좌번호를 입력해 주세요!'); return; }
+                if(!gBankName) { alert('사은품을 입금받으실 은행을 선택 또는 입력해 주세요!'); return; }
+                if(!gBankNum || gBankNum.length < 10 || gBankNum.length > 16) { alert('사은품 입금 계좌번호는 10~16자리 숫자로 정확히 입력해 주세요!'); document.getElementById('main-full-giftbanknum').focus(); return; }
                 giftResult = `현금 입금계좌 (${gBankName} ${gBankNum})`;
             } else if(gifttype === '가전') {
                 const appliance = document.getElementById('main-full-appliance').value;
@@ -2178,9 +2239,10 @@ function copyAccountInfoPop() {
 
             let payResult = "";
             if(paytype === '계좌') {
-                const bName = document.getElementById('main-full-bankname').value;
+                const bName = getBankName('main-full-bankname', 'main-full-bankname-direct');
                 const bNum = document.getElementById('main-full-banknum').value.trim();
-                if(!bName || !bNum) { alert('자동이체 하실 은행과 계좌번호를 입력해 주세요!'); return; }
+                if(!bName) { alert('자동이체 하실 은행을 선택 또는 입력해 주세요!'); return; }
+                if(!bNum || bNum.length < 10 || bNum.length > 16) { alert('자동이체 계좌번호는 10~16자리 숫자로 정확히 입력해 주세요!'); document.getElementById('main-full-banknum').focus(); return; }
                 payResult = `계좌이체 (${bName} ${bNum})`;
             } else if(paytype === '카드') {
                 const cName = document.getElementById('main-full-cardname').value;
@@ -2239,8 +2301,12 @@ function copyAccountInfoPop() {
             
             document.getElementById('main-full-giftbankname').value = "";
             document.getElementById('main-full-giftbanknum').value = "";
+            document.getElementById('main-full-giftbankname-direct').value = "";
+            document.getElementById('main-full-giftbankname-direct').style.display = "none";
             document.getElementById('main-full-bankname').value = "";
             document.getElementById('main-full-banknum').value = "";
+            document.getElementById('main-full-bankname-direct').value = "";
+            document.getElementById('main-full-bankname-direct').style.display = "none";
             document.getElementById('main-full-cardname').value = "";
             document.getElementById('main-full-cardnum').value = "";
             document.getElementById('main-full-cardvalid').value = "";
