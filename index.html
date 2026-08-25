@@ -15,10 +15,10 @@
     <!-- 투명 파비콘 적용 완료 -->
     <link rel="icon" href="사거리로고_투명.png" type="image/png">
     
-    <!-- 🚀 프리텐다드 폰트 불러오기 (절대 안 깨지는 Static 버전) -->
+    <!-- 🚀 프리텐다드 폰트 불러오기 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
     
-    <!-- 다음/카카오 주소 검색 API 스크립트 연동 -->
+    <!-- 다음/카카오 주소 검색 API -->
     <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
     <style>
         :root { --main-bg: #3E441E; --point-color: #2D3214; --gold-color: #FFD700; --fire-orange: #FF5722; --footer-bg: #EAEFE9; --footer-text: #555555; }
@@ -27,22 +27,27 @@
         
         body { margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; background-color: var(--main-bg); color: #fff; letter-spacing: -0.5px; overflow-x: hidden; padding-bottom: 90px; }
         
-        .nav-top-row { display: flex; align-items: center; gap: 12px; }
-        .mobile-menu-btn, .mobile-quick-btn-zone { display: none; }
-        
-        /* 🚀 개편된 최상단 내비게이션 바 */
+        /* 🚀 개편된 최상단 내비게이션 바 (오류 수정 완료) */
         .navbar { position: fixed; top: 0; left: 0; right: 0; height: 80px; background: #FFFFFF; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; z-index: 1000; border-bottom: 3px solid var(--gold-color); box-shadow: 0 4px 20px rgba(0,0,0,0.15); transition: all 0.3s ease-in-out; }
         .nav-logo-group { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
         .nav-logo-group img { height: 50px; display: block; object-fit: contain; background: #FFFFFF; }
         .nav-logo-text { font-size: 24px; font-weight: 900; color: #111111; letter-spacing: -1px; }
         
-        /* 🚀 8개 메뉴 꽉 찬 배치 */
-        .nav-menu { display: flex; gap: 14px; align-items: center; margin-left: 20px; flex-wrap: nowrap; }
-        .nav-menu a { color: #2D3748; text-decoration: none; font-weight: 800; font-size: 15px; transition: 0.2s; padding: 6px 8px; border-radius: 6px; white-space: nowrap; }
-        .nav-menu a:hover { color: var(--fire-orange); background: rgba(0,0,0,0.05); }
-        .nav-menu .nav-divider { color: #CBD5E0; margin: 0 2px; }
-        .nav-menu a.boss-highlight-btn { color: #E64A19 !important; border: 2px solid #FF5722; border-radius: 8px; background-color: rgba(255, 87, 34, 0.08); }
+        /* PC 메뉴 */
+        .pc-only-menu { display: flex; gap: 14px; align-items: center; margin-left: 20px; flex-wrap: nowrap; }
+        .pc-only-menu a { color: #2D3748; text-decoration: none; font-weight: 800; font-size: 15px; transition: 0.2s; padding: 6px 8px; border-radius: 6px; white-space: nowrap; }
+        .pc-only-menu a:hover { color: var(--fire-orange); background: rgba(0,0,0,0.05); }
+        .pc-only-menu .nav-divider { color: #CBD5E0; margin: 0 2px; }
+        .pc-only-menu a.boss-highlight-btn { color: #E64A19 !important; border: 2px solid #FF5722; border-radius: 8px; background-color: rgba(255, 87, 34, 0.08); }
         
+        /* 모바일 메뉴버튼 및 드롭다운 */
+        .mobile-menu-btn { display: none; background: none; border: none; font-size: 28px; color: #111; cursor: pointer; padding: 0; line-height: 1; }
+        #mobile-nav-menu { display: none; position: absolute; top: calc(100% + 5px); right: 15px; width: 170px; background: #fff; border: 2px solid var(--gold-color); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); flex-direction: column; padding: 10px; gap: 5px; z-index: 1001; }
+        #mobile-nav-menu.active { display: flex; }
+        #mobile-nav-menu a { font-size: 15px; text-align: center; padding: 14px; border-bottom: 1px solid #F7FAFC; border-radius: 8px; font-weight: 700; color: #2D3748; text-decoration: none; }
+        #mobile-nav-menu a:last-child { border-bottom: none; }
+        #mobile-nav-menu a.boss-highlight-btn { color: #E64A19; }
+
         .nav-phone-call-zone { display: flex; align-items: center; flex-shrink: 0; margin-left: auto; }
         .nav-phone-btn { display: flex; align-items: center; gap: 6px; background: var(--point-color); color: var(--gold-color); text-decoration: none; padding: 10px 18px; border-radius: 30px; font-weight: 900; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.2s; white-space: nowrap; }
         .nav-phone-btn:hover { transform: scale(1.04); background: #1B1E0C; }
@@ -57,7 +62,7 @@
         .main-mascot { width: 100%; height: 100%; border-radius: 50%; background: #fff; padding: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); border: 6px solid var(--gold-color); transition: transform 0.3s ease-out; }
         .mascot-container:hover .main-mascot { transform: scale(1.08); }
         
-        /* 🚀 메가 임팩트 존 (복구 완료) */
+        /* 🚀 메가 임팩트 존 (CSS 복구 완료) */
         .mega-impact-zone { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; position: relative; }
         .mega-text-top { font-size: 34px; font-weight: 700; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.4); margin-bottom: -5px; letter-spacing: -1px; animation: text-shine 1.5s infinite alternate; }
         @keyframes text-shine { 0% { opacity: 0.9; text-shadow: 0 0 10px rgba(255,255,255,0.5); } 100% { opacity: 1; text-shadow: 0 0 20px #FFD700, 0 0 35px #FFD700; color: #FFFDF5; } }
@@ -75,7 +80,7 @@
         @keyframes badge-glow { 0% { transform: rotate(-10deg) scale(1); filter: drop-shadow(0 0 5px rgba(255, 42, 95, 0.4)); } 100% { transform: rotate(-10deg) scale(1.08); filter: drop-shadow(0 0 20px rgba(255, 42, 95, 1)); } }
 
         .consult-main-card { background: rgba(17, 20, 7, 0.85); border-radius: 20px; padding: 35px 25px; border: 2px solid rgba(255,215,0,0.25); box-shadow: 0 15px 35px rgba(0,0,0,0.4); text-align: center; }
-        .form-group input, .form-group select { width: 100%; padding: 14px; border-radius: 8px; border: 2px solid #E2E8F0; margin-bottom: 15px; font-size: 15px; font-family: inherit; background: #fff; color: #2D3748; box-sizing: border-box; }
+        .form-group input { width: 100%; padding: 14px; border-radius: 8px; border: 2px solid #E2E8F0; margin-bottom: 15px; font-size: 15px; font-family: inherit; background: #fff; color: #2D3748; box-sizing: border-box; }
         
         .privacy-agree-zone { text-align: left; padding: 4px 2px 15px 2px; font-family: 'Noto Sans KR', sans-serif; }
         .privacy-label { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: #CBD5E0; cursor: pointer; line-height: 1.4; }
@@ -108,11 +113,11 @@
         .prev-arrow { left: 0; }
         .next-arrow { right: 0; }
 
-        /* 🚀 10대 베스트 요금 라인업 CSS */
+        /* 🚀 10대 베스트 요금 라인업 CSS (로고 사이즈 및 정렬 수정) */
         #best-plan-section { max-width: 1200px; margin: 0 auto; padding-top: 20px; }
         .prov-section { margin-bottom: 60px; background: rgba(0,0,0,0.15); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,215,0,0.2); }
         .prov-title { display: flex; align-items: center; gap: 15px; font-size: 26px; font-weight: 900; color: #FFD700; margin-top: 0; margin-bottom: 25px; border-bottom: 2px dashed rgba(255,215,0,0.3); padding-bottom: 15px; justify-content: flex-start; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
-        .prov-title img { width: 90px; height: 35px; background: #fff; padding: 4px 8px; border-radius: 8px; object-fit: contain; } /* 🚀 로고 크기 고정 */
+        .prov-title img { width: 90px; height: 35px; background: #fff; padding: 4px 8px; border-radius: 8px; object-fit: contain; }
         .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
         .plan-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: left; display: flex; flex-direction: column; }
         .plan-card-header { background: #1A202C; color: #fff; padding: 20px; font-size: 18px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; letter-spacing: -0.5px; }
@@ -135,7 +140,7 @@
         .quick-close-btn { position: absolute; top: 15px; right: 15px; background: #F7FAFC; border: 1px solid #E2E8F0; font-size: 14px; font-weight: 700; color: #555; cursor: pointer; padding: 8px 14px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); z-index: 100; transition: 0.2s; }
         .quick-close-btn:hover { background: #E2E8F0; }
 
-        /* 🚀 PC 전용 셀프요금설계 팝업 내부 CSS (ID 충돌 방지용 pc- 접두사 적용) */
+        /* 🚀 PC 전용 셀프요금설계 팝업 CSS */
         .pc-calc-wrapper { width: 100%; background: #fff; border-radius: 24px; padding: 0; color: #2D3748; position: relative; }
         .pc-calc-group { margin-bottom: 35px; text-align: left; }
         .pc-calc-group-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: #1A202C; border-left: 5px solid var(--main-bg); padding-left: 10px; }
@@ -199,7 +204,7 @@
         .theme-LG .mq-plan-header { background: #E50073; } .theme-LG .mq-plan-card:hover { border-color: #E50073; } .theme-LG .mq-plan-gift .gift-label, .theme-LG .mq-plan-gift .gift-val { color: #E50073; } .theme-LG .mq-plan-card:hover .mq-plan-select-btn { background: #E50073; border-color: #E50073; color: #fff; }
         .theme-스카이 .mq-plan-header { background: #FF9800; } .theme-스카이 .mq-plan-card:hover { border-color: #FF9800; } .theme-스카이 .mq-plan-gift .gift-label, .theme-스카이 .mq-plan-gift .gift-val { color: #FF9800; } .theme-스카이 .mq-plan-card:hover .mq-plan-select-btn { background: #FF9800; border-color: #FF9800; color: #fff; }
 
-        /* 🚀 사이드바 다이렉트 팝업 (분할 모달) 전용 CSS */
+        /* 사이드바 다이렉트 팝업 (분할 모달) 전용 CSS */
         .split-popup-content { background: #fff; width: 95%; max-width: 1000px; border-radius: 20px; display: flex; flex-direction: row; overflow: hidden; position: relative; max-height: 85vh; box-shadow: 0 15px 40px rgba(0,0,0,0.5); transform: translateY(20px); transition: transform 0.3s ease; text-align: left; margin: auto; }
         .quick-popup-overlay.active .split-popup-content { transform: translateY(0); }
         .split-left { flex: 1; padding: 40px 30px; background: #F8FAFC; overflow-y: auto; border-right: 2px solid #E2E8F0; }
@@ -253,6 +258,8 @@
         .footer-row-info span b { color: #fff; font-weight: 500; }
         .footer-copyright { color: #718096; font-size: 12px; margin-top: 8px; }
 
+        .prov-badge { padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0; }
+
         .privacy-modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 5000; align-items: center; justify-content: center; padding: 20px; }
         .privacy-modal-card { background: #ffffff; color: #2D3748; width: 100%; max-width: 640px; border-radius: 20px; display: flex; flex-direction: column; max-height: 85vh; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
         .privacy-modal-header { padding: 20px 25px; border-bottom: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: space-between; }
@@ -264,6 +271,7 @@
 
         /* PC (데스크탑) 대응 */
         @media (min-width: 951px) {
+            #mobile-nav-menu { display: none !important; }
             .pc-quick-menu { display: flex; flex-direction: column; gap: 15px; position: fixed; right: 25px; top: 50%; transform: translateY(-50%); z-index: 9999; }
             .pc-q-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 85px; height: 85px; border-radius: 20px; text-decoration: none; font-weight: 700; font-size: 14px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); border: 2px solid rgba(255,255,255,0.2); }
             .pc-q-btn:hover { transform: translateX(-12px) scale(1.05); box-shadow: -5px 15px 25px rgba(0,0,0,0.25); }
@@ -275,17 +283,13 @@
 
         /* 모바일 대응 */
         @media (max-width: 950px) {
+            .pc-only-menu { display: none !important; }
             .navbar { padding: 12px 15px; height: auto; flex-direction: row !important; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0; border-bottom: none; } 
             .nav-logo-group { order: 1; } 
             .nav-logo-group img { height: 36px; } 
             .nav-logo-text { font-size: 18px; }
             
             .mobile-menu-btn { order: 2; display: block; background: none; border: none; font-size: 28px; color: #111; cursor: pointer; padding: 0; line-height: 1; }
-            
-            .nav-menu { display: none !important; position: absolute !important; top: calc(100% + 5px) !important; right: 15px !important; left: auto !important; width: 170px !important; background: #fff; border: 2px solid var(--gold-color); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); flex-direction: column !important; padding: 10px !important; gap: 5px !important; transform: none !important; z-index: 1001; margin-left:0; }
-            .nav-menu.active { display: flex !important; }
-            .nav-menu a { font-size: 15px !important; text-align: center; padding: 14px !important; border-bottom: 1px solid #F7FAFC; border-radius: 8px !important; font-weight: 700 !important; white-space: normal; }
-            .nav-menu a:last-child { border-bottom: none; }
             
             .nav-phone-call-zone { display: none; }
 
@@ -373,8 +377,6 @@
             .mq-btn-grid.col-4 { grid-template-columns: repeat(2, 1fr) !important; }
         }
     </style>
-
-    <meta name="naver-site-verification" content="5c3f44754e17810b58e999eabcd4203fe523fd0c" />
 </head>
 <body>
     
@@ -385,7 +387,7 @@
         </a>
         
         <!-- 🚀 PC 전용 8구 풀 네비게이션 -->
-        <div class="nav-menu" id="pc-nav-menu" style="display: none;">
+        <div class="nav-menu pc-only-menu" id="pc-nav-menu">
             <a href="#prov-section-SK" onclick="scrollToProv(event, 'SK')">SK인터넷</a>
             <a href="#prov-section-LG" onclick="scrollToProv(event, 'LG')">LG U+</a>
             <a href="#prov-section-KT" onclick="scrollToProv(event, 'KT')">KT인터넷</a>
@@ -454,7 +456,7 @@
                 </div>
             </div>
             <div class="main-right" id="mainCardTriggerPoint">
-                <!-- 🚀 1분 간편 빠른상담 (군더더기 싹 뺀 다이어트 폼) -->
+                <!-- 🚀 1분 간편 빠른상담 -->
                 <div class="consult-main-card">
                     <h3 style="color:#FFD700; margin-top:0; font-size:24px; font-weight:900; margin-bottom: 25px; letter-spacing:-1px;">⚡ 1분 간편 빠른상담</h3>
                     
@@ -477,16 +479,14 @@
         </div>
     </div>
 
-    <!-- 📸 털보아저씨 찐 설치후기 가로 스와이프 슬라이더 섹션 (위치 변경 완!) -->
+    <!-- 📸 털보아저씨 찐 설치후기 가로 스와이프 슬라이더 섹션 (순서 변경) -->
     <div id="blog-stories-section" style="position: relative;">
         <div class="section-title" style="margin-bottom: 25px; text-align: center;">🧔🏻‍♂️ 털보아저씨의 찐 설치 스토리</div>
         
-        <!-- PC 전용 좌우 화살표 버튼 -->
         <button class="story-arrow prev-arrow" onclick="scrollStory(-1)">◀</button>
         <button class="story-arrow next-arrow" onclick="scrollStory(1)">▶</button>
 
         <div class="story-slider-container" id="storySlider">
-            
             <div class="story-card">
                 <div class="story-img-box"><img src="야키토리 사화.jpg" alt="안산 야키토리 사화 설치후기" loading="lazy"></div>
                 <div class="story-content">
@@ -495,7 +495,6 @@
                     <div class="story-info-item"><span class="story-label">매장소개</span><div class="story-desc">낭만적인 분위기의 야키토리 전문 맛집! 맛도 분위기도 최고인 안산1등 맛집입니다.</div></div>
                 </div>
             </div>
-
             <div class="story-card">
                 <div class="story-img-box"><img src="프리드라이프.png" alt="프리드라이프 의정부가능점 설치후기" loading="lazy"></div>
                 <div class="story-content">
@@ -504,7 +503,6 @@
                     <div class="story-info-item"><span class="story-label">매장소개</span><div class="story-desc">업무 차질이 없도록 끊김 없는 고속 통신망이 필수인 사무실 환경에 맞춤 설계 완료!</div></div>
                 </div>
             </div>
-
             <div class="story-card">
                 <div class="story-img-box"><img src="허그미세라믹.jpg" alt="대전 허그미세라믹 설치후기" loading="lazy"></div>
                 <div class="story-content">
@@ -513,7 +511,6 @@
                     <div class="story-info-item"><span class="story-label">매장소개</span><div class="story-desc">대전에 위치한 감성 가득한 도자기 공방! 취미생활이나 체험용으로 추천드립니다.</div></div>
                 </div>
             </div>
-
             <div class="story-card">
                 <div class="story-img-box"><img src="점보프린트.gif" alt="서울 점보프린트 설치후기" loading="lazy"></div>
                 <div class="story-content">
@@ -522,7 +519,6 @@
                     <div class="story-info-item"><span class="story-label">매장소개</span><div class="story-desc">jumboprint.co.kr 명함/전단/팜플렛/스티커 등 모든 제작은 점보프린트!</div></div>
                 </div>
             </div>
-
             <div class="story-card">
                 <div class="story-img-box"><img src="연일왕자회오리날다.jpg" alt="대전 연일왕자회오리날다 설치후기" loading="lazy"></div>
                 <div class="story-content">
@@ -531,11 +527,10 @@
                     <div class="story-info-item"><span class="story-label">매장소개</span><div class="story-desc">평범한 오리요리는 가라! 대전에서 오리요리 배달은 이곳에서!</div></div>
                 </div>
             </div>
-            
         </div>
     </div>
 
-    <!-- 🚀 10대 베스트 요금 라인업 섹션 (위치 변경 완!) -->
+    <!-- 🚀 신규: 10대 베스트 요금 라인업 섹션 (순서 변경) -->
     <div id="best-plan-section" class="section">
         <div class="section-title">🏆 사거리인터넷 10대 베스트 요금 라인업</div>
         <p style="color:#A0AEC0; font-size:16px; margin-bottom:40px; font-weight:700;">복잡한 계산은 그만! 가장 혜택이 좋은 통신사별 베스트 요금을 한눈에 확인하세요.</p>
@@ -934,7 +929,7 @@
         </div>
     </div>
 
-    <!-- 통합된 단일 Javascript 영역 -->
+    <!-- 완벽하게 재조립된 100% 클린 Javascript 영역 -->
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_1x_FqN2kW6FJyoHDXw7IF_-Rgl4lD1n_msdM48sgXG7Ch1lMCnTKz5ytcylQAy-P/exec";
         const sheetId = '14xary6wzUQph0YEYAS1Ewc_eWtOo1KIkw5FKpZEl28c';
@@ -949,11 +944,8 @@
         let currentCalculatedPrice = "0원";
         let currentGiftStatusText = "사은품 대기 중";
         let quickData = { telecom: '', product: '', speed: '', price: '', gift: '' };
-        let giftData = []; 
-        let giftDetailData = []; 
-        let isGiftMode = false;
-        let selectedGift = null;
-        let currentViewedPopupGiftName = "";
+        let giftData = [], giftDetailData = []; 
+        let isGiftMode = false, selectedGift = null, currentViewedPopupGiftName = "";
         let hellovisionRegions = [], skPopRegions = []; 
 
         const targetTvs = {
@@ -966,16 +958,16 @@
 
         const logoMap = {
             'SK': '에스케이로고.jpg',
-            'KT': '케이티로고.jpg',
             'LG': '엘지로고.png',
+            'KT': '케이티로고.jpg',
             '스카이': '스카이로고.png',
             '헬로': '헬로비전로고.png'
         };
 
         const nameMap = {
             'SK': 'SK 브로드밴드',
-            'KT': 'KT 인터넷',
             'LG': 'LG U+',
+            'KT': 'KT 인터넷',
             '스카이': 'KT스카이라이프',
             '헬로': 'LG헬로비전'
         };
@@ -1006,7 +998,6 @@
             
             renderBestPlans(); 
             setupUniversalStickyScroll();
-            checkPcNavbarDisplay();
         }
 
         async function loadGiftData() {
@@ -1020,18 +1011,15 @@
             } catch(e) { console.error("사은품 데이터 로드 실패", e); }
         }
 
-        window.onload = function() { loadData(); loadGiftData(); };
-        window.addEventListener('resize', checkPcNavbarDisplay);
+        window.onload = function() { 
+            loadData(); loadGiftData(); 
+        };
 
-        function checkPcNavbarDisplay() {
-            const pcNav = document.getElementById('pc-nav-menu');
-            if(window.innerWidth > 950) { pcNav.style.display = 'flex'; } else { pcNav.style.display = 'none'; }
-        }
-
-        /* 🚀 메인 요금표 10줄 렌더링 함수 */
+        /* 🚀 10대 베스트 요금표 (순서/로고/문구 디테일 완벽 수정) */
         function renderBestPlans() {
             const container = document.getElementById('best-plan-container');
             container.innerHTML = '';
+            // 팀장님 요청 순서: SK, LG, KT, 스카이, 헬로
             const provs = ['SK', 'LG', 'KT', '스카이', '헬로'];
             const types = ['결합', '단독'];
             const speeds = ['100M', '500M', '1G'];
@@ -1080,6 +1068,7 @@
                             let formatSubsidy = subsidy.includes('원') ? subsidy : subsidy + '원';
                             let actualTv = cleanRow[3] || "";
                             
+                            // 🚀 [수정] 디테일 추가
                             let conditionText = "";
                             if (prov === '스카이' || prov === '헬로') { conditionText = "✨ 알뜰 실속"; } 
                             else if (type === '결합') { conditionText = "📱 휴대폰 결합시"; } 
@@ -1121,7 +1110,7 @@
             if(window.innerWidth <= 950) { closeMobileMenu(); }
         }
 
-        /* 🚀 베스트 요금표에서 다이렉트 팝업 즉시 오픈 */
+        /* 🚀 베스트 요금표 -> 분할 팝업 바로 띄우기 (오류 완벽 해결) */
         function openDirectFromBest(prov, prod, speed, tv, price, gift) {
             document.getElementById('main-full-telecom').value = prov;
             document.getElementById('main-full-prodtype').value = prod;
@@ -1139,7 +1128,6 @@
             document.getElementById('direct-summary-price').innerText = currentCalculatedPrice;
             document.getElementById('direct-summary-gift').innerText = currentGiftStatusText;
 
-            // 좌측 선택 버튼 디자인 갱신
             document.querySelectorAll('#direct-telecom-group .direct-option-btn').forEach(b => {
                 b.classList.toggle('active', b.innerText.includes(prov) || (prov==='LG'&&b.innerText==='LG U+'));
             });
@@ -1147,7 +1135,6 @@
                 b.classList.toggle('active', b.innerText.includes(prod));
             });
 
-            // 우측 화면 세팅
             document.getElementById('direct-result-layer').style.display = 'block';
             document.getElementById('direct-final-layer').style.display = 'block';
             
@@ -1156,9 +1143,10 @@
 
             document.getElementById('sidebar-direct-popup-overlay').classList.add('active');
             document.body.style.overflow = 'hidden';
+            goToDirectStep('1');
         }
 
-        /* 🚀 셀프 요금설계 기기별 팝업 오픈 */
+        /* 🚀 팝업 열기 닫기 및 메뉴 조작 공통 함수들 */
         function openSelfCalcPopup(e) {
             if(e) e.preventDefault();
             if (window.innerWidth > 950) {
@@ -1178,7 +1166,61 @@
             }
         }
 
-        /* 🚀 PC 전용 셀프계산기 함수 (pc_ 접두어) */
+        function openPcPhonePopup(e) {
+            e.preventDefault();
+            document.getElementById('pc-phone-popup-overlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closePcPhonePopup(e) {
+            if(e) e.preventDefault();
+            if (!e || e.target === document.getElementById('pc-phone-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) { 
+                document.getElementById('pc-phone-popup-overlay').classList.remove('active'); 
+                document.body.style.overflow = ''; 
+            }
+        }
+
+        function openMobileDirectForm(e) {
+            e.preventDefault();
+            document.getElementById('sidebar-direct-popup-overlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function openPcDirectForm(e) {
+            e.preventDefault();
+            document.getElementById('sidebar-direct-popup-overlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeSidebarDirectPopup(e) {
+            if(e) e.preventDefault();
+            if (!e || e.target === document.getElementById('sidebar-direct-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) { 
+                document.getElementById('sidebar-direct-popup-overlay').classList.remove('active'); 
+                document.body.style.overflow = ''; 
+            }
+        }
+        function toggleMobileMenu() { document.getElementById('mobile-nav-menu').classList.toggle('active'); }
+        function closeMobileMenu() { document.getElementById('mobile-nav-menu').classList.remove('active'); }
+
+        function toggleRegionAccordion() {
+            const panel = document.getElementById('region-list-panel');
+            const arrow = document.getElementById('accordion-arrow');
+            if (panel && arrow) { panel.classList.toggle('open'); arrow.classList.toggle('open'); }
+        }
+
+        function scrollStory(direction) {
+            const slider = document.getElementById('storySlider');
+            if (slider) { slider.scrollBy({ left: 320 * direction, behavior: 'smooth' }); }
+        }
+
+        function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'flex'; }
+        function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
+        
+        function setupUniversalStickyScroll() {
+            const navbar = document.querySelector('.navbar'); 
+            window.addEventListener('scroll', function() {
+                if (navbar) { if (window.pageYOffset > 50 && window.innerWidth <= 950) { navbar.classList.add('scrolled'); } else { navbar.classList.remove('scrolled'); } }
+            }, { passive: true });
+        }
+
+        /* 🚀 PC 셀프 요금설계 전용 자바스크립트 (pc_ 접두어) */
         function pc_setProvider(p, el) { 
             document.querySelectorAll('#pc-logoOptionsScroll .pc-logo-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); pc_curProv = p; if(!pc_curProd) pc_curProd = '단독';
             const menuBox = document.getElementById('pc-product-type-box');
@@ -1203,7 +1245,6 @@
             document.querySelectorAll('#pc-product-type-box .pc-text-btn').forEach(b => { 
                 b.classList.remove('active', 'locked'); 
                 if(b.textContent.includes(pc_curProd === '단독' ? '단독' : (pc_curProd === '결합' ? '결합' : '요금할인형'))) b.classList.add('active'); 
-                if (selectedGift && (b.textContent.includes('단독') || b.textContent.includes('요금할인형'))) b.classList.add('locked');
             });
             
             if(pc_curProd === '요금할인형') {
@@ -1222,27 +1263,13 @@
             let speeds = [...new Set(filteredRows.map(row => row[2].trim()))];
             if(pc_curProd !== '요금할인형') { speeds.sort((a, b) => (b.includes('1G') ? 1000 : parseInt(b) || 100) - (a.includes('1G') ? 1000 : parseInt(a) || 100)); }
             
-            const slot = document.getElementById('pc-region-content-slot');
-            if(slot) {
-                if(pc_curProv === '헬로') {
-                    let tableRowsHtml = ''; hellovisionRegions.forEach(r => { tableRowsHtml += `<tr><td><span class="region-tag">${r.city}</span></td><td>${r.districts}</td></tr>`; });
-                    slot.innerHTML = `<div class="accordion-wrapper"><button class="accordion-trigger" onclick="toggleRegionAccordion()"><img src="헬로비전로고.png" alt="헬로" loading="lazy"><span>📍 설치 가능 지역 확인 ▼</span><span class="accordion-arrow" id="accordion-arrow">▼</span></button><div class="accordion-panel" id="region-list-panel"><div class="panel-scroll-box"><table class="region-table"><thead><tr><th style="width:70px;">시/도</th><th>상세 구역 명칭</th></tr></thead><tbody>${tableRowsHtml}</tbody></table></div></div></div>`;
-                } else if(pc_curProv === 'SK' && pc_curProd === '요금할인형') {
-                    let tableRowsHtml = ''; skPopRegions.forEach(r => { tableRowsHtml += `<tr><td><span class="region-tag">${r.city}</span></td><td>${r.districts}</td></tr>`; });
-                    slot.innerHTML = `<div class="accordion-wrapper"><button class="accordion-trigger" onclick="toggleRegionAccordion()"><span style="font-weight:900; color:#E53E3E;">[SK POP 전용]</span><span style="margin-left:5px;">📍 설치 가능 지역 확인 ▼</span><span class="accordion-arrow" id="accordion-arrow">▼</span></button><div class="accordion-panel" id="region-list-panel"><div class="panel-scroll-box"><table class="region-table"><thead><tr><th style="width:70px;">시/도</th><th>상세 구역 명칭</th></tr></thead><tbody>${tableRowsHtml}</tbody></table></div></div></div>`;
-                } else { slot.innerHTML = `<div class="pc-normal-region-box">🏠 전국 어디서나<br>전지역 즉시 설치!</div>`; }
-            }
-            
             if (speeds.length > 0) {
-                if (selectedGift && pc_currentActiveSpeed === '100M') pc_currentActiveSpeed = speeds.includes('500M') ? '500M' : speeds[0];
-                else if (!speeds.includes(pc_currentActiveSpeed)) pc_currentActiveSpeed = speeds[0];
-
-                speeds.forEach((speed, i) => {
-                    const btn = document.createElement('div'); const isLocked = (selectedGift && speed === '100M');
-                    btn.className = 'pc-text-btn' + (speed === pc_currentActiveSpeed ? ' active' : '') + (isLocked ? ' locked' : ''); 
+                if (!speeds.includes(pc_currentActiveSpeed)) pc_currentActiveSpeed = speeds[0];
+                speeds.forEach((speed) => {
+                    const btn = document.createElement('div'); 
+                    btn.className = 'pc-text-btn' + (speed === pc_currentActiveSpeed ? ' active' : ''); 
                     btn.textContent = speed;
                     btn.onclick = function() { 
-                        if (isLocked) { alert("⚠️ 선택하신 프리미엄 가전은 '500M 이상' 요금제 가입 시에만 증정됩니다.\n100M 상품을 원하시면 우측 상단의 [🔄 가전 초기화] 버튼을 눌러주세요!"); return; }
                         pc_currentActiveSpeed = speed; document.querySelectorAll('#pc-speed-box .pc-text-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); pc_updateTvOptions(filteredRows, speed); 
                     };
                     speedBox.appendChild(btn);
@@ -1303,8 +1330,6 @@
                 printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]} / ${cleanRow[3]}`;
             }
             
-            const matchedGifts = getMatchingGifts(pc_curProv, pc_curProd, pc_currentActiveSpeed, cleanRow[3].trim());
-            renderGiftCards(matchedGifts);
             if (baseEl) { baseEl.innerHTML = isAlthempone ? `${basePrice}<span>원/월</span>` : (basePrice.includes('원') ? basePrice : `${basePrice}<span>원</span>`); }
             
             const labelSlot = document.getElementById('pc-subsidy-label-text'); const subsidySlot = document.getElementById('pc-res-subsidy');
@@ -1313,31 +1338,26 @@
                 currentGiftStatusText = "요금 최대 상쇄 할인 (가전 중복제외)";
             } else {
                 labelSlot.textContent = `사거리 특별 독점 지원금 (설치당일입금)`; subsidySlot.textContent = subsidy.includes('원') ? subsidy : subsidy + '원'; 
-                if (isGiftMode && selectedGift && matchedGifts.some(g => g[4] === selectedGift[4])) {
-                    currentGiftStatusText = `🎁 가전: ${selectedGift[4]}`; printableProductDetail += ` [사은품: ${selectedGift[4]}]`;
-                } else {
-                    currentGiftStatusText = `현금 사은품 ${subsidy} 증정`;
-                }
+                currentGiftStatusText = `현금 사은품 ${subsidy} 증정`;
             }
             
             const cleanSpecText = special ? special.replace(/"/g, '').trim() : "";
             const specEl = document.getElementById('pc-res-special'); 
             if(cleanSpecText) { specEl.innerHTML = `🔥 털보아저씨의 한줄평: ${cleanSpecText} 🔥`; } else { specEl.textContent = ""; }
-            currentSelectedString = printableProductDetail; 
         }
 
         function pc_openDirectFromCalc() {
             if(!pc_curProv || !pc_curProd) { alert("먼저 위에서 통신사와 요금제를 선택해 주세요! 😎"); return; }
-            
             let tv = "";
             if (pc_curProd === '결합') {
                 const activeTvBtn = document.querySelector('#pc-tv-product-box .pc-text-btn.active');
                 if (activeTvBtn) tv = activeTvBtn.innerText;
             }
-            openDirectFromBest(pc_curProv, pc_curProd, pc_currentActiveSpeed, tv, currentCalculatedPrice.replace('월 ', ''), currentGiftStatusText.replace('현금 사은품 ', '').replace(' 증정', ''));
+            document.getElementById('pc-calc-popup-overlay').classList.remove('active');
+            openDirectFromBest(pc_curProv, pc_curProd, pc_currentActiveSpeed, tv, currentCalculatedPrice.replace('월 ', ''), currentGiftStatusText.replace('현금 사은품 ', '').replace(' 증정', '').replace(' 지원', ''));
         }
 
-        /* 🚀 모바일 전용 셀프계산기 스텝 이동 함수 */
+        /* 🚀 모바일 전용 셀프계산기 함수 */
         function goToMobileStep(stepNum) { 
             document.querySelectorAll('#mobile-calc-popup-overlay .mobile-quick-step').forEach(step => { step.classList.remove('active-step'); }); 
             const target = document.getElementById('mobile-quick-step-' + stepNum);
@@ -1381,202 +1401,111 @@
 
         function selectMobileQuickCard(speed, price, gift) { quickData.speed = speed; quickData.price = price; quickData.gift = gift; goToMobileStep(4); }
 
+        /* 🚀 폼 전송 함수 영역 */
+        function submitMainFastForm() {
+            const name = document.getElementById('main-fast-name').value.trim(); 
+            const phone = document.getElementById('main-fast-phone').value.trim(); 
+            const checked = document.getElementById('fast-privacy-check').checked;
+            
+            if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('main-fast-name').focus(); return; } 
+            if(phone.length !== 13 || !phone.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('main-fast-phone').focus(); return; }
+            if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 상담 신청이 가능합니다.'); return; }
+            
+            const formData = { type: "간편 빠른상담", name: name, phone: phone, summary: `희망상품: 상담 후 결정` };
+            
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
+            alert(`[간편 빠른상담 접수 성공! 🎉]\n\n성함: ${name}\n연락처: ${phone}\n\n가장 빠른 시간 내에 연락드리겠습니다!`); 
+            document.getElementById('main-fast-name').value = ""; document.getElementById('main-fast-phone').value = ""; document.getElementById('fast-privacy-check').checked = false;
+        }
+
         function submitMobileQuickApply() {
             const name = document.getElementById('mobile-quick-name').value.trim(); 
             const phone = document.getElementById('mobile-quick-phone').value.trim();
-            
             if(!name || !phone) { alert('성함과 연락처를 모두 적어주셔야 떡값을 쏠 수 있습니다! 😎'); return; }
             if(phone.length !== 13 || !phone.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('mobile-quick-phone').focus(); return; }
             
-            const formData = { 
-                type: "셀프요금설계 (모바일 스텝형)", 
-                name: name, 
-                phone: phone, 
-                summary: `통신사: ${quickData.telecom}\n상품: ${quickData.product} / 속도: ${quickData.speed}\n요금: 월 ${quickData.price}원\n사은품: ${quickData.gift}` 
-            };
+            const formData = { type: "셀프요금설계 (모바일 스텝형)", name: name, phone: phone, summary: `통신사: ${quickData.telecom}\n상품: ${quickData.product} / 속도: ${quickData.speed}\n요금: 월 ${quickData.price}원\n사은품: ${quickData.gift}` };
             
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) })
-                .then(() => console.log('모바일 간단요금표 전송 완료'))
-                .catch(error => console.error('전송 에러:', error));
-
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
             alert(`[간편 접수 성공! 🎉]\n\n${name} 고객님!\n선택하신 [ ${quickData.telecom} / ${quickData.product} / ${quickData.speed} ]\n(월 ${quickData.price}원 / 사은품 ${quickData.gift})\n\n가장 빠른 시간 내에 연락드리겠습니다!`);
-            
-            document.getElementById('mobile-calc-popup-overlay').classList.remove('active'); 
-            document.body.style.overflow = ''; 
+            document.getElementById('mobile-calc-popup-overlay').classList.remove('active'); document.body.style.overflow = ''; 
             document.getElementById('mobile-quick-name').value = ''; document.getElementById('mobile-quick-phone').value = '';
         }
 
-        function execDaumPostcode(prefix) {
-            new daum.Postcode({
-                oncomplete: function(data) {
-                    let addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress;
-                    document.getElementById(prefix + '-postcode').value = data.zonecode;
-                    document.getElementById(prefix + '-addr1').value = addr;
-                    document.getElementById(prefix + '-addr2').focus();
-                }
-            }).open();
-        }
-
-        function autoCleanAccount(target) { target.value = target.value.replace(/[^0-9]/g, ''); }
-        function autoFormatCardValid(target) {
-            let val = target.value.replace(/[^0-9]/g, '');
-            if (val.length >= 3) { target.value = val.substring(0, 2) + '/' + val.substring(2, 4); } else { target.value = val; }
-        }
-        function toggleDirectBankInput(selectEl, targetId) {
-            const targetEl = document.getElementById(targetId);
-            if (selectEl.value === '직접입력') { targetEl.style.display = 'block'; targetEl.focus(); } else { targetEl.style.display = 'none'; targetEl.value = ''; }
-        }
-
-        function getBankName(selectId, directId) {
-            const selectVal = document.getElementById(selectId).value;
-            if (selectVal === '직접입력') { return document.getElementById(directId).value.trim(); }
-            return selectVal;
-        }
-
-        /* 다이렉트 팝업 좌측 컨트롤 */
-        function selectDirectTelecom(val, el) {
-            document.querySelectorAll('#direct-telecom-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); document.getElementById('main-full-telecom').value = val; checkDirectStep2();
-        }
-
-        function selectDirectProd(val, el) {
-            document.querySelectorAll('#direct-prodtype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); document.getElementById('main-full-prodtype').value = val; checkDirectStep2();
-        }
-
-        function checkDirectStep2() {
-            const tel = document.getElementById('main-full-telecom').value;
-            const prod = document.getElementById('main-full-prodtype').value;
+        function submitDirectQuick() {
+            const n = document.getElementById('direct-quick-name').value.trim(); const p = document.getElementById('direct-quick-phone').value.trim(); const chk = document.getElementById('direct-quick-privacy').checked;
+            if(!n || !p) { alert("성함을과 연락처를 입력해주세요!"); return; }
+            if(p.length !== 13 || !p.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('direct-quick-phone').focus(); return; }
+            if(!chk) { alert("개인정보 동의에 체크해주세요!"); return; }
             
-            document.getElementById('direct-speed-layer').style.display = 'none';
-            document.getElementById('direct-tv-layer').style.display = 'none';
-            document.getElementById('direct-result-layer').style.display = 'none';
-            document.getElementById('direct-final-layer').style.display = 'none';
-            document.getElementById('main-full-speed').value = '';
-            document.getElementById('main-full-tvprod').value = '';
+            const prod = document.getElementById('direct-summary-prod').innerText; const price = currentCalculatedPrice; const gift = currentGiftStatusText;
+            const formData = { type: "다이렉트 (즉시 상담신청)", name: n, phone: p, summary: `상품: ${prod}\n요금: ${price}\n혜택: ${gift}` };
+            
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
+            alert(`[즉시 상담신청 접수 성공! 🎉]\n\n상품: ${prod}\n요금: ${price}\n혜택: ${gift}\n성함: ${n}\n연락처: ${p}\n\n빠르게 연락드리겠습니다!`);
+            closeSidebarDirectPopup();
+            document.getElementById('direct-quick-name').value = ''; document.getElementById('direct-quick-phone').value = ''; document.getElementById('direct-quick-privacy').checked = false;
+        }
 
-            if (tel && prod) {
-                document.getElementById('direct-speed-layer').style.display = 'block';
-                renderDirectSpeed(tel, prod);
+        function submitDirectFull() {
+            const n = document.getElementById('pop-full-name').value.trim(); const b = document.getElementById('pop-full-birth').value.trim(); const post = document.getElementById('pop-full-postcode').value.trim();
+            const addr1 = document.getElementById('pop-full-addr1').value.trim(); const addr2 = document.getElementById('pop-full-addr2').value.trim(); const p = document.getElementById('pop-full-phone').value.trim();
+            const chk = document.getElementById('pop-full-privacy').checked;
+
+            if(!n) { alert('성함을 입력해 주세요!'); document.getElementById('pop-full-name').focus(); return; }
+            if(!b || b.length !== 8) { alert('생년월일 8자리를 정확히 입력해 주세요 (예: 19901010)'); document.getElementById('pop-full-birth').focus(); return; }
+            if(!post || !addr1 || !addr2) { alert('설치 주소(우편번호 및 상세주소)를 모두 입력해 주세요!'); document.getElementById('pop-full-addr2').focus(); return; }
+            if(p.length !== 13 || !p.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('pop-full-phone').focus(); return; }
+
+            const telecom = document.getElementById('main-full-telecom').value; const prodtype = document.getElementById('main-full-prodtype').value; const speed = document.getElementById('main-full-speed').value;
+            const tvprod = document.getElementById('main-full-tvprod').value; const gifttype = document.getElementById('main-full-gifttype').value; const paytype = document.getElementById('main-full-paytype').value;
+
+            if(!telecom || !prodtype || !speed || (prodtype === '결합' && !tvprod)) { alert('상품 선택 정보를 모두 선택해 주세요!'); return; }
+            if(!gifttype) { alert('사은품 수령 방식을 선택해 주세요!'); return; }
+
+            let giftResult = "";
+            if(gifttype === '현금') {
+                const gBankName = getBankName('main-full-giftbankname', 'main-full-giftbankname-direct'); const gBankNum = document.getElementById('main-full-giftbanknum').value.trim();
+                if(!gBankName || !gBankNum) { alert('사은품 입금 계좌 정보를 정확히 입력해 주세요!'); return; }
+                giftResult = `현금 입금계좌 (${gBankName} ${gBankNum})`;
+            } else if(gifttype === '가전') {
+                const appliance = document.getElementById('main-full-appliance').value;
+                if(!appliance) { alert('프리미엄 가전 사은품을 선택해 주세요!'); return; }
+                giftResult = `가전 사은품 (${appliance})`;
             }
-        }
 
-        function renderDirectSpeed(tel, prod) {
-            const speedGroup = document.getElementById('direct-speed-group');
-            speedGroup.innerHTML = '';
-            let mappedProd = (prod === '단독') ? '단독' : '결합';
-            
-            let filtered = allData.filter(row => {
-                if(!row[0] || !row[1]) return false;
-                let p = row[0].trim(); let isMatch = false;
-                if(tel === 'KT' && p.includes('KT')) isMatch = true; if(tel === 'LG' && p.includes('LG')) isMatch = true; if(tel === 'SK' && p.includes('SK')) isMatch = true; if(tel === '스카이' && p.includes('스카이')) isMatch = true; if(tel === '헬로' && p.includes('헬로')) isMatch = true;
-                return isMatch && (row[1].trim() === mappedProd);
-            });
-
-            let speeds = [...new Set(filtered.map(r => r[2].trim()))];
-            speeds.sort((a,b) => (b.includes('1G')?1000:parseInt(b)||0) - (a.includes('1G')?1000:parseInt(a)||0));
-            
-            speeds.forEach(s => {
-                speedGroup.innerHTML += `<div class="direct-option-btn" onclick="selectDirectSpeed('${s}', this)">🚀 ${s}</div>`;
-            });
-        }
-
-        function selectDirectSpeed(val, el) {
-            document.querySelectorAll('#direct-speed-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); document.getElementById('main-full-speed').value = val;
-            
-            const prod = document.getElementById('main-full-prodtype').value;
-            document.getElementById('direct-result-layer').style.display = 'none';
-            document.getElementById('direct-final-layer').style.display = 'none';
-            
-            if (prod === '결합') {
-                document.getElementById('direct-tv-layer').style.display = 'block';
-                document.getElementById('main-full-tvprod').value = '';
-                renderDirectTv();
-            } else {
-                document.getElementById('direct-tv-layer').style.display = 'none';
-                document.getElementById('main-full-tvprod').value = '';
-                calcDirectResult(); 
+            if(!paytype) { alert('통신요금 납부 방법을 선택해 주세요!'); return; }
+            let payResult = "";
+            if(paytype === '계좌') {
+                const bName = getBankName('pop-full-bankname', 'pop-full-bankname-direct'); const bNum = document.getElementById('pop-full-banknum').value.trim();
+                if(!bName || !bNum) { alert('자동이체 계좌번호를 정확히 입력해 주세요!'); return; }
+                payResult = `계좌이체 (${bName} ${bNum})`;
+            } else if(paytype === '카드') {
+                const cName = getBankName('pop-full-cardname', 'pop-full-cardname-direct'); const cNum = document.getElementById('pop-full-cardnum').value.trim(); const cValid = document.getElementById('pop-full-cardvalid').value.trim();
+                if(!cName || !cNum || !cValid) { alert('신용카드 정보를 모두 입력해 주세요!'); return; }
+                payResult = `신용카드 (${cName} ${cNum} / ${cValid})`;
             }
+
+            if(!chk) { alert('개인정보 수집 및 이용에 동의하셔야 접수가 가능합니다.'); return; }
+
+            const formData = {
+                type: "다이렉트 접수 (완료)", name: n, phone: p,
+                summary: `생년월일: ${b} / 설치주소: ${addr1} ${addr2}\n통신사: ${telecom} / 상품: ${prodtype} (${speed}${prodtype === '결합' ? ' / ' + tvprod : ''})\n사은품: ${giftResult}\n납부방법: ${payResult}`
+            };
+
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
+
+            alert(`[다이렉트 접수 성공! 🎉]\n\n성함: ${n}\n연락처: ${p}\n\n꼼꼼히 확인 후 신속하게 개통 및 혜택 지급을 도와드리겠습니다!`);
+            closeSidebarDirectPopup();
         }
 
-        function renderDirectTv() {
-            const tel = document.getElementById('main-full-telecom').value;
-            const speed = document.getElementById('main-full-speed').value;
-            const tvGroup = document.getElementById('direct-tv-group');
-            tvGroup.innerHTML = '';
-
-            let filtered = allData.filter(row => {
-                if(!row[0] || !row[1] || !row[3]) return false;
-                let p = row[0].trim();
-                let isMatch = (tel === 'KT' && p.includes('KT')) || (tel === 'LG' && p.includes('LG')) || (tel === 'SK' && p.includes('SK')) || (tel === '스카이' && p.includes('스카이')) || (tel === '헬로' && p.includes('헬로'));
-                return isMatch && row[1].trim() === '결합' && row[2].trim() === speed;
-            });
-            filtered.sort((a, b) => (parseInt(b[6].replace(/[^0-9]/g, "")) || 0) - (parseInt(a[6].replace(/[^0-9]/g, "")) || 0));
-
-            let tvs = [...new Set(filtered.map(r => r[3].trim()))];
-            tvs.forEach(t => {
-                tvGroup.innerHTML += `<div class="direct-option-btn" onclick="selectDirectTv('${t}', this)">📺 ${t}</div>`;
-            });
-        }
-
-        function selectDirectTv(val, el) {
-            document.querySelectorAll('#direct-tv-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); document.getElementById('main-full-tvprod').value = val; calcDirectResult(); 
-        }
-
-        function calcDirectResult() {
-            const tel = document.getElementById('main-full-telecom').value;
-            const prod = document.getElementById('main-full-prodtype').value;
-            const speed = document.getElementById('main-full-speed').value;
-            const tv = document.getElementById('main-full-tvprod').value || '';
-            let mappedProd = (prod === '단독') ? '단독' : '결합';
-            
-            let targetRow = allData.find(row => {
-                if(!row[0] || !row[1] || !row[2]) return false;
-                let p = row[0].trim(); let isMatch = false;
-                if(tel === 'KT' && p.includes('KT')) isMatch = true; if(tel === 'LG' && p.includes('LG')) isMatch = true; if(tel === 'SK' && p.includes('SK')) isMatch = true; if(tel === '스카이' && p.includes('스카이')) isMatch = true; if(tel === '헬로' && p.includes('헬로')) isMatch = true;
-                
-                let prodMatch = (row[1].trim() === mappedProd) && (row[2].trim() === speed);
-                if (mappedProd === '결합') { prodMatch = prodMatch && (row[3] ? row[3].trim() === tv : false); }
-                return isMatch && prodMatch;
-            });
-
-            if (targetRow) {
-                const cleanRow = targetRow.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
-                let dcPriceRaw = parseInt(cleanRow[5] ? cleanRow[5].replace(/[^0-9]/g, "") : "0") || 0;
-                let priceRaw = (dcPriceRaw > 0) ? cleanRow[6] : cleanRow[4];
-                let priceNum = parseInt(priceRaw.replace(/[^0-9]/g, "")) || 0;
-                let formatPrice = priceNum > 0 ? priceNum.toLocaleString() + "원" : priceRaw;
-                let subsidy = cleanRow[7] || "0";
-                let formatSubsidy = subsidy.includes('원') ? subsidy : subsidy + '원';
-
-                let prefixText = (tel === '스카이' || tel === '헬로') ? "✨ 알뜰 실속 요금" : "📱 휴대폰 결합 시";
-                document.getElementById('direct-result-price').innerHTML = `<span style="font-size:14px; color:#3182CE; display:block; margin-bottom:4px; font-weight:900;">${prefixText}</span>월 ${formatPrice}`;
-                document.getElementById('direct-result-gift').innerText = `🎁 현금 ${formatSubsidy} 지원!`;
-                document.getElementById('direct-result-layer').style.display = 'block';
-                
-                const matchedGifts = getMatchingGifts(tel, prod, speed, tv);
-                renderDirectGifts(matchedGifts);
-
-                document.getElementById('direct-final-layer').style.display = 'block';
-                
-                document.querySelectorAll('#direct-gifttype-group .direct-option-btn, #direct-paytype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-                document.getElementById('main-full-gifttype').value = ''; document.getElementById('main-full-paytype').value = '';
-                document.getElementById('direct-giftbank-layer').style.display = 'none'; document.getElementById('direct-appliance-layer').style.display = 'none';
-                document.getElementById('main-full-bank-layer').style.display = 'none'; document.getElementById('main-full-card-layer').style.display = 'none';
-                
-                const copyBtn = document.getElementById('btn-copy-account');
-                if (copyBtn) copyBtn.style.display = 'none';
-            }
-        }
-
+        /* 🚀 사은품 팝업 및 다이렉트 팝업 유틸 함수들 */
+        function getMatchingGifts(prov, prod, speed, tv) { return giftData.filter(row => { return row[0].trim() === prov && row[1].trim() === prod && row[2].trim() === speed && row[3].trim() === tv; }); }
+        
         function renderDirectGifts(gifts) {
-            const listEl = document.getElementById('direct-appliance-list'); listEl.innerHTML = '';
-            const giftTypeGroup = document.getElementById('direct-gifttype-group');
-            if (!gifts || gifts.length === 0) {
-                giftTypeGroup.children[1].style.display = 'none'; 
-            } else {
+            const listEl = document.getElementById('direct-appliance-list'); listEl.innerHTML = ''; const giftTypeGroup = document.getElementById('direct-gifttype-group');
+            if (!gifts || gifts.length === 0) { giftTypeGroup.children[1].style.display = 'none'; } 
+            else {
                 giftTypeGroup.children[1].style.display = 'block'; 
                 gifts.forEach(gift => {
                     const card = document.createElement('div'); 
@@ -1589,11 +1518,11 @@
                     card.onclick = function() {
                         const hiddenInput = document.getElementById('main-full-appliance'); const isAlreadySelected = (hiddenInput.value === gift[4]);
                         document.querySelectorAll('#direct-appliance-list .gift-card').forEach(c => {
-                            c.style.border = '2px solid #E2E8F0'; c.style.background = '#fff'; c.style.boxShadow = 'none'; c.style.transform = 'translateY(0)'; c.querySelector('.gift-check-badge').style.display = 'none'; c.querySelector('.gift-title').style.fontWeight = '500'; c.querySelector('.gift-title').style.color = '#4A5568'; 
+                            c.style.border = '2px solid #E2E8F0'; c.style.background = '#fff'; c.style.transform = 'translateY(0)'; c.querySelector('.gift-check-badge').style.display = 'none'; c.querySelector('.gift-title').style.fontWeight = '500'; c.querySelector('.gift-title').style.color = '#4A5568'; 
                         });
                         if (isAlreadySelected) { hiddenInput.value = ''; } 
                         else {
-                            card.style.border = '3px solid #E53E3E'; card.style.background = '#FFF5F5'; card.style.boxShadow = '0 10px 20px rgba(229, 62, 62, 0.15)'; card.style.transform = 'translateY(-4px)'; card.querySelector('.gift-check-badge').style.display = 'block'; card.querySelector('.gift-title').style.fontWeight = '900'; card.querySelector('.gift-title').style.color = '#1A202C'; hiddenInput.value = gift[4]; 
+                            card.style.border = '3px solid #E53E3E'; card.style.background = '#FFF5F5'; card.style.transform = 'translateY(-4px)'; card.querySelector('.gift-check-badge').style.display = 'block'; card.querySelector('.gift-title').style.fontWeight = '900'; card.querySelector('.gift-title').style.color = '#1A202C'; hiddenInput.value = gift[4]; 
                         }
                     };
                     listEl.appendChild(card);
@@ -1601,73 +1530,92 @@
             }
         }
 
+        function togglePopPay(type) {
+            document.getElementById('pop-btn-bank').classList.remove('active'); document.getElementById('pop-btn-card').classList.remove('active'); document.getElementById('pop-full-paytype').value = type;
+            if(type === '계좌') { document.getElementById('pop-btn-bank').classList.add('active'); document.getElementById('pop-full-bank-layer').style.display = 'grid'; document.getElementById('pop-full-card-layer').style.display = 'none'; } 
+            else if(type === '카드') { document.getElementById('pop-btn-card').classList.add('active'); document.getElementById('pop-full-bank-layer').style.display = 'none'; document.getElementById('pop-full-card-layer').style.display = 'block'; }
+            checkCopyButtonVisibilityPop();
+        }
+
         function checkCopyButtonVisibility() {
-            const giftType = document.getElementById('main-full-gifttype').value;
-            const payType = document.getElementById('main-full-paytype').value;
-            const copyBtn = document.getElementById('btn-copy-account');
+            const giftType = document.getElementById('main-full-gifttype').value; const payType = document.getElementById('main-full-paytype').value; const copyBtn = document.getElementById('btn-copy-account');
             if (copyBtn) { if (giftType === '현금' && payType === '계좌') { copyBtn.style.display = 'block'; } else { copyBtn.style.display = 'none'; } }
         }
-
-        function copyAccountInfo() {
-            const selectVal = document.getElementById('main-full-giftbankname').value;
-            const directVal = document.getElementById('main-full-giftbankname-direct').value.trim();
-            const giftBankNum = document.getElementById('main-full-giftbanknum').value.trim();
-
-            if (!selectVal || !giftBankNum || (selectVal === '직접입력' && !directVal)) {
-                alert("위쪽 💰 '사은품 입금 계좌'의 은행명과 계좌번호를 먼저 정확히 입력해 주세요!"); document.getElementById('main-full-giftbanknum').focus(); return;
-            }
-            const paySelect = document.getElementById('main-full-bankname'); paySelect.value = selectVal; toggleDirectBankInput(paySelect, 'main-full-bankname-direct');
-            if (selectVal === '직접입력') { document.getElementById('main-full-bankname-direct').value = directVal; }
-            document.getElementById('main-full-banknum').value = giftBankNum;
-
-            const payBankLayer = document.getElementById('main-full-bank-layer');
-            payBankLayer.style.transition = "background-color 0.3s"; payBankLayer.style.backgroundColor = "#FFFDF5";
-            setTimeout(() => { payBankLayer.style.backgroundColor = "transparent"; }, 600);
-        }
-
         function checkCopyButtonVisibilityPop() {
-            const payType = document.getElementById('pop-full-paytype').value;
-            const copyBtnPop = document.getElementById('btn-copy-account-pop');
+            const payType = document.getElementById('pop-full-paytype').value; const copyBtnPop = document.getElementById('btn-copy-account-pop');
             if (copyBtnPop) { if (!isGiftMode && payType === '계좌') { copyBtnPop.style.display = 'block'; } else { copyBtnPop.style.display = 'none'; } }
         }
 
+        function copyAccountInfo() {
+            const selectVal = document.getElementById('main-full-giftbankname').value; const directVal = document.getElementById('main-full-giftbankname-direct').value.trim(); const giftBankNum = document.getElementById('main-full-giftbanknum').value.trim();
+            if (!selectVal || !giftBankNum || (selectVal === '직접입력' && !directVal)) { alert("위쪽 💰 '사은품 입금 계좌'의 은행명과 계좌번호를 먼저 정확히 입력해 주세요!"); return; }
+            const paySelect = document.getElementById('main-full-bankname'); paySelect.value = selectVal; toggleDirectBankInput(paySelect, 'main-full-bankname-direct');
+            if (selectVal === '직접입력') { document.getElementById('main-full-bankname-direct').value = directVal; }
+            document.getElementById('main-full-banknum').value = giftBankNum;
+        }
+
         function copyAccountInfoPop() {
-            const selectVal = document.getElementById('pop-full-giftbankname').value;
-            const directVal = document.getElementById('pop-full-giftbankname-direct').value.trim();
-            const giftBankNum = document.getElementById('pop-full-giftbanknum').value.trim();
-
-            if (!selectVal || !giftBankNum || (selectVal === '직접입력' && !directVal)) {
-                alert("위쪽 💰 '사은품 입금 계좌'의 은행명과 계좌번호를 먼저 정확히 입력해 주세요!"); document.getElementById('pop-full-giftbanknum').focus(); return;
-            }
-
+            const selectVal = document.getElementById('main-full-giftbankname').value; const directVal = document.getElementById('main-full-giftbankname-direct').value.trim(); const giftBankNum = document.getElementById('main-full-giftbanknum').value.trim();
+            if (!selectVal || !giftBankNum || (selectVal === '직접입력' && !directVal)) { alert("위쪽 💰 '사은품 입금 계좌'의 은행명과 계좌번호를 먼저 정확히 입력해 주세요!"); return; }
             const paySelect = document.getElementById('pop-full-bankname'); paySelect.value = selectVal; toggleDirectBankInput(paySelect, 'pop-full-bankname-direct');
             if (selectVal === '직접입력') { document.getElementById('pop-full-bankname-direct').value = directVal; }
             document.getElementById('pop-full-banknum').value = giftBankNum;
-
-            const payBankLayer = document.getElementById('pop-full-bank-layer');
-            payBankLayer.style.transition = "background-color 0.3s"; payBankLayer.style.backgroundColor = "#FFFDF5"; 
-            setTimeout(() => { payBankLayer.style.backgroundColor = "transparent"; }, 600);
         }
 
         function selectDirectGiftType(val, el) {
-            document.querySelectorAll('#direct-gifttype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); document.getElementById('main-full-gifttype').value = val;
-            
-            if (val === '현금') {
-                document.getElementById('direct-giftbank-layer').style.display = 'block'; document.getElementById('direct-appliance-layer').style.display = 'none'; document.getElementById('main-full-appliance').value = '';
-            } else if (val === '가전') {
-                document.getElementById('direct-giftbank-layer').style.display = 'none'; document.getElementById('direct-appliance-layer').style.display = 'block';
-            }
+            document.querySelectorAll('#direct-gifttype-group .direct-option-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('main-full-gifttype').value = val;
+            if (val === '현금') { document.getElementById('direct-giftbank-layer').style.display = 'block'; document.getElementById('direct-appliance-layer').style.display = 'none'; document.getElementById('main-full-appliance').value = ''; } 
+            else if (val === '가전') { document.getElementById('direct-giftbank-layer').style.display = 'none'; document.getElementById('direct-appliance-layer').style.display = 'block'; }
             checkCopyButtonVisibility();
         }
 
         function selectDirectPayType(val, el) {
-            document.querySelectorAll('#direct-paytype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); document.getElementById('main-full-paytype').value = val;
-            
+            document.querySelectorAll('#direct-paytype-group .direct-option-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('main-full-paytype').value = val;
             if (val === '계좌') { document.getElementById('main-full-bank-layer').style.display = 'grid'; document.getElementById('main-full-card-layer').style.display = 'none'; } 
             else if (val === '카드') { document.getElementById('main-full-bank-layer').style.display = 'none'; document.getElementById('main-full-card-layer').style.display = 'grid'; }
             checkCopyButtonVisibility();
+        }
+
+        function goToDirectStep(step) {
+            document.querySelectorAll('#sidebar-direct-popup-overlay .quick-step').forEach(s => { s.classList.remove('active-step'); });
+            const target = document.getElementById('direct-step-' + step); if(target) target.classList.add('active-step');
+        }
+
+        /* 🚀 사은품 팝업 (Gift Popup) 연동 */
+        function openGiftPopup(e) {
+            if(e) e.preventDefault(); 
+            document.getElementById('gift-popup-overlay').classList.add('active'); document.body.style.overflow = 'hidden'; backToGiftList(); 
+            const grid = document.getElementById('gift-popup-grid'); grid.innerHTML = '';
+            let uniqueMap = new Map();
+            giftDetailData.forEach((item) => {
+                let name = item[0] ? item[0].trim() : ''; let img = item[1] ? item[1].trim() : '';
+                if (name && (img.includes('.jpg') || img.includes('.png')) && !uniqueMap.has(name)) { uniqueMap.set(name, item); }
+            });
+            uniqueMap.forEach((item, name) => {
+                let img = item[1] || ''; let originalIndex = giftDetailData.findIndex(r => r[0] && r[0].trim() === name);
+                grid.innerHTML += `<div class="gift-popup-card" onclick="showGiftDetail(${originalIndex})"><img src="${img}" alt="${name}" loading="lazy"><div class="gift-popup-name">${name}</div><div class="gift-popup-btn">🔍 상세 스펙 및 가격 보기</div></div>`;
+            });
+        }
+
+        function closeGiftPopup(e) {
+            if(e) e.preventDefault();
+            if (!e || e.target === document.getElementById('gift-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) { document.getElementById('gift-popup-overlay').classList.remove('active'); document.body.style.overflow = ''; }
+        }
+
+        function showGiftDetail(index) {
+            const item = giftDetailData[index]; const name = item[0] || ''; const img = item[1] || ''; currentViewedPopupGiftName = name;
+            let rawDesc = item[2] || '상세 설명이 등록되지 않았습니다.';
+            let styledDesc = rawDesc.replace(/\[제품 설명\]/g, '<br><br><span style="color:#3182CE; font-weight:900; display:block; margin-bottom:5px;">🔹 제품 설명</span>').replace(/\[가격\]/g, '<br><br><span style="color:#E53E3E; font-weight:900; display:block; margin-bottom:5px;">💰 혜택 정보</span>');
+            document.getElementById('gift-popup-list-view').style.display = 'none'; document.getElementById('gift-popup-detail-view').style.display = 'block';
+            document.getElementById('gift-detail-content-box').innerHTML = `<img src="${img}" class="gift-detail-img" alt="${name}" loading="lazy"><div class="gift-detail-title">${name}</div><div class="gift-detail-desc">${styledDesc}</div>`;
+        }
+
+        function backToGiftList() { document.getElementById('gift-popup-detail-view').style.display = 'none'; document.getElementById('gift-popup-list-view').style.display = 'block'; }
+        
+        function triggerMainFastSms(e) {
+            e.preventDefault(); const targetPhone = "01064142444"; const smsBody = `[사거리인터넷] 인터넷 가입 빠른 상담 요청합니다.`;
+            const isTargetIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const smsLink = isTargetIos ? `sms:${targetPhone}&body=${encodeURIComponent(smsBody)}` : `sms:${targetPhone}?body=${encodeURIComponent(smsBody)}`; window.location.href = smsLink;
         }
 
         function autoHyphenMobile(target) {
@@ -1677,9 +1625,7 @@
             if (val.length > 2 && val.charAt(2) !== '0') val = '010';
             if (val.length > 11) val = val.substring(0, 11);
             let res = '';
-            if (val.length < 4) { res = val; } 
-            else if (val.length < 8) { res = val.substr(0, 3) + '-' + val.substr(3); } 
-            else { res = val.substr(0, 3) + '-' + val.substr(3, 4) + '-' + val.substr(7); }
+            if (val.length < 4) { res = val; } else if (val.length < 8) { res = val.substr(0, 3) + '-' + val.substr(3); } else { res = val.substr(0, 3) + '-' + val.substr(3, 4) + '-' + val.substr(7); }
             target.value = res;
         }
 
@@ -1691,14 +1637,6 @@
             });
         });
 
-        function openPrivacyModal() { document.getElementById('privacyModal').style.display = 'flex'; }
-        function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
-        function setupUniversalStickyScroll() {
-            const navbar = document.querySelector('.navbar'); 
-            window.addEventListener('scroll', function() {
-                if (navbar) { if (window.pageYOffset > 50 && window.innerWidth <= 950) { navbar.classList.add('scrolled'); } else { navbar.classList.remove('scrolled'); } }
-            }, { passive: true });
-        }
     </script>
 <!-- MR Script Ver 2.0 -->
 <script async="true" src="//log1.toup.net/mirae_log_chat_common.js?adkey=tjyhi" charset="UTF-8"></script>
