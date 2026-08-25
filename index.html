@@ -1066,45 +1066,46 @@
             });
         }
 
-        /* 🚀 베스트 요금표 -> 분할 팝업 바로 띄우기 (화면 멈춤 에러 완벽 해결) */
+        /* 🚀 1단계 수정: 베스트 요금표 -> 투트랙 팝업 (즉시상담/바로접수) 띄우기 */
         function openDirectFromBest(prov, prod, speed, tv, price, gift) {
-            document.getElementById('sidebar-direct-popup-overlay').classList.add('active');
+            // 상품명 문자열 조립
+            let productDesc = prod === '결합' ? '인터넷+TV 결합' : '인터넷 단독';
+            let tvDesc = tv ? ` / ${tv}` : '';
+            let fullProdStr = `[${prov}] ${productDesc} / ${speed}${tvDesc}`;
+            
+            // 전역 변수 세팅 (상담 전송용)
+            currentCalculatedPrice = price.includes('월') ? price : '월 ' + price;
+            currentGiftStatusText = gift;
+            
+            // 기존 투트랙 팝업창에 요약 정보 꽂아넣기
+            const prodEl = document.getElementById('direct-summary-prod');
+            const priceEl = document.getElementById('direct-summary-price');
+            const giftEl = document.getElementById('direct-summary-gift');
+            
+            if(prodEl) prodEl.innerText = fullProdStr;
+            if(priceEl) priceEl.innerText = currentCalculatedPrice;
+            if(giftEl) giftEl.innerText = currentGiftStatusText;
+
+            // 투트랙 팝업 열고 1단계 화면으로 초기화
+            document.getElementById('direct-popup-overlay').classList.add('active');
             document.body.style.overflow = 'hidden';
+            goToDirectStep('1');
+        }
 
-            // 팝업 좌측 자동 셋팅 로직
-            document.querySelectorAll('#sidebar-telecom-group .direct-option-btn').forEach(b => {
-                b.classList.remove('active');
-                if(b.innerText.includes(prov) || (prov==='LG'&&b.innerText==='LG U+')) b.classList.add('active');
-            });
-            document.getElementById('sidebar-telecom').value = prov;
+        /* 🚀 1단계 수정: 투트랙 팝업 닫기 함수 복구 */
+        function closeDirectPopup(e) {
+            if(e) e.preventDefault();
+            if (!e || e.target === document.getElementById('direct-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) { 
+                document.getElementById('direct-popup-overlay').classList.remove('active'); 
+                document.body.style.overflow = ''; 
+            }
+        }
 
-            document.querySelectorAll('#sidebar-prodtype-group .direct-option-btn').forEach(b => {
-                b.classList.remove('active');
-                if(b.innerText.includes(prod)) b.classList.add('active');
-            });
-            document.getElementById('sidebar-prodtype').value = prod;
-
-            checkSidebarStep2(); // 속도 버튼 생성
-
-            // 스크립트 꼬임 방지를 위해 아주 짧은 시간 텀을 주고 속도/TV 선택 진행
-            setTimeout(() => {
-                document.querySelectorAll('#sidebar-speed-group .direct-option-btn').forEach(b => {
-                    if(b.innerText.includes(speed)) { b.classList.add('active'); document.getElementById('sidebar-speed').value = speed; }
-                });
-                
-                if(prod === '결합') {
-                    document.getElementById('sidebar-tv-layer').style.display = 'block';
-                    renderSidebarTv();
-                    setTimeout(() => {
-                        document.querySelectorAll('#sidebar-tv-group .direct-option-btn').forEach(b => {
-                            if(b.innerText.includes(tv)) { b.classList.add('active'); document.getElementById('sidebar-tvprod').value = tv; }
-                        });
-                        calcSidebarResult();
-                    }, 50);
-                } else {
-                    calcSidebarResult();
-                }
-            }, 50);
+        /* 🚀 1단계 수정: 투트랙 팝업 스텝 이동 함수 (증발한 함수 완벽 복구!) */
+        function goToDirectStep(step) {
+            document.querySelectorAll('#direct-popup-overlay .quick-step').forEach(s => { s.classList.remove('active-step'); });
+            const target = document.getElementById('direct-step-' + step); 
+            if(target) target.classList.add('active-step');
         }
 
         /* ========================================================================= */
