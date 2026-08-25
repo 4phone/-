@@ -996,7 +996,7 @@
             if(window.innerWidth > 950) { pcNav.style.display = 'flex'; } else { pcNav.style.display = 'none'; }
         }
 
-        /* 🚀 10대 베스트 요금표 렌더링 (단독상품 텍스트 수정 완료) */
+        /* 🚀 1. 메인 10대 베스트 요금표 렌더링 */
         function renderBestPlans() {
             const container = document.getElementById('best-plan-container'); container.innerHTML = '';
             const provs = ['SK', 'LG', 'KT', '스카이', '헬로'];
@@ -1040,7 +1040,7 @@
                             let formatPrice = (parseInt(priceRaw.replace(/[^0-9]/g, "")) || 0).toLocaleString() + "원";
                             let formatSubsidy = (cleanRow[7] || "0").includes('원') ? cleanRow[7] : (cleanRow[7] || "0") + '원';
                             
-                            // 🚀 [수정] 3단계 요건 적용: 알뜰폰 제외 모두 '휴대폰 결합시'로 텍스트 강제
+                            // 🚀 수정: 알뜰폰 제외 모두 '휴대폰 결합시'로 통일
                             let conditionText = (prov === '스카이' || prov === '헬로') ? "✨ 알뜰 실속" : "📱 휴대폰 결합시";
                             let detailName = `인터넷 ${speed}`;
                             if (type === '결합' && cleanRow[3]) detailName += ` + ${cleanRow[3]}`;
@@ -1058,7 +1058,6 @@
                             </div>`;
                         }
                     });
-                    
                     if(!foundAny) { cardHtml += `<div class="p-empty-row">해당하는 요금제가 없습니다.</div>`; }
                     cardHtml += `</div></div>`; provHtml += cardHtml;
                 });
@@ -1066,18 +1065,15 @@
             });
         }
 
-        /* 🚀 1단계 수정: 베스트 요금표 -> 투트랙 팝업 (즉시상담/바로접수) 띄우기 */
+        /* 🚀 2. 10대 베스트 요금표 ➔ '투트랙 팝업' 열기 연동 */
         function openDirectFromBest(prov, prod, speed, tv, price, gift) {
-            // 상품명 문자열 조립
             let productDesc = prod === '결합' ? '인터넷+TV 결합' : '인터넷 단독';
             let tvDesc = tv ? ` / ${tv}` : '';
             let fullProdStr = `[${prov}] ${productDesc} / ${speed}${tvDesc}`;
             
-            // 전역 변수 세팅 (상담 전송용)
             currentCalculatedPrice = price.includes('월') ? price : '월 ' + price;
             currentGiftStatusText = gift;
             
-            // 기존 투트랙 팝업창에 요약 정보 꽂아넣기
             const prodEl = document.getElementById('direct-summary-prod');
             const priceEl = document.getElementById('direct-summary-price');
             const giftEl = document.getElementById('direct-summary-gift');
@@ -1086,13 +1082,12 @@
             if(priceEl) priceEl.innerText = currentCalculatedPrice;
             if(giftEl) giftEl.innerText = currentGiftStatusText;
 
-            // 투트랙 팝업 열고 1단계 화면으로 초기화
             document.getElementById('direct-popup-overlay').classList.add('active');
             document.body.style.overflow = 'hidden';
             goToDirectStep('1');
         }
 
-        /* 🚀 1단계 수정: 투트랙 팝업 닫기 함수 복구 */
+        /* 투트랙 팝업 컨트롤 함수 */
         function closeDirectPopup(e) {
             if(e) e.preventDefault();
             if (!e || e.target === document.getElementById('direct-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) { 
@@ -1100,243 +1095,110 @@
                 document.body.style.overflow = ''; 
             }
         }
-
-        /* 🚀 1단계 수정: 투트랙 팝업 스텝 이동 함수 (증발한 함수 완벽 복구!) */
         function goToDirectStep(step) {
             document.querySelectorAll('#direct-popup-overlay .quick-step').forEach(s => { s.classList.remove('active-step'); });
             const target = document.getElementById('direct-step-' + step); 
             if(target) target.classList.add('active-step');
         }
 
-        /* ========================================================================= */
-        /* 🚀 신규: 사이드바 다이렉트 팝업(분할창) 전용 컨트롤 스크립트 */
-        /* ========================================================================= */
-        function selectSidebarTelecom(val, el) {
-            document.querySelectorAll('#sidebar-telecom-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); document.getElementById('sidebar-telecom').value = val; checkSidebarStep2();
-        }
-
-        function selectSidebarProd(val, el) {
-            document.querySelectorAll('#sidebar-prodtype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); document.getElementById('sidebar-prodtype').value = val; checkSidebarStep2();
-        }
-
-        function checkSidebarStep2() {
-            const tel = document.getElementById('sidebar-telecom').value;
-            const prod = document.getElementById('sidebar-prodtype').value;
+        /* 🚀 3. 메인 1분 간편 폼 및 투트랙 팝업 전송 함수 복구 */
+        function submitMainFastForm() {
+            const name = document.getElementById('main-fast-name').value.trim(); 
+            const phone = document.getElementById('main-fast-phone').value.trim(); 
+            const checked = document.getElementById('fast-privacy-check').checked;
             
-            document.getElementById('sidebar-speed-layer').style.display = 'none'; document.getElementById('sidebar-tv-layer').style.display = 'none';
-            document.getElementById('sidebar-result-layer').style.display = 'none'; document.getElementById('sidebar-final-layer').style.display = 'none';
-            document.getElementById('sidebar-speed').value = ''; document.getElementById('sidebar-tvprod').value = '';
+            if(!name) { alert('성함을 입력해 주세요!'); document.getElementById('main-fast-name').focus(); return; } 
+            if(phone.length !== 13 || !phone.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('main-fast-phone').focus(); return; }
+            if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 상담 신청이 가능합니다.'); return; }
+            
+            const formData = { type: "간편 빠른상담", name: name, phone: phone, summary: `희망상품: 상담 후 결정` };
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
 
-            if (tel && prod) { document.getElementById('sidebar-speed-layer').style.display = 'block'; renderSidebarSpeed(tel, prod); }
+            alert(`[간편 빠른상담 접수 성공! 🎉]\n\n성함: ${name}\n연락처: ${phone}\n\n가장 빠른 시간 내에 연락드리겠습니다!`); 
+            document.getElementById('main-fast-name').value = ""; document.getElementById('main-fast-phone').value = ""; document.getElementById('fast-privacy-check').checked = false;
         }
 
-        function renderSidebarSpeed(tel, prod) {
-            const speedGroup = document.getElementById('sidebar-speed-group'); speedGroup.innerHTML = '';
-            let filtered = allData.filter(row => {
-                if(!row[0] || !row[1]) return false;
-                let isMatch = (tel === 'KT' && row[0].includes('KT')) || (tel === 'LG' && row[0].includes('LG')) || (tel === 'SK' && row[0].includes('SK')) || (tel === '스카이' && row[0].includes('스카이')) || (tel === '헬로' && row[0].includes('헬로'));
-                return isMatch && (row[1].trim() === prod);
-            });
-            let speeds = [...new Set(filtered.map(r => r[2].trim()))];
-            speeds.sort((a,b) => (b.includes('1G')?1000:parseInt(b)||0) - (a.includes('1G')?1000:parseInt(a)||0));
-            speeds.forEach(s => { speedGroup.innerHTML += `<div class="direct-option-btn" onclick="selectSidebarSpeed('${s}', this)">🚀 ${s}</div>`; });
+        function submitDirectQuick() {
+            const n = document.getElementById('direct-quick-name').value.trim(); const p = document.getElementById('direct-quick-phone').value.trim(); const chk = document.getElementById('direct-quick-privacy').checked;
+            if(!n || !p) { alert("성함을과 연락처를 입력해주세요!"); return; }
+            if(p.length !== 13 || !p.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('direct-quick-phone').focus(); return; }
+            if(!chk) { alert("개인정보 동의에 체크해주세요!"); return; }
+            
+            const prod = document.getElementById('direct-summary-prod').innerText; const price = currentCalculatedPrice; const gift = currentGiftStatusText;
+            const formData = { type: "요금표 (즉시 상담신청)", name: n, phone: p, summary: `상품: ${prod}\n요금: ${price}\n혜택: ${gift}` };
+            
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
+            alert(`[즉시 상담신청 접수 성공! 🎉]\n\n상품: ${prod}\n요금: ${price}\n혜택: ${gift}\n성함: ${n}\n연락처: ${p}\n\n빠르게 연락드리겠습니다!`);
+            closeDirectPopup();
+            document.getElementById('direct-quick-name').value = ''; document.getElementById('direct-quick-phone').value = ''; document.getElementById('direct-quick-privacy').checked = false;
         }
 
-        function selectSidebarSpeed(val, el) {
-            document.querySelectorAll('#sidebar-speed-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); document.getElementById('sidebar-speed').value = val;
-            
-            const prod = document.getElementById('sidebar-prodtype').value;
-            document.getElementById('sidebar-result-layer').style.display = 'none'; document.getElementById('sidebar-final-layer').style.display = 'none';
-            
-            if (prod === '결합') {
-                document.getElementById('sidebar-tv-layer').style.display = 'block'; document.getElementById('sidebar-tvprod').value = ''; renderSidebarTv();
-            } else {
-                document.getElementById('sidebar-tv-layer').style.display = 'none'; document.getElementById('sidebar-tvprod').value = ''; calcSidebarResult(); 
+        function togglePopPay(type) {
+            document.getElementById('pop-btn-bank').classList.remove('active'); document.getElementById('pop-btn-card').classList.remove('active'); document.getElementById('pop-full-paytype').value = type;
+            if(type === '계좌') { document.getElementById('pop-btn-bank').classList.add('active'); document.getElementById('pop-full-bank-layer').style.display = 'grid'; document.getElementById('pop-full-card-layer').style.display = 'none'; } 
+            else if(type === '카드') { document.getElementById('pop-btn-card').classList.add('active'); document.getElementById('pop-full-bank-layer').style.display = 'none'; document.getElementById('pop-full-card-layer').style.display = 'block'; }
+            checkCopyButtonVisibilityPop();
+        }
+
+        function submitDirectFull() {
+            const n = document.getElementById('pop-full-name').value.trim(); const b = document.getElementById('pop-full-birth').value.trim(); const post = document.getElementById('pop-full-postcode').value.trim();
+            const addr1 = document.getElementById('pop-full-addr1').value.trim(); const addr2 = document.getElementById('pop-full-addr2').value.trim(); const p = document.getElementById('pop-full-phone').value.trim();
+            const chk = document.getElementById('pop-full-privacy').checked;
+
+            if(!n) { alert('성함을 입력해 주세요!'); document.getElementById('pop-full-name').focus(); return; }
+            if(!b || b.length !== 8) { alert('생년월일 8자리를 정확히 입력해 주세요 (예: 19901010)'); document.getElementById('pop-full-birth').focus(); return; }
+            if(!post || !addr1 || !addr2) { alert('설치 주소(우편번호 및 상세주소)를 모두 입력해 주세요!'); document.getElementById('pop-full-addr2').focus(); return; }
+            if(p.length !== 13 || !p.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('pop-full-phone').focus(); return; }
+
+            const gBank = getBankName('pop-full-giftbankname', 'pop-full-giftbankname-direct'); const gNum = document.getElementById('pop-full-giftbanknum').value.trim();
+            if (gBank || gNum) {
+                if(!gBank) { alert('사은품을 입금받으실 은행을 선택 또는 입력해 주세요!'); return; }
+                if(!gNum || gNum.length < 10 || gNum.length > 16) { alert('사은품 입금 계좌번호는 10~16자리 숫자로 정확히 입력해 주세요!'); document.getElementById('pop-full-giftbanknum').focus(); return; }
             }
-        }
+            let giftInfo = (gBank && gNum) ? `${gBank} ${gNum}` : "입력 안 함 (또는 가전 선택)";
 
-        function renderSidebarTv() {
-            const tel = document.getElementById('sidebar-telecom').value; const speed = document.getElementById('sidebar-speed').value;
-            const tvGroup = document.getElementById('sidebar-tv-group'); tvGroup.innerHTML = '';
-            let filtered = allData.filter(row => {
-                if(!row[0] || !row[1] || !row[3]) return false;
-                let isMatch = (tel === 'KT' && row[0].includes('KT')) || (tel === 'LG' && row[0].includes('LG')) || (tel === 'SK' && row[0].includes('SK')) || (tel === '스카이' && row[0].includes('스카이')) || (tel === '헬로' && row[0].includes('헬로'));
-                return isMatch && row[1].trim() === '결합' && row[2].trim() === speed;
-            });
-            filtered.sort((a, b) => (parseInt(b[6].replace(/[^0-9]/g, "")) || 0) - (parseInt(a[6].replace(/[^0-9]/g, "")) || 0));
-            let tvs = [...new Set(filtered.map(r => r[3].trim()))];
-            tvs.forEach(t => { tvGroup.innerHTML += `<div class="direct-option-btn" onclick="selectSidebarTv('${t}', this)">📺 ${t}</div>`; });
-        }
-
-        function selectSidebarTv(val, el) {
-            document.querySelectorAll('#sidebar-tv-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active'); document.getElementById('sidebar-tvprod').value = val; calcSidebarResult(); 
-        }
-
-        function calcSidebarResult() {
-            const tel = document.getElementById('sidebar-telecom').value; const prod = document.getElementById('sidebar-prodtype').value;
-            const speed = document.getElementById('sidebar-speed').value; const tv = document.getElementById('sidebar-tvprod').value || '';
-            
-            let targetRow = allData.find(row => {
-                if(!row[0] || !row[1] || !row[2]) return false;
-                let isMatch = (tel === 'KT' && row[0].includes('KT')) || (tel === 'LG' && row[0].includes('LG')) || (tel === 'SK' && row[0].includes('SK')) || (tel === '스카이' && row[0].includes('스카이')) || (tel === '헬로' && row[0].includes('헬로'));
-                let prodMatch = (row[1].trim() === prod) && (row[2].trim() === speed);
-                if (prod === '결합') { prodMatch = prodMatch && (row[3] ? row[3].trim() === tv : false); }
-                return isMatch && prodMatch;
-            });
-
-            if (targetRow) {
-                const cleanRow = targetRow.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
-                let dcPriceRaw = parseInt(cleanRow[5] ? cleanRow[5].replace(/[^0-9]/g, "") : "0") || 0;
-                let priceRaw = (dcPriceRaw > 0) ? cleanRow[6] : cleanRow[4];
-                let formatPrice = (parseInt(priceRaw.replace(/[^0-9]/g, "")) || 0).toLocaleString() + "원";
-                let formatSubsidy = (cleanRow[7] || "0").includes('원') ? cleanRow[7] : (cleanRow[7] || "0") + '원';
-
-                let prefixText = (tel === '스카이' || tel === '헬로') ? "✨ 알뜰 실속 요금" : "📱 휴대폰 결합 시";
-                document.getElementById('sidebar-result-price').innerHTML = `<span style="font-size:14px; color:#3182CE; display:block; margin-bottom:4px; font-weight:900;">${prefixText}</span>월 ${formatPrice}`;
-                document.getElementById('sidebar-result-gift').innerText = `🎁 현금 ${formatSubsidy} 지원!`;
-                document.getElementById('sidebar-result-layer').style.display = 'block';
-                
-                const matchedGifts = getMatchingGifts(tel, prod, speed, tv);
-                renderSidebarGifts(matchedGifts);
-
-                document.getElementById('sidebar-final-layer').style.display = 'block';
-                
-                document.querySelectorAll('#sidebar-gifttype-group .direct-option-btn, #sidebar-paytype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
-                document.getElementById('sidebar-gifttype').value = ''; document.getElementById('sidebar-paytype').value = '';
-                document.getElementById('sidebar-giftbank-layer').style.display = 'none'; document.getElementById('sidebar-appliance-layer').style.display = 'none';
-                document.getElementById('sidebar-bank-layer').style.display = 'none'; document.getElementById('sidebar-card-layer').style.display = 'none';
-                
-                const copyBtn = document.getElementById('btn-sidebar-copy-account');
-                if (copyBtn) copyBtn.style.display = 'none';
-            }
-        }
-
-        function renderSidebarGifts(gifts) {
-            const listEl = document.getElementById('sidebar-appliance-list'); listEl.innerHTML = '';
-            const giftTypeGroup = document.getElementById('sidebar-gifttype-group');
-            if (!gifts || gifts.length === 0) { giftTypeGroup.children[1].style.display = 'none'; } 
-            else {
-                giftTypeGroup.children[1].style.display = 'block'; 
-                gifts.forEach(gift => {
-                    const card = document.createElement('div'); 
-                    card.className = 'gift-card'; card.style.padding = '12px 10px'; card.style.cursor = 'pointer'; card.style.position = 'relative'; card.style.border = '2px solid #E2E8F0'; card.style.borderRadius = '14px'; card.style.background = '#fff'; card.style.transition = 'all 0.2s ease-in-out'; 
-                    card.innerHTML = `
-                        <div class="gift-check-badge" style="display:none; position:absolute; top:-12px; right:-12px; background:#E53E3E; color:#fff; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:900; box-shadow:0 4px 10px rgba(229, 62, 62, 0.3); z-index:10; border:2px solid #fff; letter-spacing:-0.5px;">✓ 선택완료</div>
-                        <img src="${gift[5]}" alt="${gift[4]}" loading="lazy" style="height:100px; margin-bottom:8px; pointer-events:none;">
-                        <div class="gift-title" style="font-size:13px; font-weight:500; line-height:1.3; color:#4A5568; word-break:keep-all; pointer-events:none;">${gift[4]}</div>
-                    `;
-                    card.onclick = function() {
-                        const hiddenInput = document.getElementById('sidebar-appliance'); const isAlreadySelected = (hiddenInput.value === gift[4]);
-                        document.querySelectorAll('#sidebar-appliance-list .gift-card').forEach(c => {
-                            c.style.border = '2px solid #E2E8F0'; c.style.background = '#fff'; c.style.transform = 'translateY(0)'; c.querySelector('.gift-check-badge').style.display = 'none'; c.querySelector('.gift-title').style.fontWeight = '500'; c.querySelector('.gift-title').style.color = '#4A5568'; 
-                        });
-                        if (isAlreadySelected) { hiddenInput.value = ''; } 
-                        else {
-                            card.style.border = '3px solid #E53E3E'; card.style.background = '#FFF5F5'; card.style.transform = 'translateY(-4px)'; card.querySelector('.gift-check-badge').style.display = 'block'; card.querySelector('.gift-title').style.fontWeight = '900'; card.querySelector('.gift-title').style.color = '#1A202C'; hiddenInput.value = gift[4]; 
-                        }
-                    };
-                    listEl.appendChild(card);
-                });
-            }
-        }
-
-        function selectSidebarGiftType(val, el) {
-            document.querySelectorAll('#sidebar-gifttype-group .direct-option-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('sidebar-gifttype').value = val;
-            if (val === '현금') { document.getElementById('sidebar-giftbank-layer').style.display = 'block'; document.getElementById('sidebar-appliance-layer').style.display = 'none'; document.getElementById('sidebar-appliance').value = ''; } 
-            else if (val === '가전') { document.getElementById('sidebar-giftbank-layer').style.display = 'none'; document.getElementById('sidebar-appliance-layer').style.display = 'block'; }
-            checkSidebarCopyButtonVisibility();
-        }
-
-        function selectSidebarPayType(val, el) {
-            document.querySelectorAll('#sidebar-paytype-group .direct-option-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('sidebar-paytype').value = val;
-            if (val === '계좌') { document.getElementById('sidebar-bank-layer').style.display = 'grid'; document.getElementById('sidebar-card-layer').style.display = 'none'; } 
-            else if (val === '카드') { document.getElementById('sidebar-bank-layer').style.display = 'none'; document.getElementById('sidebar-card-layer').style.display = 'grid'; }
-            checkSidebarCopyButtonVisibility();
-        }
-
-        function checkSidebarCopyButtonVisibility() {
-            const giftType = document.getElementById('sidebar-gifttype').value; const payType = document.getElementById('sidebar-paytype').value; const copyBtn = document.getElementById('btn-sidebar-copy-account');
-            if (copyBtn) { if (giftType === '현금' && payType === '계좌') { copyBtn.style.display = 'block'; } else { copyBtn.style.display = 'none'; } }
-        }
-
-        function copySidebarAccountInfo() {
-            const selectVal = document.getElementById('sidebar-giftbankname').value; const directVal = document.getElementById('sidebar-giftbankname-direct').value.trim(); const giftBankNum = document.getElementById('sidebar-giftbanknum').value.trim();
-            if (!selectVal || !giftBankNum || (selectVal === '직접입력' && !directVal)) { alert("위쪽 💰 '사은품 입금 계좌'의 은행명과 계좌번호를 먼저 정확히 입력해 주세요!"); return; }
-            const paySelect = document.getElementById('sidebar-bankname'); paySelect.value = selectVal; toggleDirectBankInput(paySelect, 'sidebar-bankname-direct');
-            if (selectVal === '직접입력') { document.getElementById('sidebar-bankname-direct').value = directVal; }
-            document.getElementById('sidebar-banknum').value = giftBankNum;
-            const payBankLayer = document.getElementById('sidebar-bank-layer'); payBankLayer.style.transition = "background-color 0.3s"; payBankLayer.style.backgroundColor = "#FFFDF5"; 
-            setTimeout(() => { payBankLayer.style.backgroundColor = "transparent"; }, 600);
-        }
-
-        function submitSidebarFullForm() {
-            const n = document.getElementById('sidebar-name').value.trim(); const b = document.getElementById('sidebar-birth').value.trim(); const post = document.getElementById('sidebar-postcode').value.trim();
-            const addr1 = document.getElementById('sidebar-addr1').value.trim(); const addr2 = document.getElementById('sidebar-addr2').value.trim(); const p = document.getElementById('sidebar-phone').value.trim();
-            const chk = document.getElementById('sidebar-privacy-check').checked;
-            
-            if(!n) { alert('성함을 입력해 주세요!'); document.getElementById('sidebar-name').focus(); return; }
-            if(!b || b.length !== 8) { alert('생년월일 8자리를 정확히 입력해 주세요 (예: 19901010)'); document.getElementById('sidebar-birth').focus(); return; }
-            if(!post || !addr1 || !addr2) { alert('설치 주소(우편번호 및 상세주소)를 모두 입력해 주세요!'); document.getElementById('sidebar-addr2').focus(); return; }
-            if(p.length !== 13 || !p.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('sidebar-phone').focus(); return; }
-
-            const telecom = document.getElementById('sidebar-telecom').value; const prodtype = document.getElementById('sidebar-prodtype').value; const speed = document.getElementById('sidebar-speed').value;
-            const tvprod = document.getElementById('sidebar-tvprod').value; const gifttype = document.getElementById('sidebar-gifttype').value; const paytype = document.getElementById('sidebar-paytype').value;
-
-            if(!telecom || !prodtype || !speed || (prodtype === '결합' && !tvprod)) { alert('상품 선택 정보를 모두 선택해 주세요!'); return; }
-            if(!gifttype) { alert('사은품 수령 방식을 선택해 주세요!'); return; }
-
-            let giftResult = "";
-            if(gifttype === '현금') {
-                const gBankName = getBankName('sidebar-giftbankname', 'sidebar-giftbankname-direct'); const gBankNum = document.getElementById('sidebar-giftbanknum').value.trim();
-                if(!gBankName || !gBankNum) { alert('사은품 입금 계좌 정보를 정확히 입력해 주세요!'); return; }
-                giftResult = `현금 입금계좌 (${gBankName} ${gBankNum})`;
-            } else if(gifttype === '가전') {
-                const appliance = document.getElementById('sidebar-appliance').value;
-                if(!appliance) { alert('프리미엄 가전 사은품을 선택해 주세요!'); return; }
-                giftResult = `가전 사은품 (${appliance})`;
-            }
-
-            if(!paytype) { alert('통신요금 납부 방법을 선택해 주세요!'); return; }
+            const payType = document.getElementById('pop-full-paytype').value;
+            if(!payType) { alert('통신요금 납부 방법을 선택해 주세요!'); return; }
             let payResult = "";
             if(paytype === '계좌') {
-                const bName = getBankName('sidebar-bankname', 'sidebar-bankname-direct'); const bNum = document.getElementById('sidebar-banknum').value.trim();
+                const bName = getBankName('pop-full-bankname', 'pop-full-bankname-direct'); const bNum = document.getElementById('pop-full-banknum').value.trim();
                 if(!bName || !bNum) { alert('자동이체 계좌번호를 정확히 입력해 주세요!'); return; }
                 payResult = `계좌이체 (${bName} ${bNum})`;
             } else if(paytype === '카드') {
-                const cName = getBankName('sidebar-cardname', 'sidebar-cardname-direct'); const cNum = document.getElementById('sidebar-cardnum').value.trim(); const cValid = document.getElementById('sidebar-cardvalid').value.trim();
+                const cName = getBankName('pop-full-cardname', 'pop-full-cardname-direct'); const cNum = document.getElementById('pop-full-cardnum').value.trim(); const cValid = document.getElementById('pop-full-cardvalid').value.trim();
                 if(!cName || !cNum || !cValid) { alert('신용카드 정보를 모두 입력해 주세요!'); return; }
                 payResult = `신용카드 (${cName} ${cNum} / ${cValid})`;
             }
 
             if(!chk) { alert('개인정보 수집 및 이용에 동의하셔야 접수가 가능합니다.'); return; }
 
-            const formData = {
-                type: "다이렉트 접수 (완료)", name: n, phone: p,
-                summary: `생년월일: ${b} / 설치주소: ${addr1} ${addr2}\n통신사: ${telecom} / 상품: ${prodtype} (${speed}${prodtype === '결합' ? ' / ' + tvprod : ''})\n사은품: ${giftResult}\n납부방법: ${payResult}`
-            };
+            const prod = document.getElementById('direct-summary-prod').innerText; const price = currentCalculatedPrice; const gift = currentGiftStatusText;
+            const summaryStr = `생년월일: ${b} / 설치주소: ${addr1} ${addr2}\n상품: ${prod}\n요금: ${price}\n혜택: ${gift}\n사은품계좌: ${giftInfo}\n납부방법: ${payResult}`;
 
+            const formData = { type: "요금표 (바로 접수)", name: n, phone: p, summary: summaryStr };
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
 
             alert(`[다이렉트 접수 성공! 🎉]\n\n성함: ${n}\n연락처: ${p}\n\n꼼꼼히 확인 후 신속하게 개통 및 혜택 지급을 도와드리겠습니다!`);
-            
-            // 전송 후 입력값 초기화
-            document.getElementById('sidebar-name').value = ""; document.getElementById('sidebar-birth').value = ""; document.getElementById('sidebar-postcode').value = ""; document.getElementById('sidebar-addr1').value = ""; document.getElementById('sidebar-addr2').value = ""; document.getElementById('sidebar-phone').value = "";
-            document.querySelectorAll('#sidebar-direct-popup-overlay .direct-option-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('sidebar-telecom').value = ""; document.getElementById('sidebar-prodtype').value = ""; document.getElementById('sidebar-speed').value = ""; document.getElementById('sidebar-tvprod').value = ""; document.getElementById('sidebar-gifttype').value = ""; document.getElementById('sidebar-appliance').value = ""; document.getElementById('sidebar-paytype').value = "";
-            document.getElementById('sidebar-speed-layer').style.display = 'none'; document.getElementById('sidebar-tv-layer').style.display = 'none'; document.getElementById('sidebar-result-layer').style.display = 'none'; document.getElementById('sidebar-final-layer').style.display = 'none';
-            document.getElementById('sidebar-giftbankname').value = ""; document.getElementById('sidebar-giftbanknum').value = ""; document.getElementById('sidebar-giftbankname-direct').style.display = "none";
-            document.getElementById('sidebar-bankname').value = ""; document.getElementById('sidebar-banknum').value = ""; document.getElementById('sidebar-bankname-direct').style.display = "none";
-            document.getElementById('sidebar-cardname').value = ""; document.getElementById('sidebar-cardnum').value = ""; document.getElementById('sidebar-cardvalid').value = ""; document.getElementById('sidebar-cardname-direct').style.display = "none";
-            document.getElementById('sidebar-privacy-check').checked = false;
-            
-            closeSidebarDirectPopup();
+            closeDirectPopup();
         }
 
-        /* 🚀 PC 셀프 요금설계 전용 자바스크립트 (pc_ 접두어 & 단독상품 텍스트 수정) */
+        /* 🚀 4. 증발했던 셀프요금설계 스위치 팝업 컨트롤 (부활 완료!) */
+        function openSelfCalcPopup(e) {
+            if(e) e.preventDefault();
+            if (window.innerWidth > 950) { document.getElementById('pc-calc-popup-overlay').classList.add('active'); } 
+            else { document.getElementById('mobile-calc-popup-overlay').classList.add('active'); goToMobileStep(1); }
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSelfCalcPopup(e, type) {
+            if(e) e.preventDefault();
+            if (!e || e.target.classList.contains('quick-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) { 
+                document.getElementById(type + '-calc-popup-overlay').classList.remove('active'); 
+                document.body.style.overflow = ''; 
+            }
+        }
+
+        /* 🚀 5. PC 셀프 요금설계 로직 (단독상품 텍스트 수정 포함) */
         function pc_setProvider(p, el) { 
             document.querySelectorAll('#pc-logoOptionsScroll .pc-logo-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); pc_curProv = p; if(!pc_curProd) pc_curProd = '단독';
             const menuBox = document.getElementById('pc-product-type-box');
@@ -1427,33 +1289,27 @@
             const isAlthempone = pc_curProv === '스카이' || pc_curProv === '헬로' || pc_curProd === '요금할인형';
             const baseEl = document.getElementById('pc-res-base'); let printableProductDetail = "";
             
-            // 🚀 [수정] 3단계 요건 적용: 알뜰폰 제외 모두 '휴대폰 결합시'로 텍스트 강제
+            // 🚀 수정: 알뜰폰 아니면 모두 '휴대폰 결합시' 표기 고정
             if (isAlthempone) {
                 document.getElementById('pc-comb-display-area').style.display = "none";
-                document.getElementById('pc-label-base').textContent = (pc_curProd === '요금할인형') ? ((pc_curProv === 'SK') ? "SK 요금할인형 특가" : "스카이 요금할인형 특가") : "✨ 알뜰 실속 요금";
+                document.getElementById('pc-label-base').textContent = "✨ 알뜰 실속 요금";
                 if (baseEl) { baseEl.style.textDecoration = "none"; baseEl.style.color = "#1A202C"; baseEl.style.fontSize = "34px"; baseEl.style.fontWeight = "900"; }
                 printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]}`;
                 currentCalculatedPrice = `${basePrice}원/월`;
+                baseEl.innerHTML = basePrice.includes('원') ? basePrice : `${basePrice}<span>원/월</span>`;
             } else {
-                // 단독이든 결합이든 모두 '휴대폰 결합시'라고 표기되도록 블록 통일
-                document.getElementById('pc-comb-display-area').style.display = "none"; // 원래 표시하던 결합가 영역 숨김
-                document.getElementById('pc-label-base').textContent = "📱 휴대폰 결합시"; // 메인 타이틀을 무조건 결합시로 변경
+                document.getElementById('pc-comb-display-area').style.display = "none"; 
+                document.getElementById('pc-label-base').textContent = "📱 휴대폰 결합시"; 
                 if (baseEl) { baseEl.style.textDecoration = "none"; baseEl.style.color = "#1A202C"; baseEl.style.fontSize = "34px"; baseEl.style.fontWeight = "900"; }
                 
-                // 단독이면 원래 basePrice, 결합이면 할인가(cleanRow[6])를 적용
                 const dcPriceRaw = parseInt(cleanRow[5].replace(/[^0-9]/g, "")) || 0;
                 let finalPriceStr = (dcPriceRaw > 0) ? cleanRow[6] : cleanRow[4];
                 let finalPriceNum = parseInt(finalPriceStr.replace(/[^0-9]/g, "")) || 0;
                 currentCalculatedPrice = finalPriceNum > 0 ? finalPriceNum.toLocaleString() + "원/월" : finalPriceStr + "/월";
                 
-                // baseEl 화면 출력값을 위에서 계산한 currentCalculatedPrice 로 대체
                 baseEl.innerHTML = `${currentCalculatedPrice.replace('/월', '')}<span>원/월</span>`;
-
                 printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]} / ${cleanRow[3]}`;
             }
-            
-            // 알뜰폰일 경우 baseEl에 가격 셋팅 (위의 일반 통신사 블록과 분리)
-            if (isAlthempone && baseEl) { baseEl.innerHTML = basePrice.includes('원') ? basePrice : `${basePrice}<span>원/월</span>`; }
             
             const matchedGifts = getMatchingGifts(pc_curProv, pc_curProd, pc_currentActiveSpeed, cleanRow[3].trim());
             renderGiftCards(matchedGifts);
@@ -1487,7 +1343,64 @@
             openDirectFromBest(pc_curProv, pc_curProd, pc_currentActiveSpeed, tv, currentCalculatedPrice.replace('월 ', ''), currentGiftStatusText.replace('현금 사은품 ', '').replace(' 증정', '').replace(' 지원', ''));
         }
 
-        /* 🚀 팝업 공통 및 유틸 함수들 */
+        /* 🚀 6. 모바일 셀프 요금설계 로직 */
+        function goToMobileStep(stepNum) { 
+            document.querySelectorAll('#mobile-calc-popup-overlay .mobile-quick-step').forEach(step => { step.classList.remove('active-step'); }); 
+            const target = document.getElementById('mobile-quick-step-' + stepNum);
+            if(target) target.classList.add('active-step'); 
+        }
+        
+        function nextMobileStep(nextNum, value) {
+            if (nextNum === 2) { quickData.telecom = (value === '알뜰형') ? '스카이' : value; }
+            if (nextNum === 3) { quickData.product = value; renderMobileQuickCards(); }
+            goToMobileStep(nextNum);
+        }
+
+        function prevMobileStep(prevNum) { goToMobileStep(prevNum); }
+        
+        function renderMobileQuickCards() {
+            const container = document.getElementById('mobile-quick-card-container'); container.innerHTML = '';
+            container.className = `mq-card-list theme-${quickData.telecom}`;
+            let mappedProd = (quickData.product === '인터넷만') ? '단독' : '결합'; let prov = quickData.telecom;
+            let filtered = allData.filter(row => {
+                if(!row[0] || !row[1]) return false;
+                let p = row[0].trim(); let isMatch = false;
+                if(prov === 'KT' && p.includes('KT')) isMatch = true; if(prov === 'LG' && p.includes('LG')) isMatch = true; if(prov === 'SK' && p.includes('SK')) isMatch = true; if(prov === '스카이' && p.includes('스카이')) isMatch = true; if(prov === '헬로' && p.includes('헬로')) isMatch = true;
+                return isMatch && (row[1].trim() === mappedProd);
+            });
+            let speeds = [...new Set(filtered.map(r => r[2].trim()))];
+            speeds.sort((a,b) => (b.includes('1G')?1000:parseInt(b)||0) - (a.includes('1G')?1000:parseInt(a)||0));
+            speeds.forEach(speed => {
+                let targetRows = filtered.filter(r => r[2].trim() === speed);
+                targetRows.sort((a, b) => { let priceA = parseInt(a[mappedProd==='결합'?6:4].replace(/[^0-9]/g, "")) || 0; let priceB = parseInt(b[mappedProd==='결합'?6:4].replace(/[^0-9]/g, "")) || 0; return priceA - priceB; });
+                if(targetRows.length > 0) {
+                    let bestPlan = targetRows[0]; let priceStr = bestPlan[mappedProd==='결합'?6:4].trim(); let giftStr = bestPlan[7] ? bestPlan[7].trim() : '0'; 
+                    let priceNum = parseInt(priceStr.replace(/[^0-9]/g, "")) || 0; let formatPrice = priceNum > 0 ? priceNum.toLocaleString() : priceStr; let formatGift = giftStr.includes('원') ? giftStr : giftStr + '원';
+                    let titleName = `${speed} ${quickData.product}`;
+                    
+                    let iconsHtml = `<img src="wifi.svg" alt="인터넷" loading="lazy">`; if(mappedProd === '결합') iconsHtml += ` <span>+</span> <img src="tv.svg" alt="TV" loading="lazy">`;
+                    let smartSubText = (quickData.product === '인터넷+TV') ? "결합 할인시 / 3년 약정 / 부가세 포함" : "3년 약정 / 부가세 포함";
+                    container.innerHTML += `<div class="mq-plan-card"><div class="mq-plan-header">${titleName}</div><div class="mq-plan-body"><div class="mq-plan-icons">${iconsHtml}</div><div class="mq-plan-price"><div class="price-val">${formatPrice}<span>원</span></div><div class="price-sub">${smartSubText}</div></div><div class="mq-plan-gift"><div class="gift-label">현금사은품</div><div class="gift-val">${formatGift}</div></div><button class="mq-plan-select-btn" onclick="selectMobileQuickCard('${speed}', '${formatPrice}', '${formatGift}')">가입신청</button></div></div>`;
+                }
+            });
+        }
+
+        function selectMobileQuickCard(speed, price, gift) { quickData.speed = speed; quickData.price = price; quickData.gift = gift; goToMobileStep(4); }
+
+        function submitMobileQuickApply() {
+            const name = document.getElementById('mobile-quick-name').value.trim(); const phone = document.getElementById('mobile-quick-phone').value.trim();
+            if(!name || !phone) { alert('성함과 연락처를 모두 적어주셔야 떡값을 쏠 수 있습니다! 😎'); return; }
+            if(phone.length !== 13 || !phone.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('mobile-quick-phone').focus(); return; }
+            
+            const formData = { type: "셀프요금설계 (모바일)", name: name, phone: phone, summary: `통신사: ${quickData.telecom}\n상품: ${quickData.product} / 속도: ${quickData.speed}\n요금: 월 ${quickData.price}원\n사은품: ${quickData.gift}` };
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
+
+            alert(`[간편 접수 성공! 🎉]\n\n${name} 고객님!\n선택하신 [ ${quickData.telecom} / ${quickData.product} / ${quickData.speed} ]\n(월 ${quickData.price}원 / 사은품 ${quickData.gift})\n\n가장 빠른 시간 내에 연락드리겠습니다!`);
+            document.getElementById('mobile-calc-popup-overlay').classList.remove('active'); document.body.style.overflow = ''; 
+            document.getElementById('mobile-quick-name').value = ''; document.getElementById('mobile-quick-phone').value = '';
+        }
+
+        /* 🚀 7. 사이드바 다이렉트 접수 (분할창) 로직 및 기타 유틸 함수들 */
         function openMobileDirectForm(e) { e.preventDefault(); document.getElementById('sidebar-direct-popup-overlay').classList.add('active'); document.body.style.overflow = 'hidden'; }
         function openPcDirectForm(e) { e.preventDefault(); document.getElementById('sidebar-direct-popup-overlay').classList.add('active'); document.body.style.overflow = 'hidden'; }
         function closeSidebarDirectPopup(e) { if(e) e.preventDefault(); if (!e || e.target === document.getElementById('sidebar-direct-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) { document.getElementById('sidebar-direct-popup-overlay').classList.remove('active'); document.body.style.overflow = ''; } }
@@ -1507,86 +1420,166 @@
         function toggleDirectBankInput(selectEl, targetId) { const targetEl = document.getElementById(targetId); if (selectEl.value === '직접입력') { targetEl.style.display = 'block'; targetEl.focus(); } else { targetEl.style.display = 'none'; targetEl.value = ''; } }
         function getBankName(selectId, directId) { const selectVal = document.getElementById(selectId).value; if (selectVal === '직접입력') { return document.getElementById(directId).value.trim(); } return selectVal; }
 
-        function autoHyphenMobile(target) {
-            let val = target.value.replace(/[^0-9]/g, '');
-            if (val.length > 0 && val.charAt(0) !== '0') val = '0';
-            if (val.length > 1 && val.charAt(1) !== '1') val = '01';
-            if (val.length > 2 && val.charAt(2) !== '0') val = '010';
-            if (val.length > 11) val = val.substring(0, 11);
-            let res = '';
-            if (val.length < 4) { res = val; } else if (val.length < 8) { res = val.substr(0, 3) + '-' + val.substr(3); } else { res = val.substr(0, 3) + '-' + val.substr(3, 4) + '-' + val.substr(7); }
-            target.value = res;
+        function selectSidebarTelecom(val, el) { document.querySelectorAll('#sidebar-telecom-group .direct-option-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('sidebar-telecom').value = val; checkSidebarStep2(); }
+        function selectSidebarProd(val, el) { document.querySelectorAll('#sidebar-prodtype-group .direct-option-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('sidebar-prodtype').value = val; checkSidebarStep2(); }
+
+        function checkSidebarStep2() {
+            const tel = document.getElementById('sidebar-telecom').value; const prod = document.getElementById('sidebar-prodtype').value;
+            document.getElementById('sidebar-speed-layer').style.display = 'none'; document.getElementById('sidebar-tv-layer').style.display = 'none'; document.getElementById('sidebar-result-layer').style.display = 'none'; document.getElementById('sidebar-final-layer').style.display = 'none';
+            document.getElementById('sidebar-speed').value = ''; document.getElementById('sidebar-tvprod').value = '';
+            if (tel && prod) { document.getElementById('sidebar-speed-layer').style.display = 'block'; renderSidebarSpeed(tel, prod); }
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
-            const phoneInputIds = ['main-fast-phone', 'quick-phone', 'direct-quick-phone', 'main-full-phone', 'pop-full-phone', 'mobile-quick-phone', 'sidebar-phone'];
-            phoneInputIds.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) { el.setAttribute("maxlength", "13"); el.addEventListener('input', function() { autoHyphenMobile(this); }); }
+        function renderSidebarSpeed(tel, prod) {
+            const speedGroup = document.getElementById('sidebar-speed-group'); speedGroup.innerHTML = '';
+            let filtered = allData.filter(row => { if(!row[0] || !row[1]) return false; let isMatch = (tel === 'KT' && row[0].includes('KT')) || (tel === 'LG' && row[0].includes('LG')) || (tel === 'SK' && row[0].includes('SK')) || (tel === '스카이' && row[0].includes('스카이')) || (tel === '헬로' && row[0].includes('헬로')); return isMatch && (row[1].trim() === prod); });
+            let speeds = [...new Set(filtered.map(r => r[2].trim()))]; speeds.sort((a,b) => (b.includes('1G')?1000:parseInt(b)||0) - (a.includes('1G')?1000:parseInt(a)||0));
+            speeds.forEach(s => { speedGroup.innerHTML += `<div class="direct-option-btn" onclick="selectSidebarSpeed('${s}', this)">🚀 ${s}</div>`; });
+        }
+
+        function selectSidebarSpeed(val, el) {
+            document.querySelectorAll('#sidebar-speed-group .direct-option-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('sidebar-speed').value = val;
+            const prod = document.getElementById('sidebar-prodtype').value;
+            document.getElementById('sidebar-result-layer').style.display = 'none'; document.getElementById('sidebar-final-layer').style.display = 'none';
+            if (prod === '결합') { document.getElementById('sidebar-tv-layer').style.display = 'block'; document.getElementById('sidebar-tvprod').value = ''; renderSidebarTv(); } 
+            else { document.getElementById('sidebar-tv-layer').style.display = 'none'; document.getElementById('sidebar-tvprod').value = ''; calcSidebarResult(); }
+        }
+
+        function renderSidebarTv() {
+            const tel = document.getElementById('sidebar-telecom').value; const speed = document.getElementById('sidebar-speed').value; const tvGroup = document.getElementById('sidebar-tv-group'); tvGroup.innerHTML = '';
+            let filtered = allData.filter(row => { if(!row[0] || !row[1] || !row[3]) return false; let isMatch = (tel === 'KT' && row[0].includes('KT')) || (tel === 'LG' && row[0].includes('LG')) || (tel === 'SK' && row[0].includes('SK')) || (tel === '스카이' && row[0].includes('스카이')) || (tel === '헬로' && row[0].includes('헬로')); return isMatch && row[1].trim() === '결합' && row[2].trim() === speed; });
+            filtered.sort((a, b) => (parseInt(b[6].replace(/[^0-9]/g, "")) || 0) - (parseInt(a[6].replace(/[^0-9]/g, "")) || 0));
+            let tvs = [...new Set(filtered.map(r => r[3].trim()))]; tvs.forEach(t => { tvGroup.innerHTML += `<div class="direct-option-btn" onclick="selectSidebarTv('${t}', this)">📺 ${t}</div>`; });
+        }
+
+        function selectSidebarTv(val, el) { document.querySelectorAll('#sidebar-tv-group .direct-option-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('sidebar-tvprod').value = val; calcSidebarResult(); }
+
+        function calcSidebarResult() {
+            const tel = document.getElementById('sidebar-telecom').value; const prod = document.getElementById('sidebar-prodtype').value; const speed = document.getElementById('sidebar-speed').value; const tv = document.getElementById('sidebar-tvprod').value || '';
+            let targetRow = allData.find(row => {
+                if(!row[0] || !row[1] || !row[2]) return false; let isMatch = (tel === 'KT' && row[0].includes('KT')) || (tel === 'LG' && row[0].includes('LG')) || (tel === 'SK' && row[0].includes('SK')) || (tel === '스카이' && row[0].includes('스카이')) || (tel === '헬로' && row[0].includes('헬로'));
+                let prodMatch = (row[1].trim() === prod) && (row[2].trim() === speed); if (prod === '결합') { prodMatch = prodMatch && (row[3] ? row[3].trim() === tv : false); } return isMatch && prodMatch;
             });
-        });
-
-        function getMatchingGifts(prov, prod, speed, tv) { return giftData.filter(row => { return row[0].trim() === prov && row[1].trim() === prod && row[2].trim() === speed && row[3].trim() === tv; }); }
-        
-        function renderGiftCards(gifts) {
-            const listElement = document.getElementById('calculator-gift-list'); const toggleArea = document.getElementById('gift-mode-toggle-area'); listElement.innerHTML = '';
-            if (toggleArea) { toggleArea.style.display = (gifts && gifts.length > 0) ? 'block' : 'none'; }
-            if (isGiftMode && (!gifts || gifts.length === 0)) { resetToCashMode(); }
-
-            gifts.forEach(gift => {
-                const card = document.createElement('div'); card.className = 'gift-card'; card.style.cursor = 'pointer'; card.style.position = 'relative'; card.style.transition = 'all 0.2s ease-in-out'; 
-                const isAlreadySelected = (selectedGift && selectedGift[4].trim() === gift[4].trim());
-                if (isAlreadySelected) { card.style.border = '3px solid #E53E3E'; card.style.background = '#FFF5F5'; card.style.boxShadow = '0 10px 20px rgba(229, 62, 62, 0.15)'; card.style.transform = 'translateY(-4px)'; } 
-                else { card.style.border = '2px solid #E2E8F0'; card.style.background = '#fff'; card.style.boxShadow = 'none'; card.style.transform = 'translateY(0)'; }
-                
-                card.innerHTML = `
-                    <div class="gift-check-badge" style="display:${isAlreadySelected ? 'block' : 'none'}; position:absolute; top:-12px; right:-12px; background:#E53E3E; color:#fff; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:900; box-shadow:0 4px 10px rgba(229, 62, 62, 0.3); z-index:10; border:2px solid #fff; letter-spacing:-0.5px;">✓ 선택완료</div>
-                    <img src="${gift[5]}" alt="${gift[4]}" loading="lazy" style="height:120px; margin-bottom:8px; pointer-events:none;">
-                    <div class="gift-title" style="font-size:14px; font-weight:${isAlreadySelected ? '900' : '500'}; line-height:1.3; color:${isAlreadySelected ? '#1A202C' : '#4A5568'}; word-break:keep-all; pointer-events:none;">${gift[4]}</div>
-                `;
-
-                card.onclick = function() {
-                    const currentlySelected = (selectedGift && selectedGift[4].trim() === gift[4].trim());
-                    document.querySelectorAll('#calculator-gift-list .gift-card').forEach(c => {
-                        c.style.border = '2px solid #E2E8F0'; c.style.background = '#fff'; c.style.boxShadow = 'none'; c.style.transform = 'translateY(0)'; c.querySelector('.gift-check-badge').style.display = 'none'; c.querySelector('.gift-title').style.fontWeight = '500'; c.querySelector('.gift-title').style.color = '#4A5568';
-                    });
-                    if (currentlySelected) {
-                        selectedGift = null; const subsidyText = document.getElementById('pc-res-subsidy').innerText; currentGiftStatusText = `현금 사은품 ${subsidyText} 증정`; 
-                    } else {
-                        card.style.border = '3px solid #E53E3E'; card.style.background = '#FFF5F5'; card.style.boxShadow = '0 10px 20px rgba(229, 62, 62, 0.15)'; card.style.transform = 'translateY(-4px)'; card.querySelector('.gift-check-badge').style.display = 'block'; card.querySelector('.gift-title').style.fontWeight = '900'; card.querySelector('.gift-title').style.color = '#1A202C'; selectedGift = gift; currentGiftStatusText = `🎁 가전: ${selectedGift[4]}`; 
-                    }
-                };
-                listElement.appendChild(card);
-            });
-        }
-
-        function resetToCashMode() {
-            isGiftMode = false; const subsidyBox = document.querySelector('.pc-subsidy-box'); const giftPanel = document.getElementById('calculator-gift-panel'); const toggleBtn = document.getElementById('btn-toggle-gift');
-            if (subsidyBox) subsidyBox.style.display = 'block'; if (giftPanel) giftPanel.style.display = 'none';
-            if (toggleBtn) { toggleBtn.textContent = '🎁 현금 대신 가전 사은품으로 보기'; toggleBtn.style.background = '#3182CE'; }
-        }
-
-        function toggleGiftMode() {
-            const subsidyBox = document.querySelector('.pc-subsidy-box'); const giftPanel = document.getElementById('calculator-gift-panel'); const toggleBtn = document.getElementById('btn-toggle-gift');
-            isGiftMode = !isGiftMode;
-            if (isGiftMode) {
-                if (subsidyBox) subsidyBox.style.display = 'none'; if (giftPanel) giftPanel.style.display = 'block';
-                if (toggleBtn) { toggleBtn.textContent = '↩️ 다시 현금 사은품으로 보기'; toggleBtn.style.background = '#DD6B20'; }
-                if (selectedGift) { currentGiftStatusText = `🎁 가전: ${selectedGift[4]}`; }
-            } else {
-                if (subsidyBox) subsidyBox.style.display = 'block'; if (giftPanel) giftPanel.style.display = 'none';
-                if (toggleBtn) { toggleBtn.textContent = '🎁 현금 대신 가전 사은품으로 보기'; toggleBtn.style.background = '#3182CE'; }
-                const subsidyText = document.getElementById('pc-res-subsidy').innerText; currentGiftStatusText = `현금 사은품 ${subsidyText} 증정`; 
+            if (targetRow) {
+                const cleanRow = targetRow.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
+                let dcPriceRaw = parseInt(cleanRow[5] ? cleanRow[5].replace(/[^0-9]/g, "") : "0") || 0; let priceRaw = (dcPriceRaw > 0) ? cleanRow[6] : cleanRow[4];
+                let formatPrice = (parseInt(priceRaw.replace(/[^0-9]/g, "")) || 0).toLocaleString() + "원"; let formatSubsidy = (cleanRow[7] || "0").includes('원') ? cleanRow[7] : (cleanRow[7] || "0") + '원';
+                let prefixText = (tel === '스카이' || tel === '헬로') ? "✨ 알뜰 실속 요금" : "📱 휴대폰 결합 시";
+                document.getElementById('sidebar-result-price').innerHTML = `<span style="font-size:14px; color:#3182CE; display:block; margin-bottom:4px; font-weight:900;">${prefixText}</span>월 ${formatPrice}`;
+                document.getElementById('sidebar-result-gift').innerText = `🎁 현금 ${formatSubsidy} 지원!`;
+                document.getElementById('sidebar-result-layer').style.display = 'block';
+                const matchedGifts = getMatchingGifts(tel, prod, speed, tv); renderSidebarGifts(matchedGifts);
+                document.getElementById('sidebar-final-layer').style.display = 'block';
+                document.querySelectorAll('#sidebar-gifttype-group .direct-option-btn, #sidebar-paytype-group .direct-option-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('sidebar-gifttype').value = ''; document.getElementById('sidebar-paytype').value = ''; document.getElementById('sidebar-giftbank-layer').style.display = 'none'; document.getElementById('sidebar-appliance-layer').style.display = 'none'; document.getElementById('sidebar-bank-layer').style.display = 'none'; document.getElementById('sidebar-card-layer').style.display = 'none';
+                const copyBtn = document.getElementById('btn-sidebar-copy-account'); if (copyBtn) copyBtn.style.display = 'none';
             }
         }
 
-        function resetGiftSelection() {
-            selectedGift = null; currentGiftStatusText = "현금 사은품 대기 중"; pc_updateOptions();
-            if (pc_curProv && pc_curProd) { pc_calcDirectResult(); }
-            alert("🔄 가전 선택이 초기화되었습니다. 모든 상품을 자유롭게 선택 가능합니다.");
+        function renderSidebarGifts(gifts) {
+            const listEl = document.getElementById('sidebar-appliance-list'); listEl.innerHTML = ''; const giftTypeGroup = document.getElementById('sidebar-gifttype-group');
+            if (!gifts || gifts.length === 0) { giftTypeGroup.children[1].style.display = 'none'; } 
+            else {
+                giftTypeGroup.children[1].style.display = 'block'; 
+                gifts.forEach(gift => {
+                    const card = document.createElement('div'); card.className = 'gift-card'; card.style.padding = '12px 10px'; card.style.cursor = 'pointer'; card.style.position = 'relative'; card.style.border = '2px solid #E2E8F0'; card.style.borderRadius = '14px'; card.style.background = '#fff'; card.style.transition = 'all 0.2s ease-in-out'; 
+                    card.innerHTML = `<div class="gift-check-badge" style="display:none; position:absolute; top:-12px; right:-12px; background:#E53E3E; color:#fff; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:900; box-shadow:0 4px 10px rgba(229, 62, 62, 0.3); z-index:10; border:2px solid #fff; letter-spacing:-0.5px;">✓ 선택완료</div><img src="${gift[5]}" alt="${gift[4]}" loading="lazy" style="height:100px; margin-bottom:8px; pointer-events:none;"><div class="gift-title" style="font-size:13px; font-weight:500; line-height:1.3; color:#4A5568; word-break:keep-all; pointer-events:none;">${gift[4]}</div>`;
+                    card.onclick = function() {
+                        const hiddenInput = document.getElementById('sidebar-appliance'); const isAlreadySelected = (hiddenInput.value === gift[4]);
+                        document.querySelectorAll('#sidebar-appliance-list .gift-card').forEach(c => { c.style.border = '2px solid #E2E8F0'; c.style.background = '#fff'; c.style.transform = 'translateY(0)'; c.querySelector('.gift-check-badge').style.display = 'none'; c.querySelector('.gift-title').style.fontWeight = '500'; c.querySelector('.gift-title').style.color = '#4A5568'; });
+                        if (isAlreadySelected) { hiddenInput.value = ''; } else { card.style.border = '3px solid #E53E3E'; card.style.background = '#FFF5F5'; card.style.transform = 'translateY(-4px)'; card.querySelector('.gift-check-badge').style.display = 'block'; card.querySelector('.gift-title').style.fontWeight = '900'; card.querySelector('.gift-title').style.color = '#1A202C'; hiddenInput.value = gift[4]; }
+                    };
+                    listEl.appendChild(card);
+                });
+            }
         }
 
-        /* 🚀 사은품 라인업 팝업 (전체보기) */
+        function selectSidebarGiftType(val, el) {
+            document.querySelectorAll('#sidebar-gifttype-group .direct-option-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('sidebar-gifttype').value = val;
+            if (val === '현금') { document.getElementById('sidebar-giftbank-layer').style.display = 'block'; document.getElementById('sidebar-appliance-layer').style.display = 'none'; document.getElementById('sidebar-appliance').value = ''; } 
+            else if (val === '가전') { document.getElementById('sidebar-giftbank-layer').style.display = 'none'; document.getElementById('sidebar-appliance-layer').style.display = 'block'; }
+            checkSidebarCopyButtonVisibility();
+        }
+
+        function selectSidebarPayType(val, el) {
+            document.querySelectorAll('#sidebar-paytype-group .direct-option-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); document.getElementById('sidebar-paytype').value = val;
+            if (val === '계좌') { document.getElementById('sidebar-bank-layer').style.display = 'grid'; document.getElementById('sidebar-card-layer').style.display = 'none'; } 
+            else if (val === '카드') { document.getElementById('sidebar-bank-layer').style.display = 'none'; document.getElementById('sidebar-card-layer').style.display = 'grid'; }
+            checkSidebarCopyButtonVisibility();
+        }
+
+        function checkSidebarCopyButtonVisibility() {
+            const giftType = document.getElementById('sidebar-gifttype').value; const payType = document.getElementById('sidebar-paytype').value; const copyBtn = document.getElementById('btn-sidebar-copy-account');
+            if (copyBtn) { if (giftType === '현금' && payType === '계좌') { copyBtn.style.display = 'block'; } else { copyBtn.style.display = 'none'; } }
+        }
+
+        function copySidebarAccountInfo() {
+            const selectVal = document.getElementById('sidebar-giftbankname').value; const directVal = document.getElementById('sidebar-giftbankname-direct').value.trim(); const giftBankNum = document.getElementById('sidebar-giftbanknum').value.trim();
+            if (!selectVal || !giftBankNum || (selectVal === '직접입력' && !directVal)) { alert("위쪽 💰 '사은품 입금 계좌'의 은행명과 계좌번호를 먼저 정확히 입력해 주세요!"); return; }
+            const paySelect = document.getElementById('sidebar-bankname'); paySelect.value = selectVal; toggleDirectBankInput(paySelect, 'sidebar-bankname-direct');
+            if (selectVal === '직접입력') { document.getElementById('sidebar-bankname-direct').value = directVal; }
+            document.getElementById('sidebar-banknum').value = giftBankNum;
+            const payBankLayer = document.getElementById('sidebar-bank-layer'); payBankLayer.style.transition = "background-color 0.3s"; payBankLayer.style.backgroundColor = "#FFFDF5"; setTimeout(() => { payBankLayer.style.backgroundColor = "transparent"; }, 600);
+        }
+
+        function submitSidebarFullForm() {
+            const n = document.getElementById('sidebar-name').value.trim(); const b = document.getElementById('sidebar-birth').value.trim(); const post = document.getElementById('sidebar-postcode').value.trim();
+            const addr1 = document.getElementById('sidebar-addr1').value.trim(); const addr2 = document.getElementById('sidebar-addr2').value.trim(); const p = document.getElementById('sidebar-phone').value.trim();
+            const chk = document.getElementById('sidebar-privacy-check').checked;
+            
+            if(!n) { alert('성함을 입력해 주세요!'); document.getElementById('sidebar-name').focus(); return; }
+            if(!b || b.length !== 8) { alert('생년월일 8자리를 정확히 입력해 주세요 (예: 19901010)'); document.getElementById('sidebar-birth').focus(); return; }
+            if(!post || !addr1 || !addr2) { alert('설치 주소(우편번호 및 상세주소)를 모두 입력해 주세요!'); document.getElementById('sidebar-addr2').focus(); return; }
+            if(p.length !== 13 || !p.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('sidebar-phone').focus(); return; }
+
+            const telecom = document.getElementById('sidebar-telecom').value; const prodtype = document.getElementById('sidebar-prodtype').value; const speed = document.getElementById('sidebar-speed').value;
+            const tvprod = document.getElementById('sidebar-tvprod').value; const gifttype = document.getElementById('sidebar-gifttype').value; const paytype = document.getElementById('sidebar-paytype').value;
+
+            if(!telecom || !prodtype || !speed || (prodtype === '결합' && !tvprod)) { alert('상품 선택 정보를 모두 선택해 주세요!'); return; }
+            if(!gifttype) { alert('사은품 수령 방식을 선택해 주세요!'); return; }
+
+            let giftResult = "";
+            if(gifttype === '현금') {
+                const gBankName = getBankName('sidebar-giftbankname', 'sidebar-giftbankname-direct'); const gBankNum = document.getElementById('sidebar-giftbanknum').value.trim();
+                if(!gBankName || !gBankNum) { alert('사은품 입금 계좌 정보를 정확히 입력해 주세요!'); return; }
+                giftResult = `현금 입금계좌 (${gBankName} ${gBankNum})`;
+            } else if(gifttype === '가전') {
+                const appliance = document.getElementById('sidebar-appliance').value;
+                if(!appliance) { alert('프리미엄 가전 사은품을 선택해 주세요!'); return; }
+                giftResult = `가전 사은품 (${appliance})`;
+            }
+
+            if(!paytype) { alert('통신요금 납부 방법을 선택해 주세요!'); return; }
+            let payResult = "";
+            if(paytype === '계좌') {
+                const bName = getBankName('sidebar-bankname', 'sidebar-bankname-direct'); const bNum = document.getElementById('sidebar-banknum').value.trim();
+                if(!bName || !bNum) { alert('자동이체 계좌번호를 정확히 입력해 주세요!'); return; }
+                payResult = `계좌이체 (${bName} ${bNum})`;
+            } else if(paytype === '카드') {
+                const cName = getBankName('sidebar-cardname', 'sidebar-cardname-direct'); const cNum = document.getElementById('sidebar-cardnum').value.trim(); const cValid = document.getElementById('sidebar-cardvalid').value.trim();
+                if(!cName || !cNum || !cValid) { alert('신용카드 정보를 모두 입력해 주세요!'); return; }
+                payResult = `신용카드 (${cName} ${cNum} / ${cValid})`;
+            }
+
+            if(!chk) { alert('개인정보 수집 및 이용에 동의하셔야 접수가 가능합니다.'); return; }
+
+            const formData = { type: "사이드바 접수 (완료)", name: n, phone: p, summary: `생년월일: ${b} / 설치주소: ${addr1} ${addr2}\n통신사: ${telecom} / 상품: ${prodtype} (${speed}${prodtype === '결합' ? ' / ' + tvprod : ''})\n사은품: ${giftResult}\n납부방법: ${payResult}` };
+
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
+            alert(`[다이렉트 접수 성공! 🎉]\n\n성함: ${n}\n연락처: ${p}\n\n꼼꼼히 확인 후 신속하게 개통 및 혜택 지급을 도와드리겠습니다!`);
+            
+            document.getElementById('sidebar-name').value = ""; document.getElementById('sidebar-birth').value = ""; document.getElementById('sidebar-postcode').value = ""; document.getElementById('sidebar-addr1').value = ""; document.getElementById('sidebar-addr2').value = ""; document.getElementById('sidebar-phone').value = "";
+            document.querySelectorAll('#sidebar-direct-popup-overlay .direct-option-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('sidebar-telecom').value = ""; document.getElementById('sidebar-prodtype').value = ""; document.getElementById('sidebar-speed').value = ""; document.getElementById('sidebar-tvprod').value = ""; document.getElementById('sidebar-gifttype').value = ""; document.getElementById('sidebar-appliance').value = ""; document.getElementById('sidebar-paytype').value = "";
+            document.getElementById('sidebar-speed-layer').style.display = 'none'; document.getElementById('sidebar-tv-layer').style.display = 'none'; document.getElementById('sidebar-result-layer').style.display = 'none'; document.getElementById('sidebar-final-layer').style.display = 'none';
+            document.getElementById('sidebar-giftbankname').value = ""; document.getElementById('sidebar-giftbanknum').value = ""; document.getElementById('sidebar-giftbankname-direct').style.display = "none";
+            document.getElementById('sidebar-bankname').value = ""; document.getElementById('sidebar-banknum').value = ""; document.getElementById('sidebar-bankname-direct').style.display = "none";
+            document.getElementById('sidebar-cardname').value = ""; document.getElementById('sidebar-cardnum').value = ""; document.getElementById('sidebar-cardvalid').value = ""; document.getElementById('sidebar-cardname-direct').style.display = "none";
+            document.getElementById('sidebar-privacy-check').checked = false;
+            closeSidebarDirectPopup();
+        }
+
+        /* 🚀 사은품 팝업 (Gift Popup) */
         function openGiftPopup(e) {
             if(e) e.preventDefault(); 
             document.getElementById('gift-popup-overlay').classList.add('active'); document.body.style.overflow = 'hidden'; backToGiftList(); 
@@ -1637,6 +1630,59 @@
             }, 300);
         }
         
+        function getMatchingGifts(prov, prod, speed, tv) { return giftData.filter(row => { return row[0].trim() === prov && row[1].trim() === prod && row[2].trim() === speed && row[3].trim() === tv; }); }
+        
+        function renderGiftCards(gifts) {
+            const listElement = document.getElementById('calculator-gift-list'); const toggleArea = document.getElementById('gift-mode-toggle-area'); listElement.innerHTML = '';
+            if (toggleArea) { toggleArea.style.display = (gifts && gifts.length > 0) ? 'block' : 'none'; }
+            if (isGiftMode && (!gifts || gifts.length === 0)) { resetToCashMode(); }
+
+            gifts.forEach(gift => {
+                const card = document.createElement('div'); card.className = 'gift-card'; card.style.cursor = 'pointer'; card.style.position = 'relative'; card.style.transition = 'all 0.2s ease-in-out'; 
+                const isAlreadySelected = (selectedGift && selectedGift[4].trim() === gift[4].trim());
+                if (isAlreadySelected) { card.style.border = '3px solid #E53E3E'; card.style.background = '#FFF5F5'; card.style.boxShadow = '0 10px 20px rgba(229, 62, 62, 0.15)'; card.style.transform = 'translateY(-4px)'; } 
+                else { card.style.border = '2px solid #E2E8F0'; card.style.background = '#fff'; card.style.boxShadow = 'none'; card.style.transform = 'translateY(0)'; }
+                
+                card.innerHTML = `
+                    <div class="gift-check-badge" style="display:${isAlreadySelected ? 'block' : 'none'}; position:absolute; top:-12px; right:-12px; background:#E53E3E; color:#fff; padding:5px 12px; border-radius:20px; font-size:12px; font-weight:900; box-shadow:0 4px 10px rgba(229, 62, 62, 0.3); z-index:10; border:2px solid #fff; letter-spacing:-0.5px;">✓ 선택완료</div>
+                    <img src="${gift[5]}" alt="${gift[4]}" loading="lazy" style="height:120px; margin-bottom:8px; pointer-events:none;">
+                    <div class="gift-title" style="font-size:14px; font-weight:${isAlreadySelected ? '900' : '500'}; line-height:1.3; color:${isAlreadySelected ? '#1A202C' : '#4A5568'}; word-break:keep-all; pointer-events:none;">${gift[4]}</div>
+                `;
+
+                card.onclick = function() {
+                    const currentlySelected = (selectedGift && selectedGift[4].trim() === gift[4].trim());
+                    document.querySelectorAll('#calculator-gift-list .gift-card').forEach(c => {
+                        c.style.border = '2px solid #E2E8F0'; c.style.background = '#fff'; c.style.boxShadow = 'none'; c.style.transform = 'translateY(0)'; c.querySelector('.gift-check-badge').style.display = 'none'; c.querySelector('.gift-title').style.fontWeight = '500'; c.querySelector('.gift-title').style.color = '#4A5568';
+                    });
+                    if (currentlySelected) {
+                        selectedGift = null; const subsidyText = document.getElementById('pc-res-subsidy').innerText; currentGiftStatusText = `현금 사은품 ${subsidyText} 증정`; 
+                    } else {
+                        card.style.border = '3px solid #E53E3E'; card.style.background = '#FFF5F5'; card.style.boxShadow = '0 10px 20px rgba(229, 62, 62, 0.15)'; card.style.transform = 'translateY(-4px)'; card.querySelector('.gift-check-badge').style.display = 'block'; card.querySelector('.gift-title').style.fontWeight = '900'; card.querySelector('.gift-title').style.color = '#1A202C'; selectedGift = gift; currentGiftStatusText = `🎁 가전: ${selectedGift[4]}`; 
+                    }
+                };
+                listElement.appendChild(card);
+            });
+        }
+
+        function autoHyphenMobile(target) {
+            let val = target.value.replace(/[^0-9]/g, '');
+            if (val.length > 0 && val.charAt(0) !== '0') val = '0';
+            if (val.length > 1 && val.charAt(1) !== '1') val = '01';
+            if (val.length > 2 && val.charAt(2) !== '0') val = '010';
+            if (val.length > 11) val = val.substring(0, 11);
+            let res = '';
+            if (val.length < 4) { res = val; } else if (val.length < 8) { res = val.substr(0, 3) + '-' + val.substr(3); } else { res = val.substr(0, 3) + '-' + val.substr(3, 4) + '-' + val.substr(7); }
+            target.value = res;
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const phoneInputIds = ['main-fast-phone', 'quick-phone', 'direct-quick-phone', 'main-full-phone', 'pop-full-phone', 'mobile-quick-phone', 'sidebar-phone'];
+            phoneInputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.setAttribute("maxlength", "13"); el.addEventListener('input', function() { autoHyphenMobile(this); }); }
+            });
+        });
+
     </script>
 <!-- MR Script Ver 2.0 -->
 <script async="true" src="//log1.toup.net/mirae_log_chat_common.js?adkey=tjyhi" charset="UTF-8"></script>
