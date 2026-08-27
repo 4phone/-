@@ -1191,14 +1191,16 @@
                             let formatSubsidy = (cleanRow[7] || "0").includes('원') ? cleanRow[7] : (cleanRow[7] || "0") + '원';
                             
                             let conditionText = (prov === '스카이' || prov === '헬로') ? "✨ 알뜰 실속" : "📱 휴대폰 결합시";
-                            let tvBadgeHtml = type === '결합' ? `<div class="tv-badge">+ ${cleanRow[3]}</div>` : `<div class="tv-badge" style="background:#E2E8F0; color:#718096;">인터넷 단독</div>`;
+                            
+                            // 🚀 수정된 부분: 결합상품은 '100M + TV요금제', 단독은 '100M'만 크게 노출
+                            let displayProductName = type === '결합' ? `${speed} + ${cleanRow[3]}` : `${speed}`;
 
                             cardHtml += `
                             <div class="plan-row">
                                 <div class="plan-info-top">
                                     <div class="p-speed-tv">
-                                        <div class="speed-badge">${speed}</div>
-                                        ${tvBadgeHtml}
+                                        <!-- 기존의 자잘한 회색 태그를 날리고, 메인 속도 배지에 하나로 통합 -->
+                                        <div class="speed-badge" style="word-break: keep-all;">${displayProductName}</div>
                                     </div>
                                     <div class="p-price-box">
                                         <div class="p-condition">[${conditionText}]</div>
