@@ -27,7 +27,10 @@
         
         body { margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; background-color: var(--main-bg); color: #fff; letter-spacing: -0.5px; overflow-x: hidden; padding-bottom: 90px; }
         
-        /* 🚀 개편된 최상단 내비게이션 바 (오류 수정 완료) */
+        /* 🚀 Fix 4: 팝업창 및 모든 폼 요소에 프리텐다드 폰트 강제 상속 */
+        button, input, select, textarea { font-family: inherit; }
+
+        /* 🚀 개편된 최상단 내비게이션 바 */
         .navbar { position: fixed; top: 0; left: 0; right: 0; height: 80px; background: #FFFFFF; display: flex; align-items: center; justify-content: space-between; padding: 0 40px; z-index: 1000; border-bottom: 3px solid var(--gold-color); box-shadow: 0 4px 20px rgba(0,0,0,0.15); transition: all 0.3s ease-in-out; }
         .nav-logo-group { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
         .nav-logo-group img { height: 50px; display: block; object-fit: contain; background: #FFFFFF; }
@@ -62,7 +65,6 @@
         .main-mascot { width: 100%; height: 100%; border-radius: 50%; background: #fff; padding: 4px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); border: 6px solid var(--gold-color); transition: transform 0.3s ease-out; }
         .mascot-container:hover .main-mascot { transform: scale(1.08); }
         
-        /* 🚀 메가 임팩트 존 (CSS 복구 완료) */
         .mega-impact-zone { display: flex; flex-direction: column; align-items: center; text-align: center; width: 100%; position: relative; }
         .mega-text-top { font-size: 34px; font-weight: 700; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.4); margin-bottom: -5px; letter-spacing: -1px; animation: text-shine 1.5s infinite alternate; }
         @keyframes text-shine { 0% { opacity: 0.9; text-shadow: 0 0 10px rgba(255,255,255,0.5); } 100% { opacity: 1; text-shadow: 0 0 20px #FFD700, 0 0 35px #FFD700; color: #FFFDF5; } }
@@ -113,7 +115,7 @@
         .prev-arrow { left: 0; }
         .next-arrow { right: 0; }
 
-        /* 🚀 10대 베스트 요금 라인업 CSS (로고 사이즈 및 정렬 수정) */
+        /* 🚀 Fix 7: 10대 베스트 요금 라인업 대개편 (직관적 UI) */
         #best-plan-section { max-width: 1200px; margin: 0 auto; padding-top: 20px; }
         .prov-section { margin-bottom: 60px; background: rgba(0,0,0,0.15); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,215,0,0.2); }
         .prov-title { display: flex; align-items: center; gap: 15px; font-size: 26px; font-weight: 900; color: #FFD700; margin-top: 0; margin-bottom: 25px; border-bottom: 2px dashed rgba(255,215,0,0.3); padding-bottom: 15px; justify-content: flex-start; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
@@ -122,14 +124,24 @@
         .plan-card { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.3); text-align: left; display: flex; flex-direction: column; }
         .plan-card-header { background: #1A202C; color: #fff; padding: 20px; font-size: 18px; font-weight: 900; display: flex; justify-content: space-between; align-items: center; letter-spacing: -0.5px; }
         .plan-card-body { padding: 0 20px; flex-grow: 1; display: flex; flex-direction: column; }
-        .plan-row { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #E2E8F0; }
+        
+        .plan-row { display: flex; flex-direction: column; padding: 25px 0; border-bottom: 1px solid #E2E8F0; gap: 15px; }
         .plan-row:last-child { border-bottom: none; }
-        .p-speed { font-size: 20px; font-weight: 900; color: #3182CE; width: 65px; letter-spacing: -1px; }
-        .p-details { flex: 1; padding: 0 15px; }
-        .p-price { font-size: 20px; font-weight: 900; color: #111; margin-bottom: 6px; letter-spacing: -1px; }
-        .p-gift { font-size: 14px; font-weight: 800; color: #E53E3E; background: #FFF5F5; display: inline-block; padding: 5px 10px; border-radius: 6px; border: 1px solid #FEB2B2; }
-        .p-apply-btn { background: #FFD700; color: #111; font-weight: 900; font-size: 15px; border: none; padding: 14px 22px; border-radius: 10px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(255,215,0,0.3); white-space: nowrap; }
-        .p-apply-btn:hover { transform: translateY(-3px); background: #F6C200; box-shadow: 0 6px 15px rgba(255,215,0,0.4); }
+        .plan-info-top { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
+        .p-speed-tv { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+        .p-speed-tv .speed-badge { font-size: 24px; font-weight: 900; color: #3182CE; letter-spacing: -1px; line-height: 1; }
+        .p-speed-tv .tv-badge { font-size: 15px; font-weight: 700; color: #2D3748; background: #EDF2F7; padding: 4px 10px; border-radius: 6px; }
+        .p-price-box { text-align: right; }
+        .p-condition { font-size: 14px; font-weight: 800; color: #718096; margin-bottom: 6px; letter-spacing: -0.5px; }
+        .p-price { font-size: 26px; font-weight: 900; color: #111; letter-spacing: -1px; line-height: 1; }
+        
+        /* 네온 펄스 애니메이션 추가 */
+        .p-gift-box { width: 100%; text-align: center; background: #FFF5F5; padding: 14px; border-radius: 8px; border: 2px solid #FEB2B2; animation: neon-pulse 1.5s infinite alternate; margin-top: 5px; }
+        .p-gift-text { font-size: 18px; font-weight: 900; color: #E53E3E; }
+        @keyframes neon-pulse { 0% { box-shadow: 0 0 5px rgba(229, 62, 62, 0.2); border-color: #FEB2B2; } 100% { box-shadow: 0 0 15px rgba(229, 62, 62, 0.6); border-color: #E53E3E; } }
+        
+        .p-apply-btn { width: 100%; background: linear-gradient(135deg, #FFD700 0%, #F6C200 100%); color: #111; font-weight: 900; font-size: 18px; border: none; padding: 18px; border-radius: 12px; cursor: pointer; transition: 0.2s; box-shadow: 0 6px 15px rgba(255,215,0,0.3); margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .p-apply-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255,215,0,0.4); }
         .p-empty-row { text-align: center; padding: 30px; color: #A0AEC0; font-size: 15px; font-weight: 700; }
 
         /* 공통 팝업 오버레이 */
@@ -139,6 +151,11 @@
         .quick-popup-overlay.active .quick-popup-content { transform: translateY(0); }
         .quick-close-btn { position: absolute; top: 15px; right: 15px; background: #F7FAFC; border: 1px solid #E2E8F0; font-size: 14px; font-weight: 700; color: #555; cursor: pointer; padding: 8px 14px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); z-index: 100; transition: 0.2s; }
         .quick-close-btn:hover { background: #E2E8F0; }
+
+        /* 🚀 투트랙 팝업용 애니메이션 CSS */
+        .quick-step { display: none; }
+        .quick-step.active-step { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* 🚀 PC 전용 셀프요금설계 팝업 CSS */
         .pc-calc-wrapper { width: 100%; background: #fff; border-radius: 24px; padding: 0; color: #2D3748; position: relative; }
@@ -234,11 +251,10 @@
         .split-popup-content .privacy-label { display: flex !important; align-items: center !important; gap: 10px !important; font-size: 14px !important; color: #4A5568 !important; margin: 0 !important; width: 100%; }
         .split-popup-content .privacy-label input[type="checkbox"] { width: 18px !important; height: 18px !important; margin: 0 !important; cursor: pointer; }
 
-        /* 사은품 팝업 CSS */
+        /* 🚀 Fix 2: 사은품 팝업 및 패널 그리드 CSS (PC 2줄, 모바일 1줄 복구) */
         .gift-popup-header { display: flex; align-items: center; justify-content: space-between; background: #1A202C; color: #fff; padding: 20px; border-radius: 20px 20px 0 0; }
         .gift-popup-header h3 { margin: 0; font-size: 22px; font-weight: 700; text-align: left; flex: 1; word-break: keep-all; line-height: 1.3; }
         .gift-popup-header .quick-close-btn { position: static !important; margin-left: 10px; flex-shrink: 0; background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); color: #fff; }
-        .gift-popup-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .gift-popup-card { border: 2px solid #E2E8F0; border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; background: #fff; display: flex; flex-direction: column; height: 100%; }
         .gift-popup-card:hover { border-color: #3182CE; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         .gift-popup-card img { width: 100%; height: 140px; object-fit: contain; margin-bottom: 12px; }
@@ -248,6 +264,8 @@
         .gift-detail-img { width: 100%; height: 250px; object-fit: contain; margin-bottom: 20px; }
         .gift-detail-title { font-size: 24px; font-weight: 700; color: #111; margin-bottom: 15px; border-bottom: 2px solid #E2E8F0; padding-bottom: 12px; }
         .gift-detail-desc { font-size: 15px; line-height: 1.6; color: #2D3748; background: #F8FAFC; padding: 20px; border-radius: 12px; word-break: keep-all; border: 1px solid #E2E8F0; }
+        
+        #calculator-gift-list, .gift-grid, .gift-popup-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         
         .footer { background: #1B1E0C; color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.8; text-align: left; padding: 40px 40px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 80px; font-family: 'Noto Sans KR', sans-serif; }
         .footer-container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
@@ -279,7 +297,7 @@
             .pc-btn-phone { background: linear-gradient(135deg, #2D3214 0%, #1B1E0C 100%); color: #FFD700; border-color: #3E441E; }
             .pc-btn-kakao { background: linear-gradient(135deg, #FEE500 0%, #FBC02D 100%); color: #111; border-color: #FFF59D; }
             .pc-btn-direct { background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%); color: #fff; border-color: #FF8A65; }
-            /* 🚀 Fix 3: PC 해상도 화면 퀵버튼 숨김 적용 */
+            /* 🚀 Fix 6: PC 해상도 화면 모바일 퀵버튼 숨김 적용 */
             .mobile-quick-btn-zone { display: none !important; }
         }
 
@@ -297,7 +315,6 @@
 
             .navbar.scrolled { flex-wrap: wrap !important; height: auto !important; padding: 12px 15px !important; }
 
-            /* 🚀 신규: 모바일 통신사 스와이프 탭 */
             .mobile-swipe-tabs { display: flex; gap: 8px; overflow-x: auto; white-space: nowrap; padding: 12px 15px; background: #fff; border-bottom: 3px solid var(--gold-color); position: sticky; top: 60px; z-index: 900; scrollbar-width: none; -webkit-overflow-scrolling: touch; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
             .mobile-swipe-tabs::-webkit-scrollbar { display: none; }
             .m-tab-link { background: #F7FAFC; border: 1px solid #E2E8F0; color: #4A5568; font-weight: 800; font-size: 14px; padding: 8px 16px; border-radius: 20px; text-decoration: none; transition: 0.2s; }
@@ -321,10 +338,9 @@
             .prov-section { padding: 20px 15px !important; margin-bottom: 40px !important; }
             .prov-title { font-size: 20px !important; gap: 10px !important; }
             .prov-title img { height: 28px !important; width: auto !important; padding: 4px 8px !important; }
-            .plan-row { flex-direction: column; align-items: flex-start !important; gap: 12px; padding: 15px 0 !important; }
-            .p-speed { width: auto !important; font-size: 20px !important; }
-            .p-details { padding: 0 !important; width: 100%; }
-            .p-apply-btn { width: 100%; padding: 16px !important; font-size: 16px !important; }
+            
+            .plan-info-top { flex-direction: column; align-items: flex-start !important; gap: 15px; }
+            .p-price-box { text-align: left !important; }
 
             .story-arrow { display: none !important; }
             #blog-stories-section { padding: 30px 10px 10px 10px; }
@@ -367,7 +383,9 @@
         }
 
         @media (max-width: 650px) {
-            .gift-popup-grid, .gift-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; } 
+            /* 🚀 Fix 2: 모바일 환경에서만 사은품 그리드 1줄(1fr)로 전환 */
+            #calculator-gift-list, .gift-grid, .gift-popup-grid { grid-template-columns: 1fr !important; } 
+            
             .gift-popup-card, .gift-card { padding: 12px 8px !important; display: flex; flex-direction: column; height: 100%; }
             .gift-popup-card img, .gift-card img { height: 90px !important; margin-bottom: 8px !important; }
             .gift-popup-name, .gift-title { font-size: 13px !important; line-height: 1.2 !important; margin-bottom: 8px !important; word-break: keep-all; flex-grow: 1; }
@@ -532,7 +550,7 @@
         </div>
     </div>
 
-    <!-- 🚀 신규: 10대 베스트 요금 라인업 섹션 (순서 변경) -->
+    <!-- 🚀 Fix 7: 10대 베스트 요금 라인업 섹션 완전 개편 -->
     <div id="best-plan-section" class="section">
         <div class="section-title">🏆 사거리인터넷 10대 베스트 요금 라인업</div>
         <p style="color:#A0AEC0; font-size:16px; margin-bottom:40px; font-weight:700;">복잡한 계산은 그만! 가장 혜택이 좋은 통신사별 베스트 요금을 한눈에 확인하세요.</p>
@@ -582,7 +600,6 @@
                 <div class="pc-calc-result-box">
                     <div class="pc-res-row-prices">
                         <div class="pc-res-col">
-                            <!-- 🚀 Fix 4: 초기 텍스트 📱 휴대폰 결합시 로 변경 완료 -->
                             <div class="pc-res-label" id="pc-label-base">📱 휴대폰 결합시</div>
                             <div class="pc-res-val" id="pc-res-base" style="color:#4A5568; font-size:24px; text-decoration:none;">0원</div>
                         </div>
@@ -602,7 +619,7 @@
                        <div class="pc-res-val pc-subsidy-val" id="pc-res-subsidy">0원</div>
                     </div>
 
-                    <!-- 🚀 Fix 6: 가전 사은품 패널 복구 완료 -->
+                    <!-- 🚀 Fix 2: 가전 사은품 패널 그리드 적용 완료 -->
                     <div id="calculator-gift-panel" style="display: none; margin-top: 30px; text-align: left; background: #fff; border: 2px solid #E2E8F0; border-radius: 16px; padding: 25px;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <div style="font-size: 18px; font-weight: 800; color: #1A202C;">🎁 선택 가능한 프리미엄 가전 사은품</div>
@@ -610,12 +627,14 @@
                                 <button id="btn-toggle-gift" onclick="resetToCashMode()" style="background: #E2E8F0; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; transition: 0.2s;">🔄 가전 초기화 (현금으로 받기)</button>
                             </div>
                         </div>
-                        <div id="calculator-gift-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px;"></div>
+                        <!-- 이 영역에 display:grid가 적용됨 (CSS 참조) -->
+                        <div id="calculator-gift-list"></div>
                     </div>
                 </div>
                 <div id="pc-res-special" style="margin-top:25px; font-weight:900; color:var(--fire-orange); font-size:18px;"></div>
                 
                 <div style="margin-top: 40px; text-align: center;">
+                    <!-- 🚀 Fix 3: 팝업 버튼 연동 -->
                     <button class="quick-submit-btn" style="font-size: 24px; padding: 22px 20px; background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%); color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); border-radius: 18px; width: 100%; max-width: 760px; margin: 0 auto; letter-spacing: -1px; box-shadow: 0 10px 20px rgba(255,87,34,0.3);" onclick="pc_openDirectFromCalc()">🚀 설계한 조건으로 바로 가입 신청하기</button>
                 </div>
             </div>
@@ -679,7 +698,7 @@
         </div>
     </div>
 
-    <!-- 🚀 사이드바 및 베스트요금 전용 다이렉트 접수 팝업 (화면 분할) -->
+    <!-- 사이드바 다이렉트 접수 팝업 (분할 화면) -->
     <div id="sidebar-direct-popup-overlay" class="quick-popup-overlay" onclick="closeSidebarDirectPopup(event)">
         <div class="split-popup-content" onclick="event.stopPropagation()">
             <button class="quick-close-btn" style="top: 15px; right: 15px;" onclick="closeSidebarDirectPopup(event)">✕ 닫기</button>
@@ -736,7 +755,7 @@
 
                     <div id="sidebar-appliance-layer" style="display:none; margin-bottom:15px;">
                         <div style="font-size:13px; color:#E53E3E; font-weight:900; margin-bottom:8px;">※ 원하시는 프리미엄 가전을 선택해주세요!</div>
-                        <div class="gift-grid" id="sidebar-appliance-list" style="grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:10px;"></div>
+                        <div class="gift-grid" id="sidebar-appliance-list"></div>
                         <input type="hidden" id="sidebar-appliance" value="">
                     </div>
 
@@ -831,68 +850,85 @@
         </div>
     </div>
 
-    <!-- 🚀 Fix 1,2: 투트랙 팝업창(요금표 바로가입) 복구 완료 -->
+    <!-- 🚀 Fix 1, 3: 요금표 가입신청 / 셀프요금설계 투트랙 팝업창 (2버튼 스텝 분할 방식 롤백) -->
     <div id="direct-popup-overlay" class="quick-popup-overlay" onclick="closeDirectPopup(event)">
-        <div class="split-popup-content" onclick="event.stopPropagation()">
-            <button class="quick-close-btn" style="top: 15px; right: 15px;" onclick="closeDirectPopup(event)">✕ 닫기</button>
+        <div class="quick-popup-content" style="max-width: 500px; padding: 35px 25px;" onclick="event.stopPropagation()">
+            <button class="quick-close-btn" onclick="closeDirectPopup(event)">✕ 닫기</button>
             
-            <div class="split-left" style="background: #F8FAFC; padding: 30px;">
-                <h3 style="font-size: 22px; font-weight: 800; margin-bottom: 20px;">선택하신 상품 내역</h3>
-                <div style="background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 20px;">
-                    <div id="direct-summary-prod" style="font-size: 16px; font-weight: 700; color: #2D3748; margin-bottom: 10px;">상품명</div>
-                    <div id="direct-summary-price" style="font-size: 24px; font-weight: 900; color: #1A202C; margin-bottom: 10px;">0원</div>
-                    <div id="direct-summary-gift" style="font-size: 18px; font-weight: 800; color: #E53E3E;">사은품 0원</div>
+            <!-- 스텝 1: 진행 방식 선택 -->
+            <div id="direct-step-1" class="quick-step active-step">
+                <h3 style="font-size: 24px; font-weight: 900; margin-bottom: 25px; color: #111; letter-spacing: -1px;">어떤 방식으로<br>진행해 드릴까요?</h3>
+                
+                <div style="background: #F8FAFC; padding: 20px; border-radius: 14px; margin-bottom: 25px; text-align: center; border: 2px solid #E2E8F0;">
+                    <div id="direct-summary-prod" style="font-size: 15px; font-weight: 800; color: #4A5568; margin-bottom: 10px;">상품명</div>
+                    <div id="direct-summary-price" style="font-size: 26px; font-weight: 900; color: #1A202C; margin-bottom: 5px;">0원</div>
+                    <div id="direct-summary-gift" style="font-size: 18px; font-weight: 900; color: #E53E3E;">사은품 0원</div>
                 </div>
 
-                <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 15px; color: #2B6CB0;">⚡ 1분 즉시 상담신청</h3>
-                <p style="font-size: 14px; color: #718096; margin-bottom: 15px;">복잡한 입력 없이 이름과 연락처만 남겨주시면 빠르게 상담해 드립니다.</p>
-                <div class="form-group"><input type="text" id="direct-quick-name" placeholder="성함 입력" style="width: 100%; padding: 14px; border-radius: 8px; border: 2px solid #E2E8F0; margin-bottom: 10px;"></div>
-                <div class="form-group"><input type="tel" id="direct-quick-phone" placeholder="연락처 입력 (- 제외)" maxlength="13" oninput="autoHyphenMobile(this)" style="width: 100%; padding: 14px; border-radius: 8px; border: 2px solid #E2E8F0; margin-bottom: 10px;"></div>
-                <div class="privacy-agree-zone">
-                    <label class="privacy-label">
-                        <input type="checkbox" id="direct-quick-privacy">
-                        <b>개인정보 수집 및 이용 동의 (필수)</b>
-                    </label>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button style="width: 100%; padding: 22px; background: #3182CE; color: #fff; font-size: 18px; font-weight: 900; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(49, 130, 206, 0.3); transition: 0.2s;" onclick="goToDirectStep(2)">
+                        🙋‍♂️ 1분 즉시 상담신청
+                        <span style="font-size:14px; font-weight:500; opacity:0.9; margin-top:6px; display:block;">전문 상담원과 혜택 조율하기</span>
+                    </button>
+                    
+                    <button style="width: 100%; padding: 22px; background: #FF5722; color: #fff; font-size: 18px; font-weight: 900; border: none; border-radius: 14px; cursor: pointer; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.3); transition: 0.2s;" onclick="goToDirectStep(3)">
+                        📝 사은품 즉시 수령 (바로 접수)
+                        <span style="font-size:14px; font-weight:500; opacity:0.9; margin-top:6px; display:block;">입력 후 개통 및 혜택 당일 지급</span>
+                    </button>
                 </div>
-                <button class="submit-btn" style="background: #3182CE; color: #fff;" onclick="submitDirectQuick()">빠른 상담 신청하기</button>
             </div>
-            
-            <div class="split-right" style="padding: 30px;">
-                <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 20px;">📝 사은품 즉시 수령 (바로 접수)</h3>
-                <p style="font-size: 14px; color: #718096; margin-bottom: 20px;">확실하게 결정하셨다면 가입 정보를 모두 입력해 주세요. 당일 접수 및 사은품 지급이 진행됩니다.</p>
+
+            <!-- 스텝 2: 1분 즉시 상담신청 폼 -->
+            <div id="direct-step-2" class="quick-step" style="text-align: left;">
+                <button class="quick-close-btn" style="top: 15px; left: 15px; right: auto; background: #EDF2F7;" onclick="goToDirectStep(1)">← 뒤로가기</button>
+                <h3 style="font-size: 22px; font-weight: 900; margin-bottom: 15px; color: #2B6CB0; margin-top: 35px; letter-spacing: -1px;">⚡ 1분 즉시 상담신청</h3>
+                <p style="font-size: 15px; color: #718096; margin-bottom: 20px; line-height: 1.5; font-weight: 500;">복잡한 입력 없이 이름과 연락처만 남겨주시면 빠르게 상담해 드립니다.</p>
+                <div class="form-group"><input type="text" id="direct-quick-name" placeholder="성함 입력" style="width: 100%; padding: 16px; border-radius: 10px; border: 2px solid #E2E8F0; margin-bottom: 12px; font-size: 16px;"></div>
+                <div class="form-group"><input type="tel" id="direct-quick-phone" placeholder="연락처 입력 (- 제외)" maxlength="13" oninput="autoHyphenMobile(this)" style="width: 100%; padding: 16px; border-radius: 10px; border: 2px solid #E2E8F0; margin-bottom: 12px; font-size: 16px;"></div>
+                <div class="privacy-agree-zone">
+                    <label class="privacy-label"><input type="checkbox" id="direct-quick-privacy"><b>개인정보 수집 및 이용 동의 (필수)</b></label>
+                </div>
+                <button class="submit-btn" style="background: #3182CE; color: #fff; border-radius: 12px; font-size: 18px;" onclick="submitDirectQuick()">빠른 상담 신청하기</button>
+            </div>
+
+            <!-- 스텝 3: 사은품 즉시 수령 (바로 접수) 폼 -->
+            <div id="direct-step-3" class="quick-step" style="text-align: left;">
+                <button class="quick-close-btn" style="top: 15px; left: 15px; right: auto; background: #EDF2F7; z-index: 101;" onclick="goToDirectStep(1)">← 뒤로가기</button>
+                <h3 style="font-size: 22px; font-weight: 900; margin-bottom: 15px; color: #FF5722; margin-top: 35px; letter-spacing: -1px;">📝 사은품 즉시 수령 (바로 접수)</h3>
+                <p style="font-size: 14px; color: #718096; margin-bottom: 20px; line-height: 1.5; font-weight: 500;">확실하게 결정하셨다면 가입 정보를 모두 입력해 주세요. 당일 접수 및 사은품 지급이 진행됩니다.</p>
                 
                 <div class="direct-form-grid">
-                    <div class="form-group"><input type="text" id="pop-full-name" placeholder="성함 입력" style="width: 100%; padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px;"></div>
-                    <div class="form-group"><input type="text" id="pop-full-birth" placeholder="생년월일 8자리" maxlength="8" style="width: 100%; padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px;"></div>
+                    <div class="form-group"><input type="text" id="pop-full-name" placeholder="성함 입력" style="width: 100%; padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px;"></div>
+                    <div class="form-group"><input type="text" id="pop-full-birth" placeholder="생년월일 8자리" maxlength="8" style="width: 100%; padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px;"></div>
                 </div>
                 
                 <div class="direct-form-full">
                     <div class="address-flex">
-                        <input type="text" id="pop-full-postcode" placeholder="우편번호" readonly style="background: #EDF2F7; padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px; max-width: 100px;">
-                        <input type="text" id="pop-full-addr1" placeholder="주소 검색" readonly onclick="execDaumPostcode('pop-full')" style="padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px; cursor: pointer;">
-                        <button type="button" class="addr-search-btn" onclick="execDaumPostcode('pop-full')" style="padding: 12px 15px; border-radius: 8px;">검색</button>
+                        <input type="text" id="pop-full-postcode" placeholder="우편번호" readonly style="background: #EDF2F7; padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px; max-width: 100px;">
+                        <input type="text" id="pop-full-addr1" placeholder="주소 검색" readonly onclick="execDaumPostcode('pop-full')" style="padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px; cursor: pointer;">
+                        <button type="button" class="addr-search-btn" onclick="execDaumPostcode('pop-full')" style="padding: 14px 15px; border-radius: 10px;">검색</button>
                     </div>
-                    <input type="text" id="pop-full-addr2" placeholder="상세 주소 입력" style="width: 100%; padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px; margin-top: 8px;">
+                    <input type="text" id="pop-full-addr2" placeholder="상세 주소 입력" style="width: 100%; padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px; margin-top: 8px;">
                 </div>
                 
                 <div class="direct-form-full">
-                    <input type="tel" id="pop-full-phone" placeholder="연락처 (- 제외)" maxlength="13" oninput="autoHyphenMobile(this)" style="width: 100%; padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px;">
+                    <input type="tel" id="pop-full-phone" placeholder="연락처 (- 제외)" maxlength="13" oninput="autoHyphenMobile(this)" style="width: 100%; padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px;">
                 </div>
 
-                <div class="direct-step-title" style="margin-top: 15px;">💰 사은품 입금 계좌 (현금 선택시)</div>
+                <div class="direct-step-title" style="margin-top: 20px;">💰 사은품 입금 계좌 (현금 선택시)</div>
                 <div class="direct-form-grid">
-                    <select id="pop-full-giftbankname" onchange="toggleDirectBankInput(this, 'pop-full-giftbankname-direct')" style="padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px;">
+                    <select id="pop-full-giftbankname" onchange="toggleDirectBankInput(this, 'pop-full-giftbankname-direct')" style="padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px;">
                         <option value="">은행 선택</option>
                         <option value="농협은행">농협은행</option><option value="국민은행">국민은행</option><option value="신한은행">신한은행</option>
                         <option value="우리은행">우리은행</option><option value="하나은행">하나은행</option><option value="기업은행">기업은행</option>
                         <option value="카카오뱅크">카카오뱅크</option><option value="토스뱅크">토스뱅크</option><option value="케이뱅크">케이뱅크</option>
                         <option value="직접입력">직접 입력</option>
                     </select>
-                    <input type="text" id="pop-full-giftbanknum" placeholder="계좌번호 (숫자만)" oninput="autoCleanAccount(this)" maxlength="16" style="padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px;">
-                    <input type="text" id="pop-full-giftbankname-direct" placeholder="은행명 입력" style="display:none; grid-column: span 2; padding: 12px; border: 2px solid #3182CE; border-radius: 8px; margin-top: 8px;">
+                    <input type="text" id="pop-full-giftbanknum" placeholder="계좌번호 (숫자만)" oninput="autoCleanAccount(this)" maxlength="16" style="padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px;">
+                    <input type="text" id="pop-full-giftbankname-direct" placeholder="은행명 입력" style="display:none; grid-column: span 2; padding: 14px; border: 2px solid #3182CE; border-radius: 10px; margin-top: 8px;">
                 </div>
 
-                <div class="direct-step-title" style="margin-top: 15px;">💳 통신요금 납부 방법</div>
+                <div class="direct-step-title" style="margin-top: 20px;">💳 통신요금 납부 방법</div>
                 <div class="direct-option-group">
                     <div class="direct-option-btn" id="pop-btn-bank" onclick="togglePopPay('계좌')">🏦 계좌이체</div>
                     <div class="direct-option-btn" id="pop-btn-card" onclick="togglePopPay('카드')">💳 신용카드</div>
@@ -900,36 +936,33 @@
                 <input type="hidden" id="pop-full-paytype" value="">
                 
                 <div id="pop-full-bank-layer" class="direct-form-grid" style="display:none; margin-bottom:15px;">
-                    <select id="pop-full-bankname" onchange="toggleDirectBankInput(this, 'pop-full-bankname-direct')" style="padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px;">
+                    <select id="pop-full-bankname" onchange="toggleDirectBankInput(this, 'pop-full-bankname-direct')" style="padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px;">
                         <option value="">은행 선택</option>
                         <option value="농협은행">농협은행</option><option value="국민은행">국민은행</option><option value="신한은행">신한은행</option>
                         <option value="카카오뱅크">카카오뱅크</option><option value="직접입력">직접 입력</option>
                     </select>
-                    <input type="text" id="pop-full-banknum" placeholder="계좌번호" oninput="autoCleanAccount(this)" maxlength="16" style="padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px;">
-                    <input type="text" id="pop-full-bankname-direct" placeholder="은행명 입력" style="display:none; grid-column: span 2; padding: 12px; border: 2px solid #3182CE; border-radius: 8px; margin-top: 8px;">
+                    <input type="text" id="pop-full-banknum" placeholder="계좌번호" oninput="autoCleanAccount(this)" maxlength="16" style="padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px;">
+                    <input type="text" id="pop-full-bankname-direct" placeholder="은행명 입력" style="display:none; grid-column: span 2; padding: 14px; border: 2px solid #3182CE; border-radius: 10px; margin-top: 8px;">
                 </div>
 
                 <div id="pop-full-card-layer" style="display:none; margin-bottom:15px;">
                     <div class="direct-form-grid">
-                        <select id="pop-full-cardname" onchange="toggleDirectBankInput(this, 'pop-full-cardname-direct')" style="padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px;">
+                        <select id="pop-full-cardname" onchange="toggleDirectBankInput(this, 'pop-full-cardname-direct')" style="padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px;">
                             <option value="">카드사 선택</option>
                             <option value="신한카드">신한카드</option><option value="삼성카드">삼성카드</option>
                             <option value="국민카드">국민카드</option><option value="현대카드">현대카드</option>
                             <option value="직접입력">직접 입력</option>
                         </select>
-                        <input type="text" id="pop-full-cardvalid" placeholder="유효기간(MM/YY)" oninput="autoFormatCardValid(this)" maxlength="5" style="padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px;">
-                        <input type="text" id="pop-full-cardname-direct" placeholder="카드사 직접입력" style="display:none; grid-column: span 2; padding: 12px; border: 2px solid #3182CE; border-radius: 8px; margin-top: 8px;">
+                        <input type="text" id="pop-full-cardvalid" placeholder="유효기간(MM/YY)" oninput="autoFormatCardValid(this)" maxlength="5" style="padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px;">
+                        <input type="text" id="pop-full-cardname-direct" placeholder="카드사 직접입력" style="display:none; grid-column: span 2; padding: 14px; border: 2px solid #3182CE; border-radius: 10px; margin-top: 8px;">
                     </div>
-                    <input type="text" id="pop-full-cardnum" placeholder="카드번호 (숫자만)" oninput="autoCleanAccount(this)" maxlength="16" style="width: 100%; padding: 12px; border: 2px solid #E2E8F0; border-radius: 8px; margin-top: 8px;">
+                    <input type="text" id="pop-full-cardnum" placeholder="카드번호 (숫자만)" oninput="autoCleanAccount(this)" maxlength="16" style="width: 100%; padding: 14px; border: 2px solid #E2E8F0; border-radius: 10px; margin-top: 8px;">
                 </div>
 
                 <div class="privacy-agree-zone">
-                    <label class="privacy-label">
-                        <input type="checkbox" id="pop-full-privacy">
-                        <b>개인정보 수집 및 이용 동의 (필수)</b>
-                    </label>
+                    <label class="privacy-label"><input type="checkbox" id="pop-full-privacy"><b>개인정보 수집 및 이용 동의 (필수)</b></label>
                 </div>
-                <button class="submit-btn" style="background: #FF5722; color: #fff;" onclick="submitDirectFull()">바로 접수 완료하기</button>
+                <button class="submit-btn" style="background: #FF5722; color: #fff; border-radius: 12px; font-size: 18px;" onclick="submitDirectFull()">바로 접수 완료하기</button>
             </div>
         </div>
     </div>
@@ -1113,7 +1146,7 @@
             if(window.innerWidth > 950) { pcNav.style.display = 'flex'; } else { pcNav.style.display = 'none'; }
         }
 
-        /* 🚀 1. 메인 10대 베스트 요금표 렌더링 */
+        /* 🚀 Fix 7: 10대 베스트 요금표 렌더링 (대개편된 디자인 반영) */
         function renderBestPlans() {
             const container = document.getElementById('best-plan-container'); container.innerHTML = '';
             const provs = ['SK', 'LG', 'KT', '스카이', '헬로'];
@@ -1157,19 +1190,23 @@
                             let formatPrice = (parseInt(priceRaw.replace(/[^0-9]/g, "")) || 0).toLocaleString() + "원";
                             let formatSubsidy = (cleanRow[7] || "0").includes('원') ? cleanRow[7] : (cleanRow[7] || "0") + '원';
                             
-                            // 🚀 수정: 알뜰폰 제외 모두 '휴대폰 결합시'로 통일
                             let conditionText = (prov === '스카이' || prov === '헬로') ? "✨ 알뜰 실속" : "📱 휴대폰 결합시";
-                            let detailName = `인터넷 ${speed}`;
-                            if (type === '결합' && cleanRow[3]) detailName += ` + ${cleanRow[3]}`;
-                            else if (type === '단독') detailName += ` (단독)`;
+                            let tvBadgeHtml = type === '결합' ? `<div class="tv-badge">+ ${cleanRow[3]}</div>` : `<div class="tv-badge" style="background:#E2E8F0; color:#718096;">인터넷 단독</div>`;
 
                             cardHtml += `
                             <div class="plan-row">
-                                <div class="p-speed">${speed}</div>
-                                <div class="p-details">
-                                    <div style="font-size:13px; font-weight:800; color:#718096; margin-bottom:4px;">[${conditionText}] ${detailName}</div>
-                                    <div class="p-price">월 ${formatPrice}</div>
-                                    <div class="p-gift">🎁 사은품: ${formatSubsidy}</div>
+                                <div class="plan-info-top">
+                                    <div class="p-speed-tv">
+                                        <div class="speed-badge">${speed}</div>
+                                        ${tvBadgeHtml}
+                                    </div>
+                                    <div class="p-price-box">
+                                        <div class="p-condition">[${conditionText}]</div>
+                                        <div class="p-price">월 ${formatPrice}</div>
+                                    </div>
+                                </div>
+                                <div class="p-gift-box">
+                                    <div class="p-gift-text">🎁 사은품: ${formatSubsidy}</div>
                                 </div>
                                 <button class="p-apply-btn" onclick="openDirectFromBest('${prov}', '${type}', '${speed}', '${cleanRow[3] || ''}', '${formatPrice}', '${formatSubsidy}')">🚀 가입신청</button>
                             </div>`;
@@ -1182,7 +1219,7 @@
             });
         }
 
-        /* 🚀 2. 10대 베스트 요금표 ➔ '투트랙 팝업' 열기 연동 */
+        /* 🚀 요금표 ➔ '투트랙 팝업' 스텝 연결 */
         function openDirectFromBest(prov, prod, speed, tv, price, gift) {
             let productDesc = prod === '결합' ? '인터넷+TV 결합' : '인터넷 단독';
             let tvDesc = tv ? ` / ${tv}` : '';
@@ -1201,15 +1238,17 @@
 
             document.getElementById('direct-popup-overlay').classList.add('active');
             document.body.style.overflow = 'hidden';
-            goToDirectStep('1');
+            goToDirectStep(1); // 1번 스텝(버튼 선택창)으로 이동
         }
 
-        /* 투트랙 팝업 컨트롤 함수 */
+        /* 🚀 투트랙 팝업 컨트롤 함수 */
         function closeDirectPopup(e) {
             if(e) e.preventDefault();
             if (!e || e.target === document.getElementById('direct-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) { 
                 document.getElementById('direct-popup-overlay').classList.remove('active'); 
                 document.body.style.overflow = ''; 
+                // 닫을 때 리셋 
+                setTimeout(() => goToDirectStep(1), 300);
             }
         }
         function goToDirectStep(step) {
@@ -1218,7 +1257,7 @@
             if(target) target.classList.add('active-step');
         }
 
-        /* 🚀 3. 메인 1분 간편 폼 및 투트랙 팝업 전송 함수 복구 */
+        /* 메인 1분 간편 빠른상담 폼 전송 */
         function submitMainFastForm() {
             const name = document.getElementById('main-fast-name').value.trim(); 
             const phone = document.getElementById('main-fast-phone').value.trim(); 
@@ -1235,6 +1274,7 @@
             document.getElementById('main-fast-name').value = ""; document.getElementById('main-fast-phone').value = ""; document.getElementById('fast-privacy-check').checked = false;
         }
 
+        /* 🚀 투트랙: 1분 즉시 상담신청 전송 */
         function submitDirectQuick() {
             const n = document.getElementById('direct-quick-name').value.trim(); const p = document.getElementById('direct-quick-phone').value.trim(); const chk = document.getElementById('direct-quick-privacy').checked;
             if(!n || !p) { alert("성함과 연락처를 입력해주세요!"); return; }
@@ -1250,15 +1290,11 @@
             document.getElementById('direct-quick-name').value = ''; document.getElementById('direct-quick-phone').value = ''; document.getElementById('direct-quick-privacy').checked = false;
         }
 
+        /* 🚀 투트랙: 사은품 즉시 수령 (바로 접수) 전송 */
         function togglePopPay(type) {
             document.getElementById('pop-btn-bank').classList.remove('active'); document.getElementById('pop-btn-card').classList.remove('active'); document.getElementById('pop-full-paytype').value = type;
             if(type === '계좌') { document.getElementById('pop-btn-bank').classList.add('active'); document.getElementById('pop-full-bank-layer').style.display = 'grid'; document.getElementById('pop-full-card-layer').style.display = 'none'; } 
             else if(type === '카드') { document.getElementById('pop-btn-card').classList.add('active'); document.getElementById('pop-full-bank-layer').style.display = 'none'; document.getElementById('pop-full-card-layer').style.display = 'block'; }
-            checkCopyButtonVisibilityPop();
-        }
-
-        function checkCopyButtonVisibilityPop() {
-            // 팝업창 내에서 페이(계좌/카드) 선택 시 에러 방지용 함수
         }
 
         function submitDirectFull() {
@@ -1301,9 +1337,12 @@
 
             alert(`[다이렉트 접수 성공! 🎉]\n\n성함: ${n}\n연락처: ${p}\n\n꼼꼼히 확인 후 신속하게 개통 및 혜택 지급을 도와드리겠습니다!`);
             closeDirectPopup();
+            
+            // 입력값 초기화
+            document.getElementById('pop-full-name').value = ''; document.getElementById('pop-full-birth').value = ''; document.getElementById('pop-full-postcode').value = ''; document.getElementById('pop-full-addr1').value = ''; document.getElementById('pop-full-addr2').value = ''; document.getElementById('pop-full-phone').value = '';
+            document.getElementById('pop-full-giftbanknum').value = ''; document.getElementById('pop-full-banknum').value = ''; document.getElementById('pop-full-cardnum').value = ''; document.getElementById('pop-full-cardvalid').value = '';
         }
 
-        /* 🚀 4. 증발했던 셀프요금설계 스위치 팝업 컨트롤 (부활 완료!) */
         function openSelfCalcPopup(e) {
             if(e) e.preventDefault();
             if (window.innerWidth > 950) { document.getElementById('pc-calc-popup-overlay').classList.add('active'); } 
@@ -1311,15 +1350,31 @@
             document.body.style.overflow = 'hidden';
         }
 
+        /* 🚀 Fix 5: 셀프요금설계 팝업 닫기 시 자동 초기화(리셋) 로직 반영 */
         function closeSelfCalcPopup(e, type) {
             if(e) e.preventDefault();
             if (!e || e.target.classList.contains('quick-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) { 
                 document.getElementById(type + '-calc-popup-overlay').classList.remove('active'); 
                 document.body.style.overflow = ''; 
+                
+                setTimeout(() => {
+                    if (type === 'pc') {
+                        document.querySelectorAll('#pc-logoOptionsScroll .pc-logo-btn').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('#pc-product-type-box .pc-text-btn').forEach(b => b.classList.remove('active'));
+                        document.getElementById('pc-speed-box').innerHTML = '';
+                        document.getElementById('pc-tv-group-layer').style.display = 'none';
+                        document.getElementById('pc-res-base').innerHTML = '0원';
+                        document.getElementById('pc-res-subsidy').textContent = '0원';
+                        pc_curProv = null; pc_curProd = null; pc_currentActiveSpeed = ""; selectedGift = null;
+                        resetToCashMode();
+                    } else if (type === 'mobile') {
+                        goToMobileStep(1);
+                        quickData = { telecom: '', product: '', speed: '', price: '', gift: '' };
+                    }
+                }, 300);
             }
         }
 
-        /* 🚀 5. PC 셀프 요금설계 로직 (단독상품 텍스트 수정 포함) */
         function pc_setProvider(p, el) { 
             document.querySelectorAll('#pc-logoOptionsScroll .pc-logo-btn').forEach(b => b.classList.remove('active')); el.classList.add('active'); pc_curProv = p; if(!pc_curProd) pc_curProd = '단독';
             const menuBox = document.getElementById('pc-product-type-box');
@@ -1410,7 +1465,6 @@
             const isAlthempone = pc_curProv === '스카이' || pc_curProv === '헬로' || pc_curProd === '요금할인형';
             const baseEl = document.getElementById('pc-res-base'); let printableProductDetail = "";
             
-            // 🚀 Fix 4: 알뜰폰 아니면 모두 '휴대폰 결합시' 표기 고정
             if (isAlthempone) {
                 document.getElementById('pc-comb-display-area').style.display = "none";
                 document.getElementById('pc-label-base').textContent = "✨ 알뜰 실속 요금";
@@ -1432,7 +1486,7 @@
                 printableProductDetail = `${cleanRow[0]} / ${cleanRow[1]} / ${cleanRow[2]} / ${cleanRow[3]}`;
             }
             
-            // 🚀 Fix 5: 단독 상품 시 TV 요금제 공백 처리 (에러 방지용)
+            /* 🚀 Fix 6: 단독상품 에러 방지용 옵셔널 체이닝 추가 */
             const matchedGifts = getMatchingGifts(pc_curProv, pc_curProd, pc_currentActiveSpeed, cleanRow[3] ? cleanRow[3].trim() : "");
             renderGiftCards(matchedGifts);
             
@@ -1454,6 +1508,7 @@
             if(cleanSpecText) { specEl.innerHTML = `🔥 털보아저씨의 한줄평: ${cleanSpecText} 🔥`; } else { specEl.textContent = ""; }
         }
 
+        /* 🚀 Fix 3: 설계 결과에서 팝업창 연동 및 초기화 방지 확인 */
         function pc_openDirectFromCalc() {
             if(!pc_curProv || !pc_curProd) { alert("먼저 위에서 통신사와 요금제를 선택해 주세요! 😎"); return; }
             let tv = "";
@@ -1461,11 +1516,12 @@
                 const activeTvBtn = document.querySelector('#pc-tv-product-box .pc-text-btn.active');
                 if (activeTvBtn) tv = activeTvBtn.innerText;
             }
+            // 기존 팝업은 닫되 리셋은 하지 않음
             document.getElementById('pc-calc-popup-overlay').classList.remove('active');
             openDirectFromBest(pc_curProv, pc_curProd, pc_currentActiveSpeed, tv, currentCalculatedPrice.replace('월 ', ''), currentGiftStatusText.replace('현금 사은품 ', '').replace(' 증정', '').replace(' 지원', ''));
         }
 
-        /* 🚀 6. 모바일 셀프 요금설계 로직 */
+        /* 🚀 모바일 셀프 요금설계 로직 */
         function goToMobileStep(stepNum) { 
             document.querySelectorAll('#mobile-calc-popup-overlay .mobile-quick-step').forEach(step => { step.classList.remove('active-step'); }); 
             const target = document.getElementById('mobile-quick-step-' + stepNum);
@@ -1520,9 +1576,10 @@
             alert(`[간편 접수 성공! 🎉]\n\n${name} 고객님!\n선택하신 [ ${quickData.telecom} / ${quickData.product} / ${quickData.speed} ]\n(월 ${quickData.price}원 / 사은품 ${quickData.gift})\n\n가장 빠른 시간 내에 연락드리겠습니다!`);
             document.getElementById('mobile-calc-popup-overlay').classList.remove('active'); document.body.style.overflow = ''; 
             document.getElementById('mobile-quick-name').value = ''; document.getElementById('mobile-quick-phone').value = '';
+            goToMobileStep(1); quickData = { telecom: '', product: '', speed: '', price: '', gift: '' }; // 전송 후 리셋
         }
 
-        /* 🚀 7. 사이드바 다이렉트 접수 (분할창) 로직 및 기타 유틸 함수들 */
+        /* 🚀 사이드바 다이렉트 접수 (분할창) 로직 및 기타 유틸 함수들 */
         function openMobileDirectForm(e) { e.preventDefault(); document.getElementById('sidebar-direct-popup-overlay').classList.add('active'); document.body.style.overflow = 'hidden'; }
         function openPcDirectForm(e) { e.preventDefault(); document.getElementById('sidebar-direct-popup-overlay').classList.add('active'); document.body.style.overflow = 'hidden'; }
         function closeSidebarDirectPopup(e) { if(e) e.preventDefault(); if (!e || e.target === document.getElementById('sidebar-direct-popup-overlay') || e.currentTarget.classList.contains('quick-close-btn')) { document.getElementById('sidebar-direct-popup-overlay').classList.remove('active'); document.body.style.overflow = ''; } }
@@ -1666,7 +1723,7 @@
                 giftResult = `현금 입금계좌 (${gBankName} ${gBankNum})`;
             } else if(gifttype === '가전') {
                 const appliance = document.getElementById('sidebar-appliance').value;
-                if(!appliance) { alert('프리미엄 가전 사은품을 선택해 주세요!'); return; }
+                if(!appliance) { alert('프리미 가전 사은품을 선택해 주세요!'); return; }
                 giftResult = `가전 사은품 (${appliance})`;
             }
 
@@ -1785,7 +1842,7 @@
             });
         }
 
-        /* 🚀 가전 사은품 초기화 함수 추가 (에러 방지용) */
+        /* 🚀 가전 사은품 초기화 함수 추가 (에러 방지 및 리셋용) */
         function resetToCashMode() {
             isGiftMode = false;
             selectedGift = null;
