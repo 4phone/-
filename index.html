@@ -641,10 +641,12 @@
         </div>
     </div>
 
-    <!-- 🚀 모바일 전용 셀프 요금설계 스텝 팝업 -->
+    <!-- 🚀 모바일 전용 셀프 요금설계 스텝 팝업 (디자인 개편) -->
     <div id="mobile-calc-popup-overlay" class="quick-popup-overlay" onclick="closeSelfCalcPopup(event, 'mobile')">
         <div class="quick-popup-content" onclick="event.stopPropagation()">
             <button class="quick-close-btn" onclick="closeSelfCalcPopup(event, 'mobile')">✕ 닫기</button>
+            
+            <!-- 1단계 -->
             <div id="mobile-quick-step-1" class="mobile-quick-step active-step">
                 <h3>통신사를 선택해주세요</h3>
                 <div class="mq-btn-grid col-4">
@@ -655,28 +657,45 @@
                     <button class="mq-btn-item m-telecom-btn" onclick="nextMobileStep(2, '헬로')"><img src="헬로비전로고.png" alt="헬로비전" loading="lazy"></button>
                 </div>
             </div>
+            
+            <!-- 2단계 -->
             <div id="mobile-quick-step-2" class="mobile-quick-step">
                 <h3>어떤 상품이 필요하신가요?</h3>
                 <div class="mq-btn-grid col-1">
-                    <button class="mq-btn-item" onclick="nextMobileStep(3, '인터넷만')">인터넷만 (단독)</button>
-                    <button class="mq-btn-item" onclick="nextMobileStep(3, '인터넷+TV')">인터넷 + TV (결합)</button>
+                    <button class="mq-btn-item" onclick="nextMobileStep(3, '단독')">💻 인터넷만 (단독)</button>
+                    <button class="mq-btn-item" onclick="nextMobileStep(3, '결합')">📺 인터넷 + TV (결합)</button>
                 </div>
                 <button class="m-quick-prev-btn" onclick="prevMobileStep(1)">← 이전으로</button>
             </div>
+            
+            <!-- 3단계 -->
             <div id="mobile-quick-step-3" class="mobile-quick-step">
                 <h3>원하시는 속도를 선택해주세요</h3>
-                <div id="mobile-quick-card-container" class="mq-card-list"></div>
+                <div class="mq-btn-grid col-1" id="mobile-quick-speed-container">
+                    <!-- JS로 자동 렌더링 -->
+                </div>
                 <button class="m-quick-prev-btn" onclick="prevMobileStep(2)">← 이전으로</button>
             </div>
+
+            <!-- 4단계 (결합 선택시에만 나옴) -->
             <div id="mobile-quick-step-4" class="mobile-quick-step">
-                <h3>🎉 빠른 상담 접수</h3>
-                <p style="color:#666; font-size:14px; margin-bottom:20px; line-height:1.4;">고객님이 선택하신 조건으로<br>빠르게 혜택을 안내해 드립니다!</p>
-                <div class="m-quick-form">
-                    <input type="text" id="mobile-quick-name" placeholder="성함을 적어주세요">
-                    <input type="tel" id="mobile-quick-phone" placeholder="연락처를 적어주세요 (- 제외)" oninput="autoHyphenMobile(this)" maxlength="13">
-                    <button class="quick-submit-btn" onclick="submitMobileQuickApply()">🚀 위 조건으로 가입 신청하기</button>
+                <h3>TV 요금제를 선택해주세요</h3>
+                <div class="mq-btn-grid col-1" id="mobile-quick-tv-container">
+                    <!-- JS로 자동 렌더링 -->
                 </div>
-                <button class="m-quick-prev-btn" onclick="prevMobileStep(3)">← 다시 선택하기</button>
+                <button class="m-quick-prev-btn" onclick="prevMobileStep(3)">← 이전으로</button>
+            </div>
+            
+            <!-- 5단계 (최종 결과) -->
+            <div id="mobile-quick-step-5" class="mobile-quick-step">
+                <h3 style="color:#2B6CB0; margin-bottom:15px;">🎉 맞춤 설계 완료!</h3>
+                <div style="background:#F8FAFC; border:2px solid #E2E8F0; border-radius:14px; padding:20px; text-align:center; margin-bottom:20px;">
+                    <div id="m-calc-res-prod" style="font-size:15px; font-weight:800; color:#4A5568; margin-bottom:10px;">상품명</div>
+                    <div id="m-calc-res-price" style="font-size:28px; font-weight:900; color:#1A202C; margin-bottom:10px; letter-spacing:-1px;">0원</div>
+                    <div id="m-calc-res-gift" style="font-size:18px; font-weight:900; color:#E53E3E;">🎁 사은품 0원</div>
+                </div>
+                <button class="quick-submit-btn" style="width:100%; font-size: 18px; padding: 18px; background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%); color: #fff; font-weight:900; border:none; border-radius: 14px; box-shadow: 0 5px 15px rgba(255,87,34,0.3); margin-bottom:10px; transition: 0.2s;" onclick="m_openDirectFromCalc()">🚀 이 조건으로 가입 신청하기</button>
+                <button class="m-quick-prev-btn" onclick="goToMobileStep(1)">🔄 처음부터 다시 계산</button>
             </div>
         </div>
     </div>
@@ -1523,7 +1542,9 @@
             openDirectFromBest(pc_curProv, pc_curProd, pc_currentActiveSpeed, tv, currentCalculatedPrice.replace('월 ', ''), currentGiftStatusText.replace('현금 사은품 ', '').replace(' 증정', '').replace(' 지원', ''));
         }
 
-        /* 🚀 모바일 셀프 요금설계 로직 */
+        /* 🚀 수정된 모바일 셀프 요금설계 로직 (투트랙 팝업 연동) */
+        let m_filteredData = [];
+
         function goToMobileStep(stepNum) { 
             document.querySelectorAll('#mobile-calc-popup-overlay .mobile-quick-step').forEach(step => { step.classList.remove('active-step'); }); 
             const target = document.getElementById('mobile-quick-step-' + stepNum);
@@ -1531,54 +1552,84 @@
         }
         
         function nextMobileStep(nextNum, value) {
-            if (nextNum === 2) { quickData.telecom = (value === '알뜰형') ? '스카이' : value; }
-            if (nextNum === 3) { quickData.product = value; renderMobileQuickCards(); }
+            if (nextNum === 2) { 
+                quickData.telecom = (value === '알뜰형') ? '스카이' : value; 
+            }
+            if (nextNum === 3) { 
+                quickData.product = value; 
+                renderMobileSpeeds(); 
+            }
+            if (nextNum === 4) {
+                quickData.speed = value;
+                if (quickData.product === '결합') {
+                    renderMobileTvs();
+                } else {
+                    quickData.tv = '';
+                    calcMobileResult();
+                    nextNum = 5; // 단독 상품이면 TV 단계를 건너뛰고 5단계(결과창)로 바로 직행!
+                }
+            }
+            if (nextNum === 5 && quickData.product === '결합') {
+                quickData.tv = value;
+                calcMobileResult();
+            }
             goToMobileStep(nextNum);
         }
 
         function prevMobileStep(prevNum) { goToMobileStep(prevNum); }
         
-        function renderMobileQuickCards() {
-            const container = document.getElementById('mobile-quick-card-container'); container.innerHTML = '';
-            container.className = `mq-card-list theme-${quickData.telecom}`;
-            let mappedProd = (quickData.product === '인터넷만') ? '단독' : '결합'; let prov = quickData.telecom;
-            let filtered = allData.filter(row => {
+        function renderMobileSpeeds() {
+            const container = document.getElementById('mobile-quick-speed-container'); container.innerHTML = '';
+            let prov = quickData.telecom;
+            m_filteredData = allData.filter(row => {
                 if(!row[0] || !row[1]) return false;
                 let p = row[0].trim(); let isMatch = false;
                 if(prov === 'KT' && p.includes('KT')) isMatch = true; if(prov === 'LG' && p.includes('LG')) isMatch = true; if(prov === 'SK' && p.includes('SK')) isMatch = true; if(prov === '스카이' && p.includes('스카이')) isMatch = true; if(prov === '헬로' && p.includes('헬로')) isMatch = true;
-                return isMatch && (row[1].trim() === mappedProd);
+                return isMatch && (row[1].trim() === quickData.product);
             });
-            let speeds = [...new Set(filtered.map(r => r[2].trim()))];
+            
+            let speeds = [...new Set(m_filteredData.map(r => r[2].trim()))];
             speeds.sort((a,b) => (b.includes('1G')?1000:parseInt(b)||0) - (a.includes('1G')?1000:parseInt(a)||0));
+            
             speeds.forEach(speed => {
-                let targetRows = filtered.filter(r => r[2].trim() === speed);
-                targetRows.sort((a, b) => { let priceA = parseInt(a[mappedProd==='결합'?6:4].replace(/[^0-9]/g, "")) || 0; let priceB = parseInt(b[mappedProd==='결합'?6:4].replace(/[^0-9]/g, "")) || 0; return priceA - priceB; });
-                if(targetRows.length > 0) {
-                    let bestPlan = targetRows[0]; let priceStr = bestPlan[mappedProd==='결합'?6:4].trim(); let giftStr = bestPlan[7] ? bestPlan[7].trim() : '0'; 
-                    let priceNum = parseInt(priceStr.replace(/[^0-9]/g, "")) || 0; let formatPrice = priceNum > 0 ? priceNum.toLocaleString() : priceStr; let formatGift = giftStr.includes('원') ? giftStr : giftStr + '원';
-                    let titleName = `${speed} ${quickData.product}`;
-                    
-                    let iconsHtml = `<img src="wifi.svg" alt="인터넷" loading="lazy">`; if(mappedProd === '결합') iconsHtml += ` <span>+</span> <img src="tv.svg" alt="TV" loading="lazy">`;
-                    let smartSubText = (quickData.product === '인터넷+TV') ? "결합 할인시 / 3년 약정 / 부가세 포함" : "3년 약정 / 부가세 포함";
-                    container.innerHTML += `<div class="mq-plan-card"><div class="mq-plan-header">${titleName}</div><div class="mq-plan-body"><div class="mq-plan-icons">${iconsHtml}</div><div class="mq-plan-price"><div class="price-val">${formatPrice}<span>원</span></div><div class="price-sub">${smartSubText}</div></div><div class="mq-plan-gift"><div class="gift-label">현금사은품</div><div class="gift-val">${formatGift}</div></div><button class="mq-plan-select-btn" onclick="selectMobileQuickCard('${speed}', '${formatPrice}', '${formatGift}')">가입신청</button></div></div>`;
-                }
+                container.innerHTML += `<button class="mq-btn-item" onclick="nextMobileStep(4, '${speed}')">🚀 ${speed}</button>`;
             });
         }
 
-        function selectMobileQuickCard(speed, price, gift) { quickData.speed = speed; quickData.price = price; quickData.gift = gift; goToMobileStep(4); }
-
-        function submitMobileQuickApply() {
-            const name = document.getElementById('mobile-quick-name').value.trim(); const phone = document.getElementById('mobile-quick-phone').value.trim();
-            if(!name || !phone) { alert('성함과 연락처를 모두 적어주셔야 떡값을 쏠 수 있습니다! 😎'); return; }
-            if(phone.length !== 13 || !phone.startsWith('010')) { alert('올바른 휴대폰 번호(010) 11자리를 입력해 주세요!'); document.getElementById('mobile-quick-phone').focus(); return; }
+        function renderMobileTvs() {
+            const container = document.getElementById('mobile-quick-tv-container'); container.innerHTML = '';
+            let targetRows = m_filteredData.filter(r => r[2].trim() === quickData.speed && r[3]);
+            targetRows.sort((a, b) => (parseInt(b[6].replace(/[^0-9]/g, "")) || 0) - (parseInt(a[6].replace(/[^0-9]/g, "")) || 0));
+            let tvs = [...new Set(targetRows.map(r => r[3].trim()))];
             
-            const formData = { type: "셀프요금설계 (모바일)", name: name, phone: phone, summary: `통신사: ${quickData.telecom}\n상품: ${quickData.product} / 속도: ${quickData.speed}\n요금: 월 ${quickData.price}원\n사은품: ${quickData.gift}` };
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
+            tvs.forEach(tv => {
+                container.innerHTML += `<button class="mq-btn-item" onclick="nextMobileStep(5, '${tv}')">📺 ${tv}</button>`;
+            });
+        }
 
-            alert(`[간편 접수 성공! 🎉]\n\n${name} 고객님!\n선택하신 [ ${quickData.telecom} / ${quickData.product} / ${quickData.speed} ]\n(월 ${quickData.price}원 / 사은품 ${quickData.gift})\n\n가장 빠른 시간 내에 연락드리겠습니다!`);
-            document.getElementById('mobile-calc-popup-overlay').classList.remove('active'); document.body.style.overflow = ''; 
-            document.getElementById('mobile-quick-name').value = ''; document.getElementById('mobile-quick-phone').value = '';
-            goToMobileStep(1); quickData = { telecom: '', product: '', speed: '', price: '', gift: '' }; // 전송 후 리셋
+        function calcMobileResult() {
+            let bestPlan = m_filteredData.find(r => r[2].trim() === quickData.speed && (quickData.product === '단독' || r[3].trim() === quickData.tv));
+            if (bestPlan) {
+                let priceStr = bestPlan[quickData.product === '결합' ? 6 : 4].trim(); 
+                let giftStr = bestPlan[7] ? bestPlan[7].trim() : '0'; 
+                let priceNum = parseInt(priceStr.replace(/[^0-9]/g, "")) || 0; 
+                
+                quickData.price = priceNum > 0 ? priceNum.toLocaleString() + '원' : priceStr; 
+                quickData.gift = giftStr.includes('원') ? giftStr : giftStr + '원';
+                
+                let conditionText = (quickData.telecom === '스카이' || quickData.telecom === '헬로') ? "✨ 알뜰 실속" : "📱 휴대폰 결합시";
+                let prodName = quickData.product === '결합' ? `${quickData.speed} + ${quickData.tv}` : `${quickData.speed} (단독)`;
+                
+                document.getElementById('m-calc-res-prod').innerText = `[${conditionText}] ${prodName}`;
+                document.getElementById('m-calc-res-price').innerText = `월 ${quickData.price}`;
+                document.getElementById('m-calc-res-gift').innerText = `🎁 사은품: ${quickData.gift}`;
+            }
+        }
+
+        // 🚀 최종 가입신청 버튼 클릭 시 ➔ 투트랙 팝업(1분상담/바로접수) 호출
+        function m_openDirectFromCalc() {
+            document.getElementById('mobile-calc-popup-overlay').classList.remove('active'); // 모바일 설계팝업 닫기
+            openDirectFromBest(quickData.telecom, quickData.product, quickData.speed, quickData.tv || '', quickData.price, `현금 사은품 ${quickData.gift} 증정`); // 투트랙 팝업 띄우기
         }
 
         /* 🚀 사이드바 다이렉트 접수 (분할창) 로직 및 기타 유틸 함수들 */
