@@ -1192,26 +1192,22 @@
                     <div class="plan-card-header" style="background:#2B6CB0;">📺 ${nameMap[prov]} 알뜰형</div>
                     <div class="plan-card-body">`;
                 
-                let foundAny = false;
-                const discountSpeeds = ['100M', '200M', '500M']; // 스카이라이프 200M 대응
+                // 🔥 시트에 '요금할인형'으로 등록된 모든 데이터를 동적으로 가져오기
+                let matchingRows = allData.filter(r => {
+                    if(!r[0] || !r[1] || !r[2]) return false;
+                    let isProvMatch = (prov === 'SK' && r[0].includes('SK')) || (prov === '스카이' && r[0].includes('스카이'));
+                    return isProvMatch && (r[1].trim() === '요금할인형');
+                });
 
-                discountSpeeds.forEach(speed => {
-                    let row = allData.find(r => {
-                        if(!r[0] || !r[1] || !r[2]) return false;
-                        let isProvMatch = (prov === 'SK' && r[0].includes('SK')) || (prov === '스카이' && r[0].includes('스카이'));
-                        return isProvMatch && (r[1].trim() === '요금할인형') && (r[2].trim() === speed);
-                    });
-
-                    if (row) {
-                        foundAny = true;
+                if (matchingRows.length > 0) {
+                    matchingRows.forEach(row => {
                         let cleanRow = row.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
                         let dcPriceRaw = parseInt(cleanRow[5] ? cleanRow[5].replace(/[^0-9]/g, "") : "0") || 0;
                         let priceRaw = (dcPriceRaw > 0) ? cleanRow[6] : cleanRow[4];
                         let formatPrice = (parseInt(priceRaw.replace(/[^0-9]/g, "")) || 0).toLocaleString() + "원";
                         
-                        // 시트의 7번째 열(H열) 데이터 가져오기, 없으면 기본 텍스트
                         let formatSubsidy = cleanRow[7] ? cleanRow[7] : "설치비 전액 지원!";
-                        let displayProductName = `${speed} + ${cleanRow[3] || '매달 추가할인형'}`;
+                        let displayProductName = cleanRow[2]; // 시트 C열의 이름(예: 100M + Btv)을 그대로 가져옴
 
                         cardHtml += `
                         <div class="plan-row">
@@ -1230,11 +1226,12 @@
                             <div class="p-gift-box">
                                 <div class="p-gift-text">🎁 혜택: ${formatSubsidy}</div>
                             </div>
-                            <button class="p-apply-btn" onclick="openDirectFromBest('${prov}', '요금할인형', '${speed}', '${cleanRow[3] || ''}', '${formatPrice}', '${formatSubsidy}')">🚀 가입신청</button>
+                            <button class="p-apply-btn" onclick="openDirectFromBest('${prov}', '요금할인형', '${displayProductName}', '${cleanRow[3] || ''}', '${formatPrice}', '${formatSubsidy}')">🚀 가입신청</button>
                         </div>`;
-                    }
-                });
-                if(!foundAny) { cardHtml += `<div class="p-empty-row">해당하는 요금제가 없습니다.</div>`; }
+                    });
+                } else {
+                    cardHtml += `<div class="p-empty-row">해당하는 요금제가 없습니다.</div>`;
+                }
                 cardHtml += `</div></div>`;
                 discountHtml += cardHtml;
             });
