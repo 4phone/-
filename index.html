@@ -1718,6 +1718,22 @@
         function closePrivacyModal() { document.getElementById('privacyModal').style.display = 'none'; }
         function setupUniversalStickyScroll() { const navbar = document.querySelector('.navbar'); window.addEventListener('scroll', function() { if (navbar) { if (window.pageYOffset > 50 && window.innerWidth <= 950) { navbar.classList.add('scrolled'); } else { navbar.classList.remove('scrolled'); } } }, { passive: true }); }
         
+        // 🚀 Fix 8: 상단 메뉴 스크롤 가림 현상 해결 (오프셋 이동 함수 추가)
+        function scrollToProv(event, prov) {
+            event.preventDefault(); // 무식한 기본 점프 차단
+            const target = document.getElementById('prov-section-' + prov);
+            if (target) {
+                // PC는 상단바(90px), 모바일은 상단바+스와이프탭(130px) 여백 확보
+                const offset = window.innerWidth > 950 ? 90 : 130; 
+                const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
         function execDaumPostcode(prefix) { new daum.Postcode({ oncomplete: function(data) { let addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress; document.getElementById(prefix + '-postcode').value = data.zonecode; document.getElementById(prefix + '-addr1').value = addr; document.getElementById(prefix + '-addr2').focus(); } }).open(); }
         function autoCleanAccount(target) { target.value = target.value.replace(/[^0-9]/g, ''); }
         function autoFormatCardValid(target) { let val = target.value.replace(/[^0-9]/g, ''); if (val.length >= 3) { target.value = val.substring(0, 2) + '/' + val.substring(2, 4); } else { target.value = val; } }
