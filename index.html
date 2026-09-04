@@ -1215,8 +1215,8 @@
                             document.getElementById('current-map-addr').innerText = selectedMapAddress;
                             document.getElementById('map-submit-btn').innerText = `🚀 [${result[i].region_3depth_name}] 이 주소로 1분 빠른 접수하기`;
                             
-                            // 구글 시트 데이터(시, 동)와 0.1초만에 비교해서 전광판 불빛 바꾸기
-                            checkRegionAvailability(result[i].region_2depth_name, result[i].region_3depth_name);
+                            // 🚀 수정됨: 쪼개진 주소가 아닌 '전체 주소'를 통째로 넘겨줍니다!
+                            checkRegionAvailability(selectedMapAddress);
                             break;
                         }
                     }
@@ -1248,18 +1248,26 @@
             } else { alert('이 브라우저에서는 위치 정보가 지원되지 않습니다.'); }
         }
 
-        function checkRegionAvailability(city, district) {
+        // 🚀 수정됨: 똑똑한 스마트 키워드 매칭 두뇌 탑재!
+        function checkRegionAvailability(fullAddress) {
             const skBadge = document.getElementById('status-skpop');
             const helloBadge = document.getElementById('status-hello');
             
             let skOk = false, helloOk = false;
             
-            if (skPopRegions.length > 0) {
-                skOk = skPopRegions.some(r => r.city.includes(city) && (r.districts.includes('전체') || r.districts.includes(district)));
-            }
-            if (hellovisionRegions.length > 0) {
-                helloOk = hellovisionRegions.some(r => r.city.includes(city) && (r.districts.includes('전체') || r.districts.includes(district)));
-            }
+            // 💡 마법의 핵심 로직: 큰 지역(경기)이 포함되어 있고, 상세구역(부천시, 김포시 등) 중 하나라도 포함되면 통과!
+            const checkMatch = (regionData, address) => {
+                return regionData.some(r => {
+                    if (address.includes(r.city)) { // 1. 큰 지역 확인 (예: '경기'가 카카오 주소에 포함되었는가?)
+                        const detailKeywords = r.districts.split(',').map(k => k.trim()); // 2. 쉼표로 구역 쪼개기
+                        return detailKeywords.some(keyword => address.includes(keyword) || keyword === '전체'); // 3. 하나라도 걸리면 OK
+                    }
+                    return false;
+                });
+            };
+
+            if (skPopRegions.length > 0) { skOk = checkMatch(skPopRegions, fullAddress); }
+            if (hellovisionRegions.length > 0) { helloOk = checkMatch(hellovisionRegions, fullAddress); }
 
             if(skOk) { skBadge.className = 'map-status-badge status-ok'; skBadge.innerText = '🟢 설치 가능 지역'; }
             else { skBadge.className = 'map-status-badge status-no'; skBadge.innerText = '🔴 아쉽지만 타 통신사 추천'; }
