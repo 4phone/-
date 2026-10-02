@@ -503,11 +503,6 @@
                 <div class="consult-main-card">
                     <h3 style="color:#FFD700; margin-top:0; font-size:24px; font-weight:900; margin-bottom: 25px; letter-spacing:-1px;">⚡ 1분 간편 빠른상담</h3>
                     
-                    <!-- 📍 [추가] 카카오맵 설치 지역 조회 버튼 삽입 -->
-                    <button class="map-open-btn" onclick="openMapPopup(event)">
-                        📍 우리집 설치가능 지역 지도로 찾기
-                    </button>
-
                     <div class="form-group"><input type="text" id="main-fast-name" placeholder="성함을 적어주세요"></div>
                     <div class="form-group"><input type="tel" id="main-fast-phone" placeholder="연락처를 적어주세요 (- 제외)"></div>
                     
@@ -521,7 +516,11 @@
                     
                     <button class="submit-btn" onclick="submitMainFastForm()">화끈하게 빠른 상담 신청</button>
                     <a href="tel:18332440" class="phone-call-btn">📞 직통 전화걸기: 1833-2440</a>
-                    <a href="#" class="main-sms-routing-btn" onclick="triggerMainFastSms(event)">💬 문자로 상담 접수: 010-6414-2444</a>
+                    <a href="sms:01064142444" class="main-sms-routing-btn" onclick="triggerMainFastSms(event)">💬 문자로 상담 접수: 010-6414-2444</a>
+                    <!-- 📍 카카오맵 설치 지역 조회 버튼 (문자로 상담 접수 아래로 이동) -->
+                    <button class="map-open-btn" style="margin-top: 8px; margin-bottom: 0;" onclick="openMapPopup(event)">
+                        📍 우리집 설치가능 지역 지도로 찾기
+                    </button>
                 </div>
             </div>
         </div>
@@ -1587,6 +1586,42 @@
                 document.getElementById('main-fast-phone').value = "";
                 document.getElementById('fast-privacy-check').checked = false;
             }, `[간편 빠른상담 접수 완료 🎉]\n\n성함: ${name}\n연락처: ${phone}\n\n가장 빠른 시간 내에 연락드리겠습니다!`);
+        }
+
+        /* 🚀 [추가] 문자로 상담 접수: 누르면 휴대폰 문자 앱이 열리고 010-6414-2444 번호로 바로 보낼 수 있게 연결 */
+        const SMS_CONSULT_NUMBER = '01064142444';
+        const SMS_CONSULT_NUMBER_VIEW = '010-6414-2444';
+
+        // 문자 앱에 미리 채워 줄 내용 만들기 (위쪽 폼에 이미 적은 성함/연락처가 있으면 같이 넣어줌)
+        function buildConsultSmsUrl(isIos) {
+            const nameEl = document.getElementById('main-fast-name');
+            const phoneEl = document.getElementById('main-fast-phone');
+            const name = nameEl ? nameEl.value.trim() : '';
+            const phone = phoneEl ? phoneEl.value.trim() : '';
+            const body = '사거리인터넷 상담 신청합니다.\n성함: ' + name + '\n연락처: ' + phone + '\n희망상품(인터넷/TV/CCTV): ';
+            // 안드로이드는 ?body= , 아이폰은 &body= 형식을 사용
+            return 'sms:' + SMS_CONSULT_NUMBER + (isIos ? '&' : '?') + 'body=' + encodeURIComponent(body);
+        }
+
+        function triggerMainFastSms(e) {
+            if (e) e.preventDefault();
+            const ua = navigator.userAgent || '';
+            const isIos = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+            const isMobile = isIos || /Android/i.test(ua);
+
+            if (isMobile) {
+                window.location.href = buildConsultSmsUrl(isIos);   // 휴대폰 문자 앱 열기
+                return;
+            }
+            // PC에는 문자 앱이 없으므로 번호를 복사해서 안내
+            const notice = function(copied) {
+                alert('📱 문자 상담은 휴대폰에서 이용하실 수 있어요.\n\n상담 문자 번호: ' + SMS_CONSULT_NUMBER_VIEW + (copied ? '\n(번호가 복사되었습니다)' : '') + '\n\n바로 상담을 원하시면 [화끈하게 빠른 상담 신청] 또는 전화(1833-2440)를 이용해 주세요.');
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(SMS_CONSULT_NUMBER_VIEW).then(function() { notice(true); }, function() { notice(false); });
+            } else {
+                notice(false);
+            }
         }
 
         // 🚀 수정됨: 입력한 상세 주소를 지도 주소 뒤에 자연스럽게 묶어서 구글 시트로 쏩니다!
