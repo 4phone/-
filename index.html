@@ -1595,17 +1595,14 @@ async function sendReception(formData, onSuccess, successMsg) {
             // 시트로 넘어가는 최종 데이터 패키징
             const formData = { type: "요금표 (즉시 상담신청)", name: n, phone: p, summary: `상품: ${prod}\n요금: ${price}\n혜택: ${gift}${finalMapInfo}` };
             
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
-            
-            alert(`[즉시 상담신청 접수 성공! 🎉]\n\n상품: ${prod}\n요금: ${price}\n혜택: ${gift}\n성함: ${n}\n연락처: ${p}\n\n빠르게 연락드리겠습니다!`);
-            closeDirectPopup();
-            
-            // 깔끔한 초기화
-            document.getElementById('direct-quick-name').value = ''; 
-            document.getElementById('direct-quick-phone').value = ''; 
-            if(document.getElementById('direct-quick-detail-addr')) document.getElementById('direct-quick-detail-addr').value = ''; 
-            document.getElementById('direct-quick-privacy').checked = false;
-            selectedMapAddress = ""; 
+        sendReception(formData, () => {
+    closeDirectPopup();
+    document.getElementById('direct-quick-name').value = '';
+    document.getElementById('direct-quick-phone').value = '';
+    if (document.getElementById('direct-quick-detail-addr')) document.getElementById('direct-quick-detail-addr').value = '';
+    document.getElementById('direct-quick-privacy').checked = false;
+    selectedMapAddress = "";
+}, `[즉시 상담신청 접수 완료 🎉]\n\n상품: ${prod}\n요금: ${price}\n혜택: ${gift}\n성함: ${n}\n연락처: ${p}\n\n빠르게 연락드리겠습니다!`);
         }
 
         function togglePopPay(type) {
@@ -1650,14 +1647,13 @@ async function sendReception(formData, onSuccess, successMsg) {
             const summaryStr = `생년월일: ${b} / 설치주소: ${addr1} ${addr2}\n상품: ${prod}\n요금: ${price}\n혜택: ${gift}\n사은품계좌: ${giftInfo}\n납부방법: ${payResult}`;
 
             const formData = { type: "요금표 (바로 접수)", name: n, phone: p, summary: summaryStr };
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
-
-            alert(`[다이렉트 접수 성공! 🎉]\n\n성함: ${n}\n연락처: ${p}\n\n꼼꼼히 확인 후 신속하게 개통 및 혜택 지급을 도와드리겠습니다!`);
-            closeDirectPopup();
-            
-            document.getElementById('pop-full-name').value = ''; document.getElementById('pop-full-birth').value = ''; document.getElementById('pop-full-postcode').value = ''; document.getElementById('pop-full-addr1').value = ''; document.getElementById('pop-full-addr2').value = ''; document.getElementById('pop-full-phone').value = '';
-            document.getElementById('pop-full-giftbanknum').value = ''; document.getElementById('pop-full-banknum').value = ''; document.getElementById('pop-full-cardnum').value = ''; document.getElementById('pop-full-cardvalid').value = '';
-        }
+           sendReception(formData, () => {
+    closeDirectPopup();
+    ['pop-full-name','pop-full-birth','pop-full-postcode','pop-full-addr1','pop-full-addr2','pop-full-phone',
+     'pop-full-giftbanknum','pop-full-banknum','pop-full-cardnum','pop-full-cardvalid']
+        .forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('pop-full-privacy').checked = false;
+}, `[다이렉트 접수 완료 🎉]\n\n성함: ${n}\n연락처: ${p}\n\n꼼꼼히 확인 후 신속하게 개통 및 혜택 지급을 도와드리겠습니다!`);
 
         function openSelfCalcPopup(e) {
             if(e) e.preventDefault();
