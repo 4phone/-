@@ -1561,11 +1561,11 @@ async function sendReception(formData, onSuccess, successMsg) {
             if(!checked) { alert('개인정보 수집 및 이용에 동의하셔야 상담 신청이 가능합니다.'); return; }
             
             const formData = { type: "간편 빠른상담", name: name, phone: phone, summary: `희망상품: 상담 후 결정` };
-            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }).catch(error => console.error(error));
-
-            alert(`[간편 빠른상담 접수 성공! 🎉]\n\n성함: ${name}\n연락처: ${phone}\n\n가장 빠른 시간 내에 연락드리겠습니다!`); 
-            document.getElementById('main-fast-name').value = ""; document.getElementById('main-fast-phone').value = ""; document.getElementById('fast-privacy-check').checked = false;
-        }
+            sendReception(formData, () => {
+    document.getElementById('main-fast-name').value = "";
+    document.getElementById('main-fast-phone').value = "";
+    document.getElementById('fast-privacy-check').checked = false;
+}, `[간편 빠른상담 접수 완료 🎉]\n\n성함: ${name}\n연락처: ${phone}\n\n가장 빠른 시간 내에 연락드리겠습니다!`);
 
         // 🚀 수정됨: 입력한 상세 주소를 지도 주소 뒤에 자연스럽게 묶어서 구글 시트로 쏩니다!
         function submitDirectQuick() {
