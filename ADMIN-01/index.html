@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WBuU5s+dVJsqIhAygn8W7eqe+zA114o7M7MGjx+w49Q='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KGhn24NFA5ujP2fPGktU5bwUqcDTgRG8OhU1Ay74tvM='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -76,6 +76,15 @@
         .drive-line.good { background: #E3F2E3; color: #1F6B2A; } .drive-line.bad { background: #FDECEA; color: #A33226; }
         .drive-tip { margin-top: 10px; font-size: 13px; color: var(--muted); }
         .code-box { width: 100%; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; min-height: 96px; word-break: break-all; background: #F7F9F0; }
+        .today-tasks { margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line); }
+        .tasks-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+        .tasks-bar h2 { font-size: 21px; font-weight: 800; letter-spacing: -0.7px; }
+        .check-inline { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .staff-block { margin-bottom: 26px; }
+        .staff-block .section-head .actions { gap: 14px; }
+        .group-meta { font-size: 13.5px; color: var(--muted); font-weight: 600; }
+        .adm-badge { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 800; background: var(--olive-700); color: #fff; border-radius: 4px; padding: 1px 7px; vertical-align: middle; letter-spacing: 0; }
+        .row.done .title { color: var(--hint); text-decoration: line-through; }
         .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
         .page-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
         .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -276,7 +285,7 @@
         var teamCache = null, syncChain = Promise.resolve(), syncQueued = false, pollTimer = null, pushTimer = null;
         var db = null, me = '', authed = false, cryptoKey = null, idleTimer = null, toastTimer = null, pendingToast = '';
         var now0 = new Date();
-        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null) };
+        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false };
 
         /* ---------- 공통 도구 ---------- */
         function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -328,9 +337,9 @@
         function seedDb() {
             return {
                 staff: [
-                    { id: 's1', name: '전상민', role: '대표', u: 0, o: 1 },
-                    { id: 's2', name: '김철종', role: '팀장', u: 0, o: 2 },
-                    { id: 's3', name: '임찬양', role: '팀장', u: 0, o: 3 }
+                    { id: 's1', name: '전상민', role: '대표', u: 0, o: 1, adm: true },
+                    { id: 's2', name: '김철종', role: '팀장', u: 0, o: 2, adm: false },
+                    { id: 's3', name: '임찬양', role: '팀장', u: 0, o: 3, adm: false }
                 ],
                 events: [], notices: [], tasks: [],
                 del: Object.create(null),                  // 지워진 항목 기록(다른 직원 화면에서도 지워지도록)
@@ -346,24 +355,28 @@
             list(d.staff, 200).forEach(function (s, i) {
                 if (!s || !str(s.name, 30).trim()) return;
                 var id = str(s.id, 40) || uid(); if (ids[id]) return; ids[id] = 1;
-                out.staff.push({ id: id, name: str(s.name, 30).trim(), role: str(s.role, 30).trim(), u: num(s.u), o: num(s.o) || (i + 1) });
+                out.staff.push({ id: id, name: str(s.name, 30).trim(), role: str(s.role, 30).trim(), u: num(s.u), o: num(s.o) || (i + 1), adm: !!s.adm });
             });
             if (!out.staff.length) return null;
+            if (!out.staff.some(function (x) { return x.adm; })) {   // 관리자가 한 명도 없으면 '전상민'(없으면 순서가 가장 앞선 직원)을 관리자로
+                var first = out.staff.slice().sort(function (p, q) { return p.o - q.o; })[0];
+                (out.staff.filter(function (x) { return x.name === '전상민'; })[0] || first).adm = true;
+            }
             function okStaff(id) { return ids[id] ? id : ''; }
-            list(d.events, 5000).forEach(function (e) {
+            list(d.events, 50000).forEach(function (e) {
                 if (!e || !isYmd(e.date) || !str(e.title, 120).trim()) return;
-                out.events.push({ id: str(e.id, 40) || uid(), title: str(e.title, 120).trim(), date: e.date, time: /^\d{2}:\d{2}$/.test(e.time || '') ? e.time : '', staffId: okStaff(e.staffId), memo: str(e.memo, 2000), u: num(e.u) });
+                out.events.push({ id: str(e.id, 40) || uid(), title: str(e.title, 120).trim(), date: e.date, time: /^\d{2}:\d{2}$/.test(e.time || '') ? e.time : '', staffId: okStaff(e.staffId), memo: str(e.memo, 2000), u: num(e.u), b: num(e.b) });
             });
-            list(d.notices, 5000).forEach(function (n) {
+            list(d.notices, 50000).forEach(function (n) {
                 if (!n || !str(n.title, 120).trim()) return;
-                out.notices.push({ id: str(n.id, 40) || uid(), title: str(n.title, 120).trim(), body: str(n.body, 5000), staffId: okStaff(n.staffId), date: isYmd(n.date) ? n.date : ymd(new Date()), pinned: !!n.pinned, u: num(n.u) });
+                out.notices.push({ id: str(n.id, 40) || uid(), title: str(n.title, 120).trim(), body: str(n.body, 5000), staffId: okStaff(n.staffId), date: isYmd(n.date) ? n.date : ymd(new Date()), pinned: !!n.pinned, u: num(n.u), b: num(n.b) });
             });
-            list(d.tasks, 5000).forEach(function (t) {
+            list(d.tasks, 50000).forEach(function (t) {
                 if (!t || !str(t.title, 120).trim()) return;
                 out.tasks.push({
                     id: str(t.id, 40) || uid(), title: str(t.title, 120).trim(), staffId: okStaff(t.staffId), due: isYmd(t.due) ? t.due : '',
                     priority: ['high', 'normal', 'low'].indexOf(t.priority) >= 0 ? t.priority : 'normal',
-                    status: ['todo', 'doing', 'done'].indexOf(t.status) >= 0 ? t.status : 'todo', memo: str(t.memo, 2000), u: num(t.u)
+                    status: ['todo', 'doing', 'done'].indexOf(t.status) >= 0 ? t.status : 'todo', memo: str(t.memo, 2000), u: num(t.u), b: num(t.b)
                 });
             });
             var dd = d.del && typeof d.del === 'object' ? d.del : {};
@@ -475,6 +488,7 @@
             try { return normalizeDb(JSON.parse(raw)); } catch (e) { return null; }
         }
         function commit(msg) { saveDb(); render(); if (msg) toast(msg); requestSync(DRIVE_PUSH_DELAY_MS); }
+        function delNote() { return driveOn() ? '\n공유 저장소에 연결되어 있어서 다른 직원의 화면에서도 사라지고, 되돌릴 수 없어요.' : ''; }
         function stamp(it) { it.u = Math.max(Date.now(), (it.u || 0) + 1); return it; }   // 수정 시각 기록 (같은 항목은 항상 더 커지게)
         function tomb(id) { db.del[id] = Date.now(); }                                    // 삭제 기록
 
@@ -482,7 +496,12 @@
         function staffName(id) { var s = staffById(id); return s ? s.name : '미지정'; }
         function staffColor(id) { for (var i = 0; i < db.staff.length; i++) if (db.staff[i].id === id) return PALETTE[i % PALETTE.length]; return '#9AA38A'; }
         function whoTag(id, label) { return h('span', { class: 'who' }, h('i', { style: '--c:' + staffColor(id) }), label || staffName(id)); }
-        function pickMe() { var m = lsGet(ME_KEY); return staffById(m) ? m : (db.staff[0] ? db.staff[0].id : ''); }
+        function pickMe() {
+            var m = lsGet(ME_KEY); if (staffById(m)) return m;
+            var adm = db.staff.filter(function (x) { return x.adm; })[0];   // 처음 접속하면 관리자로 시작
+            return adm ? adm.id : (db.staff[0] ? db.staff[0].id : '');
+        }
+        function byO(p, q) { return (p.o - q.o) || (p.id < q.id ? -1 : p.id > q.id ? 1 : 0); }
 
         /* --- 로그인 상태 / 자동 잠금 --- */
         function startSession() {
@@ -640,7 +659,7 @@
                     commit(isNew ? '일정을 저장했어요.' : '일정을 수정했어요.');
                 },
                 onDelete: isNew ? null : function () { db.events = db.events.filter(function (x) { return x.id !== ev.id; }); tomb(ev.id); commit('일정을 삭제했어요.'); },
-                deleteConfirm: '이 일정을 삭제할까요?'
+                deleteConfirm: '이 일정을 삭제할까요?' + delNote()
             });
         }
         function editNotice(n) {
@@ -659,7 +678,7 @@
                     commit(isNew ? '공지를 등록했어요.' : '공지를 수정했어요.');
                 },
                 onDelete: isNew ? null : function () { db.notices = db.notices.filter(function (x) { return x.id !== n.id; }); tomb(n.id); commit('공지를 삭제했어요.'); },
-                deleteConfirm: '이 공지를 삭제할까요?'
+                deleteConfirm: '이 공지를 삭제할까요?' + delNote()
             });
         }
         function editTask(t) {
@@ -681,7 +700,7 @@
                     commit(isNew ? '업무를 저장했어요.' : '업무를 수정했어요.');
                 },
                 onDelete: isNew ? null : function () { db.tasks = db.tasks.filter(function (x) { return x.id !== t.id; }); tomb(t.id); commit('업무를 삭제했어요.'); },
-                deleteConfirm: '이 업무를 삭제할까요?'
+                deleteConfirm: '이 업무를 삭제할까요?' + delNote()
             });
         }
         function editStaff(s) {
@@ -690,17 +709,32 @@
                 title: isNew ? '직원 추가' : '직원 정보 수정', saveText: isNew ? '직원 추가' : '변경 저장',
                 fields: [
                     { key: 'name', label: '이름', required: true, max: 30, value: s ? s.name : '' },
-                    { key: 'role', label: '직책', max: 30, value: s ? s.role : '', hint: '예: 대표, 팀장, 상담원' }
+                    { key: 'role', label: '직책', max: 30, value: s ? s.role : '', hint: '예: 대표, 팀장, 상담원' },
+                    { key: 'adm', label: '관리자 (오늘 화면에서 모든 직원의 업무를 한눈에 봐요)', type: 'checkbox', value: s ? !!s.adm : false }
                 ],
+                validate: function (v) {
+                    if (s && s.adm && !v.adm && !db.staff.some(function (x) { return x.adm && x.id !== s.id; })) return '관리자는 최소 1명이 있어야 해요. 다른 직원을 먼저 관리자로 지정해 주세요.';
+                    return null;
+                },
                 onSave: function (v) {
-                    if (isNew) db.staff.push(stamp({ id: uid(), name: v.name, role: v.role, u: 0, o: Date.now() }));
-                    else { s.name = v.name; s.role = v.role; stamp(s); }
+                    if (isNew) db.staff.push(stamp({ id: uid(), name: v.name, role: v.role, u: 0, o: Date.now(), adm: v.adm }));
+                    else { s.name = v.name; s.role = v.role; s.adm = v.adm; stamp(s); }
+                    db.staff.sort(byO);
                     commit(isNew ? '직원을 추가했어요.' : '직원 정보를 수정했어요.');
                 }
             });
         }
-        function removeStaff(s) {
+        function moveStaff(s, dir) {   // 직원 순서 바꾸기: 오늘 화면의 업무 순서에 그대로 반영
+            var list = db.staff.slice().sort(byO), i = list.indexOf(s), j = i + dir;
+            if (i < 0 || j < 0 || j >= list.length) return;
+            var other = list[j], t = s.o; s.o = other.o; other.o = t;
+            if (s.o === other.o) s.o += dir;
+            stamp(s); stamp(other); db.staff.sort(byO);
+            commit();
+        }
+                function removeStaff(s) {
             if (db.staff.length <= 1) { toast('직원은 최소 1명이 있어야 해요.'); return; }
+            if (s.adm && !db.staff.some(function (x) { return x.adm && x.id !== s.id; })) { toast('관리자는 최소 1명이 있어야 해요. 다른 직원을 관리자로 지정한 뒤 삭제해 주세요.'); return; }
             var cnt = db.tasks.filter(function (t) { return t.staffId === s.id; }).length + db.events.filter(function (e) { return e.staffId === s.id; }).length;
             if (!confirm(s.name + ' 직원을 삭제할까요?' + (cnt ? '\n이 직원에게 배정된 일정·업무 ' + cnt + '건은 "미지정"으로 바뀝니다.' : ''))) return;
             db.staff = db.staff.filter(function (x) { return x.id !== s.id; }); tomb(s.id);
@@ -730,10 +764,13 @@
         function renderToday() {
             var now = new Date(), today = ymd(now);
             var evs = db.events.filter(function (e) { return e.date === today; }).sort(byTime);
-            var mine = db.tasks.filter(function (t) { return t.status !== 'done' && t.staffId === me; }).sort(taskSort);
-            var late = mine.filter(function (t) { return t.due && t.due < today; }).length;
-            var notices = db.notices.slice().sort(noticeSort).slice(0, 3);
-            var sum = '오늘 일정 ' + evs.length + '건, 진행할 내 업무 ' + mine.length + '건이 있어요.' + (late ? ' 마감이 지난 업무가 ' + late + '건 있어요.' : '');
+            var meStaff = staffById(me), isAdmin = !!(meStaff && meStaff.adm);
+            var notices = db.notices.slice().sort(noticeSort).slice(0, 5);
+            var staffSorted = db.staff.slice().sort(byO);
+            function tasksOf(sid) { return db.tasks.filter(function (t) { return t.staffId === sid && (state.showDone || t.status !== 'done'); }).sort(taskSort); }
+            var openAll = db.tasks.filter(function (t) { return t.status !== 'done' && (isAdmin || t.staffId === me); });
+            var late = openAll.filter(function (t) { return t.due && t.due < today; }).length;
+            var sum = '오늘 일정 ' + evs.length + '건, ' + (isAdmin ? '직원들이 진행 중인 업무가 전체 ' : '진행할 내 업무 ') + openAll.length + '건이 있어요.' + (late ? ' 마감이 지난 업무가 ' + late + '건 있어요.' : '');
 
             var evBox = evs.length ? h('div', { class: 'panel' }, evs.map(function (e) {
                 return h('button', { type: 'button', class: 'row', onclick: function () { editEvent(e); } },
@@ -742,17 +779,37 @@
                     whoTag(e.staffId, e.staffId ? null : '전체'));
             })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '오늘 등록된 일정이 없어요.'));
 
-            var taskBox = mine.length ? h('div', { class: 'panel' }, mine.slice(0, 6).map(function (t) {
-                return h('button', { type: 'button', class: 'row task-row', onclick: function () { editTask(t); } },
-                    h('span', {}, h('div', { class: 'title' }, t.title), h('div', { class: 'sub' }, STATUS.filter(function (s) { return s.v === t.status; })[0].t + (t.priority === 'high' ? ', 우선순위 높음' : ''))),
-                    dueTag(t));
-            })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '지금 처리할 내 업무가 없어요.'));
-
             var noticeBox = notices.length ? h('div', { class: 'panel' }, notices.map(function (n) {
                 return h('button', { type: 'button', class: 'row task-row', onclick: function () { state.view = 'notices'; state.open[n.id] = true; render(); } },
                     h('span', {}, h('div', { class: 'title' }, (n.pinned ? '[고정] ' : '') + n.title), h('div', { class: 'sub' }, n.date + ' ' + staffName(n.staffId))),
                     h('span', { class: 'due' }, '보기'));
             })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '등록된 공지가 없어요.'));
+
+            // 업무: 관리자는 직원(관리자 제외)을 순서대로 보여준 뒤 관리자 본인 업무, 일반 직원은 자기 업무만
+            var groups = [];
+            if (isAdmin) {
+                staffSorted.filter(function (x) { return !x.adm; }).forEach(function (x) { groups.push({ s: x, tasks: tasksOf(x.id) }); });
+                staffSorted.filter(function (x) { return x.adm; }).forEach(function (x) { groups.push({ s: x, tasks: tasksOf(x.id), adm: true }); });
+                var none = tasksOf(''); if (none.length) groups.push({ s: null, tasks: none });
+            } else if (meStaff) groups.push({ s: meStaff, tasks: tasksOf(me) });
+
+            function groupBlock(g) {
+                var openN = g.tasks.filter(function (t) { return t.status !== 'done'; }).length;
+                var lateN = g.tasks.filter(function (t) { return t.status !== 'done' && t.due && t.due < today; }).length;
+                return h('section', { class: 'staff-block', 'data-staff': g.s ? g.s.id : 'none' },
+                    h('div', { class: 'section-head' },
+                        h('h2', {}, g.s ? g.s.name + '의 업무' : '담당자 미지정 업무', g.adm ? h('span', { class: 'adm-badge' }, '관리자') : null),
+                        h('div', { class: 'actions' },
+                            h('span', { class: 'group-meta' }, '진행 ' + openN + '건' + (lateN ? ', 마감 지남 ' + lateN + '건' : '')),
+                            h('button', { type: 'button', class: 'link-btn', onclick: function () { state.view = 'tasks'; state.who = g.s ? g.s.id : 'none'; state.status = 'all'; render(); window.scrollTo(0, 0); } }, '업무 전체 보기'))),
+                    g.tasks.length ? h('div', { class: 'panel' }, g.tasks.map(function (t) {
+                        return h('button', { type: 'button', class: 'row task-row' + (t.status === 'done' ? ' done' : ''), onclick: function () { editTask(t); } },
+                            h('span', {}, h('div', { class: 'title' }, t.title), h('div', { class: 'sub' }, STATUS.filter(function (x) { return x.v === t.status; })[0].t + (t.priority === 'high' ? ', 우선순위 높음' : ''))),
+                            dueTag(t));
+                    })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, state.showDone ? '등록된 업무가 없어요.' : '진행 중인 업무가 없어요.')));
+            }
+            var doneToggle = h('label', { class: 'check-inline' },
+                h('input', { type: 'checkbox', checked: state.showDone, 'data-fk': 'show-done', onchange: function () { state.showDone = this.checked; render(); } }), '완료한 업무도 보기');
 
             return h('div', {},
                 h('div', { class: 'today-head' },
@@ -763,9 +820,10 @@
                         h('button', { type: 'button', class: 'btn', onclick: function () { editNotice(null); } }, '공지 쓰기'))),
                 h('div', { class: 'board' },
                     h('div', {}, h('div', { class: 'section-head' }, h('h2', {}, '오늘 일정'), h('button', { type: 'button', class: 'link-btn', onclick: function () { state.view = 'calendar'; render(); } }, '캘린더 보기')), evBox),
-                    h('div', {},
-                        h('div', { class: 'section' }, h('div', { class: 'section-head' }, h('h2', {}, staffName(me) + '의 업무'), h('button', { type: 'button', class: 'link-btn', onclick: function () { state.view = 'tasks'; state.who = 'me'; render(); } }, '전체 업무')), taskBox),
-                        h('div', { class: 'section' }, h('div', { class: 'section-head' }, h('h2', {}, '최근 공지'), h('button', { type: 'button', class: 'link-btn', onclick: function () { state.view = 'notices'; render(); } }, '공지사항 전체')), noticeBox))));
+                    h('div', {}, h('div', { class: 'section-head' }, h('h2', {}, '최근 공지'), h('button', { type: 'button', class: 'link-btn', onclick: function () { state.view = 'notices'; render(); } }, '공지사항 전체')), noticeBox)),
+                h('div', { class: 'today-tasks' },
+                    h('div', { class: 'tasks-bar' }, h('h2', {}, isAdmin ? '직원별 업무' : '내 업무'), doneToggle),
+                    groups.map(groupBlock)));
         }
 
         /* ---------- 화면: 캘린더 ---------- */
@@ -935,7 +993,7 @@
         function canon(d) {   // 같은 내용이면 항상 같은 글자가 되도록 정렬한 비교용 문자열
             function byId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
             return JSON.stringify([
-                d.staff.slice().sort(function (a, b) { return (a.o - b.o) || byId(a, b); }).map(function (x) { return [x.id, x.name, x.role, x.u, x.o]; }),
+                d.staff.slice().sort(function (a, b) { return (a.o - b.o) || byId(a, b); }).map(function (x) { return [x.id, x.name, x.role, x.u, x.o, x.adm ? 1 : 0]; }),
                 d.events.slice().sort(byId).map(function (x) { return [x.id, x.title, x.date, x.time, x.staffId, x.memo, x.u]; }),
                 d.notices.slice().sort(byId).map(function (x) { return [x.id, x.title, x.body, x.staffId, x.date, x.pinned ? 1 : 0, x.u]; }),
                 d.tasks.slice().sort(byId).map(function (x) { return [x.id, x.title, x.staffId, x.due, x.priority, x.status, x.memo, x.u]; }),
@@ -943,30 +1001,48 @@
             ]);
         }
         function mergeData(a, b) {
-            var del = Object.create(null), cutoff = Date.now() - 90 * 86400000;
+            var del = Object.create(null), cutoff = Date.now() - 90 * 86400000, conflicts = 0;
             [a.del, b.del].forEach(function (m) { Object.keys(m).forEach(function (id) { if (m[id] > (del[id] || 0)) del[id] = m[id]; }); });
-            function tie(x) { return JSON.stringify(Object.keys(x).sort().map(function (k) { return [k, x[k]]; })); }
-            function pick(x, y) { if (!x) return y; if (!y) return x; if (x.u !== y.u) return x.u > y.u ? x : y; return tie(x) >= tie(y) ? x : y; }
+            function alive(it) { var t = del[it.id]; return !(t !== undefined && t >= it.u); }
             function byId(p, q) { return p.id < q.id ? -1 : p.id > q.id ? 1 : 0; }
-            function mergeList(la, lb) {
-                var map = Object.create(null);
-                la.concat(lb).forEach(function (it) { map[it.id] = pick(map[it.id], it); });
+            function body(x) { return JSON.stringify(Object.keys(x).filter(function (k) { return k !== 'u' && k !== 'b'; }).sort().map(function (k) { return [k, x[k]]; })); }
+            function conflictCopy(it) {   // 먼저 고친 쪽의 내용을 '[충돌본]' 항목으로 남김 (같은 충돌은 어느 기기에서 만들어도 같은 번호가 되어 한 번만 생김)
+                var c = JSON.parse(JSON.stringify(it));
+                c.id = String(it.id).split('~c')[0] + '~c' + it.u; c.b = 0;
+                if (typeof c.title === 'string' && c.title.indexOf('[충돌본] ') !== 0) c.title = ('[충돌본] ' + c.title).slice(0, 120);
+                return c;
+            }
+            function pickItem(x, y, copies) {
+                if (!x) return y; if (!y) return x;
+                if (body(x) === body(y)) return x.u >= y.u ? x : y;                     // 내용이 같으면 문제 없음
+                var newer, older;
+                if (x.u !== y.u) { newer = x.u > y.u ? x : y; older = newer === x ? y : x; }
+                else { newer = body(x) >= body(y) ? x : y; older = newer === x ? y : x; }
+                // 나중에 고친 쪽이, 먼저 고친 쪽의 최신 내용을 모른 채(= 동기화되기 전 기준으로) 고쳤다면 '동시에 고친 것'
+                if (copies && (x.u === y.u || ((newer.b || 0) > 0 && newer.b < older.u))) copies.push(conflictCopy(older));
+                return newer;
+            }
+            function mergeList(la, lb, withCopies) {
+                var map = Object.create(null), copies = [], had = Object.create(null);
+                la.concat(lb).forEach(function (it) { had[it.id] = 1; map[it.id] = pickItem(map[it.id], it, withCopies ? copies : null); });
+                var made = Object.create(null);
+                copies.forEach(function (c) { if (!had[c.id] && alive(c)) made[c.id] = 1; map[c.id] = pickItem(map[c.id], c, null); });
+                conflicts += Object.keys(made).length;
                 return Object.keys(map).map(function (id) { return map[id]; });
             }
-            function alive(it) { var t = del[it.id]; return !(t !== undefined && t >= it.u); }
-            var allStaff = mergeList(a.staff, b.staff), staff = allStaff.filter(alive);
+            var allStaff = mergeList(a.staff, b.staff, false), staff = allStaff.filter(alive);
             if (!staff.length) staff = [allStaff.slice().sort(function (p, q) { return q.u - p.u; })[0]];   // 직원이 0명이 되지 않게
-            staff.sort(function (p, q) { return (p.o - q.o) || byId(p, q); });
-            Object.keys(del).forEach(function (id) { if (del[id] < cutoff) delete del[id]; });             // 90일 지난 삭제 기록 정리
+            staff.sort(byO);
+            Object.keys(del).forEach(function (id) { if (del[id] < cutoff) delete del[id]; });             // 90일 지난 '삭제 기록'만 정리 (항목 자체는 절대 자동으로 지우지 않음)
             return {
                 staff: staff,
-                events: mergeList(a.events, b.events).filter(alive).sort(byId),
-                notices: mergeList(a.notices, b.notices).filter(alive).sort(byId),
-                tasks: mergeList(a.tasks, b.tasks).filter(alive).sort(byId),
-                del: del
+                events: mergeList(a.events, b.events, true).filter(alive).sort(byId),
+                notices: mergeList(a.notices, b.notices, true).filter(alive).sort(byId),
+                tasks: mergeList(a.tasks, b.tasks, true).filter(alive).sort(byId),
+                del: del, conflicts: conflicts
             };
         }
-        function applyMerged(m) {
+                function applyMerged(m) {
             db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.del = m.del;
             var ok = Object.create(null); db.staff.forEach(function (x) { ok[x.id] = 1; });
             [db.events, db.notices, db.tasks].forEach(function (list) { list.forEach(function (it) { if (it.staffId && !ok[it.staffId]) it.staffId = ''; }); });
@@ -975,6 +1051,12 @@
         }
 
         /* --- 동기화: 드라이브의 최신 내용을 받아 합치고, 내 변경분이 있으면 올림 --- */
+        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
+        function markSynced(snap) {   // 드라이브와 같아진 항목은 '동기화된 기준 시각(b)'을 현재 수정 시각으로 맞춤 (snap이 있으면 그 시점 그대로인 항목만)
+            var changed = false;
+            [db.events, db.notices, db.tasks].forEach(function (l) { l.forEach(function (it) { if ((!snap || snap[it.id] === it.u) && it.b !== it.u) { it.b = it.u; changed = true; } }); });
+            return changed;
+        }
         function mergeRemote(j, team) {
             if (!j || typeof j.rev !== 'number' || !j.blob || typeof j.blob.iv !== 'string' || typeof j.blob.ct !== 'string') { var se = new Error('shape'); se.code = 'shape'; return Promise.reject(se); }
             return decryptText(team.encKey, j.blob, 'drive-v1').then(function (text) {
@@ -983,34 +1065,37 @@
                 return parsed;
             }).catch(function () { var de = new Error('decrypt'); de.code = 'decrypt'; throw de; }).then(function (remote) {
                 var before = canon(localData()), merged = mergeData(localData(), remote), after = canon(merged);
-                var res = { rev: j.rev, needPush: after !== canon(remote), changedLocal: after !== before, revChanged: db.drive.rev !== j.rev };
-                if (res.changedLocal) applyMerged(merged);
+                var res = { rev: j.rev, needPush: after !== canon(remote), changedLocal: after !== before, revChanged: db.drive.rev !== j.rev, conflicts: 0, marked: false };
+                if (res.changedLocal) { applyMerged(merged); res.conflicts = merged.conflicts; }
                 db.drive.rev = j.rev;
+                if (!res.needPush) res.marked = markSynced(null);       // 드라이브와 완전히 같아졌으니 지금 내용이 기준
                 return res;
             });
         }
-        function pushLoop(team, rev, tries) {
-            if (!driveOn()) return Promise.resolve(rev);
+        function pushLoop(team, rev, tries, acc) {
+            acc = acc || { conflicts: 0 };
+            if (!driveOn()) return Promise.resolve(acc);
+            var snap = uMap();
             return encryptText(team.encKey, JSON.stringify(dataSnapshot()), 'drive-v1').then(function (blob) {
                 return driveCall(db.drive.url, 'put', { token: team.token, baseRev: rev, blob: blob });
-            }).then(function (j) { db.drive.rev = j.rev; return j.rev; }, function (e) {
+            }).then(function (j) { db.drive.rev = j.rev; markSynced(snap); return acc; }, function (e) {
                 if (e && e.code === 'conflict' && tries < 4) {   // 다른 직원이 먼저 저장함 → 그 내용을 받아 합친 뒤 다시 저장
-                    return mergeRemote(e.reply, team).then(function (st) { return st.needPush ? pushLoop(team, st.rev, tries + 1) : st.rev; });
+                    return mergeRemote(e.reply, team).then(function (st) { acc.conflicts += st.conflicts; return st.needPush ? pushLoop(team, st.rev, tries + 1, acc) : acc; });
                 }
                 throw e;
             });
         }
         function doSync() {
             if (!driveOn() || !authed) return Promise.resolve({ ok: false });
-            var team = null, info = { changedLocal: false, pushed: false, changedRev: false };
+            var team = null, info = { changedLocal: false, pushed: false, changedRev: false, marked: false, conflicts: 0 };
             if (driveState.status !== 'error' && driveState.status !== 'keyerror') driveState.status = 'syncing';
             function attempt() {
                 return ensureTeam().then(function (t) { team = t; return driveCall(db.drive.url, 'get', { token: team.token }); })
                     .then(function (j) { if (!driveOn()) throw new Error('off'); return mergeRemote(j, team); })
                     .then(function (st) {
-                        info.changedLocal = st.changedLocal; info.changedRev = st.revChanged;
+                        info.changedLocal = st.changedLocal; info.changedRev = st.revChanged; info.marked = st.marked; info.conflicts += st.conflicts;
                         if (db.drive.pk) { db.drive.pk = ''; info.changedRev = true; }   // 키 교체가 실제로는 일어나지 않았음 → 임시 키 폐기
-                        return st.needPush ? pushLoop(team, st.rev, 0).then(function () { info.pushed = true; }) : null;
+                        return st.needPush ? pushLoop(team, st.rev, 0).then(function (acc) { info.pushed = true; info.conflicts += acc.conflicts; }) : null;
                     });
             }
             return attempt().catch(function (e) {
@@ -1023,9 +1108,10 @@
                 if (!authed || !db || !driveOn()) return { ok: false };
                 var wasOk = driveState.status === 'ok';
                 driveState = { status: 'ok', at: new Date(), msg: '' };
-                if (info.changedLocal || info.changedRev || info.pushed) saveDb();
+                if (info.changedLocal || info.changedRev || info.pushed || info.marked) saveDb();
                 if (info.changedLocal || !wasOk) render();
-                return { ok: true, changed: info.changedLocal, pushed: info.pushed };
+                if (info.conflicts) toast('같은 항목을 동시에 고친 내용이 있어서 한쪽을 "[충돌본]"으로 함께 보관했어요. 확인한 뒤 필요 없는 쪽을 삭제해 주세요.');
+                return { ok: true, changed: info.changedLocal, pushed: info.pushed, conflicts: info.conflicts };
             }).catch(function (e) {
                 if (!authed || !db || !driveOn()) return { ok: false, error: e };
                 var key = e && (e.code === 'bad_key' || e.code === 'decrypt');
@@ -1035,7 +1121,7 @@
                 return { ok: false, error: e };
             });
         }
-        function syncJob(fn) { var p = syncChain.then(fn); syncChain = p.catch(function () { /* 다음 작업은 계속 */ }); return p; }
+                function syncJob(fn) { var p = syncChain.then(fn); syncChain = p.catch(function () { /* 다음 작업은 계속 */ }); return p; }
         function runSync() {   // 자동 동기화: 이미 대기 중인 게 있으면 합침, 팀 코드가 틀린 상태면 멈춤
             if (!driveOn() || !authed || driveState.status === 'keyerror') return Promise.resolve({ ok: false });
             if (syncQueued) return syncChain;
@@ -1321,11 +1407,15 @@
             return h('div', {},
                 h('div', { class: 'page-head' }, h('h1', {}, '설정')),
                 h('div', { class: 'set-block' },
-                    h('div', { class: 'section-head' }, h('div', {}, h('h2', {}, '직원 관리'), h('p', { style: 'color:var(--muted);font-size:14px' }, '일정·업무·공지의 담당자로 선택할 수 있어요.')), h('button', { type: 'button', class: 'btn btn-primary btn-sm', onclick: function () { editStaff(null); } }, '직원 추가')),
-                    h('div', { class: 'panel' }, db.staff.map(function (s) {
+                    h('div', { class: 'section-head' }, h('div', {}, h('h2', {}, '직원 관리'), h('p', { style: 'color:var(--muted);font-size:14px' }, '일정·업무·공지의 담당자로 선택할 수 있어요. ▲▼로 순서를 바꾸면 오늘 화면의 직원별 업무 순서에 그대로 반영돼요.')), h('button', { type: 'button', class: 'btn btn-primary btn-sm', onclick: function () { editStaff(null); } }, '직원 추가')),
+                    h('div', { class: 'panel' }, db.staff.slice().sort(byO).map(function (s, i, arr) {
                         return h('div', { class: 'staff-row' }, h('i', { style: '--c:' + staffColor(s.id) }),
-                            h('div', {}, h('b', {}, s.name), s.role ? h('span', { class: 'role' }, s.role) : null),
-                            h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editStaff(s); } }, '수정'), h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { removeStaff(s); } }, '삭제')));
+                            h('div', {}, h('b', {}, s.name), s.role ? h('span', { class: 'role' }, s.role) : null, s.adm ? h('span', { class: 'adm-badge' }, '관리자') : null),
+                            h('div', { class: 'actions' },
+                                h('button', { type: 'button', class: 'btn btn-sm', 'aria-label': s.name + ' 순서 위로', disabled: i === 0, onclick: function () { moveStaff(s, -1); } }, '▲'),
+                                h('button', { type: 'button', class: 'btn btn-sm', 'aria-label': s.name + ' 순서 아래로', disabled: i === arr.length - 1, onclick: function () { moveStaff(s, 1); } }, '▼'),
+                                h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editStaff(s); } }, '수정'),
+                                h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { removeStaff(s); } }, '삭제')));
                     }))),
                 driveBlock(),
                 h('div', { class: 'set-block' }, h('h2', {}, '암호화 백업'),
