@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KGhn24NFA5ujP2fPGktU5bwUqcDTgRG8OhU1Ay74tvM='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-IQBBSP/szod3KacQ+lqcHOK0snFrfpQIN+3ScdX8TUM='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -85,6 +85,11 @@
         .group-meta { font-size: 13.5px; color: var(--muted); font-weight: 600; }
         .adm-badge { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 800; background: var(--olive-700); color: #fff; border-radius: 4px; padding: 1px 7px; vertical-align: middle; letter-spacing: 0; }
         .row.done .title { color: var(--hint); text-decoration: line-through; }
+        .date-filter { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+        .date-filter input[type="date"] { width: auto; padding: 7px 10px; }
+        .date-chip { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: #FFF8DB; border: 1px solid #F0DC8A; border-radius: 8px; padding: 9px 14px; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #6B5300; }
+        .field-wrap { display: grid; gap: 8px; }
+        .quick-row { display: flex; gap: 6px; flex-wrap: wrap; }
         .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
         .page-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
         .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -155,7 +160,7 @@
         .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
         .filters label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
         .filters select { width: auto; min-width: 120px; padding: 8px 10px; }
-        .t-head, .t-row { display: grid; grid-template-columns: minmax(0, 2.6fr) minmax(0, 1fr) 104px 74px 112px 118px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
+        .t-head, .t-row { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr) 158px 74px 112px 96px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
         .t-head { background: #F7F9F0; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 700; color: var(--muted); }
         .t-row { border-bottom: 1px solid var(--line); }
         .t-row:last-child { border-bottom: none; }
@@ -285,7 +290,7 @@
         var teamCache = null, syncChain = Promise.resolve(), syncQueued = false, pollTimer = null, pushTimer = null;
         var db = null, me = '', authed = false, cryptoKey = null, idleTimer = null, toastTimer = null, pendingToast = '';
         var now0 = new Date();
-        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false };
+        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false, date: '' };
 
         /* ---------- 공통 도구 ---------- */
         function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -512,7 +517,7 @@
         function lock() {   // 잠그면 암호키와 데이터를 메모리에서도 지우고 화면을 비웁니다
             authed = false; cryptoKey = null; db = null; me = '';
             stopPoll(); clearTimeout(pushTimer); teamCache = null; syncQueued = false; driveState = { status: 'idle', at: null, msg: '' };
-            state.view = 'today'; state.who = 'all'; state.status = 'all'; state.open = Object.create(null);
+            state.view = 'today'; state.who = 'all'; state.status = 'all'; state.date = ''; state.open = Object.create(null);
             var d = document.getElementById('dlg'); if (d.open) closeDlg(); else d.textContent = '';
             var t = document.getElementById('toast'); t.hidden = true; t.textContent = '';
             clearTimeout(idleTimer); render();
@@ -611,7 +616,11 @@
                 inputs[f.key] = input;
                 if (f.type === 'checkbox') field = h('label', { class: 'field check', for: 'f_' + f.key }, input, h('span', {}, f.label));
                 else field = h('label', { class: 'field', for: 'f_' + f.key }, f.label + (f.required ? ' (필수)' : ''), input, f.hint ? h('span', { class: 'hint' }, f.hint) : null);
-                body.appendChild(field);
+                if (f.quick && f.quick.length) {
+                    body.appendChild(h('div', { class: 'field-wrap' }, field, h('div', { class: 'quick-row' }, f.quick.map(function (q) {
+                        return h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { input.value = q.value; input.focus(); } }, q.label);
+                    }))));
+                } else body.appendChild(field);
             });
             var cancel = h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기');
             var save = h('button', { type: 'submit', class: 'btn btn-primary' }, cfg.saveText || '저장');
@@ -681,6 +690,11 @@
                 deleteConfirm: '이 공지를 삭제할까요?' + delNote()
             });
         }
+        function dateQuick() {   // 마감일을 빠르게 고르는 버튼: 오늘 / 내일 / 다음 주 월요일 / 마감일 없음
+            var d = new Date(), y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
+            return [{ label: '오늘', value: ymd(d) }, { label: '내일', value: ymd(new Date(y, m, day + 1)) },
+                    { label: '다음 주 월요일', value: ymd(new Date(y, m, day + ((8 - d.getDay()) % 7 || 7))) }, { label: '마감일 없음', value: '' }];
+        }
         function editTask(t) {
             var isNew = !t;
             openForm({
@@ -688,7 +702,8 @@
                 fields: [
                     { key: 'title', label: '업무 내용', required: true, value: t ? t.title : '' },
                     { key: 'staffId', label: '담당자', type: 'select', options: staffOptions(true), value: t ? t.staffId : me },
-                    { key: 'due', label: '마감일', type: 'date', value: t ? t.due : '', hint: '비워 두면 마감일 없이 등록돼요.' },
+                    { key: 'due', label: '마감일', type: 'date', value: t ? t.due : ymd(new Date()), quick: dateQuick(),
+                      hint: t ? '비워 두면 마감일 없이 저장돼요.' : '오늘 날짜로 정해져 있어요. 달력이나 아래 버튼으로 다른 날을 고르면 미리 등록할 수 있어요. 지우면 마감일 없이 등록돼요.' },
                     { key: 'priority', label: '우선순위', type: 'select', options: PRIORITY.map(function (p) { return { v: p.v, t: p.t }; }), value: t ? t.priority : 'normal' },
                     { key: 'status', label: '진행 상태', type: 'select', options: STATUS.map(function (s) { return { v: s.v, t: s.t }; }), value: t ? t.status : 'todo' },
                     { key: 'memo', label: '메모', type: 'textarea', value: t ? t.memo : '' }
@@ -801,7 +816,7 @@
                         h('h2', {}, g.s ? g.s.name + '의 업무' : '담당자 미지정 업무', g.adm ? h('span', { class: 'adm-badge' }, '관리자') : null),
                         h('div', { class: 'actions' },
                             h('span', { class: 'group-meta' }, '진행 ' + openN + '건' + (lateN ? ', 마감 지남 ' + lateN + '건' : '')),
-                            h('button', { type: 'button', class: 'link-btn', onclick: function () { state.view = 'tasks'; state.who = g.s ? g.s.id : 'none'; state.status = 'all'; render(); window.scrollTo(0, 0); } }, '업무 전체 보기'))),
+                            h('button', { type: 'button', class: 'link-btn', onclick: function () { state.view = 'tasks'; state.who = g.s ? g.s.id : 'none'; state.status = 'all'; state.date = ''; render(); window.scrollTo(0, 0); } }, '업무 전체 보기'))),
                     g.tasks.length ? h('div', { class: 'panel' }, g.tasks.map(function (t) {
                         return h('button', { type: 'button', class: 'row task-row' + (t.status === 'done' ? ' done' : ''), onclick: function () { editTask(t); } },
                             h('span', {}, h('div', { class: 'title' }, t.title), h('div', { class: 'sub' }, STATUS.filter(function (x) { return x.v === t.status; })[0].t + (t.priority === 'high' ? ', 우선순위 높음' : ''))),
@@ -894,7 +909,7 @@
             var today = ymd(new Date());
             var list = db.tasks.filter(function (t) {
                 var okWho = state.who === 'all' || (state.who === 'me' ? t.staffId === me : state.who === 'none' ? !t.staffId : t.staffId === state.who);
-                return okWho && (state.status === 'all' || t.status === state.status);
+                return okWho && (state.status === 'all' || t.status === state.status) && (!state.date || t.due === state.date);
             }).sort(taskSort);
             var whoSel = h('select', { id: 'flt-who', 'data-fk': 'flt-who', 'aria-label': '담당자 필터', value: state.who },
                 h('option', { value: 'all' }, '전체 직원'), h('option', { value: 'me' }, '내 업무만'),
@@ -904,6 +919,10 @@
             var stSel = h('select', { id: 'flt-status', 'data-fk': 'flt-status', 'aria-label': '상태 필터' }, h('option', { value: 'all' }, '모든 상태'), STATUS.map(function (s) { return h('option', { value: s.v }, s.t); }));
             stSel.value = state.status;
             stSel.addEventListener('change', function () { state.status = this.value; render(); });
+            var dateIn = h('input', { type: 'date', id: 'flt-date', 'data-fk': 'flt-date', 'aria-label': '날짜별 업무 보기 (마감일 기준)' });
+            dateIn.value = state.date;
+            dateIn.addEventListener('change', function () { state.date = /^\d{4}-\d{2}-\d{2}$/.test(this.value) ? this.value : ''; render(); });
+            var yd = new Date(); yd.setDate(yd.getDate() - 1);
 
             var rows = list.map(function (t) {
                 var sel = h('select', { class: 'st-' + t.status, 'data-fk': 'st-' + t.id, 'aria-label': t.title + ' 진행 상태' }, STATUS.map(function (s) { return h('option', { value: s.v }, s.t); }));
@@ -918,11 +937,16 @@
                     h('div', { class: 't-actions' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editTask(t); } }, '수정')));
             });
             return h('div', {},
-                h('div', { class: 'page-head' }, h('h1', {}, '업무'), h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: function () { editTask(null); } }, '업무 추가'))),
+                h('div', { class: 'page-head' }, h('h1', {}, '업무'), h('div', { class: 'actions' },
+                    h('label', { class: 'date-filter' }, '날짜별 보기', dateIn),
+                    h('button', { type: 'button', class: 'btn', 'data-fk': 'flt-yesterday', onclick: function () { state.date = ymd(yd); render(); } }, '어제'),
+                    h('button', { type: 'button', class: 'btn btn-primary', onclick: function () { editTask(null); } }, '업무 추가'))),
                 h('div', { class: 'filters' }, h('label', {}, '담당', whoSel), h('label', {}, '상태', stSel)),
+                state.date ? h('div', { class: 'date-chip', role: 'status' }, h('span', {}, koDate(state.date) + ' 마감인 업무만 보고 있어요.'),
+                    h('button', { type: 'button', class: 'link-btn', onclick: function () { state.date = ''; render(); } }, '전체 보기')) : null,
                 h('div', { class: 'panel' },
                     rows.length ? [h('div', { class: 't-head' }, h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows]
-                        : h('div', { class: 'empty' }, db.tasks.length ? '조건에 맞는 업무가 없어요. 필터를 바꿔 보세요.' : '아직 등록된 업무가 없어요. 오른쪽 위 [업무 추가]로 시작해 보세요.')));
+                        : h('div', { class: 'empty' }, state.date ? '이 날(' + koDate(state.date) + ') 마감인 업무가 없어요. 담당·상태 필터를 걸어 두었다면 함께 확인해 보세요.' : (db.tasks.length ? '조건에 맞는 업무가 없어요. 필터를 바꿔 보세요.' : '아직 등록된 업무가 없어요. 오른쪽 위 [업무 추가]로 시작해 보세요.'))));
         }
 
         /* ---------- 공유 저장소 (구글 드라이브) ---------- */
