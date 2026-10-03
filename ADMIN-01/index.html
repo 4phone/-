@@ -1,1 +1,993 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 외부 사이트로의 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-AF5aXxnHAFe9tiBEu3XOFiy6ByUQ+39sjyo26gh/q00='; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta name="referrer" content="no-referrer">
+    <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <title>사거리인터넷 ADMIN</title>
+    <link rel="icon" href="/사거리로고_투명.png" type="image/png">
+    <style>
+        :root {
+            --olive-900: #1B1E0C; --olive-800: #2D3214; --olive-700: #3E441E; --olive-100: #E4E9D2;
+            --gold: #FFD700; --gold-edge: #E3BE00; --orange: #E64A19; --ok: #2E7D32; --danger: #C0392B; --blue: #2F55B8;
+            --paper: #EEF1E4; --panel: #FFFFFF; --line: #D5DBC3; --ink: #1E2310; --muted: #5F6A4F; --hint: #8A937A;
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        html { -webkit-text-size-adjust: 100%; }
+        body { margin: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; background: var(--paper); color: var(--ink); font-size: 15px; line-height: 1.5; letter-spacing: -0.2px; }
+        button, input, select, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
+        button { cursor: pointer; }
+        :focus-visible { outline: 3px solid var(--olive-700); outline-offset: 2px; }
+        .rail :focus-visible, .login :focus-visible { outline-color: var(--gold); }
+        h1, h2, h3, p { margin: 0; }
+        [hidden] { display: none !important; }
+
+        /* ---------- 버튼 ---------- */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 14px; border-radius: 8px; border: 1px solid #BFC7AA; background: #fff; font-weight: 600; font-size: 14px; line-height: 1.2; white-space: nowrap; }
+        .btn:hover { background: #F4F6EA; }
+        .btn-primary { background: var(--gold); border-color: var(--gold-edge); color: #1B1E0C; font-weight: 800; }
+        .btn-primary:hover { background: #F6CB00; }
+        .btn-dark { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .btn-dark:hover { background: var(--olive-800); }
+        .btn-danger { color: var(--danger); border-color: #E3B5AE; }
+        .btn-danger:hover { background: #FDF1EF; }
+        .btn-sm { padding: 6px 10px; font-size: 13px; }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+        /* ---------- 로그인 ---------- */
+        .login { min-height: 100vh; display: grid; place-items: center; background: var(--olive-800); padding: 20px; }
+        .login-box { background: #fff; border-radius: 16px; padding: 34px 30px 28px; width: min(400px, 100%); box-shadow: 0 24px 60px rgba(0,0,0,.35); }
+        .login-brand { font-weight: 800; font-size: 15px; color: var(--olive-700); }
+        .login-box h1 { font-size: 26px; font-weight: 800; letter-spacing: -1px; margin: 6px 0 6px; }
+        .login-box .sub { color: var(--muted); margin-bottom: 20px; font-size: 14px; }
+        .login-box form { display: grid; gap: 12px; }
+        .login-box .btn { width: 100%; padding: 13px; font-size: 16px; }
+        .login-note { margin-top: 16px; font-size: 12.5px; color: var(--hint); line-height: 1.5; }
+        .login-note.warn { color: #9A3412; font-weight: 700; }
+        .boot-msg { max-width: 520px; margin: 16vh auto 0; padding: 20px 22px; color: #2D3214; background: #fff; border: 1px solid var(--line); border-radius: 10px; font-size: 15px; line-height: 1.6; }
+
+        /* ---------- 전체 틀 ---------- */
+        .shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 100vh; }
+        .rail { background: var(--olive-800); color: #fff; padding: 24px 14px 18px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 6px; }
+        .brand { padding: 0 10px 18px; font-weight: 800; font-size: 19px; letter-spacing: -0.8px; line-height: 1.2; }
+        .brand small { display: block; margin-top: 4px; color: var(--gold); font-weight: 700; font-size: 12.5px; letter-spacing: 0; }
+        .nav { display: flex; flex-direction: column; gap: 3px; }
+        .nav button { text-align: left; padding: 11px 12px; border-radius: 8px; border: none; background: none; color: #D5DBC0; font-weight: 600; font-size: 15px; }
+        .nav button:hover { background: rgba(255,255,255,.07); }
+        .nav button[aria-current="page"] { background: rgba(255,215,0,.15); color: var(--gold); font-weight: 800; }
+        .rail-foot { margin-top: auto; display: grid; gap: 8px; padding: 14px 10px 0; border-top: 1px solid rgba(255,255,255,.14); }
+        .rail-foot label { font-size: 12.5px; color: #B9C29F; font-weight: 600; }
+        .rail-foot select { background: var(--olive-900); border: 1px solid rgba(255,255,255,.22); color: #fff; border-radius: 8px; padding: 8px 10px; width: 100%; }
+        .rail-foot .btn { background: transparent; color: #E6EBD3; border-color: rgba(255,255,255,.28); }
+        .rail-foot .btn:hover { background: rgba(255,255,255,.08); }
+        .main { padding: 26px 34px 70px; max-width: 1200px; width: 100%; }
+
+        .mode-note { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; border-left: 5px solid var(--orange); background: #FFF6EE; padding: 11px 16px; border-radius: 0 8px 8px 0; margin-bottom: 22px; font-size: 14px; color: #5C3A1E; }
+        .mode-note b { color: var(--orange); }
+
+        .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+        .page-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
+        .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+        .empty { padding: 26px 18px; color: var(--muted); text-align: center; font-size: 14.5px; }
+        .section { margin-bottom: 28px; }
+        .section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        .section-head h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.6px; }
+        .link-btn { background: none; border: none; color: var(--olive-700); font-weight: 700; font-size: 13.5px; padding: 4px 2px; text-decoration: underline; text-underline-offset: 3px; }
+
+        .who { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+        .who i { width: 10px; height: 10px; border-radius: 50%; background: var(--c, #9AA38A); flex: none; }
+
+        /* ---------- 오늘 ---------- */
+        .today-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 4px 0 18px; border-bottom: 3px solid var(--olive-700); margin-bottom: 24px; }
+        .today-date { font-size: 46px; font-weight: 800; line-height: 1; letter-spacing: -2px; color: var(--olive-800); }
+        .today-date small { font-size: 19px; font-weight: 600; letter-spacing: -0.4px; margin-left: 10px; color: var(--muted); }
+        .today-sum { margin-top: 10px; color: var(--muted); font-size: 14.5px; }
+        .board { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+
+        .row { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); width: 100%; text-align: left; background: none; border-left: none; border-right: none; border-top: none; }
+        .row:last-child { border-bottom: none; }
+        button.row:hover { background: #F7F9F0; }
+        .row .time { font-weight: 800; font-size: 14.5px; color: var(--olive-700); }
+        .row .time.all { color: var(--hint); font-weight: 600; font-size: 13px; }
+        .row .title { font-weight: 700; overflow-wrap: anywhere; }
+        .row .sub { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+        .row.task-row { grid-template-columns: minmax(0, 1fr) auto; }
+        .due { font-size: 13px; font-weight: 700; color: var(--muted); white-space: nowrap; }
+        .due.late { color: var(--danger); }
+        .due.today { color: var(--orange); }
+
+        /* ---------- 캘린더 ---------- */
+        .cal-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+        .cal-title { font-size: 22px; font-weight: 800; letter-spacing: -0.8px; min-width: 130px; }
+        .cal-wrap { background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+        .cal-week, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+        .cal-week div { text-align: center; padding: 9px 0; font-weight: 700; font-size: 13px; color: var(--muted); border-bottom: 1px solid var(--line); background: #F7F9F0; }
+        .cal-week div:first-child { color: var(--danger); } .cal-week div:last-child { color: var(--blue); }
+        .cal-cell { min-height: 106px; padding: 6px; background: #fff; border: none; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: left; display: flex; flex-direction: column; gap: 3px; overflow: hidden; align-items: stretch; }
+        .cal-cell:nth-child(7n) { border-right: none; }
+        .cal-cell:hover { background: #FAFBF4; }
+        .cal-cell.out { background: #F6F7F0; }
+        .cal-cell.out .cal-num { color: #A8B097; }
+        .cal-cell.sel { box-shadow: inset 0 0 0 3px var(--olive-700); }
+        .cal-num { font-weight: 700; font-size: 13px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; flex: none; }
+        .cal-cell.sun .cal-num { color: var(--danger); } .cal-cell.sat .cal-num { color: var(--blue); }
+        .cal-cell.today .cal-num { background: var(--gold); color: #1B1E0C; }
+        .chip { font-size: 12px; line-height: 1.3; padding: 2px 6px; border-left: 4px solid var(--c, #9AA38A); background: #F1F4E6; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .more { font-size: 12px; color: var(--muted); padding-left: 2px; }
+        .cal-count { display: none; font-size: 11px; font-weight: 800; color: #1B1E0C; background: var(--gold); border-radius: 10px; padding: 0 6px; align-self: center; }
+        .day-panel { margin-top: 18px; }
+
+        /* ---------- 공지 ---------- */
+        .notice { padding: 16px 18px; border-bottom: 1px solid var(--line); }
+        .notice:last-child { border-bottom: none; }
+        .notice.pinned { background: #FFFBE0; }
+        .notice-head { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+        .pin { font-size: 12px; font-weight: 800; background: var(--gold); color: #1B1E0C; border-radius: 4px; padding: 1px 7px; }
+        .notice h3 { font-size: 17px; font-weight: 800; letter-spacing: -0.5px; overflow-wrap: anywhere; }
+        .notice .meta { font-size: 13px; color: var(--muted); margin-top: 3px; }
+        .nbody { margin-top: 10px; white-space: pre-wrap; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .nbody.open { display: block; overflow: visible; }
+        .notice-act { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+
+        /* ---------- 업무 ---------- */
+        .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+        .filters label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
+        .filters select { width: auto; min-width: 120px; padding: 8px 10px; }
+        .t-head, .t-row { display: grid; grid-template-columns: minmax(0, 2.6fr) minmax(0, 1fr) 104px 74px 112px 118px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
+        .t-head { background: #F7F9F0; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 700; color: var(--muted); }
+        .t-row { border-bottom: 1px solid var(--line); }
+        .t-row:last-child { border-bottom: none; }
+        .t-row.hi { border-left-color: var(--orange); }
+        .t-row.done .t-title { color: var(--hint); text-decoration: line-through; }
+        .t-title { font-weight: 700; overflow-wrap: anywhere; }
+        .t-memo { font-size: 13px; color: var(--muted); font-weight: 400; overflow-wrap: anywhere; }
+        .t-cell::before { content: attr(data-label); display: none; }
+        .t-row select { padding: 6px 8px; font-size: 13.5px; font-weight: 700; }
+        .st-todo { background: #F1F4E6; } .st-doing { background: #FFF3BF; } .st-done { background: #DDF0DD; }
+        .pri { font-size: 13px; font-weight: 700; }
+        .pri.high { color: var(--orange); } .pri.low { color: var(--hint); }
+        .t-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+        /* ---------- 설정 ---------- */
+        .set-block { margin-bottom: 26px; }
+        .set-block h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.6px; margin-bottom: 4px; }
+        .set-block > p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+        .staff-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+        .staff-row:last-child { border-bottom: none; }
+        .staff-row i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
+        .staff-row .role { color: var(--muted); font-size: 13.5px; margin-left: 8px; }
+
+        /* ---------- 입력창(팝업) ---------- */
+        input, select, textarea { border: 1px solid #BFC7AA; border-radius: 8px; padding: 10px 12px; background: #fff; width: 100%; }
+        input[type="checkbox"] { width: 18px; height: 18px; padding: 0; accent-color: var(--olive-700); }
+        textarea { min-height: 120px; resize: vertical; }
+        dialog { border: none; border-radius: 14px; padding: 0; width: min(560px, 94vw); box-shadow: 0 24px 70px rgba(0,0,0,.4); color: var(--ink); }
+        dialog::backdrop { background: rgba(20,24,8,.62); }
+        .dlg-head { padding: 18px 22px; border-bottom: 1px solid var(--line); font-weight: 800; font-size: 19px; letter-spacing: -0.6px; }
+        .dlg-body { padding: 18px 22px 8px; display: grid; gap: 14px; max-height: 66vh; overflow: auto; }
+        .field { display: grid; gap: 6px; font-weight: 700; font-size: 14px; }
+        .field.check { grid-template-columns: 18px 1fr; align-items: center; gap: 10px; }
+        .field .hint { font-weight: 400; color: var(--muted); font-size: 12.5px; }
+        .err { color: var(--danger); font-size: 13.5px; min-height: 20px; font-weight: 600; padding: 0 22px; }
+        .dlg-foot { padding: 12px 22px 18px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        .dlg-foot .left { margin-right: auto; }
+
+        .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); background: var(--olive-900); color: #fff; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 14.5px; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,.35); max-width: 92vw; }
+
+        /* ---------- 모바일 ---------- */
+        @media (max-width: 900px) {
+            .shell { grid-template-columns: minmax(0, 1fr); }
+            .rail { position: sticky; top: 0; height: auto; z-index: 30; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 10px 12px 8px; }
+            .brand { padding: 0; font-size: 17px; }
+            .brand small { display: none; }
+            .nav { order: 3; flex: 1 0 100%; flex-direction: row; overflow-x: auto; gap: 4px; padding-bottom: 2px; scrollbar-width: none; }
+            .nav::-webkit-scrollbar { display: none; }
+            .nav button { white-space: nowrap; padding: 8px 14px; font-size: 14.5px; }
+            .rail-foot { margin: 0 0 0 auto; padding: 0; border: none; display: flex; align-items: center; gap: 8px; }
+            .rail-foot label { display: none; }
+            .rail-foot select { width: auto; max-width: 118px; padding: 6px 8px; font-size: 13.5px; }
+            .rail-foot .btn { padding: 6px 10px; font-size: 13px; }
+            .main { padding: 18px 14px 80px; }
+            .today-date { font-size: 38px; }
+            .board { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+            .page-head h1 { font-size: 23px; }
+            .main .btn-sm, .main .btn { min-height: 38px; }
+        }
+        @media (max-width: 760px) {
+            .t-head { display: none; }
+            .t-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px; padding: 14px 14px 14px 12px; }
+            .t-row .t-main { grid-column: 1 / -1; }
+            .t-cell::before { display: block; font-size: 11.5px; color: var(--hint); font-weight: 600; margin-bottom: 1px; }
+            .t-row .t-actions { grid-column: 1 / -1; justify-content: flex-start; }
+        }
+        @media (max-width: 700px) {
+            .cal-cell { min-height: 56px; padding: 4px 2px; align-items: center; gap: 2px; }
+            .cal-cell .chip, .cal-cell .more { display: none; }
+            .cal-cell .cal-count { display: inline-block; }
+            .cal-title { font-size: 19px; min-width: 0; }
+            .row { grid-template-columns: 50px minmax(0, 1fr); }
+            .row .who { grid-column: 2; }
+        }
+        @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+    </style>
+</head>
+<body>
+    <div id="boot-msg" class="boot-msg">관리자 화면을 불러오는 중입니다. 이 문구가 계속 보이면 자바스크립트가 꺼져 있거나, admin.html 파일 내용이 중간에 바뀐 것일 수 있어요. 브라우저를 최신으로 바꾸고 파일을 처음 받은 그대로 다시 올려 주세요.</div>
+    <div id="app"></div>
+    <dialog id="dlg"></dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        /* 다른 사이트 화면 안에 몰래 끼워 넣어 클릭을 가로채는 공격(클릭재킹) 방지 */
+        if (window.top !== window.self) {
+            document.body.textContent = '이 페이지는 다른 사이트 안에서 열 수 없어요.';
+            return;
+        }
+        /* 보안 연결(https)이 아니면 https 주소로 이동 (내 컴퓨터 테스트용 localhost 제외) */
+        if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            location.replace('https:' + location.href.substring(location.protocol.length));
+            return;
+        }
+
+        /* =====================================================================
+           사거리인터넷 ADMIN  v2  (보안 강화판)
+           - 저장 내용은 비밀번호로 암호화(AES-256-GCM)해서 이 브라우저에만 저장합니다.
+           - 외부 사이트의 글꼴·스크립트를 쓰지 않고, 주소창 위쪽의 보안 정책(CSP)으로 외부 전송을 막습니다.
+           - 공유 저장소(구글 시트) 연동은 다음 단계에서 저장 부분만 교체하면 됩니다.
+           ===================================================================== */
+        var DB_KEY = 'sageori_admin_db_v2';          // 암호화된 데이터
+        var AUTH_KEY = 'sageori_admin_auth_v2';      // 비밀번호 확인용 값(암호화된 확인 문구) + 소금값
+        var GUARD_KEY = 'sageori_admin_guard_v2';    // 비밀번호 틀린 횟수 / 잠금 시간
+        var ME_KEY = 'sageori_admin_me_v1';          // "내 이름" 선택 (직원 번호만 저장, 내용 없음)
+        var LEGACY_DB_KEY = 'sageori_admin_db_v1';   // 이전 버전(암호화 전) 저장 위치: 있으면 암호화해서 옮김
+        var LEGACY_AUTH_KEY = 'sageori_admin_auth_v1';
+        var IDLE_MS = 15 * 60 * 1000;                // 15분 동안 아무 조작이 없으면 자동 잠금
+        var KDF_ITER = 600000;                       // 비밀번호 → 암호키 변환 반복 횟수 (클수록 무차별 대입에 강함)
+        var MIN_PW = 10;                             // 비밀번호 최소 길이
+        var LOCK_STEPS = [30, 60, 300, 900];         // 5번 틀릴 때마다 잠금 시간(초): 30초, 1분, 5분, 15분
+        var WEEK = ['일', '월', '화', '수', '목', '금', '토'];
+        var PALETTE = ['#5C6B1E', '#B58900', '#E64A19', '#00796B', '#3949AB', '#8E3B6B', '#6D4C41', '#455A64'];
+        var STATUS = [{ v: 'todo', t: '할 일' }, { v: 'doing', t: '진행 중' }, { v: 'done', t: '완료' }];
+        var PRIORITY = [{ v: 'high', t: '높음' }, { v: 'normal', t: '보통' }, { v: 'low', t: '낮음' }];
+        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'settings', t: '설정' }];
+
+        var db = null, me = '', authed = false, cryptoKey = null, idleTimer = null, toastTimer = null, pendingToast = '';
+        var now0 = new Date();
+        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null) };
+
+        /* ---------- 공통 도구 ---------- */
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+        function parseYmd(s) { var p = String(s).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+        function dayDiff(a, b) { return Math.round((parseYmd(a) - parseYmd(b)) / 86400000); }
+        function koDate(s) { var d = parseYmd(s); return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + WEEK[d.getDay()] + ')'; }
+        function uid() { return 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+        function isYmd(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s); }
+        function str(v, max) { return (typeof v === 'string' ? v : '').slice(0, max || 2000); }
+
+        // 화면 요소 만들기: 글자는 항상 textContent로 넣어서 입력값이 코드로 실행되지 않게 합니다
+        function h(tag, props) {
+            var el = document.createElement(tag), deferred = null, i;
+            props = props || {};
+            Object.keys(props).forEach(function (k) {
+                var v = props[k];
+                if (v === false || v == null) return;
+                if (k === 'class') el.className = v;
+                else if (k === 'text') el.textContent = v;
+                else if (k === 'value') deferred = v;
+                else if (k === 'checked') el.checked = !!v;
+                else if (k === 'style') el.style.cssText = v;
+                else if (k.indexOf('on') === 0) el.addEventListener(k.slice(2), v);
+                else if (v === true) el.setAttribute(k, '');
+                else el.setAttribute(k, v);
+            });
+            for (i = 2; i < arguments.length; i++) append(el, arguments[i]);
+            if (deferred !== null) el.value = deferred;
+            return el;
+        }
+        function append(el, c) {
+            if (c == null || c === false) return;
+            if (Array.isArray(c)) { c.forEach(function (x) { append(el, x); }); return; }
+            el.appendChild(c.nodeType ? c : document.createTextNode(String(c)));
+        }
+        function toast(msg) {
+            var t = document.getElementById('toast');
+            t.textContent = msg; t.hidden = false;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(function () { t.hidden = true; }, 2600);
+        }
+
+        /* ---------- 저장소: 비밀번호로 암호화해서 이 브라우저에 저장 ---------- */
+        function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+        function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+        function lsDel(k) { try { localStorage.removeItem(k); } catch (e) { /* 무시 */ } }
+
+        function seedDb() {
+            return {
+                staff: [
+                    { id: 's1', name: '전상민', role: '대표' },
+                    { id: 's2', name: '김철종', role: '팀장' },
+                    { id: 's3', name: '임찬양', role: '팀장' }
+                ],
+                events: [], notices: [], tasks: []
+            };
+        }
+        // 저장소·백업에서 읽은 내용은 항상 이 함수로 걸러서(글자 수·개수 제한, 형식 검사) 사용합니다
+        function normalizeDb(d) {
+            if (!d || typeof d !== 'object') return null;
+            var out = { staff: [], events: [], notices: [], tasks: [] }, ids = Object.create(null);
+            function list(v, max) { return Array.isArray(v) ? v.slice(0, max) : []; }
+            list(d.staff, 200).forEach(function (s) {
+                if (!s || !str(s.name, 30).trim()) return;
+                var id = str(s.id, 40) || uid(); if (ids[id]) return; ids[id] = 1;
+                out.staff.push({ id: id, name: str(s.name, 30).trim(), role: str(s.role, 30).trim() });
+            });
+            if (!out.staff.length) return null;
+            function okStaff(id) { return ids[id] ? id : ''; }
+            list(d.events, 5000).forEach(function (e) {
+                if (!e || !isYmd(e.date) || !str(e.title, 120).trim()) return;
+                out.events.push({ id: str(e.id, 40) || uid(), title: str(e.title, 120).trim(), date: e.date, time: /^\d{2}:\d{2}$/.test(e.time || '') ? e.time : '', staffId: okStaff(e.staffId), memo: str(e.memo, 2000) });
+            });
+            list(d.notices, 5000).forEach(function (n) {
+                if (!n || !str(n.title, 120).trim()) return;
+                out.notices.push({ id: str(n.id, 40) || uid(), title: str(n.title, 120).trim(), body: str(n.body, 5000), staffId: okStaff(n.staffId), date: isYmd(n.date) ? n.date : ymd(new Date()), pinned: !!n.pinned });
+            });
+            list(d.tasks, 5000).forEach(function (t) {
+                if (!t || !str(t.title, 120).trim()) return;
+                out.tasks.push({
+                    id: str(t.id, 40) || uid(), title: str(t.title, 120).trim(), staffId: okStaff(t.staffId), due: isYmd(t.due) ? t.due : '',
+                    priority: ['high', 'normal', 'low'].indexOf(t.priority) >= 0 ? t.priority : 'normal',
+                    status: ['todo', 'doing', 'done'].indexOf(t.status) >= 0 ? t.status : 'todo', memo: str(t.memo, 2000)
+                });
+            });
+            return out;
+        }
+
+        /* --- 암호화 도구: 브라우저 내장 WebCrypto (PBKDF2로 키 만들기 + AES-256-GCM으로 암호화) --- */
+        var enc = new TextEncoder(), dec = new TextDecoder();
+        function cryptoReady() { return !!(window.crypto && window.crypto.subtle && window.isSecureContext !== false); }
+        function b64e(buf) { var a = new Uint8Array(buf), s = '', i; for (i = 0; i < a.length; i++) s += String.fromCharCode(a[i]); return btoa(s); }
+        function b64d(text) { var s = atob(text), a = new Uint8Array(s.length), i; for (i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+        function randBytes(n) { return crypto.getRandomValues(new Uint8Array(n)); }
+        function deriveKey(pw, saltB64, iter) {
+            return crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveKey']).then(function (base) {
+                // extractable=false: 만들어진 키는 코드로도 꺼내 볼 수 없습니다
+                return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64d(saltB64), iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+            });
+        }
+        function encryptText(key, text, aad) {   // aad: 용도 표시(데이터/확인값/백업을 서로 바꿔치기하지 못하게 묶어 둠)
+            var iv = randBytes(12);               // 저장할 때마다 새로 만드는 일회용 값
+            return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv, additionalData: enc.encode(aad) }, key, enc.encode(text)).then(function (ct) { return { iv: b64e(iv), ct: b64e(ct) }; });
+        }
+        function decryptText(key, blob, aad) {   // 비밀번호가 틀리거나 내용이 바뀌었으면 거절(reject)됩니다
+            return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(blob.iv), additionalData: enc.encode(aad) }, key, b64d(blob.ct)).then(function (buf) { return dec.decode(buf); });
+        }
+
+        /* --- 비밀번호 확인 --- */
+        function loadAuth() {
+            try {
+                var a = JSON.parse(lsGet(AUTH_KEY) || 'null');
+                return a && a.v === 2 && typeof a.salt === 'string' && typeof a.iter === 'number' && a.iter >= 1000 && a.iter <= 5000000 && a.chk && typeof a.chk.iv === 'string' && typeof a.chk.ct === 'string' ? a : null;
+            } catch (e) { return null; }
+        }
+        function makeAuth(pw) {   // 새 비밀번호 → { key, auth }
+            var salt = b64e(randBytes(16));
+            return deriveKey(pw, salt, KDF_ITER).then(function (key) {
+                return encryptText(key, JSON.stringify({ ok: 'sageori-admin' }), 'chk').then(function (chk) { return { key: key, auth: { v: 2, salt: salt, iter: KDF_ITER, chk: chk } }; });
+            });
+        }
+        function verifyPw(pw, auth) {   // 맞으면 암호키를 돌려주고, 틀리면 거절됩니다
+            return deriveKey(pw, auth.salt, auth.iter).then(function (key) {
+                return decryptText(key, auth.chk, 'chk').then(function (t) { if (JSON.parse(t).ok !== 'sageori-admin') throw new Error('bad'); return key; });
+            });
+        }
+        function pwProblem(pw) {
+            if (pw.length < MIN_PW) return '비밀번호는 ' + MIN_PW + '자 이상으로 만들어 주세요.';
+            if (/^(.)\1+$/.test(pw)) return '같은 글자만 반복한 비밀번호는 쓸 수 없어요.';
+            if (/^\d+$/.test(pw)) return '숫자만으로는 안전하지 않아요. 문자도 섞어 주세요.';
+            return '';
+        }
+
+        /* --- 비밀번호 틀린 횟수: 새로고침해도 유지되고, 반복할수록 잠금 시간이 길어짐 --- */
+        function readGuard() {
+            try { var g = JSON.parse(lsGet(GUARD_KEY) || 'null'); if (g && typeof g === 'object') return { fails: +g.fails || 0, level: +g.level || 0, until: +g.until || 0 }; } catch (e) { /* 무시 */ }
+            return { fails: 0, level: 0, until: 0 };
+        }
+        function guardWait() { return Math.max(0, Math.ceil((readGuard().until - Date.now()) / 1000)); }
+        function guardFail() {
+            var g = readGuard(); g.fails++;
+            if (g.fails >= 5) { g.level++; g.fails = 0; g.until = Date.now() + LOCK_STEPS[Math.min(g.level, LOCK_STEPS.length) - 1] * 1000; }
+            lsSet(GUARD_KEY, JSON.stringify(g)); return g;
+        }
+        function guardReset() { lsDel(GUARD_KEY); }
+        function fmtWait(sec) { return sec >= 60 ? Math.ceil(sec / 60) + '분' : sec + '초'; }
+
+        /* --- 데이터 읽기 / 쓰기 (항상 암호화된 상태로만 저장) --- */
+        var saveChain = Promise.resolve();
+        function writeDbNow(key, obj) {   // 암호화해서 저장, 실패하면 거절됨
+            return encryptText(key, JSON.stringify(obj), 'db').then(function (blob) { if (!lsSet(DB_KEY, JSON.stringify(blob))) throw new Error('store'); });
+        }
+        function saveDb() {
+            if (!cryptoKey || !db) return Promise.resolve();
+            var key = cryptoKey, snapshot = JSON.parse(JSON.stringify(db));
+            var p = saveChain.then(function () { return writeDbNow(key, snapshot); });
+            saveChain = p.catch(function () { /* 실패해도 다음 저장은 계속 */ });
+            return p.catch(function () { toast('저장하지 못했어요. 브라우저의 저장 공간이 막혀 있는지 확인해 주세요.'); });
+        }
+        function rekey(r) {   // 비밀번호 변경: 새 키로 데이터를 다시 암호화하고, 데이터와 확인값을 연달아 교체
+            var snapshot = JSON.parse(JSON.stringify(db)); cryptoKey = r.key;
+            var p = saveChain.then(function () { return encryptText(r.key, JSON.stringify(snapshot), 'db'); }).then(function (blob) {
+                var a = lsSet(DB_KEY, JSON.stringify(blob)), b = lsSet(AUTH_KEY, JSON.stringify(r.auth));
+                if (!a || !b) throw new Error('store');
+            });
+            saveChain = p.catch(function () { /* 무시 */ });
+            return p;
+        }
+        function failDb(raw) {   // 데이터를 읽지 못했을 때: 원본은 따로 보관하고 새로 시작
+            lsSet(DB_KEY + '_corrupt', raw);
+            db = seedDb(); me = pickMe();
+            pendingToast = '저장된 데이터를 읽지 못해 새로 시작했어요. 손상된 데이터는 따로 보관해 두었어요. 백업 파일이 있다면 설정에서 불러오세요.';
+            return Promise.resolve();
+        }
+        function openDb() {
+            var raw = lsGet(DB_KEY);
+            if (!raw) { db = seedDb(); me = pickMe(); return Promise.resolve(); }
+            var blob; try { blob = JSON.parse(raw); } catch (e) { return failDb(raw); }
+            return decryptText(cryptoKey, blob, 'db').then(function (t) {
+                var d = normalizeDb(JSON.parse(t)); if (!d) throw new Error('empty');
+                db = d; me = pickMe();
+            }).catch(function () { return failDb(raw); });
+        }
+        function takeLegacyDb() {   // 이전 버전(암호화 전)에 저장된 내용이 있으면 가져오기
+            var raw = lsGet(LEGACY_DB_KEY); if (!raw) return null;
+            try { return normalizeDb(JSON.parse(raw)); } catch (e) { return null; }
+        }
+        function commit(msg) { saveDb(); render(); if (msg) toast(msg); }
+
+        function staffById(id) { for (var i = 0; i < db.staff.length; i++) if (db.staff[i].id === id) return db.staff[i]; return null; }
+        function staffName(id) { var s = staffById(id); return s ? s.name : '미지정'; }
+        function staffColor(id) { for (var i = 0; i < db.staff.length; i++) if (db.staff[i].id === id) return PALETTE[i % PALETTE.length]; return '#9AA38A'; }
+        function whoTag(id, label) { return h('span', { class: 'who' }, h('i', { style: '--c:' + staffColor(id) }), label || staffName(id)); }
+        function pickMe() { var m = lsGet(ME_KEY); return staffById(m) ? m : (db.staff[0] ? db.staff[0].id : ''); }
+
+        /* --- 로그인 상태 / 자동 잠금 --- */
+        function startSession() {
+            authed = true; resetIdle(); render();
+            if (pendingToast) { toast(pendingToast); pendingToast = ''; }
+        }
+        function lock() {   // 잠그면 암호키와 데이터를 메모리에서도 지우고 화면을 비웁니다
+            authed = false; cryptoKey = null; db = null; me = '';
+            state.view = 'today'; state.who = 'all'; state.status = 'all'; state.open = Object.create(null);
+            var d = document.getElementById('dlg'); if (d.open) closeDlg(); else d.textContent = '';
+            var t = document.getElementById('toast'); t.hidden = true; t.textContent = '';
+            clearTimeout(idleTimer); render();
+        }
+        function resetIdle() { clearTimeout(idleTimer); if (authed) idleTimer = setTimeout(lock, IDLE_MS); }
+        ['click', 'keydown', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, resetIdle, { passive: true }); });
+
+        function renderLogin() {
+            var app = document.getElementById('app');
+            app.textContent = '';
+            if (!cryptoReady()) {
+                app.appendChild(h('div', { class: 'login' }, h('div', { class: 'login-box' },
+                    h('div', { class: 'login-brand' }, '사거리인터넷'),
+                    h('h1', {}, '보안 연결이 필요해요'),
+                    h('p', { class: 'sub' }, '이 페이지는 내용을 암호화해서 저장해요. 주소가 https:// 로 시작하는 보안 연결과 최신 브라우저에서만 쓸 수 있어요.'))));
+                return;
+            }
+            var auth = loadAuth(), setup = !auth, legacy = setup && !!lsGet(LEGACY_DB_KEY);
+            var pw = h('input', { type: 'password', id: 'pw', autocomplete: setup ? 'new-password' : 'current-password', placeholder: setup ? '비밀번호 (' + MIN_PW + '자 이상)' : '비밀번호', 'aria-label': '비밀번호', maxlength: 100 });
+            var pw2 = setup ? h('input', { type: 'password', id: 'pw2', autocomplete: 'new-password', placeholder: '비밀번호 한 번 더', 'aria-label': '비밀번호 확인', maxlength: 100 }) : null;
+            var err = h('div', { class: 'err', role: 'alert', style: 'padding:0' });
+            var label = setup ? '비밀번호 만들고 시작하기' : '로그인';
+            var btn = h('button', { type: 'submit', class: 'btn btn-primary' }, label);
+            var form = h('form', { novalidate: true }, pw, pw2, err, btn);
+            function busy(on, text) { btn.disabled = on; btn.textContent = on ? text : label; }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault(); err.textContent = '';
+                if (btn.disabled) return;
+                if (setup) {
+                    var prob = pwProblem(pw.value);
+                    if (prob) { err.textContent = prob; pw.focus(); return; }
+                    if (pw.value !== pw2.value) { err.textContent = '두 비밀번호가 서로 달라요. 다시 확인해 주세요.'; pw2.focus(); return; }
+                    busy(true, '암호화 준비 중...');
+                    makeAuth(pw.value).then(function (r) {
+                        var oldDb = takeLegacyDb(), next = oldDb || seedDb();
+                        if (!lsSet(AUTH_KEY, JSON.stringify(r.auth))) throw new Error('store');
+                        return writeDbNow(r.key, next).then(function () {
+                            if (oldDb) { lsDel(LEGACY_DB_KEY); lsDel(LEGACY_AUTH_KEY); }
+                            guardReset(); cryptoKey = r.key; db = next; me = pickMe(); startSession();
+                        });
+                    }).catch(function () {
+                        lsDel(AUTH_KEY); cryptoKey = null; db = null; busy(false);
+                        err.textContent = '저장하지 못했어요. 브라우저의 저장 공간이 막혀 있는지(시크릿 모드 등) 확인해 주세요.';
+                    });
+                    return;
+                }
+                var wait = guardWait();
+                if (wait > 0) { err.textContent = '비밀번호를 여러 번 틀려서 잠겼어요. ' + fmtWait(wait) + ' 뒤에 다시 시도해 주세요.'; return; }
+                busy(true, '확인 중...');
+                verifyPw(pw.value, auth).then(function (key) {
+                    guardReset(); cryptoKey = key;
+                    return openDb().then(function () { startSession(); });
+                }, function () {
+                    busy(false);
+                    var g = guardFail(), w = guardWait();
+                    err.textContent = w > 0 ? '5번 틀려서 ' + fmtWait(w) + ' 동안 잠겼어요.' : '비밀번호가 맞지 않아요. (' + g.fails + '/5)';
+                    pw.value = ''; pw.focus();
+                }).catch(function () { cryptoKey = null; db = null; busy(false); err.textContent = '처리 중 오류가 났어요. 새로고침한 뒤 다시 시도해 주세요.'; });
+            });
+            app.appendChild(h('div', { class: 'login' },
+                h('div', { class: 'login-box' },
+                    h('div', { class: 'login-brand' }, '사거리인터넷'),
+                    h('h1', {}, setup ? '관리자 비밀번호 만들기' : '관리자 로그인'),
+                    h('p', { class: 'sub' }, setup ? '처음 사용하시네요. 저장되는 모든 내용이 이 비밀번호로 암호화돼요.' : '직원 전용 페이지입니다.'),
+                    form,
+                    setup ? h('p', { class: 'login-note warn' }, '비밀번호를 잊으면 저장된 내용을 되살릴 수 없어요. 안전한 곳에 적어 두세요.') : null,
+                    setup ? h('p', { class: 'login-note' }, '여러 단어를 이어 붙인 문장 형태(14자 이상)로 만들수록 안전해요. 다른 사이트에서 쓰는 비밀번호는 피해 주세요.') : null,
+                    legacy ? h('p', { class: 'login-note' }, '이전 버전에서 저장된 내용을 찾았어요. 새 비밀번호로 암호화해서 그대로 옮겨 드려요.') : null,
+                    h('p', { class: 'login-note' }, Math.round(IDLE_MS / 60000) + '분 동안 조작이 없으면 자동으로 잠겨요. 새로고침하거나 새 탭을 열면 다시 로그인해야 해요.'))));
+            pw.focus();
+        }
+
+        /* ---------- 팝업 입력창 ---------- */
+        function showDlg(dlg) { if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', ''); }
+        function closeDlg() { var d = document.getElementById('dlg'); if (typeof d.close === 'function') d.close(); else d.removeAttribute('open'); d.textContent = ''; }
+        document.getElementById('dlg').addEventListener('click', function (e) { if (e.target === this) closeDlg(); });
+        document.getElementById('dlg').addEventListener('cancel', function () { var d = this; setTimeout(function () { d.textContent = ''; }, 0); });
+
+        // cfg: { title, fields:[{key,label,type,options,value,required,hint}], saveText, onSave(values), onDelete }
+        function openForm(cfg) {
+            var dlg = document.getElementById('dlg'), inputs = {}, err = h('div', { class: 'err', role: 'alert' });
+            var body = h('div', { class: 'dlg-body' });
+            cfg.fields.forEach(function (f) {
+                var input, field;
+                if (f.type === 'select') {
+                    input = h('select', { id: 'f_' + f.key }, f.options.map(function (o) { return h('option', { value: o.v }, o.t); }));
+                    input.value = f.value;
+                } else if (f.type === 'textarea') {
+                    input = h('textarea', { id: 'f_' + f.key, maxlength: f.max || 2000 }); input.value = f.value || '';
+                } else if (f.type === 'checkbox') {
+                    input = h('input', { type: 'checkbox', id: 'f_' + f.key, checked: !!f.value });
+                } else {
+                    input = h('input', { type: f.type || 'text', id: 'f_' + f.key, maxlength: f.max || 120 }); input.value = f.value || '';
+                }
+                inputs[f.key] = input;
+                if (f.type === 'checkbox') field = h('label', { class: 'field check', for: 'f_' + f.key }, input, h('span', {}, f.label));
+                else field = h('label', { class: 'field', for: 'f_' + f.key }, f.label + (f.required ? ' (필수)' : ''), input, f.hint ? h('span', { class: 'hint' }, f.hint) : null);
+                body.appendChild(field);
+            });
+            var cancel = h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기');
+            var save = h('button', { type: 'submit', class: 'btn btn-primary' }, cfg.saveText || '저장');
+            var foot = h('div', { class: 'dlg-foot' });
+            if (cfg.onDelete) foot.appendChild(h('button', { type: 'button', class: 'btn btn-danger left', onclick: function () { if (confirm(cfg.deleteConfirm || '정말 삭제할까요?')) { cfg.onDelete(); closeDlg(); } } }, '삭제'));
+            foot.appendChild(cancel); foot.appendChild(save);
+            var form = h('form', { novalidate: true }, h('div', { class: 'dlg-head' }, cfg.title), body, err, foot);
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                var values = {}, i, f;
+                for (i = 0; i < cfg.fields.length; i++) {
+                    f = cfg.fields[i];
+                    values[f.key] = f.type === 'checkbox' ? inputs[f.key].checked : (f.type === 'password' ? inputs[f.key].value : inputs[f.key].value.trim());
+                    if (f.required && !values[f.key]) { err.textContent = f.label + '을(를) 입력해 주세요.'; inputs[f.key].focus(); return; }
+                }
+                var msg = cfg.validate ? cfg.validate(values) : null;
+                if (msg) { err.textContent = msg; return; }
+                cfg.onSave(values); closeDlg();
+            });
+            dlg.textContent = ''; dlg.appendChild(form); showDlg(dlg);
+            var first = body.querySelector('input,select,textarea'); if (first) first.focus();
+        }
+        function staffOptions(withNone, noneText) {
+            var o = db.staff.map(function (s) { return { v: s.id, t: s.name + (s.role ? ' ' + s.role : '') }; });
+            return withNone ? [{ v: '', t: noneText || '미지정' }].concat(o) : o;
+        }
+
+        /* ---------- 일정 / 공지 / 업무 / 직원 입력 ---------- */
+        function editEvent(ev, presetDate) {
+            var isNew = !ev;
+            openForm({
+                title: isNew ? '일정 추가' : '일정 수정', saveText: isNew ? '일정 저장' : '변경 저장',
+                fields: [
+                    { key: 'title', label: '일정 제목', required: true, value: ev ? ev.title : '' },
+                    { key: 'date', label: '날짜', type: 'date', required: true, value: ev ? ev.date : (presetDate || state.selDate) },
+                    { key: 'time', label: '시간', type: 'time', value: ev ? ev.time : '', hint: '비워 두면 종일 일정으로 표시돼요.' },
+                    { key: 'staffId', label: '담당', type: 'select', options: staffOptions(true, '전체 공통'), value: ev ? ev.staffId : me },
+                    { key: 'memo', label: '메모', type: 'textarea', value: ev ? ev.memo : '' }
+                ],
+                validate: function (v) { return isYmd(v.date) ? null : '날짜를 올바르게 입력해 주세요.'; },
+                onSave: function (v) {
+                    if (isNew) { db.events.push({ id: uid(), title: v.title, date: v.date, time: v.time, staffId: v.staffId, memo: v.memo }); }
+                    else { ev.title = v.title; ev.date = v.date; ev.time = v.time; ev.staffId = v.staffId; ev.memo = v.memo; }
+                    state.selDate = v.date; var d = parseYmd(v.date); state.calY = d.getFullYear(); state.calM = d.getMonth();
+                    commit(isNew ? '일정을 저장했어요.' : '일정을 수정했어요.');
+                },
+                onDelete: isNew ? null : function () { db.events = db.events.filter(function (x) { return x.id !== ev.id; }); commit('일정을 삭제했어요.'); },
+                deleteConfirm: '이 일정을 삭제할까요?'
+            });
+        }
+        function editNotice(n) {
+            var isNew = !n;
+            openForm({
+                title: isNew ? '새 공지' : '공지 수정', saveText: isNew ? '공지 등록' : '변경 저장',
+                fields: [
+                    { key: 'title', label: '제목', required: true, value: n ? n.title : '' },
+                    { key: 'body', label: '내용', type: 'textarea', required: true, max: 5000, value: n ? n.body : '' },
+                    { key: 'staffId', label: '작성자', type: 'select', options: staffOptions(false), value: n ? (n.staffId || me) : me },
+                    { key: 'pinned', label: '목록 맨 위에 고정하기', type: 'checkbox', value: n ? n.pinned : false }
+                ],
+                onSave: function (v) {
+                    if (isNew) db.notices.push({ id: uid(), title: v.title, body: v.body, staffId: v.staffId, date: ymd(new Date()), pinned: v.pinned });
+                    else { n.title = v.title; n.body = v.body; n.staffId = v.staffId; n.pinned = v.pinned; }
+                    commit(isNew ? '공지를 등록했어요.' : '공지를 수정했어요.');
+                },
+                onDelete: isNew ? null : function () { db.notices = db.notices.filter(function (x) { return x.id !== n.id; }); commit('공지를 삭제했어요.'); },
+                deleteConfirm: '이 공지를 삭제할까요?'
+            });
+        }
+        function editTask(t) {
+            var isNew = !t;
+            openForm({
+                title: isNew ? '업무 추가' : '업무 수정', saveText: isNew ? '업무 저장' : '변경 저장',
+                fields: [
+                    { key: 'title', label: '업무 내용', required: true, value: t ? t.title : '' },
+                    { key: 'staffId', label: '담당자', type: 'select', options: staffOptions(true), value: t ? t.staffId : me },
+                    { key: 'due', label: '마감일', type: 'date', value: t ? t.due : '', hint: '비워 두면 마감일 없이 등록돼요.' },
+                    { key: 'priority', label: '우선순위', type: 'select', options: PRIORITY.map(function (p) { return { v: p.v, t: p.t }; }), value: t ? t.priority : 'normal' },
+                    { key: 'status', label: '진행 상태', type: 'select', options: STATUS.map(function (s) { return { v: s.v, t: s.t }; }), value: t ? t.status : 'todo' },
+                    { key: 'memo', label: '메모', type: 'textarea', value: t ? t.memo : '' }
+                ],
+                validate: function (v) { return v.due && !isYmd(v.due) ? '마감일을 올바르게 입력해 주세요.' : null; },
+                onSave: function (v) {
+                    if (isNew) db.tasks.push({ id: uid(), title: v.title, staffId: v.staffId, due: v.due, priority: v.priority, status: v.status, memo: v.memo });
+                    else { t.title = v.title; t.staffId = v.staffId; t.due = v.due; t.priority = v.priority; t.status = v.status; t.memo = v.memo; }
+                    commit(isNew ? '업무를 저장했어요.' : '업무를 수정했어요.');
+                },
+                onDelete: isNew ? null : function () { db.tasks = db.tasks.filter(function (x) { return x.id !== t.id; }); commit('업무를 삭제했어요.'); },
+                deleteConfirm: '이 업무를 삭제할까요?'
+            });
+        }
+        function editStaff(s) {
+            var isNew = !s;
+            openForm({
+                title: isNew ? '직원 추가' : '직원 정보 수정', saveText: isNew ? '직원 추가' : '변경 저장',
+                fields: [
+                    { key: 'name', label: '이름', required: true, max: 30, value: s ? s.name : '' },
+                    { key: 'role', label: '직책', max: 30, value: s ? s.role : '', hint: '예: 대표, 팀장, 상담원' }
+                ],
+                onSave: function (v) {
+                    if (isNew) db.staff.push({ id: uid(), name: v.name, role: v.role });
+                    else { s.name = v.name; s.role = v.role; }
+                    commit(isNew ? '직원을 추가했어요.' : '직원 정보를 수정했어요.');
+                }
+            });
+        }
+        function removeStaff(s) {
+            if (db.staff.length <= 1) { toast('직원은 최소 1명이 있어야 해요.'); return; }
+            var cnt = db.tasks.filter(function (t) { return t.staffId === s.id; }).length + db.events.filter(function (e) { return e.staffId === s.id; }).length;
+            if (!confirm(s.name + ' 직원을 삭제할까요?' + (cnt ? '\n이 직원에게 배정된 일정·업무 ' + cnt + '건은 "미지정"으로 바뀝니다.' : ''))) return;
+            db.staff = db.staff.filter(function (x) { return x.id !== s.id; });
+            db.tasks.forEach(function (t) { if (t.staffId === s.id) t.staffId = ''; });
+            db.events.forEach(function (e) { if (e.staffId === s.id) e.staffId = ''; });
+            db.notices.forEach(function (n) { if (n.staffId === s.id) n.staffId = ''; });
+            if (me === s.id) { me = db.staff[0].id; lsSet(ME_KEY, me); }
+            commit('직원을 삭제했어요.');
+        }
+
+        /* ---------- 정렬 ---------- */
+        function byTime(a, b) { return (a.time || '') < (b.time || '') ? -1 : (a.time || '') > (b.time || '') ? 1 : 0; }
+        function taskSort(a, b) {
+            var da = a.status === 'done' ? 1 : 0, dbb = b.status === 'done' ? 1 : 0; if (da !== dbb) return da - dbb;
+            var x = a.due || '9999-99-99', y = b.due || '9999-99-99'; if (x !== y) return x < y ? -1 : 1;
+            var rank = { high: 0, normal: 1, low: 2 }; return rank[a.priority] - rank[b.priority];
+        }
+        function dueTag(t) {
+            if (!t.due) return h('span', { class: 'due' }, '마감일 없음');
+            var diff = dayDiff(t.due, ymd(new Date()));
+            if (t.status !== 'done' && diff < 0) return h('span', { class: 'due late' }, koDate(t.due) + ' 지남');
+            if (t.status !== 'done' && diff === 0) return h('span', { class: 'due today' }, '오늘 마감');
+            return h('span', { class: 'due' }, koDate(t.due));
+        }
+
+        /* ---------- 화면: 오늘 ---------- */
+        function renderToday() {
+            var now = new Date(), today = ymd(now);
+            var evs = db.events.filter(function (e) { return e.date === today; }).sort(byTime);
+            var mine = db.tasks.filter(function (t) { return t.status !== 'done' && t.staffId === me; }).sort(taskSort);
+            var late = mine.filter(function (t) { return t.due && t.due < today; }).length;
+            var notices = db.notices.slice().sort(noticeSort).slice(0, 3);
+            var sum = '오늘 일정 ' + evs.length + '건, 진행할 내 업무 ' + mine.length + '건이 있어요.' + (late ? ' 마감이 지난 업무가 ' + late + '건 있어요.' : '');
+
+            var evBox = evs.length ? h('div', { class: 'panel' }, evs.map(function (e) {
+                return h('button', { type: 'button', class: 'row', onclick: function () { editEvent(e); } },
+                    h('span', { class: 'time' + (e.time ? '' : ' all') }, e.time || '종일'),
+                    h('span', {}, h('div', { class: 'title' }, e.title), e.memo ? h('div', { class: 'sub' }, e.memo.split('\n')[0]) : null),
+                    whoTag(e.staffId, e.staffId ? null : '전체'));
+            })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '오늘 등록된 일정이 없어요.'));
+
+            var taskBox = mine.length ? h('div', { class: 'panel' }, mine.slice(0, 6).map(function (t) {
+                return h('button', { type: 'button', class: 'row task-row', onclick: function () { editTask(t); } },
+                    h('span', {}, h('div', { class: 'title' }, t.title), h('div', { class: 'sub' }, STATUS.filter(function (s) { return s.v === t.status; })[0].t + (t.priority === 'high' ? ', 우선순위 높음' : ''))),
+                    dueTag(t));
+            })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '지금 처리할 내 업무가 없어요.'));
+
+            var noticeBox = notices.length ? h('div', { class: 'panel' }, notices.map(function (n) {
+                return h('button', { type: 'button', class: 'row task-row', onclick: function () { state.view = 'notices'; state.open[n.id] = true; render(); } },
+                    h('span', {}, h('div', { class: 'title' }, (n.pinned ? '[고정] ' : '') + n.title), h('div', { class: 'sub' }, n.date + ' ' + staffName(n.staffId))),
+                    h('span', { class: 'due' }, '보기'));
+            })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '등록된 공지가 없어요.'));
+
+            return h('div', {},
+                h('div', { class: 'today-head' },
+                    h('div', {}, h('div', { class: 'today-date' }, (now.getMonth() + 1) + '월 ' + now.getDate() + '일', h('small', {}, WEEK[now.getDay()] + '요일')), h('p', { class: 'today-sum' }, sum)),
+                    h('div', { class: 'actions' },
+                        h('button', { type: 'button', class: 'btn btn-primary', onclick: function () { editEvent(null, today); } }, '일정 추가'),
+                        h('button', { type: 'button', class: 'btn', onclick: function () { editTask(null); } }, '업무 추가'),
+                        h('button', { type: 'button', class: 'btn', onclick: function () { editNotice(null); } }, '공지 쓰기'))),
+                h('div', { class: 'board' },
+                    h('div', {}, h('div', { class: 'section-head' }, h('h2', {}, '오늘 일정'), h('button', { type: 'button', class: 'link-btn', onclick: function () { state.view = 'calendar'; render(); } }, '캘린더 보기')), evBox),
+                    h('div', {},
+                        h('div', { class: 'section' }, h('div', { class: 'section-head' }, h('h2', {}, staffName(me) + '의 업무'), h('button', { type: 'button', class: 'link-btn', onclick: function () { state.view = 'tasks'; state.who = 'me'; render(); } }, '전체 업무')), taskBox),
+                        h('div', { class: 'section' }, h('div', { class: 'section-head' }, h('h2', {}, '최근 공지'), h('button', { type: 'button', class: 'link-btn', onclick: function () { state.view = 'notices'; render(); } }, '공지사항 전체')), noticeBox))));
+        }
+
+        /* ---------- 화면: 캘린더 ---------- */
+        function renderCalendar() {
+            var y = state.calY, m = state.calM, first = new Date(y, m, 1), offset = first.getDay(), daysIn = new Date(y, m + 1, 0).getDate();
+            var total = Math.ceil((offset + daysIn) / 7) * 7, today = ymd(new Date()), map = {}, i;
+            db.events.forEach(function (e) { (map[e.date] = map[e.date] || []).push(e); });
+            Object.keys(map).forEach(function (k) { map[k].sort(byTime); });
+
+            var cells = [];
+            for (i = 0; i < total; i++) {
+                (function (d) {
+                    var key = ymd(d), list = map[key] || [], dow = d.getDay(), out = d.getMonth() !== m;
+                    var cls = 'cal-cell' + (out ? ' out' : '') + (key === today ? ' today' : '') + (key === state.selDate ? ' sel' : '') + (dow === 0 ? ' sun' : dow === 6 ? ' sat' : '');
+                    cells.push(h('button', {
+                        type: 'button', 'data-fk': 'cal-' + key, class: cls, 'aria-label': (d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + list.length + '건', 'aria-pressed': key === state.selDate ? 'true' : 'false',
+                        onclick: function () { state.selDate = key; if (out) { state.calY = d.getFullYear(); state.calM = d.getMonth(); } render(); }
+                    },
+                        h('span', { class: 'cal-num' }, d.getDate()),
+                        list.slice(0, 3).map(function (e) { return h('span', { class: 'chip', style: '--c:' + staffColor(e.staffId) }, (e.time ? e.time + ' ' : '') + e.title); }),
+                        list.length > 3 ? h('span', { class: 'more' }, '+' + (list.length - 3) + '건 더') : null,
+                        list.length ? h('span', { class: 'cal-count' }, list.length) : null));
+                })(new Date(y, m, 1 - offset + i));
+            }
+
+            var sel = map[state.selDate] || [];
+            var panel = h('div', { class: 'day-panel' },
+                h('div', { class: 'section-head' }, h('h2', {}, koDate(state.selDate) + ' 일정'), h('button', { type: 'button', class: 'btn btn-primary btn-sm', onclick: function () { editEvent(null, state.selDate); } }, '이 날 일정 추가')),
+                sel.length ? h('div', { class: 'panel' }, sel.map(function (e) {
+                    return h('button', { type: 'button', class: 'row', onclick: function () { editEvent(e); } },
+                        h('span', { class: 'time' + (e.time ? '' : ' all') }, e.time || '종일'),
+                        h('span', {}, h('div', { class: 'title' }, e.title), e.memo ? h('div', { class: 'sub' }, e.memo.split('\n')[0]) : null),
+                        whoTag(e.staffId, e.staffId ? null : '전체'));
+                })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '이 날은 등록된 일정이 없어요.')));
+
+            return h('div', {},
+                h('div', { class: 'page-head' }, h('h1', {}, '캘린더')),
+                h('div', { class: 'cal-bar' },
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'cal-prev', 'aria-label': '이전 달', onclick: function () { shiftMonth(-1); } }, '이전 달'),
+                    h('div', { class: 'cal-title', 'aria-live': 'polite' }, y + '년 ' + (m + 1) + '월'),
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'cal-next', 'aria-label': '다음 달', onclick: function () { shiftMonth(1); } }, '다음 달'),
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'cal-today', onclick: function () { var n = new Date(); state.calY = n.getFullYear(); state.calM = n.getMonth(); state.selDate = ymd(n); render(); } }, '오늘')),
+                h('div', { class: 'cal-wrap' }, h('div', { class: 'cal-week' }, WEEK.map(function (w) { return h('div', {}, w); })), h('div', { class: 'cal-grid' }, cells)),
+                panel);
+        }
+        function shiftMonth(delta) { var d = new Date(state.calY, state.calM + delta, 1); state.calY = d.getFullYear(); state.calM = d.getMonth(); render(); }
+
+        /* ---------- 화면: 공지사항 ---------- */
+        function noticeSort(a, b) { if (a.pinned !== b.pinned) return a.pinned ? -1 : 1; return a.date === b.date ? 0 : (a.date < b.date ? 1 : -1); }
+        function renderNotices() {
+            var list = db.notices.slice().sort(noticeSort);
+            return h('div', {},
+                h('div', { class: 'page-head' }, h('h1', {}, '공지사항'), h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: function () { editNotice(null); } }, '공지 쓰기'))),
+                list.length ? h('div', { class: 'panel' }, list.map(function (n) {
+                    var open = !!state.open[n.id], long = n.body.length > 110 || n.body.split('\n').length > 3;
+                    return h('article', { class: 'notice' + (n.pinned ? ' pinned' : '') },
+                        h('div', { class: 'notice-head' }, n.pinned ? h('span', { class: 'pin' }, '고정') : null, h('h3', {}, n.title)),
+                        h('div', { class: 'meta' }, n.date + ' 작성: ' + staffName(n.staffId)),
+                        h('div', { class: 'nbody' + (open ? ' open' : '') }, n.body),
+                        h('div', { class: 'notice-act' },
+                            long ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { state.open[n.id] = !open; render(); } }, open ? '접기' : '내용 모두 보기') : null,
+                            h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editNotice(n); } }, '수정')));
+                })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '아직 등록된 공지가 없어요. 오른쪽 위 [공지 쓰기]로 첫 공지를 올려 보세요.')));
+        }
+
+        /* ---------- 화면: 업무 ---------- */
+        function renderTasks() {
+            var today = ymd(new Date());
+            var list = db.tasks.filter(function (t) {
+                var okWho = state.who === 'all' || (state.who === 'me' ? t.staffId === me : state.who === 'none' ? !t.staffId : t.staffId === state.who);
+                return okWho && (state.status === 'all' || t.status === state.status);
+            }).sort(taskSort);
+            var whoSel = h('select', { id: 'flt-who', 'data-fk': 'flt-who', 'aria-label': '담당자 필터', value: state.who },
+                h('option', { value: 'all' }, '전체 직원'), h('option', { value: 'me' }, '내 업무만'),
+                db.staff.map(function (s) { return h('option', { value: s.id }, s.name); }), h('option', { value: 'none' }, '미지정'));
+            whoSel.value = state.who;
+            whoSel.addEventListener('change', function () { state.who = this.value; render(); });
+            var stSel = h('select', { id: 'flt-status', 'data-fk': 'flt-status', 'aria-label': '상태 필터' }, h('option', { value: 'all' }, '모든 상태'), STATUS.map(function (s) { return h('option', { value: s.v }, s.t); }));
+            stSel.value = state.status;
+            stSel.addEventListener('change', function () { state.status = this.value; render(); });
+
+            var rows = list.map(function (t) {
+                var sel = h('select', { class: 'st-' + t.status, 'data-fk': 'st-' + t.id, 'aria-label': t.title + ' 진행 상태' }, STATUS.map(function (s) { return h('option', { value: s.v }, s.t); }));
+                sel.value = t.status;
+                sel.addEventListener('change', function () { t.status = this.value; commit(); });
+                return h('div', { class: 't-row' + (t.priority === 'high' ? ' hi' : '') + (t.status === 'done' ? ' done' : '') },
+                    h('div', { class: 't-main' }, h('div', { class: 't-title' }, t.title), t.memo ? h('div', { class: 't-memo' }, t.memo.split('\n')[0]) : null),
+                    h('div', { class: 't-cell', 'data-label': '담당' }, whoTag(t.staffId)),
+                    h('div', { class: 't-cell', 'data-label': '마감' }, dueTag(t)),
+                    h('div', { class: 't-cell', 'data-label': '우선순위' }, h('span', { class: 'pri ' + t.priority }, PRIORITY.filter(function (p) { return p.v === t.priority; })[0].t)),
+                    h('div', { class: 't-cell', 'data-label': '상태' }, sel),
+                    h('div', { class: 't-actions' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editTask(t); } }, '수정')));
+            });
+            return h('div', {},
+                h('div', { class: 'page-head' }, h('h1', {}, '업무'), h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-primary', onclick: function () { editTask(null); } }, '업무 추가'))),
+                h('div', { class: 'filters' }, h('label', {}, '담당', whoSel), h('label', {}, '상태', stSel)),
+                h('div', { class: 'panel' },
+                    rows.length ? [h('div', { class: 't-head' }, h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows]
+                        : h('div', { class: 'empty' }, db.tasks.length ? '조건에 맞는 업무가 없어요. 필터를 바꿔 보세요.' : '아직 등록된 업무가 없어요. 오른쪽 위 [업무 추가]로 시작해 보세요.')));
+        }
+
+        /* ---------- 화면: 설정 ---------- */
+        function downloadFile(name, text) {
+            var url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+            var a = h('a', { href: url, download: name });
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+        }
+        function exportBackup() {
+            if (!db) return;
+            openForm({
+                title: '암호화 백업 만들기', saveText: '백업 파일 만들기',
+                fields: [
+                    { key: 'pw', label: '백업 비밀번호', type: 'password', required: true, max: 100, hint: '백업 파일을 불러올 때 필요해요. 로그인 비밀번호와 같아도 되지만, 잊으면 복구할 수 없어요.' },
+                    { key: 'pw2', label: '백업 비밀번호 확인', type: 'password', required: true, max: 100 }
+                ],
+                validate: function (v) { return pwProblem(v.pw) || (v.pw !== v.pw2 ? '두 비밀번호가 서로 달라요.' : null); },
+                onSave: function (v) {
+                    var salt = b64e(randBytes(16)), snapshot = JSON.stringify(db);
+                    deriveKey(v.pw, salt, KDF_ITER).then(function (key) { return encryptText(key, snapshot, 'backup'); }).then(function (blob) {
+                        var file = { app: 'sageori-admin-backup', v: 2, kdf: 'PBKDF2-SHA256', iter: KDF_ITER, salt: salt, iv: blob.iv, ct: blob.ct, createdAt: new Date().toISOString() };
+                        downloadFile('사거리인터넷-admin-암호화백업-' + ymd(new Date()) + '.json', JSON.stringify(file));
+                        toast('암호화된 백업 파일을 내려받았어요.');
+                    }).catch(function () { toast('백업 파일을 만들지 못했어요.'); });
+                }
+            });
+        }
+        function importBackup(file) {
+            if (!file || !db) return;
+            if (file.size > 5 * 1024 * 1024) { toast('파일이 너무 커요. 이 페이지에서 만든 백업 파일인지 확인해 주세요.'); return; }
+            var r = new FileReader();
+            r.onload = function () {
+                var j = null;
+                try { j = JSON.parse(r.result); } catch (e) { j = null; }
+                if (!j || j.app !== 'sageori-admin-backup' || j.v !== 2 || typeof j.salt !== 'string' || typeof j.iv !== 'string' || typeof j.ct !== 'string' ||
+                    j.salt.length > 64 || j.iv.length > 32 || typeof j.iter !== 'number' || j.iter < 100000 || j.iter > 2000000) {
+                    toast('이 페이지에서 만든 암호화 백업 파일이 아니에요.'); return;
+                }
+                openForm({
+                    title: '백업 불러오기', saveText: '불러오기',
+                    fields: [{ key: 'pw', label: '백업 비밀번호', type: 'password', required: true, max: 100 }],
+                    onSave: function (v) {
+                        deriveKey(v.pw, j.salt, j.iter).then(function (key) { return decryptText(key, { iv: j.iv, ct: j.ct }, 'backup'); }).then(function (t) {
+                            var parsed = normalizeDb(JSON.parse(t));
+                            if (!parsed) throw new Error('empty');
+                            if (!authed) return;
+                            if (!confirm('지금 저장된 직원·일정·공지·업무가 모두 백업 파일 내용으로 바뀝니다.\n계속할까요?')) { toast('불러오기를 취소했어요.'); return; }
+                            db = parsed; me = pickMe(); commit('백업을 불러왔어요.');
+                        }).catch(function () { toast('비밀번호가 맞지 않거나 백업 파일이 손상됐어요.'); });
+                    }
+                });
+            };
+            r.readAsText(file);
+        }
+        function changePassword() {
+            openForm({
+                title: '비밀번호 변경', saveText: '비밀번호 변경',
+                fields: [
+                    { key: 'cur', label: '현재 비밀번호', type: 'password', required: true, max: 100 },
+                    { key: 'nw', label: '새 비밀번호', type: 'password', required: true, max: 100, hint: MIN_PW + '자 이상, 숫자만으로는 안 돼요.' },
+                    { key: 'nw2', label: '새 비밀번호 확인', type: 'password', required: true, max: 100 }
+                ],
+                validate: function (v) { return pwProblem(v.nw) || (v.nw !== v.nw2 ? '새 비밀번호 두 칸이 서로 달라요.' : null); },
+                onSave: function (v) {
+                    var auth = loadAuth();
+                    verifyPw(v.cur, auth).then(function () { return makeAuth(v.nw); }, function () { toast('현재 비밀번호가 맞지 않아요.'); return null; }).then(function (r) {
+                        if (!r || !authed) return null;
+                        return rekey(r).then(function () { toast('비밀번호를 변경했어요. 저장된 내용도 새 비밀번호로 다시 암호화했어요.'); });
+                    }).catch(function () { toast('비밀번호를 바꾸지 못했어요. 다시 시도해 주세요.'); });
+                }
+            });
+        }
+        function resetAll() {
+            if (!confirm('직원, 일정, 공지, 업무를 모두 지웁니다. 되돌릴 수 없어요.\n먼저 백업을 받아 두셨나요?')) return;
+            var t = prompt('정말 지우려면 "초기화"라고 입력해 주세요.');
+            if (t !== '초기화') { toast('초기화를 취소했어요.'); return; }
+            db = seedDb(); me = pickMe(); commit('모든 데이터를 초기화했어요.');
+        }
+        function wipeDevice() {
+            if (!confirm('이 기기에 저장된 ADMIN의 모든 데이터와 비밀번호를 삭제합니다. 되돌릴 수 없어요.\n공용 PC를 반납하거나 더 이상 쓰지 않을 때만 사용하세요.\n계속할까요?')) return;
+            var t = prompt('정말 지우려면 "삭제"라고 입력해 주세요.');
+            if (t !== '삭제') { toast('삭제를 취소했어요.'); return; }
+            authed = false; cryptoKey = null; db = null;
+            saveChain.then(function () {
+                [DB_KEY, DB_KEY + '_corrupt', AUTH_KEY, GUARD_KEY, ME_KEY, LEGACY_DB_KEY, LEGACY_AUTH_KEY].forEach(function (k) { lsDel(k); });
+                location.reload();
+            });
+        }
+        function renderSettings() {
+            var file = h('input', { type: 'file', accept: '.json,application/json', hidden: true, id: 'import-file' });
+            file.addEventListener('change', function () { importBackup(this.files[0]); this.value = ''; });
+            return h('div', {},
+                h('div', { class: 'page-head' }, h('h1', {}, '설정')),
+                h('div', { class: 'set-block' },
+                    h('div', { class: 'section-head' }, h('div', {}, h('h2', {}, '직원 관리'), h('p', { style: 'color:var(--muted);font-size:14px' }, '일정·업무·공지의 담당자로 선택할 수 있어요.')), h('button', { type: 'button', class: 'btn btn-primary btn-sm', onclick: function () { editStaff(null); } }, '직원 추가')),
+                    h('div', { class: 'panel' }, db.staff.map(function (s) {
+                        return h('div', { class: 'staff-row' }, h('i', { style: '--c:' + staffColor(s.id) }),
+                            h('div', {}, h('b', {}, s.name), s.role ? h('span', { class: 'role' }, s.role) : null),
+                            h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editStaff(s); } }, '수정'), h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { removeStaff(s); } }, '삭제')));
+                    }))),
+                h('div', { class: 'set-block' }, h('h2', {}, '암호화 백업'),
+                    h('p', {}, '지금은 입력한 내용이 이 브라우저에만 저장돼요. 브라우저 기록을 지우면 사라지니, 중요한 내용은 암호화 백업 파일로 보관해 주세요. 백업 비밀번호는 파일과 따로 기억해 두세요.'),
+                    h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-dark', onclick: exportBackup }, '암호화 백업 만들기'), h('button', { type: 'button', class: 'btn', onclick: function () { file.click(); } }, '백업 파일 불러오기'), file)),
+                h('div', { class: 'set-block' }, h('h2', {}, '보안'),
+                    h('p', {}, '이 기기에 저장된 내용은 비밀번호로 암호화돼요(AES-256). 비밀번호를 잊으면 복구할 수 없어요. 자리를 비울 때는 [지금 잠그기]를 눌러 주세요.'),
+                    h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', onclick: changePassword }, '비밀번호 변경'), h('button', { type: 'button', class: 'btn', onclick: lock }, '지금 잠그기'))),
+                h('div', { class: 'set-block' }, h('h2', {}, '삭제'),
+                    h('p', {}, '내용만 지우거나, 비밀번호까지 포함해 이 기기의 ADMIN 흔적을 모두 지울 수 있어요.'),
+                    h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-danger', onclick: resetAll }, '내용 모두 지우기'), h('button', { type: 'button', class: 'btn btn-danger', onclick: wipeDevice }, '이 기기에서 완전히 삭제'))));
+        }
+
+        /* ---------- 전체 화면 ---------- */
+        function render() {
+            var app = document.getElementById('app');
+            var ae = document.activeElement, fk = ae && ae.getAttribute ? ae.getAttribute('data-fk') : null;
+            if (!authed || !db) { renderLogin(); return; }
+            var view = state.view, content;
+            if (view === 'calendar') content = renderCalendar();
+            else if (view === 'notices') content = renderNotices();
+            else if (view === 'tasks') content = renderTasks();
+            else if (view === 'settings') content = renderSettings();
+            else content = renderToday();
+
+            var meSel = h('select', { id: 'me-sel', 'data-fk': 'me-sel', 'aria-label': '내 이름' }, staffOptions(false).map(function (o) { return h('option', { value: o.v }, o.t); }));
+            meSel.value = me;
+            meSel.addEventListener('change', function () { me = this.value; lsSet(ME_KEY, me); render(); });
+
+            var nav = h('nav', { class: 'nav', 'aria-label': '메뉴' }, VIEWS.map(function (v) {
+                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; render(); window.scrollTo(0, 0); } }, v.t);
+            }));
+            var note = h('div', { class: 'mode-note' },
+                h('span', {}, h('b', {}, '이 기기 전용 저장 '), '입력한 내용은 비밀번호로 암호화되어 지금 쓰는 이 브라우저에만 저장돼요. 직원들과 함께 보려면 공유 저장소 연결이 필요해요.'),
+                h('button', { type: 'button', class: 'btn btn-sm', onclick: exportBackup }, '암호화 백업'));
+
+            app.textContent = '';
+            app.appendChild(h('div', { class: 'shell' },
+                h('aside', { class: 'rail' },
+                    h('div', { class: 'brand' }, '사거리인터넷', h('small', {}, 'ADMIN')),
+                    nav,
+                    h('div', { class: 'rail-foot' }, h('label', { for: 'me-sel' }, '내 이름'), meSel, h('button', { type: 'button', class: 'btn btn-sm', onclick: lock }, '잠그기'))),
+                h('main', { class: 'main' }, note, content)));
+            if (fk) { var again = document.querySelector('[data-fk="' + fk + '"]'); if (again) again.focus(); }
+        }
+
+        /* ---------- 시작 ---------- */
+        render();
+        var bootMsg = document.getElementById('boot-msg'); if (bootMsg) bootMsg.remove();
+    })();
+    </script>
+</body>
+</html>
 
