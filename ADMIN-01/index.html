@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Muqp+Z3SJXKA5VbdRyEqPBPHwQ5M8ptlegy7IFaxii4='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-zAaBCGdJ2uzYsBXXxzTGb+SzEl+yrdQnrWm/4eNaDs8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -95,6 +95,16 @@
         .date-chip { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: #FFF8DB; border: 1px solid #F0DC8A; border-radius: 8px; padding: 9px 14px; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #6B5300; }
         .field-wrap { display: grid; gap: 8px; }
         .quick-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        .t-num { font-weight: 800; font-size: 15px; color: var(--olive-700); text-align: center; }
+        .box-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+        .box-count { font-size: 13.5px; font-weight: 700; color: var(--muted); }
+        .btn-report { background: var(--olive-700); border-color: var(--olive-700); color: #fff; font-weight: 800; }
+        .btn-report:hover { background: var(--olive-800); }
+        .btn.on-today { background: var(--ok); border-color: var(--ok); color: #fff; } .btn.on-today:hover { background: #276A2B; }
+        .btn.on-yday { background: var(--blue); border-color: var(--blue); color: #fff; } .btn.on-yday:hover { background: #274A9C; }
+        .date-chip.today { background: #E8F5E9; border-color: #A5D6A7; color: #1F5F26; }
+        .date-chip.yday { background: #E8EEFB; border-color: #A9BCE8; color: #243F8F; }
+        .report-img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; display: block; }
         .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
         .page-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
         .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -165,7 +175,7 @@
         .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
         .filters label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
         .filters select { width: auto; min-width: 120px; padding: 8px 10px; }
-        .t-head, .t-row { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr) 158px 74px 112px 96px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
+        .t-head, .t-row { display: grid; grid-template-columns: 46px minmax(0, 2.4fr) minmax(0, 1fr) 158px 74px 112px 96px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
         .t-head { background: #F7F9F0; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 700; color: var(--muted); }
         .t-row { border-bottom: 1px solid var(--line); }
         .t-row:last-child { border-bottom: none; }
@@ -225,8 +235,10 @@
             .page-head h1 { font-size: 23px; }
             .main .btn-sm, .main .btn { min-height: 38px; }
         }
-        @media (max-width: 760px) {
+        @media (max-width: 1100px) {   /* 표가 좁아지면 한 줄씩 카드 모양으로 */
             .t-head { display: none; }
+            .t-num { display: none; }
+            .t-title[data-n]::before { content: attr(data-n) '. '; font-weight: 800; color: var(--olive-700); }
             .t-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 12px; padding: 14px 14px 14px 12px; }
             .t-row .t-main { grid-column: 1 / -1; }
             .t-cell::before { display: block; font-size: 11.5px; color: var(--hint); font-weight: 600; margin-bottom: 1px; }
@@ -946,13 +958,18 @@
             dateIn.value = state.date;
             dateIn.addEventListener('change', function () { state.date = /^\d{4}-\d{2}-\d{2}$/.test(this.value) ? this.value : ''; render(); });
             var yd = new Date(); yd.setDate(yd.getDate() - 1);
+            var todayS = ymd(new Date()), ydS = ymd(yd), isToday = state.date === todayS, isYday = state.date === ydS;
+            var seq = 0;   // 해야 할 업무(할 일·진행 중)에만 1, 2, 3… 번호를 붙임 (완료한 업무는 번호 없이 지금처럼 유지)
+            var openN = list.filter(function (t) { return t.status !== 'done'; }).length;
 
             var rows = list.map(function (t) {
+                var num = t.status === 'done' ? '' : String(++seq);
                 var sel = h('select', { class: 'st-' + t.status, 'data-fk': 'st-' + t.id, 'aria-label': t.title + ' 진행 상태' }, STATUS.map(function (s) { return h('option', { value: s.v }, s.t); }));
                 sel.value = t.status;
                 sel.addEventListener('change', function () { t.status = this.value; stamp(t); commit(); });
                 return h('div', { class: 't-row' + (t.priority === 'high' ? ' hi' : '') + (t.status === 'done' ? ' done' : '') },
-                    h('div', { class: 't-main' }, h('div', { class: 't-title' }, t.title), t.memo ? h('div', { class: 't-memo' }, t.memo.split('\n')[0]) : null),
+                    h('div', { class: 't-num' }, num),
+                    h('div', { class: 't-main' }, h('div', { class: 't-title', 'data-n': num || null }, t.title), t.memo ? h('div', { class: 't-memo' }, t.memo.split('\n')[0]) : null),
                     h('div', { class: 't-cell', 'data-label': '담당' }, whoTag(t.staffId)),
                     h('div', { class: 't-cell', 'data-label': '마감' }, dueTag(t)),
                     h('div', { class: 't-cell', 'data-label': '우선순위' }, h('span', { class: 'pri ' + t.priority }, PRIORITY.filter(function (p) { return p.v === t.priority; })[0].t)),
@@ -962,14 +979,170 @@
             return h('div', {},
                 h('div', { class: 'page-head' }, h('h1', {}, '업무'), h('div', { class: 'actions' },
                     h('label', { class: 'date-filter' }, '날짜별 보기', dateIn),
-                    h('button', { type: 'button', class: 'btn', 'data-fk': 'flt-yesterday', onclick: function () { state.date = ymd(yd); render(); } }, '어제'),
+                    h('button', { type: 'button', class: 'btn' + (isYday ? ' on-yday' : ''), 'aria-pressed': isYday ? 'true' : 'false', 'data-fk': 'flt-yesterday', onclick: function () { state.date = ydS; render(); } }, '어제'),
+                    h('button', { type: 'button', class: 'btn' + (isToday ? ' on-today' : ''), 'aria-pressed': isToday ? 'true' : 'false', 'data-fk': 'flt-today', onclick: function () { state.date = todayS; render(); } }, '오늘'),
                     h('button', { type: 'button', class: 'btn btn-primary', onclick: function () { editTask(null); } }, '업무 추가'))),
                 h('div', { class: 'filters' }, h('label', {}, '담당', whoSel), h('label', {}, '상태', stSel)),
-                state.date ? h('div', { class: 'date-chip', role: 'status' }, h('span', {}, koDate(state.date) + ' 마감인 업무만 보고 있어요.'),
+                state.date ? h('div', { class: 'date-chip' + (isToday ? ' today' : isYday ? ' yday' : ''), role: 'status' }, h('span', {}, (isToday ? '오늘 (' + koDate(state.date) + ')' : isYday ? '어제 (' + koDate(state.date) + ')' : koDate(state.date)) + ' 마감인 업무만 보고 있어요.'),
                     h('button', { type: 'button', class: 'link-btn', onclick: function () { state.date = ''; render(); } }, '전체 보기')) : null,
+                h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '진행 ' + openN + '건, 완료 ' + (list.length - openN) + '건'),
+                    h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-fk': 'report', onclick: function () { captureReport(list); } }, '마감보고')),
                 h('div', { class: 'panel' },
-                    rows.length ? [h('div', { class: 't-head' }, h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows]
+                    rows.length ? [h('div', { class: 't-head' }, h('div', {}, '번호'), h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows]
                         : h('div', { class: 'empty' }, state.date ? '이 날(' + koDate(state.date) + ') 마감인 업무가 없어요. 담당·상태 필터를 걸어 두었다면 함께 확인해 보세요.' : (db.tasks.length ? '조건에 맞는 업무가 없어요. 필터를 바꿔 보세요.' : '아직 등록된 업무가 없어요. 오른쪽 위 [업무 추가]로 시작해 보세요.'))));
+        }
+
+        /* ---------- 마감보고: 지금 보이는 업무 목록을 그림(이미지)으로 만들어 복사 ---------- */
+        // 외부 프로그램 없이 이 화면 안에서 직접 그려요. 만든 그림은 클립보드에 복사되어 카카오톡·텔레그램에 붙여넣기로 바로 보낼 수 있어요.
+        var REPORT_FONT = "'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif";
+        function dueInfo(t) {
+            if (!t.due) return { text: '마감일 없음', color: '#66705A' };
+            var diff = dayDiff(t.due, ymd(new Date()));
+            if (t.status !== 'done' && diff < 0) return { text: koDate(t.due) + ' 지남', color: '#C0392B' };
+            if (t.status !== 'done' && diff === 0) return { text: '오늘 마감', color: '#E64A19' };
+            return { text: koDate(t.due), color: '#5F6A4F' };
+        }
+        function wrapLines(g, text, maxW, maxLines) {
+            var lines = [], line = '', i, ch;
+            for (i = 0; i < text.length; i++) {
+                ch = text.charAt(i);
+                if (ch === '\n') { lines.push(line); line = ''; continue; }
+                if (line && g.measureText(line + ch).width > maxW) {
+                    var sp = line.lastIndexOf(' ');   // 가능하면 띄어쓰기에서 줄을 나눔(낱말이 중간에서 잘리지 않게)
+                    if (sp > 0 && ch !== ' ') { lines.push(line.slice(0, sp)); line = line.slice(sp + 1) + ch; } else { lines.push(line); line = ch === ' ' ? '' : ch; }
+                } else if (line || ch !== ' ') line += ch;
+            }
+            if (line || !lines.length) lines.push(line);
+            if (lines.length > maxLines) {
+                lines = lines.slice(0, maxLines);
+                var last = lines[maxLines - 1];
+                while (last.length > 1 && g.measureText(last + '…').width > maxW) last = last.slice(0, -1);
+                lines[maxLines - 1] = last + '…';
+            }
+            return lines;
+        }
+        function fitText(g, text, maxW) {
+            if (g.measureText(text).width <= maxW) return text;
+            var t = text; while (t.length > 1 && g.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+            return t + '…';
+        }
+        function rrect(g, x, y, w, hh, r, fill) {
+            g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + hh, r); g.arcTo(x + w, y + hh, x, y + hh, r); g.arcTo(x, y + hh, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+            g.fillStyle = fill; g.fill();
+        }
+        function reportMeta() {
+            var now = new Date(), when = (now.getMonth() + 1) + '월 ' + now.getDate() + '일 (' + WEEK[now.getDay()] + ') ' + pad(now.getHours()) + ':' + pad(now.getMinutes()), f = [];
+            var sub = state.date ? '기준일 ' + koDate(state.date) + (state.date === ymd(now) ? ' (오늘)' : '') : '전체 업무 (마감일 구분 없이)';
+            if (state.who !== 'all') f.push('담당 ' + (state.who === 'me' ? staffName(me) : state.who === 'none' ? '미지정' : staffName(state.who)));
+            if (state.status !== 'all') f.push('상태 ' + STATUS.filter(function (x) { return x.v === state.status; })[0].t);
+            return { sub: sub, filters: f.join(', '), when: when };
+        }
+        function buildReportCanvas(list, meta) {
+            var F = REPORT_FONT, W = 1000, PAD = 36, MAXROWS = 120, today = ymd(new Date());
+            var shown = list.slice(0, MAXROWS), extra = list.length - shown.length;
+            var cols = [{ w: 58 }, { w: 358 }, { w: 124 }, { w: 148 }, { w: 92 }, { w: 148 }], xs = [], cx = PAD;   // 칸 너비 합계 928
+            cols.forEach(function (c) { xs.push(cx); cx += c.w; });
+            var probe = document.createElement('canvas').getContext('2d'), seq = 0;
+            var rows = shown.map(function (t) {
+                probe.font = '700 21px ' + F;
+                var lines = wrapLines(probe, t.title, cols[1].w - 22, 3), memo = '';
+                if (t.memo) { probe.font = '500 16px ' + F; memo = wrapLines(probe, t.memo.split('\n')[0], cols[1].w - 22, 1)[0] || ''; }
+                return { t: t, n: t.status === 'done' ? '' : String(++seq), lines: lines, memo: memo, h: Math.max(58, 20 + lines.length * 28 + (memo ? 24 : 0)) };
+            });
+            var headH = meta.filters ? 140 : 124, sumH = 70, thH = 46, rowsH = rows.reduce(function (a, r) { return a + r.h; }, 0), footH = extra ? 100 : 66, H = headH + sumH + thH + rowsH + footH;
+            var scale = 2; while (W * scale * H * scale > 14000000 && scale > 1) scale -= 0.25;
+            var c = document.createElement('canvas'); c.width = Math.round(W * scale); c.height = Math.round(H * scale);
+            var g = c.getContext('2d'); g.scale(scale, scale); g.textBaseline = 'alphabetic';
+            g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, W, H);
+
+            // 머리말
+            g.fillStyle = '#2D3214'; g.fillRect(0, 0, W, headH);
+            g.textAlign = 'left'; g.fillStyle = '#FFD700'; g.font = '800 36px ' + F; g.fillText('업무 마감보고', PAD, 60);
+            g.fillStyle = '#E6EBD3'; g.font = '600 22px ' + F; g.fillText(meta.sub, PAD, 98);
+            if (meta.filters) { g.fillStyle = '#B9C29F'; g.font = '500 17px ' + F; g.fillText(meta.filters, PAD, 124); }
+            g.textAlign = 'right'; g.fillStyle = '#FFD700'; g.font = '800 21px ' + F; g.fillText('사거리인터넷', W - PAD, 60); g.textAlign = 'left';
+
+            // 요약 (완료 / 진행 / 마감 지남)
+            var doneN = list.filter(function (t) { return t.status === 'done'; }).length, openN = list.length - doneN;
+            var lateN = list.filter(function (t) { return t.status !== 'done' && t.due && t.due < today; }).length, px = PAD;
+            function pill(text, bg, fg) { g.font = '700 19px ' + F; var w = g.measureText(text).width + 30; rrect(g, px, headH + 18, w, 38, 19, bg); g.fillStyle = fg; g.fillText(text, px + 15, headH + 44); px += w + 10; }
+            pill('진행 ' + openN + '건', '#FFF3BF', '#7A5B00'); pill('완료 ' + doneN + '건', '#DDF0DD', '#1F6B2A'); if (lateN) pill('마감 지남 ' + lateN + '건', '#FDECEA', '#A33226');
+
+            // 표 머리
+            var top = headH + sumH, y = top;
+            g.fillStyle = '#F1F4E6'; g.fillRect(PAD, y, 928, thH);
+            g.fillStyle = '#5F6A4F'; g.font = '700 16px ' + F;
+            ['번호', '업무', '담당', '마감', '우선순위', '상태'].forEach(function (name, i) {
+                if (i === 0) { g.textAlign = 'center'; g.fillText(name, xs[0] + cols[0].w / 2, y + 30); g.textAlign = 'left'; } else g.fillText(name, xs[i] + (i === 1 ? 12 : 4), y + 30);
+            });
+            y += thH;
+
+            // 업무 줄
+            rows.forEach(function (r) {
+                var t = r.t, done = t.status === 'done', ink = done ? '#8A937A' : '#1E2310', i, due = dueInfo(t);
+                g.fillStyle = '#E3E8D4'; g.fillRect(PAD, y + r.h - 1, 928, 1);
+                if (t.priority === 'high') { g.fillStyle = '#E64A19'; g.fillRect(PAD, y, 5, r.h - 1); }
+                if (r.n) { g.textAlign = 'center'; g.fillStyle = '#3E441E'; g.font = '800 22px ' + F; g.fillText(r.n, xs[0] + cols[0].w / 2, y + 36); g.textAlign = 'left'; }
+                g.font = '700 21px ' + F; g.fillStyle = ink;
+                for (i = 0; i < r.lines.length; i++) {
+                    var by = y + 34 + i * 28; g.fillText(r.lines[i], xs[1] + 12, by);
+                    if (done) g.fillRect(xs[1] + 12, by - 7, g.measureText(r.lines[i]).width, 2);
+                }
+                if (r.memo) { g.font = '500 16px ' + F; g.fillStyle = '#7B8568'; g.fillText(r.memo, xs[1] + 12, y + 34 + (r.lines.length - 1) * 28 + 24); }
+                g.beginPath(); g.arc(xs[2] + 10, y + 30, 6, 0, Math.PI * 2); g.closePath(); g.fillStyle = staffColor(t.staffId); g.fill();
+                g.font = '600 17px ' + F; g.fillStyle = '#4A5240'; g.fillText(fitText(g, staffName(t.staffId), cols[2].w - 30), xs[2] + 24, y + 36);
+                g.font = '700 17px ' + F; g.fillStyle = due.color; g.fillText(fitText(g, due.text, cols[3].w - 8), xs[3] + 4, y + 36);
+                var pri = t.priority === 'high' ? ['높음', '#E64A19'] : t.priority === 'low' ? ['낮음', '#8A937A'] : ['보통', '#1E2310'];
+                g.fillStyle = pri[1]; g.fillText(pri[0], xs[4] + 4, y + 36);
+                var st = t.status === 'done' ? ['완료', '#DDF0DD', '#1F6B2A'] : t.status === 'doing' ? ['진행 중', '#FFF3BF', '#7A5B00'] : ['할 일', '#F1F4E6', '#4A5240'];
+                g.font = '700 17px ' + F; var sw = g.measureText(st[0]).width + 26; rrect(g, xs[5], y + 14, sw, 30, 15, st[1]); g.fillStyle = st[2]; g.fillText(st[0], xs[5] + 13, y + 36);
+                y += r.h;
+            });
+            g.strokeStyle = '#D5DBC3'; g.lineWidth = 1; g.strokeRect(PAD + 0.5, top + 0.5, 927, y - top - 1);
+
+            // 맺음
+            if (extra) { g.fillStyle = '#C0392B'; g.font = '700 17px ' + F; g.fillText('외 ' + extra + '건은 이미지에서 줄였어요. 날짜·담당자 조건을 좁혀서 다시 만들어 주세요.', PAD, y + 36); }
+            g.fillStyle = '#8A937A'; g.font = '500 15px ' + F; g.fillText('작성 ' + meta.when, PAD, y + (extra ? 72 : 40));
+            g.textAlign = 'right'; g.fillText('사거리인터넷 ADMIN', W - PAD, y + (extra ? 72 : 40)); g.textAlign = 'left';
+            return c;
+        }
+        function downloadBlob(name, blob) {
+            var url = URL.createObjectURL(blob), a = h('a', { href: url, download: name });
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+        }
+        function showReportPreview(canvas) {   // 자동 복사가 안 되는 기기: 이미지를 보여주고 직접 복사·저장하게 안내
+            var dlg = document.getElementById('dlg'); dlg.textContent = '';
+            var img = h('img', { class: 'report-img', alt: '마감보고 이미지', src: canvas.toDataURL('image/png') });
+            var save = h('button', { type: 'button', class: 'btn btn-primary', onclick: function () {
+                canvas.toBlob(function (b) { if (b) downloadBlob('사거리인터넷-업무마감보고-' + ymd(new Date()) + '.png', b); }, 'image/png');
+            } }, '이미지 저장');
+            var form = h('form', { novalidate: true },
+                h('div', { class: 'dlg-head' }, '마감보고 이미지'),
+                h('div', { class: 'dlg-body' },
+                    h('p', {}, '이 기기에서는 자동으로 복사되지 않았어요. 아래 이미지를 길게 눌러(PC는 마우스 오른쪽 버튼) "이미지 복사"를 한 뒤 카카오톡·텔레그램에 붙여넣거나, [이미지 저장]으로 저장해서 첨부해 보내세요.'),
+                    img),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), save));
+            form.addEventListener('submit', function (e) { e.preventDefault(); });
+            dlg.appendChild(form); showDlg(dlg);
+        }
+        function captureReport(list) {
+            if (!list.length) { toast('보고할 업무가 없어요. 날짜나 담당자 조건을 확인해 주세요.'); return; }
+            var canvas;
+            try { canvas = buildReportCanvas(list, reportMeta()); } catch (e) { toast('마감보고 이미지를 만들지 못했어요.'); return; }
+            var blobP = new Promise(function (res, rej) { canvas.toBlob(function (b) { if (b) res(b); else rej(new Error('blob')); }, 'image/png'); });
+            function write(value) {
+                try { return navigator.clipboard.write([new ClipboardItem({ 'image/png': value })]); } catch (e) { return Promise.reject(e); }
+            }
+            var done;
+            if (!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem)) done = Promise.reject(new Error('unsupported'));
+            else done = write(blobP).catch(function (e) {
+                if (e && e.name === 'TypeError') return blobP.then(write);   // 이미지 준비를 기다렸다 쓰는 방식만 지원하는 브라우저는 완성된 이미지로 다시 시도
+                throw e;
+            });
+            done.then(function () {
+                toast('마감보고 이미지를 복사했어요. 카카오톡·텔레그램 대화창에서 붙여넣기(Ctrl+V, 휴대폰은 입력창 길게 누르기)하면 바로 보고돼요.');
+            }, function () { showReportPreview(canvas); });
         }
 
         /* ---------- 공유 저장소 (구글 드라이브) ---------- */
