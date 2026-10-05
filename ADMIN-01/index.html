@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-K+k6cjoex8ocFjXH0yuUtrmSJ+EIKySeoahZH0KJLL4='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mXW9s++cJVNQiUqk/wJOC94KdgbLm9JlAkMvnfaNaLU='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -280,8 +280,10 @@
         .mf-sheet .mf-in.amt { flex: 0 1 130px; min-width: 90px; }
         .mf-sheet .mf-in.telw { flex: 0 1 150px; min-width: 128px; }
         .mf-sheet .mf-area.memo { min-height: 170px; line-height: 1.5; }
-        .mf-appname { display: flex; align-items: center; gap: 6px; flex: 1 1 120px; min-width: 0; }
-        @media (max-width: 700px) { .mf-sheet .mf-in.mid, .mf-sheet .mf-in.amt { flex: 1 1 90px; min-width: 0; } }
+        .mf-appname { display: flex; align-items: center; gap: 6px; flex: 1 1 80px; min-width: 0; }
+        .mf-snap { width: 960px !important; max-width: none !important; border-radius: 0 !important; }   /* 복사보고 이미지: 항상 PC 배치 */
+        .mf-snap .mf-sign small { display: none; }
+        @media (max-width: 700px) { .mf-sheet:not(.mf-snap) .mf-in.mid, .mf-sheet:not(.mf-snap) .mf-in.amt { flex: 1 1 90px; min-width: 0; } }
         .mf-sheet .mf-in:focus { outline: none; background: #FFF6CC; border-bottom-color: var(--olive-700); }
         .mf-sheet .mf-area { flex-basis: 100%; min-height: 70px; border: 1px solid #D6D0BC; border-radius: 6px; background: rgba(255,255,255,.7); resize: vertical; }
         .mf-ck { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; padding: 4px 2px; font-weight: 600; }
@@ -291,19 +293,27 @@
         .mf-terms { margin: 10px 0 0; padding: 10px 12px 10px 32px; border: 1px solid var(--mf-line); font-size: 13px; line-height: 1.6; }
         .mf-terms li.big { font-size: 15px; font-weight: 600; }
         .mf-fine { padding: 8px 10px; font-size: 11.5px; color: #666; line-height: 1.5; border-bottom: 1px solid #E1E2E4; }
-        .mf-sign { flex: 0 0 auto; width: 170px; height: 66px; border: 1.5px dashed #B9A86A; border-radius: 6px; background: var(--mf-beige); display: grid; place-items: center; align-content: center; color: #9C8F66; font-size: 14px; padding: 2px; line-height: 1.25; }
+        .mf-sign { flex: 0 0 auto; width: 150px; height: 56px; border: 1.5px dashed #B9A86A; border-radius: 6px; background: var(--mf-beige); display: grid; place-items: center; align-content: center; color: #9C8F66; font-size: 14px; padding: 2px; line-height: 1.25; }
         .mf-sign small { font-size: 11.5px; color: #B0A27A; }
         .mf-sign.signed { border-style: solid; background: #fff; }
-        .mf-sign img { max-width: 100%; max-height: 60px; display: block; }
-        .mf-agree { border: 1px solid var(--mf-line); border-top: none; padding: 10px 12px; font-size: 13.5px; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
-        .mf-agree .mf-in { flex: 0 1 130px; }
-        .mf-foot { display: grid; grid-template-columns: 224px minmax(0, 1fr) minmax(0, 1.1fr); border: 1px solid var(--mf-line); border-top: none; }
-        .mf-date { display: flex; align-items: center; gap: 4px; padding: 10px; border-right: 1px solid #E1E2E4; }
-        .mf-date .mf-in { flex: 0 0 auto; width: 44px; min-width: 0; text-align: center; padding: 6px 2px; }
-        .mf-date .mf-in[data-mf="y"] { width: 60px; }
-        .mf-shopinfo { display: grid; gap: 4px; padding: 8px 10px; border-right: 1px solid #E1E2E4; align-content: center; }
-        .mf-shopinfo > div { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .mf-applicant { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; flex-wrap: wrap; }
+        .mf-sign img { max-width: 100%; max-height: 50px; display: block; }
+        .mf-gline { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 7px 10px; }   /* 법정대리인 정보: 한 줄 */
+        .mf-gi { display: flex; align-items: center; gap: 6px; }
+        .mf-sheet .mf-gi .mf-in { flex: 0 0 auto; min-width: 0; }
+        .mf-sheet .mf-gi .mf-in[data-mf="gRel"] { width: 56px; } .mf-sheet .mf-gi .mf-in[data-mf="gBirth"] { width: 86px; }
+        .mf-sheet .mf-gi .mf-in[data-mf="gPhone"] { width: 128px; } .mf-sheet .mf-gi .mf-in[data-mf="gName"] { width: 86px; }
+        .mf-agree { border: 1px solid var(--mf-line); border-top: none; padding: 8px 10px; font-size: 13.5px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 14px; }
+        .mf-agree-in { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .mf-sheet .mf-agree .mf-in { flex: 0 0 auto; width: 120px; min-width: 0; }
+        .mf-foot { display: grid; grid-template-columns: 236px minmax(0, 0.75fr) minmax(0, 1.25fr); border: 1px solid var(--mf-line); border-top: none; }
+        .mf-foot > div { min-height: 76px; }
+        .mf-date { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 10px; border-right: 1px solid #E1E2E4; }
+        .mf-sheet .mf-date .mf-in { flex: 0 0 auto; width: 40px; min-width: 0; text-align: center; padding: 6px 2px; }
+        .mf-sheet .mf-date .mf-in[data-mf="y"] { width: 56px; }
+        .mf-shopinfo { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; align-content: center; gap: 2px 10px; padding: 6px 10px; border-right: 1px solid #E1E2E4; }
+        .mf-shopinfo b { padding: 6px 4px; font-size: 15px; }
+        .mf-sheet .mf-shopinfo .mf-in { width: 100%; min-width: 0; }
+        .mf-applicant { display: flex; align-items: center; gap: 8px 10px; padding: 8px 10px; flex-wrap: nowrap; }
         .mf-applab { background: var(--mf-green); color: #fff; padding: 8px 12px; border-radius: 4px; display: grid; text-align: center; font-size: 13.5px; }
         .mf-applab span { font-size: 12px; opacity: .85; }
         .mf-copy { margin-top: 10px; font-size: 11.5px; color: #999; text-align: center; }
@@ -316,16 +326,19 @@
         .sig-pad { position: relative; border: 2px dashed #B9A86A; border-radius: 10px; background: #FFFDF5; overflow: hidden; }
         .sig-cv { display: block; width: 100%; height: min(300px, 42vh); touch-action: none; cursor: crosshair; position: relative; z-index: 1; }
         .sig-x { position: absolute; left: 16px; bottom: 10px; color: #DCD2B0; font-weight: 800; font-size: 22px; pointer-events: none; }
-        @media (max-width: 700px) {
-            .mf-sheet { padding: 16px 12px 12px; border-radius: 10px; }
-            .mf-title b { font-size: 30px; letter-spacing: 3px; } .mf-title span { font-size: 16px; }
-            .mf-top-r { justify-items: start; }
-            .mf-sec, .mf-grp { grid-template-columns: minmax(0, 1fr); }
-            .mf-lab { justify-content: flex-start; padding: 7px 10px; }
-            .mf-sub { justify-content: flex-start; padding: 5px 10px; }
-            .mf-cell, .mf-cell.tight { flex-basis: 100%; }
-            .mf-foot { grid-template-columns: minmax(0, 1fr); }
-            .mf-date, .mf-shopinfo { border-right: none; border-bottom: 1px solid #E1E2E4; }
+        @media (max-width: 700px) {   /* .mf-snap(복사보고 이미지)은 PC 배치 그대로 */
+            .mf-sheet:not(.mf-snap) { padding: 16px 12px 12px; border-radius: 10px; }
+            .mf-sheet:not(.mf-snap) .mf-title b { font-size: 30px; letter-spacing: 3px; } .mf-sheet:not(.mf-snap) .mf-title span { font-size: 16px; }
+            .mf-sheet:not(.mf-snap) .mf-top-r { justify-items: start; }
+            .mf-sheet:not(.mf-snap) .mf-sec, .mf-sheet:not(.mf-snap) .mf-grp { grid-template-columns: minmax(0, 1fr); }
+            .mf-sheet:not(.mf-snap) .mf-lab { justify-content: flex-start; padding: 7px 10px; }
+            .mf-sheet:not(.mf-snap) .mf-sub { justify-content: flex-start; padding: 5px 10px; }
+            .mf-sheet:not(.mf-snap) .mf-cell, .mf-sheet:not(.mf-snap) .mf-cell.tight { flex-basis: 100%; }
+            .mf-sheet:not(.mf-snap) .mf-foot, .mf-sheet:not(.mf-snap) .mf-agree { grid-template-columns: minmax(0, 1fr); }
+            .mf-sheet:not(.mf-snap) .mf-foot > div { min-height: 0; }
+            .mf-sheet:not(.mf-snap) .mf-date { justify-content: flex-start; }
+            .mf-sheet:not(.mf-snap) .mf-applicant { flex-wrap: wrap; }
+            .mf-sheet:not(.mf-snap) .mf-date, .mf-sheet:not(.mf-snap) .mf-shopinfo { border-right: none; border-bottom: 1px solid #E1E2E4; }
             .mf-tools .actions, .mf-tools .actions .btn { width: 100%; }
         }
         @media print {   /* 가입 확인서 화면에서 인쇄하면 양식만 A4로 */
@@ -346,7 +359,8 @@
             .mf-terms { margin-top: 6px; padding: 5px 10px 5px 28px; font-size: 12px; line-height: 1.45; }
             .mf-fine { padding: 4px 8px; font-size: 10.5px; line-height: 1.35; }
             .mf-agree { padding: 6px 10px; }
-            .mf-sign { height: 54px; border: 1px solid #CCC; background: #fff; } .mf-sign img { max-height: 48px; }
+            .mf-sign { height: 52px; border: 1px solid #CCC; background: #fff; } .mf-sign img { max-height: 46px; }
+            .mf-foot > div { min-height: 64px; }
             .mf-copy { margin-top: 6px; }
             .mf-sec, .mf-terms, .mf-foot, .mf-agree { break-inside: avoid; }
         }
@@ -445,7 +459,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-05.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-05.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1273,14 +1287,16 @@
             document.body.appendChild(a); a.click(); a.remove();
             setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
         }
-        function showReportPreview(canvas) {   // 자동 복사가 안 되는 기기: 이미지를 보여주고 직접 복사·저장하게 안내
+        function showReportPreview(canvas, o) {   // 자동 복사가 안 되는 기기: 이미지를 보여주고 직접 복사·저장하게 안내
+            o = o || {};
+            var title = o.title || '마감보고 이미지', file = o.file || ('사거리인터넷-업무마감보고-' + ymd(new Date()) + '.png');
             var dlg = document.getElementById('dlg'); dlg.textContent = '';
-            var img = h('img', { class: 'report-img', alt: '마감보고 이미지', src: canvas.toDataURL('image/png') });
+            var img = h('img', { class: 'report-img', alt: title, src: canvas.toDataURL('image/png') });
             var save = h('button', { type: 'button', class: 'btn btn-primary', onclick: function () {
-                canvas.toBlob(function (b) { if (b) downloadBlob('사거리인터넷-업무마감보고-' + ymd(new Date()) + '.png', b); }, 'image/png');
+                canvas.toBlob(function (b) { if (b) downloadBlob(file, b); }, 'image/png');
             } }, '이미지 저장');
             var form = h('form', { novalidate: true },
-                h('div', { class: 'dlg-head' }, '마감보고 이미지'),
+                h('div', { class: 'dlg-head' }, title),
                 h('div', { class: 'dlg-body' },
                     h('p', {}, '이 기기에서는 자동으로 복사되지 않았어요. 아래 이미지를 길게 눌러(PC는 마우스 오른쪽 버튼) "이미지 복사"를 한 뒤 카카오톡·텔레그램에 붙여넣거나, [이미지 저장]으로 저장해서 첨부해 보내세요.'),
                     img),
@@ -2445,16 +2461,21 @@
                         h('p', {}, '1. 위 내용을 모두 확인했고, 위 신청서에 작성한 내용의 서비스 업무 처리 하는 것에 동의합니다.'),
                         h('p', {}, '2. 사거리핸드폰 제공 서비스(모바일 및 홈서비스)를 해지한 후 요금 완납 후 6개월 이내까지(단, 법령에 별도 규정이 있을 경우 그 시점까지) 법정대리인 확인 및 동의 여부 확인, 위 신청서에 작성한 내용의 서비스 업무 처리, 분쟁 해결 업무 처리 목적으로 아래 개인정보를 사거리핸드폰이 수집하고 이용하는 것에 동의합니다.'),
                         h('p', {}, '※수집항목 : 성명, 관계, 생년월일, 휴대폰 번호, 주소')),
-                    row(cell(k('관계'), inp('gRel', '법정대리인 관계')), cell(k('생년월일'), inp('gBirth', '법정대리인 생년월일', BIRTH)), cell(k('휴대폰 번호'), inp('gPhone', '법정대리인 휴대폰 번호', TEL))),
-                    row(cell(k('*성명', true), inp('gName', '법정대리인 성명')), tcell(k('서명 / 인'), sign('guard', '법정대리인')))),
+                    row(h('div', { class: 'mf-gline' },
+                        h('div', { class: 'mf-gi' }, k('관계'), inp('gRel', '법정대리인 관계', { max: 10 })),
+                        h('div', { class: 'mf-gi' }, k('생년월일'), inp('gBirth', '법정대리인 생년월일', BIRTH)),
+                        h('div', { class: 'mf-gi' }, k('휴대폰 번호'), inp('gPhone', '법정대리인 휴대폰 번호', TEL)),
+                        h('div', { class: 'mf-gi' }, k('*성명', true), inp('gName', '법정대리인 성명', { max: 20 })),
+                        h('div', { class: 'mf-gi' }, sign('guard', '법정대리인'))))),
 
-                h('div', { class: 'mf-agree' }, '본인은 가입신청서 및 약관의 주요 내용에 대해 충분히 설명을 들었고, 그 내용을 이해했습니다. 따라서 위와 같은 내용으로 계약하는 것에 대해 (',
-                    inp('agree', '동의 문구', { ph: '동의합니다.', max: 20 }), ')'),
+                h('div', { class: 'mf-agree' }, h('span', {}, '본인은 가입신청서 및 약관의 주요 내용에 대해 충분히 설명을 들었고, 그 내용을 이해했습니다. 따라서 위와 같은 내용으로 계약하는 것에 대해'),
+                    h('span', { class: 'mf-agree-in' }, '(', inp('agree', '동의 문구', { ph: '동의합니다.', max: 20 }), ')')),
                 h('div', { class: 'mf-foot' },
                     h('div', { class: 'mf-date' }, inp('y', '작성 연도', { mode: 'numeric', max: 4 }), k('년'), inp('m', '작성 월', { mode: 'numeric', max: 2 }), k('월'), inp('d', '작성 일', { mode: 'numeric', max: 2 }), k('일')),
                     h('div', { class: 'mf-shopinfo' },
-                        h('div', {}, k('판매점명'), h('b', {}, '사거리핸드폰'), k('연락처'), inp('shopPhone', '연락처 (로그인한 판매자 번호)', { mode: 'tel', kind: 'tel', max: 13, cls: 'telw' })),
-                        h('div', {}, k('판매자'), inp('seller', '판매자'))),
+                        k('판매점명'), h('b', {}, '사거리핸드폰'),
+                        k('연락처'), inp('shopPhone', '연락처 (로그인한 판매자 번호)', TEL),
+                        k('판매자'), inp('seller', '판매자')),
                     h('div', { class: 'mf-applicant' }, h('div', { class: 'mf-applab' }, h('b', {}, '*신청인/가입자'), h('span', {}, '(대리인)')),
                         h('div', { class: 'mf-appname' }, k('성함'), inp('appName', '신청인/가입자 성함', { max: 20 })), sign('apply', '신청인/가입자'))),
                 h('p', { class: 'mf-copy' }, '본 신청서는 사거리핸드폰 업무용으로 제작된 것으로 사거리핸드폰의 사전 허락 없이 사용하거나 임의로 수정할 수 없습니다.'));
@@ -2503,12 +2524,16 @@
             });
 
             var tools = h('div', { class: 'mf-tools' },
-                h('p', { class: 'mf-tip' }, '작성한 내용은 저장되지 않아요. 다 쓰면 [인쇄 / PDF 저장]으로 보관해 주세요. 잠그거나 새로고침하면 지워져요.'),
+                h('p', { class: 'mf-tip' }, '작성한 내용은 저장되지 않아요. 다 쓰면 [복사보고]로 카카오톡·텔레그램에 붙여넣거나 [인쇄 / PDF 저장]으로 보관해 주세요. 잠그거나 새로고침하면 지워져요.'),
                 h('div', { class: 'actions' },
                     h('button', { type: 'button', class: 'btn', 'data-act': 'mf-new', onclick: function () {
                         if (!confirm('작성한 내용과 서명을 모두 지우고 새로 작성할까요?')) return;
                         mform = null; render(); window.scrollTo(0, 0); toast('새 가입 확인서를 열었어요.');
                     } }, '새로 작성'),
+                    h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'mf-copy', onclick: function () {
+                        if (!M.sig.apply && !confirm('신청인/가입자 서명이 아직 없어요. 그래도 복사할까요?')) return;
+                        mfCopyReport(sheet);
+                    } }, '복사보고'),
                     h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-print', onclick: function () {
                         if (!M.sig.apply && !confirm('신청인/가입자 서명이 아직 없어요. 그래도 인쇄할까요?')) return;
                         window.print();
@@ -2527,6 +2552,115 @@
                 var el = root.querySelector('[data-mf="' + n + '"]'); if (!el) return;
                 if (first || el.value === (el.getAttribute('data-auto') || '')) { el.value = v[n]; el.setAttribute('data-auto', v[n]); }
             });
+        }
+
+        /* ---------- 복사보고: 작성한 가입 확인서를 그림으로 복사 (카카오톡·텔레그램에 붙여넣기) ---------- */
+        function mfSnapshot(sheet) {   // 화면에 보이는 양식을 그대로 그림으로 (휴대폰에서도 PC 배치로)
+            var ae = document.activeElement, sy = window.scrollY; if (ae && sheet.contains(ae) && ae.blur) ae.blur();
+            sheet.classList.add('mf-snap');
+            try {
+                var base = sheet.getBoundingClientRect(), W = Math.ceil(base.width), H = Math.ceil(base.height), S = 2;
+                var cv = document.createElement('canvas'); cv.width = W * S; cv.height = H * S;
+                var c = cv.getContext('2d'); c.scale(S, S); c.fillStyle = '#fff'; c.fillRect(0, 0, W, H);
+                var rg = document.createRange();
+                var R = function (el) { var r = el.getBoundingClientRect(); return { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height }; };
+                var fontOf = function (cs) { return cs.fontStyle + ' ' + cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily; };
+                var clear = function (col) { return !col || col === 'transparent' || /rgba\([^)]*,\s*0\)$/.test(col); };
+                var path = function (r, rad) { c.beginPath(); if (rad && c.roundRect) c.roundRect(r.x, r.y, r.w, r.h, Math.min(rad, r.w / 2, r.h / 2)); else c.rect(r.x, r.y, r.w, r.h); };
+                var dash = function (st, w) { return st === 'dashed' ? [w * 3, w * 2] : st === 'dotted' ? [w, w] : []; };
+                var line = function (x1, y1, x2, y2, w, st, col) {
+                    if (!w || st === 'none' || st === 'hidden' || clear(col)) return;
+                    c.save(); c.strokeStyle = col; c.lineWidth = w; c.setLineDash(dash(st, w)); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); c.restore();
+                };
+                var paintBox = function (cs, r) {
+                    var rad = parseFloat(cs.borderTopLeftRadius) || 0;
+                    if (!clear(cs.backgroundColor)) { c.fillStyle = cs.backgroundColor; path(r, rad); c.fill(); }
+                    var t = parseFloat(cs.borderTopWidth) || 0, rt = parseFloat(cs.borderRightWidth) || 0, b = parseFloat(cs.borderBottomWidth) || 0, l = parseFloat(cs.borderLeftWidth) || 0;
+                    if (rad && t && t === rt && t === b && t === l && cs.borderTopStyle !== 'none' && !clear(cs.borderTopColor)) {
+                        c.save(); c.strokeStyle = cs.borderTopColor; c.lineWidth = t; c.setLineDash(dash(cs.borderTopStyle, t)); path({ x: r.x + t / 2, y: r.y + t / 2, w: r.w - t, h: r.h - t }, rad); c.stroke(); c.restore();
+                        return;
+                    }
+                    line(r.x, r.y + t / 2, r.x + r.w, r.y + t / 2, t, cs.borderTopStyle, cs.borderTopColor);
+                    line(r.x + r.w - rt / 2, r.y, r.x + r.w - rt / 2, r.y + r.h, rt, cs.borderRightStyle, cs.borderRightColor);
+                    line(r.x, r.y + r.h - b / 2, r.x + r.w, r.y + r.h - b / 2, b, cs.borderBottomStyle, cs.borderBottomColor);
+                    line(r.x + l / 2, r.y, r.x + l / 2, r.y + r.h, l, cs.borderLeftStyle, cs.borderLeftColor);
+                };
+                var paintText = function (node, cs) {   // 글자를 하나씩 화면 위치 그대로
+                    var s = node.nodeValue || '', i, ch, n, q;
+                    c.font = fontOf(cs); c.fillStyle = cs.color; c.textBaseline = 'middle'; c.textAlign = 'left';
+                    for (i = 0; i < s.length; i += n) {
+                        ch = s.charAt(i); n = 1;
+                        if (/[\uD800-\uDBFF]/.test(ch) && i + 1 < s.length) { ch = s.substr(i, 2); n = 2; }
+                        if (/\s/.test(ch)) continue;
+                        rg.setStart(node, i); rg.setEnd(node, i + n); q = rg.getBoundingClientRect();
+                        if (q.width || q.height) c.fillText(ch, q.left - base.left, q.top - base.top + q.height / 2);
+                    }
+                };
+                var wrap = function (text, maxW) {
+                    var out = [];
+                    text.split('\n').forEach(function (para) {
+                        var ln = '', i, t;
+                        for (i = 0; i < para.length; i++) { t = ln + para.charAt(i); if (ln && c.measureText(t).width > maxW) { out.push(ln); ln = para.charAt(i); } else ln = t; }
+                        out.push(ln);
+                    });
+                    return out;
+                };
+                var paintValue = function (el, cs, r) {
+                    var v = el.value; if (!v) return;
+                    c.save(); c.beginPath(); c.rect(r.x, r.y, r.w, r.h); c.clip();
+                    c.font = fontOf(cs); c.fillStyle = cs.color; c.textBaseline = 'middle'; c.textAlign = 'left';
+                    var bl = parseFloat(cs.borderLeftWidth) || 0, br = parseFloat(cs.borderRightWidth) || 0, pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0;
+                    if (el.tagName === 'TEXTAREA') {
+                        var lh = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.5, y = r.y + (parseFloat(cs.borderTopWidth) || 0) + (parseFloat(cs.paddingTop) || 0) + lh / 2;
+                        wrap(v, r.w - bl - br - pl - pr).forEach(function (t) { c.fillText(t, r.x + bl + pl, y); y += lh; });
+                    } else {
+                        var tw = c.measureText(v).width, x = r.x + bl + pl;
+                        if (cs.textAlign === 'right' || cs.textAlign === 'end') x = r.x + r.w - br - pr - tw;
+                        else if (cs.textAlign === 'center') x = r.x + (r.w - tw) / 2;
+                        c.fillText(v, x, r.y + r.h / 2);
+                    }
+                    c.restore();
+                };
+                var paintCheck = function (el, r) {
+                    var z = Math.min(r.w, r.h), x = r.x + (r.w - z) / 2, y = r.y + (r.h - z) / 2;
+                    c.save(); c.lineWidth = 1.5; path({ x: x + 0.75, y: y + 0.75, w: z - 1.5, h: z - 1.5 }, 3);
+                    if (el.checked) {
+                        c.fillStyle = '#146B3A'; c.fill(); c.strokeStyle = '#146B3A'; c.stroke();
+                        c.strokeStyle = '#fff'; c.lineWidth = 2.2; c.lineCap = 'round'; c.lineJoin = 'round';
+                        c.beginPath(); c.moveTo(x + z * 0.24, y + z * 0.52); c.lineTo(x + z * 0.43, y + z * 0.71); c.lineTo(x + z * 0.77, y + z * 0.3); c.stroke();
+                    } else { c.fillStyle = '#fff'; c.fill(); c.strokeStyle = '#767676'; c.stroke(); }
+                    c.restore();
+                };
+                (function walk(el) {
+                    var cs = getComputedStyle(el);
+                    if (cs.display === 'none' || cs.visibility === 'hidden') return;
+                    var r = R(el), tag = el.tagName;
+                    paintBox(cs, r);
+                    if (tag === 'INPUT' && el.type === 'checkbox') { paintCheck(el, r); return; }
+                    if (tag === 'INPUT' || tag === 'TEXTAREA') { paintValue(el, cs, r); return; }
+                    if (tag === 'IMG') { if (el.complete && el.naturalWidth) c.drawImage(el, r.x, r.y, r.w, r.h); return; }
+                    if (tag === 'LI') {   // 번호(1. 2. …)
+                        c.font = fontOf(cs); c.fillStyle = cs.color; c.textBaseline = 'middle'; c.textAlign = 'right';
+                        c.fillText([].indexOf.call(el.parentNode.children, el) + 1 + '.', r.x - 6, r.y + (parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.5) / 2);
+                    }
+                    [].forEach.call(el.childNodes, function (n) { if (n.nodeType === 3) paintText(n, cs); else if (n.nodeType === 1) walk(n); });
+                })(sheet);
+                return cv;
+            } finally { sheet.classList.remove('mf-snap'); if (window.scrollY !== sy) window.scrollTo(0, sy); }
+        }
+        function mfCopyReport(sheet) {
+            var cv;
+            try { cv = mfSnapshot(sheet); } catch (e) { toast('가입 확인서 이미지를 만들지 못했어요.'); return; }
+            var nm = (sheet.querySelector('[data-mf="name"]') || {}).value || '';
+            var file = '사거리핸드폰-가입확인서-' + (nm ? nm.replace(/[\\/:*?"<>|\s]+/g, '') + '-' : '') + ymd(new Date()) + '.png';
+            var blobP = new Promise(function (res, rej) { cv.toBlob(function (b) { if (b) res(b); else rej(new Error('blob')); }, 'image/png'); });
+            var write = function (v) { try { return navigator.clipboard.write([new ClipboardItem({ 'image/png': v })]); } catch (e) { return Promise.reject(e); } };
+            var done;
+            if (!(navigator.clipboard && navigator.clipboard.write && window.ClipboardItem)) done = Promise.reject(new Error('unsupported'));
+            else done = write(blobP).catch(function (e) { if (e && e.name === 'TypeError') return blobP.then(write); throw e; });
+            done.then(function () {
+                toast('가입 확인서 이미지를 복사했어요. 카카오톡·텔레그램 대화창에서 붙여넣기(Ctrl+V, 휴대폰은 입력창 길게 누르기)하면 보고돼요.');
+            }, function () { showReportPreview(cv, { title: '가입 확인서 이미지', file: file }); });
         }
         function paintSig(M, key) {
             var b = M.box[key]; if (!b) return;
