@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KW6KKxy2xIx6qMYj5hv7c/6bpDKNB/xqUHfKOzTL7GQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-V8g3w/XYAmIQVbbaQ30R10c99PHkBLoYSyLj3Vc8vhk='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -129,6 +129,7 @@
         .form-card:hover { border-color: var(--olive-700); background: #FBFCF4; }
         .teamjson { margin-top: 14px; padding: 14px 16px; background: #FFF8DB; border: 1px solid #F0DC8A; border-radius: 10px; }
         .teamjson h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; } .teamjson p { font-size: 13.5px; margin: 0 0 8px; } .teamjson .code-box { min-height: 56px; }
+        .login-note.ver { font-size: 12px; color: var(--hint); margin-top: 10px; }
         .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
         .page-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
         .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -334,7 +335,8 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var teamUrl = '', teamCfgDone = false, legacyOpen = false, keysOffered = false;
+        var APP_VERSION = '2026-10-05.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
         var DRIVE_PUSH_DELAY_MS = 1500; // 내용을 바꾼 뒤 이 시간 뒤에 드라이브로 저장
@@ -668,7 +670,8 @@
                     setup ? h('p', { class: 'login-note warn' }, '비밀번호를 잊으면 저장된 내용을 되살릴 수 없어요. 안전한 곳에 적어 두세요.') : null,
                     setup ? h('p', { class: 'login-note' }, '여러 단어를 이어 붙인 문장 형태(14자 이상)로 만들수록 안전해요. 다른 사이트에서 쓰는 비밀번호는 피해 주세요.') : null,
                     legacy ? h('p', { class: 'login-note' }, '이전 버전에서 저장된 내용을 찾았어요. 새 비밀번호로 암호화해서 그대로 옮겨 드려요.') : null,
-                    h('p', { class: 'login-note' }, Math.round(IDLE_MS / 60000) + '분 동안 조작이 없으면 자동으로 잠겨요. 새로고침하거나 새 탭을 열면 다시 로그인해야 해요.'))));
+                    h('p', { class: 'login-note' }, Math.round(IDLE_MS / 60000) + '분 동안 조작이 없으면 자동으로 잠겨요. 새로고침하거나 새 탭을 열면 다시 로그인해야 해요.'),
+                    cfgNote())));
             pw.focus();
         }
 
@@ -1996,13 +1999,29 @@
 
         /* ---------- 아이디(이메일) 로그인: 어느 기기에서든 이메일 + 비밀번호만으로 ---------- */
         // 이 기기의 저장 내용은 같은 비밀번호로 암호화하고, 팀 키는 내 계정 보관함(서버)에서 비밀번호로 풀어 받아요.
+        function teamJsonPath() {   // 지금 보는 페이지와 같은 폴더의 team.json (주소 끝에 /가 없어도 폴더로 취급)
+            var p = location.pathname || '/';
+            if (/\/$/.test(p)) return p + 'team.json';
+            if (/\.[A-Za-z0-9]+$/.test(p.split('/').pop())) return p.replace(/[^\/]*$/, '') + 'team.json';
+            return p + '/team.json';
+        }
         function loadTeamConfig() {   // 운영: ADMIN-01/team.json 의 서버 주소를 읽음 (없으면 예전 방식)
-            var done = function (u) { teamUrl = u || ''; teamCfgDone = true; if (!authed) render(); };
+            var done = function (u, st) { teamUrl = u || ''; teamCfgState = st; teamCfgDone = true; if (!authed) render(); };
             try {
                 var ctl = new AbortController(), tm = setTimeout(function () { ctl.abort(); }, 4000);
-                fetch('team.json', { cache: 'no-store', credentials: 'omit', signal: ctl.signal }).then(function (r) { clearTimeout(tm); if (!r.ok) throw new Error('none'); return r.json(); })
-                    .then(function (j) { done(j && typeof j.url === 'string' && DRIVE_URL_RE.test(j.url) ? j.url : ''); }, function () { clearTimeout(tm); done(''); });
-            } catch (e) { done(''); }
+                fetch(teamJsonPath(), { cache: 'no-store', credentials: 'omit', signal: ctl.signal }).then(function (r) {
+                    clearTimeout(tm);
+                    if (!r.ok) throw new Error('none');
+                    return r.text().then(function (txt) {
+                        var j = null; try { j = JSON.parse(txt); } catch (e) { /* 아래에서 bad */ }
+                        if (j && typeof j.url === 'string' && DRIVE_URL_RE.test(j.url.trim())) done(j.url.trim(), 'ok'); else done('', 'bad');
+                    });
+                }).catch(function () { clearTimeout(tm); done('', 'none'); });
+            } catch (e) { done('', 'none'); }
+        }
+        function cfgNote() {   // 로그인 화면 맨 아래: 화면 버전 + 아이디 로그인이 켜졌는지(꺼졌다면 이유)
+            var why = { ok: '켜짐', none: '꺼짐 (ADMIN-01 폴더에서 team.json 파일을 찾지 못했어요)', bad: '꺼짐 (team.json 파일은 찾았지만 내용이 올바르지 않아요)', file: '꺼짐 (내 컴퓨터에서 직접 연 파일)' }[teamCfgState] || '꺼짐';
+            return h('p', { class: 'login-note ver', 'data-cfg': teamCfgState }, '화면 버전 ' + APP_VERSION + ' / 아이디 로그인: ' + (teamUrl && teamCfgState !== 'ok' ? '켜짐' : why));
         }
         function isNetErr(er) { return !!er && (!er.code || er.code === 'http'); }
         function offHint(er) {
@@ -2156,7 +2175,7 @@
             box.appendChild(tabs); box.appendChild(form);
             var an = inAppNote(); if (an) box.appendChild(an);
             box.appendChild(h('p', { class: 'login-note' }, '비밀번호는 서버로 그대로 나가지 않고, 이 기기의 내용은 이 비밀번호로 암호화돼요. ' + Math.round(IDLE_MS / 60000) + '분 동안 조작이 없으면 자동으로 잠겨요. 비밀번호를 잊었다면 관리자에게 계정을 지워 달라고 한 뒤 다시 가입해 주세요.'));
-            box.appendChild(legacyLink);
+            box.appendChild(legacyLink); box.appendChild(cfgNote());
             app.appendChild(h('div', { class: 'login' }, box));
             (email.value ? pw : email).focus();
         }
@@ -2354,8 +2373,8 @@
 
         /* ---------- 시작 ---------- */
         readInvite();
-        if (BUILD_TEAM_URL && DRIVE_URL_RE.test(BUILD_TEAM_URL)) { teamUrl = BUILD_TEAM_URL; teamCfgDone = true; }
-        else if (location.protocol === 'file:') teamCfgDone = true;   // 내 컴퓨터에서 직접 연 파일에서는 읽지 않음
+        if (BUILD_TEAM_URL && DRIVE_URL_RE.test(BUILD_TEAM_URL)) { teamUrl = BUILD_TEAM_URL; teamCfgDone = true; teamCfgState = 'ok'; }
+        else if (location.protocol === 'file:') { teamCfgDone = true; teamCfgState = 'file'; }   // 내 컴퓨터에서 직접 연 파일에서는 읽지 않음
         else loadTeamConfig();
         render();
         var bootMsg = document.getElementById('boot-msg'); if (bootMsg) bootMsg.remove();
