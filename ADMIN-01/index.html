@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mXW9s++cJVNQiUqk/wJOC94KdgbLm9JlAkMvnfaNaLU='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hEZY7eNOIL6pMT2L51JAK5uW8m+anf7uk+jzFbaU1Xk='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -279,6 +279,19 @@
         .mf-sheet .mf-in.mid { flex: 0 1 180px; min-width: 120px; }
         .mf-sheet .mf-in.amt { flex: 0 1 130px; min-width: 90px; }
         .mf-sheet .mf-in.telw { flex: 0 1 150px; min-width: 128px; }
+        .mf-cell.sm { flex: 1 1 150px; flex-wrap: nowrap; } .mf-cell.sm.ph { flex: 1.5 1 180px; }
+        .mf-sheet .mf-cell.sm .mf-in { flex: 1 1 40px; min-width: 0; }
+        .mf-sheet .mf-in.gift { flex: 0 0 56px; width: 56px; min-width: 0; text-align: center; }
+        .mf-typegap { width: 26px; flex: none; }   /* 유형 선택과 비구매 사이 띄움 */
+        .mf-chips { flex-basis: 100%; display: grid; gap: 5px; margin: 2px 0 2px; }   /* 눌러서 입력하는 버튼 */
+        .mf-chipline { display: flex; flex-wrap: wrap; gap: 5px; }
+        .mf-chip { min-width: 52px; padding: 5px 10px; border: 1px solid #C9CCBF; border-radius: 999px; background: #fff; color: #333; font-size: 13px; font-weight: 700; line-height: 1.2; }
+        .mf-chip:hover { border-color: var(--mf-green); }
+        .mf-chip.on { background: var(--mf-green); border-color: var(--mf-green); color: #fff; }
+        .mf-snap .mf-chips { display: none; }
+        .mf-sheet.wired { --mf-green: #E2252B; }   /* 유선 가입 확인서는 빨간색 */
+        .mf-sheet.wired .mf-info:not(.red) { color: #146B3A; }
+        .mf-fine.boxed { border: 1px solid var(--mf-line); border-top: none; }
         .mf-sheet .mf-area.memo { min-height: 170px; line-height: 1.5; }
         .mf-appname { display: flex; align-items: center; gap: 6px; flex: 1 1 80px; min-width: 0; }
         .mf-snap { width: 960px !important; max-width: none !important; border-radius: 0 !important; }   /* 복사보고 이미지: 항상 PC 배치 */
@@ -344,7 +357,7 @@
         @media print {   /* 가입 확인서 화면에서 인쇄하면 양식만 A4로 */
             @page { size: A4; margin: 8mm; }
             .sh-form { display: block; min-height: 0; }
-            .sh-form .rail, .sh-form .main > :not(.mf-page), .sh-form .mf-page > .page-head, .mf-tools, .toast, dialog, .mf-sign small { display: none !important; }
+            .sh-form .rail, .sh-form .main > :not(.mf-page), .sh-form .mf-page > .page-head, .mf-tools, .toast, dialog, .mf-sign small, .mf-chips { display: none !important; }
             body:has(.sh-form) { background: #fff; }
             .sh-form .main { padding: 0; max-width: none; display: block; }
             .mf-sheet { border: none; border-radius: 0; padding: 0; width: 1000px; max-width: none; margin: 0; zoom: .73; font-size: 13px; }   /* PC 화면 배치 그대로 A4 한 장에 */
@@ -459,7 +472,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-05.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-05.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -716,7 +729,7 @@
             if (db.account) { setTimeout(maybeOfferKeys, 800); setTimeout(refreshMyProf, 1200); }
         }
         function lock() {   // 잠그면 암호키와 데이터를 메모리에서도 지우고 화면을 비웁니다
-            authed = false; cryptoKey = null; db = null; me = ''; mform = null;   // 작성 중인 가입 확인서(고객 개인정보)도 지움
+            authed = false; cryptoKey = null; db = null; me = ''; mforms = {};   // 작성 중인 가입 확인서(고객 개인정보)도 지움
             uni = { mode: 'login', pending: null }; keysOffered = false;
             stopPoll(); stopGatePoll(); clearTimeout(pushTimer); teamCache = null; syncQueued = false; driveState = { status: 'idle', at: null, msg: '' }; acctUi = { list: null, err: '', loading: false, at: 0, enforced: null }; gateMode = 'login';
             state.view = 'today'; state.who = 'all'; state.status = 'all'; state.date = ''; state.open = Object.create(null);
@@ -1855,7 +1868,7 @@
             if (!db || !db.account || !db.account.session || !driveOn()) return;
             driveCall(db.drive.url, 'me', {}).then(function (res) {
                 if (!authed || !db || !db.account || !res || !res.account || res.account.email !== db.account.email) return;
-                withProf(db.account, res.account); saveDb(); if (mform) mfSeller(mform.el, false);
+                withProf(db.account, res.account); saveDb(); mfAll(function (F) { mfSeller(F.el, false); });
             }, function () { /* 조용히 무시 */ });
         }
         function setAccount(res, priv) {
@@ -2347,10 +2360,17 @@
         }
 
 
-        /* ---------- 모바일 가입 확인서: 이 화면에서 바로 작성하고, 고객이 터치로 서명 ---------- */
+        /* ---------- 가입 확인서(모바일·유선): 이 화면에서 바로 작성하고, 고객이 터치로 서명 ---------- */
         // 작성 내용은 어디에도 저장하지 않고 이 화면(메모리)에만 있어요. 잠그거나 새로고침하면 지워져요(고객 개인정보 보호).
-        var mform = null, mfMoving = false;   // mform: { el, sig: { guard, apply }, box: {} }
-        var MF_ONE = { type: 1, disc: 1, ins: 1, card: 1, comb: 1, used: 1 };   // 하나만 고르는 칸 (다른 칸을 누르면 앞의 체크가 풀림)
+        var mforms = {}, mfMoving = false;   // mforms.mobile / mforms.wired: { kind, el, sheet, sig: { guard, apply }, box: {} }
+        var MF_ONE = { type: 1, disc: 1, ins: 1, card: 1, comb: 1, used: 1, add: 1 };   // 하나만 고르는 칸 (다른 칸을 누르면 앞의 체크가 풀림)
+        var MF_LINK = {   // '가입자와 동일' 체크: [가입자 정보 칸, 따라 채울 칸]
+            cardSame: [['name', 'cardOwner'], ['birth', 'cardBirth'], ['phone', 'cardPhone']],
+            paySame: [['name', 'payOwner'], ['birth', 'payBirth']]
+        };
+        var MF_KEEP = { dSel: '3', dSub: '6' };   // 모바일: 선택약정 3개월, 공시지원금 6개월 (직접 고칠 수 있음)
+        var MF_PRE = [['선불 U+', '선불 SK', '선불 KT'], ['후불 U+', '후불 SK', '후불 KT']];
+        var MF_GIFT = ['giftV', 'giftH', 'giftA'];   // 유선: 상품권 + 본사 + 추가지원금 = 총
         function mfMoney(v) {   // 금액: 숫자만 적었으면 1,234 처럼 쉼표
             var t = String(v || '').trim();
             if (!/^[\d,\s]+(원)?$/.test(t)) return t;
@@ -2367,49 +2387,99 @@
             if (d.length === 10) return d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6);
             return t;
         }
-        function buildMobileForm() {
-            var M = { el: null, sig: { guard: '', apply: '' }, box: {} };
-            var MONEY = { mode: 'numeric', kind: 'money', max: 15 }, BIRTH = { mode: 'numeric', ph: '예) 900101', max: 10 }, TEL = { mode: 'tel', kind: 'tel', max: 13 };
-            function inp(name, label, o) {
+        function mfAll(fn) { Object.keys(mforms).forEach(function (k) { if (mforms[k]) fn(mforms[k]); }); }
+        function mfKit(M) {   // 양식을 만드는 도구 (모바일·유선 공통)
+            var K = {};
+            K.MONEY = { mode: 'numeric', kind: 'money', max: 15 }; K.BIRTH = { mode: 'numeric', ph: '예) 900101', max: 10 }; K.TEL = { mode: 'tel', kind: 'tel', max: 13 };
+            var kids = function (a, from) { return [].slice.call(a, from || 0); };
+            K.inp = function (name, label, o) {
                 o = o || {};
                 return h('input', { type: 'text', class: 'mf-in' + (o.cls ? ' ' + o.cls : ''), name: name, 'data-mf': name, 'data-kind': o.kind || false, 'aria-label': label, autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'next', maxlength: o.max || 60, inputmode: o.mode || false, placeholder: o.ph || false });
-            }
-            function chk(name, text, grp) { return h('label', { class: 'mf-ck' }, h('input', { type: 'checkbox', name: name, 'data-mf': name, 'data-grp': grp || false }), h('span', {}, text)); }
-            function k(t, strong) { return h('span', { class: 'mf-k' + (strong ? ' strong' : '') }, t); }
-            function kids(a, from) { return [].slice.call(a, from || 0); }
-            function cell() { return h('div', { class: 'mf-cell' }, kids(arguments)); }
-            function tcell() { return h('div', { class: 'mf-cell tight' }, kids(arguments)); }
-            function wcell() { return h('div', { class: 'mf-cell wide' }, kids(arguments)); }
-            function row() { return h('div', { class: 'mf-row' }, kids(arguments)); }
-            function grp(title) { return h('div', { class: 'mf-grp' }, h('div', { class: 'mf-sub' }, title), h('div', { class: 'mf-rows' }, kids(arguments, 1))); }
-            function sec(title, mod) { return h('section', { class: 'mf-sec' + (mod ? ' ' + mod : '') }, h('div', { class: 'mf-lab' }, title), h('div', { class: 'mf-body' }, kids(arguments, 2))); }
-            function info(t, red) { return h('p', { class: 'mf-info' + (red ? ' red' : '') }, t); }
-            function note(t) { return h('span', { class: 'mf-note' }, t); }
-            function sign(key, label) {
+            };
+            K.chk = function (name, text, grp) { return h('label', { class: 'mf-ck' }, h('input', { type: 'checkbox', name: name, 'data-mf': name, 'data-grp': grp || false }), h('span', {}, text)); };
+            K.k = function (t, strong) { return h('span', { class: 'mf-k' + (strong ? ' strong' : '') }, t); };
+            K.cell = function () { return h('div', { class: 'mf-cell' }, kids(arguments)); };
+            K.scell = function () { return h('div', { class: 'mf-cell sm' }, kids(arguments)); };
+            K.tcell = function () { return h('div', { class: 'mf-cell tight' }, kids(arguments)); };
+            K.wcell = function () { return h('div', { class: 'mf-cell wide' }, kids(arguments)); };
+            K.row = function () { return h('div', { class: 'mf-row' }, kids(arguments)); };
+            K.grp = function (title) { return h('div', { class: 'mf-grp' }, h('div', { class: 'mf-sub' }, title), h('div', { class: 'mf-rows' }, kids(arguments, 1))); };
+            K.sec = function (title, mod) { return h('section', { class: 'mf-sec' + (mod ? ' ' + mod : '') }, h('div', { class: 'mf-lab' }, title), h('div', { class: 'mf-body' }, kids(arguments, 2))); };
+            K.info = function (t, red) { return h('p', { class: 'mf-info' + (red ? ' red' : '') }, t); };
+            K.note = function (t) { return h('span', { class: 'mf-note' }, t); };
+            K.sign = function (key, label) {
                 var b = h('button', { type: 'button', class: 'mf-sign', 'data-sig': key, 'aria-label': label + ' 서명하기' });
                 M.box[key] = b; paintSig(M, key);
                 b.addEventListener('click', function () { openSignPad(M, key, label); });
                 return b;
-            }
-            var now = new Date();
+            };
+            K.chips = function (name, lines) {   // 눌러서 바로 입력하는 버튼 (인쇄·복사보고 그림에는 나오지 않음)
+                return h('div', { class: 'mf-chips', 'data-chips': name }, lines.map(function (ln) {
+                    return h('div', { class: 'mf-chipline' }, ln.map(function (c) {
+                        var v = typeof c === 'string' ? c : c[0], t = typeof c === 'string' ? c : c[1];
+                        return h('button', { type: 'button', class: 'mf-chip', 'data-v': v, 'aria-pressed': 'false', tabindex: '-1' }, t);
+                    }));
+                }));
+            };
+            K.cardSec = function () {   // 제휴 카드 (모바일·유선 같음)
+                var inp = K.inp, chk = K.chk, k = K.k;
+                return K.sec('제휴 카드', '',
+                    K.grp('할인방법',
+                        K.row(K.cell(k('신청여부'), chk('cardY', '신청', 'card'), chk('cardN', '미신청', 'card')), K.cell(k('할인금액'), inp('cardDisc', '제휴카드 할인금액(원)', { mode: 'numeric', kind: 'money', max: 15, cls: 'amt' }), k('원'))),
+                        K.row(K.tcell(chk('cardSame', '가입자와 동일')), K.scell(k('명의자'), inp('cardOwner', '제휴카드 명의자', { max: 20 })), K.scell(k('생년월일'), inp('cardBirth', '제휴카드 명의자 생년월일', K.BIRTH)), h('div', { class: 'mf-cell sm ph' }, k('휴대폰'), inp('cardPhone', '제휴카드 명의자 휴대폰 번호', K.TEL))),
+                        K.row(K.scell(k('카드사명'), inp('cardCo', '카드사명')), K.wcell(K.note('*제휴카드 발급후 담당자에게 카드번호와 유효기간을 알려주셔야 등록이 가능합니다.')))));
+            };
+            K.combSec = function () {   // 결합 정보 (모바일·유선 같음)
+                var inp = K.inp, chk = K.chk, k = K.k;
+                return K.sec('결합 정보', '',
+                    K.grp('할인방법', K.row(
+                        K.tcell(chk('cOld', '기존 결합', 'comb'), k('('), inp('cOldN', '기존 결합 내용', { cls: 'mid', max: 20 }), k('인)')),
+                        K.tcell(chk('cNew', '결합', 'comb'), k('('), inp('cNewN', '결합 내용', { cls: 'mid', max: 20 }), k('인)')),
+                        K.tcell(chk('cNone', '미결합', 'comb')))));
+            };
+            K.foot = function (shopName, shopRows) {   // 맨 아래: 날짜 · 판매점 · 신청인 서명
+                var inp = K.inp, k = K.k;
+                return h('div', { class: 'mf-foot' },
+                    h('div', { class: 'mf-date' }, inp('y', '작성 연도', { mode: 'numeric', max: 4 }), k('년'), inp('m', '작성 월', { mode: 'numeric', max: 2 }), k('월'), inp('d', '작성 일', { mode: 'numeric', max: 2 }), k('일')),
+                    h('div', { class: 'mf-shopinfo' }, k('판매점명'), h('b', {}, shopName), shopRows),
+                    h('div', { class: 'mf-applicant' }, h('div', { class: 'mf-applab' }, h('b', {}, '*신청인/가입자'), h('span', {}, '(대리인)')),
+                        h('div', { class: 'mf-appname' }, k('성함'), inp('appName', '신청인/가입자 성함', { max: 20 })), K.sign('apply', '신청인/가입자')));
+            };
+            K.agree = function () {
+                return h('div', { class: 'mf-agree' }, h('span', {}, '본인은 가입신청서 및 약관의 주요 내용에 대해 충분히 설명을 들었고, 그 내용을 이해했습니다. 따라서 위와 같은 내용으로 계약하는 것에 대해'),
+                    h('span', { class: 'mf-agree-in' }, '(', K.inp('agree', '동의 문구', { ph: '동의합니다.', max: 20 }), ')'));
+            };
+            K.header = function (shop, sub, types) {
+                var inp = K.inp, k = K.k;
+                return [
+                    h('div', { class: 'mf-top' },
+                        h('div', {},
+                            h('div', { class: 'mf-use' }, h('span', { class: 'mf-pill' }, '인터넷'), '(', inp('netUse', '이용 중인 인터넷'), ')이용중'),
+                            h('div', { class: 'mf-title' }, h('b', {}, '가입 확인서'), h('span', {}, sub))),
+                        h('div', { class: 'mf-top-r' }, h('div', { class: 'mf-shop' }, shop), h('div', { class: 'mf-cust' }, k('고객등록번호 :'), inp('custNo', '고객등록번호 앞자리 (뒤 70001401은 고정)', { max: 12 }), h('span', { class: 'mf-fixno', 'data-fixno': '70001401' }, '70001401')))),
+                    h('div', { class: 'mf-type' }, h('b', {}, '유형 선택'), types)];
+            };
+            return K;
+        }
 
+        function buildMobileForm() {
+            var M = { kind: 'mobile', el: null, sheet: null, sig: { guard: '', apply: '' }, box: {} };
+            var K = mfKit(M), inp = K.inp, chk = K.chk, k = K.k, cell = K.cell, tcell = K.tcell, wcell = K.wcell, row = K.row, grp = K.grp, sec = K.sec, info = K.info, note = K.note, sign = K.sign;
+            var MONEY = K.MONEY, BIRTH = K.BIRTH, TEL = K.TEL;
             var sheet = h('div', { class: 'mf-sheet', 'data-form': 'mobile' },
-                h('div', { class: 'mf-top' },
-                    h('div', {},
-                        h('div', { class: 'mf-use' }, h('span', { class: 'mf-pill' }, '인터넷'), '(', inp('netUse', '이용 중인 인터넷'), ')이용중'),
-                        h('div', { class: 'mf-title' }, h('b', {}, '가입 확인서'), h('span', {}, '_ 모바일.인터넷'))),
-                    h('div', { class: 'mf-top-r' }, h('div', { class: 'mf-shop' }, '사거리핸드폰'), h('div', { class: 'mf-cust' }, k('고객등록번호 :'), inp('custNo', '고객등록번호 앞자리 (뒤 70001401은 고정)', { max: 12 }), h('span', { class: 'mf-fixno', 'data-fixno': '70001401' }, '70001401')))),
-                h('div', { class: 'mf-type' }, h('b', {}, '유형 선택'), chk('tNew', '신규', 'type'), chk('tPort', '번호이동', 'type'), chk('tRe', '재가입', 'type')),
+                K.header('사거리핸드폰', '_ 모바일.인터넷', [chk('tNew', '신규', 'type'), chk('tPort', '번호이동', 'type'), chk('tRe', '재가입', 'type'), h('span', { class: 'mf-typegap', 'aria-hidden': 'true' }), chk('noBuy', '비구매')]),
 
                 sec('가입자 정보', 'green',
-                    row(cell(k('가입 통신사'), inp('carrier', '가입 통신사')), cell(k('(이전 통신사'), inp('prevCarrier', '이전 통신사'), k(')'))),
-                    row(cell(k('가입자명'), inp('name', '가입자명')), cell(k('생년월일'), inp('birth', '가입자 생년월일', BIRTH)), cell(k('휴대폰 번호'), inp('phone', '가입자 휴대폰 번호', TEL))),
+                    row(cell(k('가입 통신사'), inp('carrier', '가입 통신사'), K.chips('carrier', [['U+', 'SK', 'KT']].concat(MF_PRE))),
+                        cell(k('(이전 통신사'), inp('prevCarrier', '이전 통신사'), k(')'), K.chips('prevCarrier', [['U+', 'SK', 'KT', '신규']].concat(MF_PRE)))),
+                    row(cell(k('가입자명'), inp('name', '가입자명', { max: 20 })), cell(k('생년월일'), inp('birth', '가입자 생년월일', BIRTH)), cell(k('휴대폰 번호'), inp('phone', '가입자 휴대폰 번호', TEL))),
                     row(wcell(k('주소'), inp('addr', '주소', { max: 150 })))),
                 info('[안내] 가입한 항목만 작성해 주세요.'),
 
                 sec('기기 정보', '',
                     grp('기기', row(cell(k('모델명'), inp('model', '기기 모델명')), cell(k('일련번호'), inp('serial', '기기 일련번호')))),
-                    grp('할부정보', row(cell(inp('months', '할부 개월 수', { mode: 'numeric', cls: 'short', max: 3 }), k('개월'))))),
+                    grp('할부정보', row(cell(inp('months', '할부 개월 수', { mode: 'numeric', cls: 'short', max: 3 }), k('개월'),
+                        K.chips('months', [[['0', '0개월'], ['3', '3개월'], ['6', '6개월'], ['12', '12개월'], ['24', '24개월'], ['30', '30개월'], ['36', '36개월']]]))))),
 
                 sec('약정 정보', '',
                     grp('할인방법',
@@ -2425,16 +2495,8 @@
                         row(cell(chk('insY', '신청', 'ins'), k('( 보험명'), inp('insName', '핸드폰 보험 이름'), k('/'), inp('insFee', '핸드폰 보험료(원)', { mode: 'numeric', kind: 'money', max: 15, cls: 'amt' }), k('원)')), tcell(chk('insN', '미신청', 'ins'))),
                         row(wcell(note('*개통일로 부터 30일 내에만 신청이 가능합니다.'))))),
 
-                sec('제휴 카드', '',
-                    grp('할인방법',
-                        row(cell(k('신청여부'), chk('cardY', '신청', 'card'), chk('cardN', '미신청', 'card')), cell(k('할인금액'), inp('cardDisc', '제휴카드 할인금액(원)', { mode: 'numeric', kind: 'money', max: 15, cls: 'amt' }), k('원'))),
-                        row(cell(k('명의자'), inp('cardOwner', '제휴카드 명의자')), cell(k('생년월일'), inp('cardBirth', '제휴카드 명의자 생년월일', BIRTH)), cell(k('카드사명'), inp('cardCo', '카드사명')), wcell(note('*제휴카드 발급후 담당자에게 카드번호와 유효기간을 알려주셔야 등록이 가능합니다.'))))),
-
-                sec('결합 정보', '',
-                    grp('할인방법', row(
-                        tcell(chk('cOld', '기존 결합', 'comb'), k('('), inp('cOldN', '기존 결합 내용', { cls: 'mid', max: 20 }), k('인)')),
-                        tcell(chk('cNew', '결합', 'comb'), k('('), inp('cNewN', '결합 내용', { cls: 'mid', max: 20 }), k('인)')),
-                        tcell(chk('cNone', '미결합', 'comb'))))),
+                K.cardSec(),
+                K.combSec(),
 
                 sec('추가 서비스', '', row(wcell(inp('extra', '추가 서비스', { max: 150 })))),
                 info('[안내] 기타 정보에도 중요한 내용이 첨부되니 놓치지말고 확인해 주세요.', true),
@@ -2468,21 +2530,110 @@
                         h('div', { class: 'mf-gi' }, k('*성명', true), inp('gName', '법정대리인 성명', { max: 20 })),
                         h('div', { class: 'mf-gi' }, sign('guard', '법정대리인'))))),
 
-                h('div', { class: 'mf-agree' }, h('span', {}, '본인은 가입신청서 및 약관의 주요 내용에 대해 충분히 설명을 들었고, 그 내용을 이해했습니다. 따라서 위와 같은 내용으로 계약하는 것에 대해'),
-                    h('span', { class: 'mf-agree-in' }, '(', inp('agree', '동의 문구', { ph: '동의합니다.', max: 20 }), ')')),
-                h('div', { class: 'mf-foot' },
-                    h('div', { class: 'mf-date' }, inp('y', '작성 연도', { mode: 'numeric', max: 4 }), k('년'), inp('m', '작성 월', { mode: 'numeric', max: 2 }), k('월'), inp('d', '작성 일', { mode: 'numeric', max: 2 }), k('일')),
-                    h('div', { class: 'mf-shopinfo' },
-                        k('판매점명'), h('b', {}, '사거리핸드폰'),
-                        k('연락처'), inp('shopPhone', '연락처 (로그인한 판매자 번호)', TEL),
-                        k('판매자'), inp('seller', '판매자')),
-                    h('div', { class: 'mf-applicant' }, h('div', { class: 'mf-applab' }, h('b', {}, '*신청인/가입자'), h('span', {}, '(대리인)')),
-                        h('div', { class: 'mf-appname' }, k('성함'), inp('appName', '신청인/가입자 성함', { max: 20 })), sign('apply', '신청인/가입자'))),
+                K.agree(),
+                K.foot('사거리핸드폰', [k('연락처'), inp('shopPhone', '연락처 (로그인한 판매자 번호)', TEL), k('판매자'), inp('seller', '판매자')]),
                 h('p', { class: 'mf-copy' }, '본 신청서는 사거리핸드폰 업무용으로 제작된 것으로 사거리핸드폰의 사전 허락 없이 사용하거나 임의로 수정할 수 없습니다.'));
+            return mfFinish(M, sheet, { keep: true, file: '사거리핸드폰-모바일가입확인서' });
+        }
 
-            function val(n, v) { var x = sheet.querySelector('[data-mf="' + n + '"]'); if (x) x.value = v; }
-            val('y', String(now.getFullYear())); val('m', String(now.getMonth() + 1)); val('d', String(now.getDate()));
+        function buildWiredForm() {
+            var M = { kind: 'wired', el: null, sheet: null, sig: { guard: '', apply: '' }, box: {} };
+            var K = mfKit(M), inp = K.inp, chk = K.chk, k = K.k, cell = K.cell, scell = K.scell, tcell = K.tcell, wcell = K.wcell, row = K.row, grp = K.grp, sec = K.sec, info = K.info, note = K.note;
+            var MONEY = K.MONEY, BIRTH = K.BIRTH, TEL = K.TEL, GIFT = { mode: 'decimal', cls: 'gift', max: 6 };
+            var etc = [1, 2, 3, 4, 5].map(function (n) { return row(wcell(k('*', true), inp('etc' + n, '기타 정보 ' + n + '번째 줄', { max: 150 }))); });
+            var sheet = h('div', { class: 'mf-sheet wired', 'data-form': 'wired' },
+                K.header('사거리인터넷', '_ 인터넷', [chk('tNew', '신규', 'type'), chk('tTrans', '동판', 'type'), chk('tRenew', '재약정', 'type')]),
+
+                sec('가입자 정보', 'green',
+                    row(cell(k('가입 통신사'), inp('carrier', '가입 통신사'), K.chips('carrier', [['U+', 'SK', 'KT']])),
+                        cell(k('(이전 통신사'), inp('prevCarrier', '이전 통신사'), k(')'), K.chips('prevCarrier', [['U+', 'SK', 'KT', '신규']]))),
+                    row(cell(k('가입자명'), inp('name', '가입자명', { max: 20 })), cell(k('생년월일'), inp('birth', '가입자 생년월일', BIRTH)), cell(k('휴대폰 번호'), inp('phone', '가입자 휴대폰 번호', TEL))),
+                    row(wcell(k('주소'), inp('addr', '주소', { max: 150 })))),
+                info('[안내] 가입한 항목만 작성해 주세요.'),
+
+                sec('납부 정보', '',
+                    grp('요금 납부방법',
+                        row(scell(k('예금주'), inp('payOwner', '예금주', { max: 20 })), tcell(chk('paySame', '명의자와 동일')), scell(k('생년월일'), inp('payBirth', '예금주 생년월일', BIRTH))),
+                        row(cell(k('은행명(카드사명)'), inp('payBank', '은행명 또는 카드사명')), cell(k('계좌번호(카드번호)'), inp('payNo', '계좌번호 또는 카드번호', { mode: 'numeric', max: 30 }))))),
+
+                sec('약정 정보', '', grp('약정기간', row(cell(inp('term', '약정기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월'))))),
+                info('[안내] 요금제 변경은 자동으로 변경되지 않기 때문에 반드시 매장에 방문하시거나, 담당직원과 연락하여 변경하시기 바랍니다.', true),
+
+                sec('가입 내역', '',
+                    grp('요금제',
+                        row(cell(k('인터넷 요금제'), inp('netPlan', '인터넷 요금제')), tcell(k('유지기간'), inp('keepW', '요금제 유지기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')), cell(k('청구금액'), inp('billW', '청구금액(원)', MONEY), k('원'))),
+                        row(cell(k('TV 요금제'), inp('tvPlan', 'TV 요금제')))),
+                    grp('추가 요금제',
+                        row(cell(chk('addY', '신청', 'add'), inp('addPlan', '추가 요금제 이름'), k('('), inp('addFee', '추가 요금제 금액(원)', { mode: 'numeric', kind: 'money', max: 15, cls: 'amt' }), k('원)')), tcell(chk('addN', '미신청', 'add'))),
+                        row(wcell(note('*개통 당일 내에만 신청이 가능합니다.'))))),
+
+                K.cardSec(),
+                K.combSec(),
+                info('[안내] 기타 정보에도 중요한 내용이 첨부되니 놓치지말고 확인해 주세요.', true),
+
+                sec('기타 정보', 'beige',
+                    row(wcell(note('*[중요] 요금제 변경은 자동으로 변경되지 않기 때문에 반드시 매장에 방문하시거나, 담당직원과 연락하여 변경하시기 바랍니다.'), chk('impOk', '확인'))),
+                    etc),
+
+                sec('고객 사은품', 'beige',
+                    grp('사은품 선택', row(wcell(k('총'), inp('giftT', '사은품 총액(만원)', GIFT), k('만원 (상품권 :'), inp('giftV', '상품권(만원)', GIFT), k('만원 + 본사 :'), inp('giftH', '본사 지원(만원)', GIFT), k('만원 + 추가지원금 :'), inp('giftA', '추가지원금(만원)', GIFT), k('만원)'))))),
+
+                h('ol', { class: 'mf-terms' },
+                    h('li', {}, '요금제 변경은 변경 자동변경 및 임의 변경이 불가능하며, 변경날짜이전에 변경하실 경우 위약금이 청구 될 수 있습니다.'),
+                    h('li', {}, '일시정지나 해지는 개통일로부터 12개월 이후부터 가능합니다. 기간전에는 변경이 절대 불가능하니 필요하신분은 기간을 꼭 지켜주세요.'),
+                    h('li', {}, '카드사를 통해 교체 및 신규 발급 후 카드번호, 유효기간을 꼭 알려주셔야 할인적용을 해드릴 수 있습니다. 적용은 개통일 포함 14일 이내 등록 가능 합니다.'),
+                    h('li', {}, '인터넷 TV 설치 후 첫달 요금에는 설치비가 같이 청구 됩니다. 인터넷과 TV 각각 설치비가 발생합니다.'),
+                    h('li', { class: 'big' }, '본 가입확인서 내용과 상충되는 이면 계약이 존재하지 않는 사실을 확인하며, 본인은 이면 계약과 관련하여 사거리인터넷에게 어떠한 권리도 주장할 수 없고 사거리인터넷은 그에 대한 어떤 책임도 지지 않는다는 사실을 안내받았고, 이에 동의합니다.')),
+                h('div', { class: 'mf-fine boxed' },
+                    h('p', {}, '※아래 항목에 대해 동의를 거부하실 수 있으나 거부 시 위 신청서에 작성한 내용의 서비스 업무가 제한됩니다.'),
+                    h('p', {}, '1. 위 내용을 모두 확인했고, 위 신청서에 작성한 내용의 서비스 업무 처리 하는 것에 동의합니다.'),
+                    h('p', {}, '2. 사거리인터넷 제공 서비스(홈서비스)를 해지한 후 요금 완납 후 12개월 이내까지(단, 법령에 별도규정이 있을 경우 그 시점까지) 아래 개인정보를 사거리인터넷이 수집하고 이용하는 것에 동의합니다.'),
+                    h('p', {}, '※수집항목 : 성명, 관계, 생년월일, 휴대폰 번호, 주소')),
+
+                K.agree(),
+                K.foot('사거리인터넷', [k('연락처'), h('b', {}, '1833-2440'), k('판매자'), inp('seller', '판매자'), k('연락처'), inp('sellerPhone', '판매자 연락처 (로그인한 판매자 번호)', TEL)]),
+                h('p', { class: 'mf-copy' }, '본 신청서는 사거리인터넷 업무용으로 제작된 것으로 사거리인터넷의 사전 허락 없이 사용하거나 임의로 수정할 수 없습니다.'));
+            var q = function (n) { return sheet.querySelector('[data-mf="' + n + '"]'); };
+            q('term').value = '36'; q('keepW').value = '12';   // 양식에 미리 적혀 있던 값 (고칠 수 있음)
+            return mfFinish(M, sheet, { keep: false, file: '사거리인터넷-유선가입확인서' });
+        }
+
+        function mfFinish(M, sheet, opt) {   // 공통: 기본값 · 엔터로 다음 칸 · 체크 연동 · 버튼
+            var q = function (n) { return sheet.querySelector('[data-mf="' + n + '"]'); };
+            var now = new Date();
+            q('y').value = String(now.getFullYear()); q('m').value = String(now.getMonth() + 1); q('d').value = String(now.getDate());
             mfSeller(sheet, true);   // 판매자 이름·연락처: 로그인한 계정 정보로 자동 입력 (고칠 수 있음)
+
+            function chipSync(name) {   // 칸의 값과 같은 버튼을 표시
+                [].forEach.call(sheet.querySelectorAll(name ? '[data-chips="' + name + '"]' : '[data-chips]'), function (box) {
+                    var el = q(box.getAttribute('data-chips')), v = el ? el.value.trim() : '';
+                    [].forEach.call(box.querySelectorAll('.mf-chip'), function (b) { var on = b.getAttribute('data-v') === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+                });
+            }
+            function linkSet(key, on) {   // '가입자와 동일': 체크하면 가입자 정보를 그대로, 풀면 자동으로 넣은 값만 지움
+                (MF_LINK[key] || []).forEach(function (p) {
+                    var src = q(p[0]), dst = q(p[1]); if (!src || !dst) return;
+                    if (on) { dst.value = src.value; dst.setAttribute('data-auto', src.value); }
+                    else { if (dst.value === dst.getAttribute('data-auto')) dst.value = ''; dst.removeAttribute('data-auto'); }
+                });
+            }
+            function linkFollow(srcName) {   // 체크된 상태에서 가입자 정보를 고치면 따라 바뀜 (직접 고친 칸은 그대로)
+                Object.keys(MF_LINK).forEach(function (key) {
+                    var box = q(key); if (!box || !box.checked) return;
+                    MF_LINK[key].forEach(function (p) {
+                        if (p[0] !== srcName) return;
+                        var src = q(p[0]), dst = q(p[1]); if (!src || !dst) return;
+                        if (dst.value === (dst.getAttribute('data-auto') || '')) { dst.value = src.value; dst.setAttribute('data-auto', src.value); }
+                    });
+                });
+            }
+            function giftSum() {   // 유선 사은품: 상품권 + 본사 + 추가지원금 → 총 (직접 고친 총액은 그대로)
+                var tot = q('giftT'); if (!tot) return;
+                var sum = 0, any = false;
+                MF_GIFT.forEach(function (n) { var x = q(n), v = x ? parseFloat(String(x.value).replace(/[^\d.]/g, '')) : NaN; if (!isNaN(v)) { sum += v; any = true; } });
+                var txt = any ? String(Math.round(sum * 100) / 100) : '';
+                if (tot.value === (tot.getAttribute('data-auto') || '')) { tot.value = txt; tot.setAttribute('data-auto', txt); }
+            }
 
             // 엔터(휴대폰 키보드의 [다음])를 누르면 다음 빈칸으로
             function nextField(from) {
@@ -2504,51 +2655,75 @@
                 e.preventDefault(); nextField(t);
             });
             sheet.addEventListener('compositionend', function (e) { if (pend && pend === e.target) { var t = pend; pend = null; setTimeout(function () { nextField(t); }, 0); } });
-            sheet.addEventListener('change', function (e) {   // 하나만 고르는 칸
+            sheet.addEventListener('click', function (e) {   // 통신사·할부 개월 버튼
+                var b = e.target.closest ? e.target.closest('.mf-chip') : null; if (!b || !sheet.contains(b)) return;
+                var name = b.parentNode.parentNode.getAttribute('data-chips'), el = q(name), v = b.getAttribute('data-v'); if (!el) return;
+                el.value = el.value.trim() === v ? '' : v;   // 같은 버튼을 다시 누르면 지움
+                chipSync(name);
+            });
+            sheet.addEventListener('change', function (e) {
                 var t = e.target, g = t.getAttribute ? t.getAttribute('data-grp') : null;
-                if (t.type === 'checkbox' && t.checked && g && MF_ONE[g]) [].forEach.call(sheet.querySelectorAll('input[data-grp="' + g + '"]'), function (x) { if (x !== t) x.checked = false; });
-                var KEEP = { dSel: '3', dSub: '6' }, kp = sheet.querySelector('[data-mf="keep1"]');   // 선택약정 3개월, 공시지원금 6개월 (직접 고칠 수 있음)
-                if (t.type === 'checkbox' && KEEP.hasOwnProperty(t.name) && kp) {
-                    if (t.checked) { kp.value = KEEP[t.name]; kp.setAttribute('data-auto', KEEP[t.name]); }
+                if (t.type !== 'checkbox') return;
+                if (t.checked && g && MF_ONE[g]) [].forEach.call(sheet.querySelectorAll('input[data-grp="' + g + '"]'), function (x) { if (x !== t) x.checked = false; });
+                if (MF_LINK.hasOwnProperty(t.name)) linkSet(t.name, t.checked);
+                var kp = q('keep1');
+                if (opt.keep && MF_KEEP.hasOwnProperty(t.name) && kp) {   // 선택약정 3개월, 공시지원금 6개월
+                    if (t.checked) { kp.value = MF_KEEP[t.name]; kp.setAttribute('data-auto', MF_KEEP[t.name]); }
                     else if (kp.value === kp.getAttribute('data-auto')) { kp.value = ''; kp.removeAttribute('data-auto'); }   // 체크를 풀면 자동으로 넣은 값만 지움
                 }
             });
-            sheet.addEventListener('input', function (e) {   // 메모가 길어지면 칸도 함께 늘어남
-                var t = e.target; if (!t.classList || !t.classList.contains('memo')) return;
-                t.style.height = ''; if (t.scrollHeight > t.clientHeight) t.style.height = (t.scrollHeight + 4) + 'px';
+            sheet.addEventListener('input', function (e) {
+                var t = e.target, n = t.getAttribute ? t.getAttribute('data-mf') : null;
+                if (t.classList && t.classList.contains('memo')) { t.style.height = ''; if (t.scrollHeight > t.clientHeight) t.style.height = (t.scrollHeight + 4) + 'px'; }   // 메모가 길어지면 칸도 함께
+                if (n && sheet.querySelector('[data-chips="' + n + '"]')) chipSync(n);
+                if (n) linkFollow(n);
+                if (MF_GIFT.indexOf(n) >= 0) giftSum();
             });
             sheet.addEventListener('focusout', function (e) {   // 칸을 벗어나면 금액·전화번호 모양 정리
                 if (mfMoving) return;
-                var t = e.target, kd = t.getAttribute ? t.getAttribute('data-kind') : null;
+                var t = e.target, kd = t.getAttribute ? t.getAttribute('data-kind') : null, before = t.value;
                 if (kd === 'money') t.value = mfMoney(t.value); else if (kd === 'tel') t.value = mfPhone(t.value);
+                if (t.value !== before) linkFollowFormatted(t, before);
             });
+            function linkFollowFormatted(t, before) {   // 가입자 번호 모양이 정리되면 따라 채운 칸도 같은 모양으로
+                Object.keys(MF_LINK).forEach(function (key) {
+                    var box = q(key); if (!box || !box.checked) return;
+                    MF_LINK[key].forEach(function (p) {
+                        var dst = q(p[1]);
+                        if (p[0] === t.getAttribute('data-mf') && dst && dst.value === before && dst.getAttribute('data-auto') === before) { dst.value = t.value; dst.setAttribute('data-auto', t.value); }
+                    });
+                });
+            }
 
             var tools = h('div', { class: 'mf-tools' },
                 h('p', { class: 'mf-tip' }, '작성한 내용은 저장되지 않아요. 다 쓰면 [복사보고]로 카카오톡·텔레그램에 붙여넣거나 [인쇄 / PDF 저장]으로 보관해 주세요. 잠그거나 새로고침하면 지워져요.'),
                 h('div', { class: 'actions' },
                     h('button', { type: 'button', class: 'btn', 'data-act': 'mf-new', onclick: function () {
                         if (!confirm('작성한 내용과 서명을 모두 지우고 새로 작성할까요?')) return;
-                        mform = null; render(); window.scrollTo(0, 0); toast('새 가입 확인서를 열었어요.');
+                        if (mforms[M.kind] === M) delete mforms[M.kind];
+                        render(); window.scrollTo(0, 0); toast('새 가입 확인서를 열었어요.');
                     } }, '새로 작성'),
                     h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'mf-copy', onclick: function () {
                         if (!M.sig.apply && !confirm('신청인/가입자 서명이 아직 없어요. 그래도 복사할까요?')) return;
-                        mfCopyReport(sheet);
+                        mfCopyReport(sheet, opt.file);
                     } }, '복사보고'),
                     h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-print', onclick: function () {
                         if (!M.sig.apply && !confirm('신청인/가입자 서명이 아직 없어요. 그래도 인쇄할까요?')) return;
                         window.print();
                     } }, '인쇄 / PDF 저장')));
+            chipSync();
+            M.sheet = sheet;
             M.el = h('div', { class: 'mf-wrap' }, sheet, tools);
             return M;
         }
         function mfSellerAuto() {   // 로그인한 계정의 이름·핸드폰 번호 (없으면 직원 이름 / 매장 번호)
-            var a = db && db.account, nm = a && a.name ? a.name : (me && staffById(me) ? staffName(me) : '');
-            return { seller: nm, shopPhone: a && a.phone ? mfPhone(a.phone) : '010-2422-2444' };
+            var a = db && db.account, nm = a && a.name ? a.name : (me && staffById(me) ? staffName(me) : ''), ph = a && a.phone ? mfPhone(a.phone) : '010-2422-2444';
+            return { seller: nm, shopPhone: ph, sellerPhone: ph };
         }
         function mfSeller(root, first) {   // first: 처음 열 때 / 아니면 직접 고치지 않은 칸만 새 값으로
             if (!root) return;
             var v = mfSellerAuto();
-            ['seller', 'shopPhone'].forEach(function (n) {
+            ['seller', 'shopPhone', 'sellerPhone'].forEach(function (n) {
                 var el = root.querySelector('[data-mf="' + n + '"]'); if (!el) return;
                 if (first || el.value === (el.getAttribute('data-auto') || '')) { el.value = v[n]; el.setAttribute('data-auto', v[n]); }
             });
@@ -2621,11 +2796,12 @@
                     }
                     c.restore();
                 };
-                var paintCheck = function (el, r) {
+                var paintCheck = function (el, r, cs) {
+                    var ac = cs && cs.accentColor && cs.accentColor !== 'auto' ? cs.accentColor : '#146B3A';
                     var z = Math.min(r.w, r.h), x = r.x + (r.w - z) / 2, y = r.y + (r.h - z) / 2;
                     c.save(); c.lineWidth = 1.5; path({ x: x + 0.75, y: y + 0.75, w: z - 1.5, h: z - 1.5 }, 3);
                     if (el.checked) {
-                        c.fillStyle = '#146B3A'; c.fill(); c.strokeStyle = '#146B3A'; c.stroke();
+                        c.fillStyle = ac; c.fill(); c.strokeStyle = ac; c.stroke();
                         c.strokeStyle = '#fff'; c.lineWidth = 2.2; c.lineCap = 'round'; c.lineJoin = 'round';
                         c.beginPath(); c.moveTo(x + z * 0.24, y + z * 0.52); c.lineTo(x + z * 0.43, y + z * 0.71); c.lineTo(x + z * 0.77, y + z * 0.3); c.stroke();
                     } else { c.fillStyle = '#fff'; c.fill(); c.strokeStyle = '#767676'; c.stroke(); }
@@ -2636,7 +2812,7 @@
                     if (cs.display === 'none' || cs.visibility === 'hidden') return;
                     var r = R(el), tag = el.tagName;
                     paintBox(cs, r);
-                    if (tag === 'INPUT' && el.type === 'checkbox') { paintCheck(el, r); return; }
+                    if (tag === 'INPUT' && el.type === 'checkbox') { paintCheck(el, r, cs); return; }
                     if (tag === 'INPUT' || tag === 'TEXTAREA') { paintValue(el, cs, r); return; }
                     if (tag === 'IMG') { if (el.complete && el.naturalWidth) c.drawImage(el, r.x, r.y, r.w, r.h); return; }
                     if (tag === 'LI') {   // 번호(1. 2. …)
@@ -2648,11 +2824,11 @@
                 return cv;
             } finally { sheet.classList.remove('mf-snap'); if (window.scrollY !== sy) window.scrollTo(0, sy); }
         }
-        function mfCopyReport(sheet) {
+        function mfCopyReport(sheet, prefix) {
             var cv;
             try { cv = mfSnapshot(sheet); } catch (e) { toast('가입 확인서 이미지를 만들지 못했어요.'); return; }
             var nm = (sheet.querySelector('[data-mf="name"]') || {}).value || '';
-            var file = '사거리핸드폰-가입확인서-' + (nm ? nm.replace(/[\\/:*?"<>|\s]+/g, '') + '-' : '') + ymd(new Date()) + '.png';
+            var file = (prefix || '가입확인서') + '-' + (nm ? nm.replace(/[\\/:*?"<>|\s]+/g, '') + '-' : '') + ymd(new Date()) + '.png';
             var blobP = new Promise(function (res, rej) { cv.toBlob(function (b) { if (b) res(b); else rej(new Error('blob')); }, 'image/png'); });
             var write = function (v) { try { return navigator.clipboard.write([new ClipboardItem({ 'image/png': v })]); } catch (e) { return Promise.reject(e); } };
             var done;
@@ -2711,7 +2887,7 @@
                 h('button', { type: 'button', class: 'btn', 'data-act': 'sig-clear', onclick: function () { if (ctx) ctx.clearRect(0, 0, cv.width, cv.height); ink = false; err.textContent = ''; } }, '다시 쓰기'),
                 h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '취소'),
                 h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'sig-ok', onclick: function () {
-                    if (mform !== M) { closeDlg(); return; }
+                    if (mforms[M.kind] !== M) { closeDlg(); return; }
                     var img = ink ? trimSig(cv) : '';
                     if (!img) { err.textContent = '네모 칸 안에 서명해 주세요.'; return; }
                     M.sig[key] = img; paintSig(M, key); closeDlg();
@@ -2731,18 +2907,12 @@
         /* ---------- 화면: 가입 확인서 ---------- */
         function renderForms() {
             var f = state.form;
-            if (f === 'mobile') {
-                if (!mform) mform = buildMobileForm();
+            if (f === 'mobile' || f === 'wired') {
+                if (!mforms[f]) mforms[f] = f === 'mobile' ? buildMobileForm() : buildWiredForm();
                 return h('div', { class: 'mf-page' },
-                    h('div', { class: 'page-head' }, h('h1', {}, '모바일 가입 확인서'),
+                    h('div', { class: 'page-head' }, h('h1', {}, f === 'mobile' ? '모바일 가입 확인서' : '유선 가입 확인서'),
                         h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'forms-back', onclick: function () { state.form = ''; render(); window.scrollTo(0, 0); } }, '← 가입 확인서'))),
-                    mform.el);
-            }
-            if (f === 'wired') {
-                return h('div', {},
-                    h('div', { class: 'page-head' }, h('h1', {}, '유선 가입 확인서'),
-                        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'forms-back', onclick: function () { state.form = ''; render(); } }, '← 가입 확인서'))),
-                    h('div', { class: 'panel' }, h('div', { class: 'empty', 'data-form-empty': f }, '이 화면의 기능은 다음 업무에서 만들 예정이에요.')));
+                    mforms[f].el);
             }
             return h('div', {},
                 h('div', { class: 'page-head' }, h('h1', {}, '가입 확인서')),
@@ -2891,7 +3061,8 @@
             var app = document.getElementById('app');
             var ae = document.activeElement, fk = ae && ae.getAttribute ? ae.getAttribute('data-fk') : null;
             if (!authed || !db) { renderLogin(); return; }
-            var keepEl = mform && ae && mform.el.contains(ae) ? ae : null, keepSel = null, keepY = window.scrollY;   // 가입 확인서 작성 중 화면이 새로 그려져도 쓰던 칸 그대로
+            var keepEl = null, keepSel = null, keepY = window.scrollY;
+            mfAll(function (F) { if (ae && F.el.contains(ae)) keepEl = ae; });   // 가입 확인서 작성 중 화면이 새로 그려져도 쓰던 칸 그대로
             if (keepEl) { try { keepSel = [keepEl.selectionStart, keepEl.selectionEnd]; } catch (e) { keepSel = null; } }
             var gate = accountGate();
             if (gate) { renderAccountGate(gate); return; }   // 계정 로그인이 필요하면 이 화면부터
@@ -2915,7 +3086,7 @@
             var note = driveBanner();
             var appWarn = inAppBrowser() ? h('div', { class: 'mode-note warn', 'data-note': 'inapp' }, h('span', {}, h('b', {}, '앱 안에서 열린 화면이에요 '), '이 안에서는 저장이 불안정할 수 있어요. 화면 메뉴(⋯ 또는 공유 버튼)의 "다른 브라우저로 열기"로 사파리·크롬에서 열어 주세요.')) : null;
 
-            var isMf = view === 'forms' && state.form === 'mobile';
+            var isMf = view === 'forms' && (state.form === 'mobile' || state.form === 'wired');
             mfMoving = true;
             app.textContent = '';
             app.appendChild(h('div', { class: 'shell' + (isMf ? ' sh-form' : '') },
