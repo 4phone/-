@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-zAaBCGdJ2uzYsBXXxzTGb+SzEl+yrdQnrWm/4eNaDs8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3xI5aA9HKfm5MgzxbJVHr4d15EmwPJsAxlps/YkQ+As='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -105,6 +105,23 @@
         .date-chip.today { background: #E8F5E9; border-color: #A5D6A7; color: #1F5F26; }
         .date-chip.yday { background: #E8EEFB; border-color: #A9BCE8; color: #243F8F; }
         .report-img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; display: block; }
+        .me-fixed { color: #fff; font-weight: 800; font-size: 15px; padding: 2px 2px 0; overflow-wrap: anywhere; }
+        .acct-email { font-size: 12px; color: #B9C29F; overflow-wrap: anywhere; margin-bottom: 4px; }
+        .gate-tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+        .gate-tabs .btn { flex: 1; padding: 10px; }
+        .gate-tabs .btn.on { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .gate-acct { margin: 6px 0 18px; padding: 12px 14px; background: #F1F4E6; border-radius: 8px; font-weight: 800; overflow-wrap: anywhere; }
+        .gate-actions { display: grid; gap: 8px; }
+        .gate-actions .btn { width: 100%; padding: 13px; }
+        .gate-links { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 18px; }
+        .acct-group { margin-top: 18px; }
+        .acct-group h3 { font-size: 15px; font-weight: 800; margin: 0 0 8px; color: var(--olive-800); }
+        .acct-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+        .acct-row:last-child { border-bottom: none; }
+        .acct-row b { overflow-wrap: anywhere; }
+        .acct-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+        .acct-badge { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 800; border-radius: 4px; padding: 1px 7px; vertical-align: middle; }
+        .acct-badge.ok { background: #DDF0DD; color: #1F6B2A; } .acct-badge.wait { background: #FFF3BF; color: #7A5B00; } .acct-badge.off { background: #E4E6DD; color: #5F6A4F; }
         .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
         .page-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
         .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -245,6 +262,8 @@
             .t-row .t-actions { grid-column: 1 / -1; justify-content: flex-start; }
         }
         @media (max-width: 700px) {
+            .acct-row { grid-template-columns: minmax(0, 1fr); }
+            .acct-email { display: none; }
             .cal-cell { min-height: 56px; padding: 4px 2px; align-items: center; gap: 2px; }
             .cal-cell .chip, .cal-cell .more { display: none; }
             .cal-cell .cal-count { display: inline-block; }
@@ -301,9 +320,14 @@
         // 공유 저장소 주소는 반드시 구글 Apps Script 웹 앱 주소여야 합니다 (그 밖의 주소로는 어떤 요청도 보내지 않음)
         var DRIVE_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,200}\/exec$/;
         var DRIVE_TIMEOUT_MS = 25000;   // 응답을 기다리는 최대 시간
+        var ACCT_POLL_MS = 15000;       // 승인 대기 화면에서 15초마다 승인 여부 확인
+        var ACCT_QUIET_MS = 60000;      // 관리자 화면: 승인 대기 건수는 동기화할 때 최대 1분에 한 번 확인
+        var ACCT_ITER = 300000;         // 계정 비밀번호를 한 방향 변환값으로 바꾸는 반복 횟수
+        var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
         var DRIVE_PUSH_DELAY_MS = 1500; // 내용을 바꾼 뒤 이 시간 뒤에 드라이브로 저장
         var driveState = { status: 'idle', at: null, msg: '' };   // idle / syncing / ok / error / keyerror
+        var acctUi = { list: null, err: '', loading: false, at: 0, enforced: null }, gateMode = 'login', gatePoll = null;
         var pendingJoin = null, inviteBad = false;   // 초대 링크로 열었을 때 받아 둔 팀 연결 정보
         var teamCache = null, syncChain = Promise.resolve(), syncQueued = false, pollTimer = null, pushTimer = null;
         var db = null, me = '', authed = false, cryptoKey = null, idleTimer = null, toastTimer = null, pendingToast = '';
@@ -366,7 +390,8 @@
                 ],
                 events: [], notices: [], tasks: [],
                 del: Object.create(null),                  // 지워진 항목 기록(다른 직원 화면에서도 지워지도록)
-                drive: { url: '', k: '', rev: 0, pk: '' }  // 공유 저장소 연결 정보 (암호화된 데이터 안에만 보관)
+                drive: { url: '', k: '', rev: 0, pk: '', acc: false },  // 공유 저장소 연결 정보 (암호화된 데이터 안에만 보관)
+                account: null    // 이 기기에서 로그인한 계정 (이 기기 안에만 보관하고 드라이브로는 보내지 않음)
             };
         }
         // 관리자는 한 명만: 여러 명이면 '전상민'(없으면 순서가 앞선 사람) 한 명만 남기고, 한 명도 없으면 '전상민'(없으면 첫 직원)으로 정함
@@ -387,7 +412,7 @@
         // 저장소·백업·드라이브에서 읽은 내용은 항상 이 함수로 걸러서(글자 수·개수 제한, 형식 검사) 사용합니다
         function normalizeDb(d) {
             if (!d || typeof d !== 'object') return null;
-            var out = { staff: [], events: [], notices: [], tasks: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '' } }, ids = Object.create(null);
+            var out = { staff: [], events: [], notices: [], tasks: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
             function list(v, max) { return Array.isArray(v) ? v.slice(0, max) : []; }
             list(d.staff, 200).forEach(function (s, i) {
                 if (!s || !str(s.name, 30).trim()) return;
@@ -417,7 +442,11 @@
             Object.keys(dd).slice(0, 20000).forEach(function (id) { var t = num(dd[id]); if (id.length <= 40 && t > 0) out.del[id] = t; });
             var dr = d.drive && typeof d.drive === 'object' ? d.drive : {};
             if (DRIVE_URL_RE.test(str(dr.url, 300)) && /^[0-9a-f]{64}$/.test(str(dr.k, 64))) {
-                out.drive = { url: str(dr.url, 300), k: dr.k, rev: Math.floor(num(dr.rev)), pk: /^[0-9a-f]{64}$/.test(str(dr.pk, 64)) ? dr.pk : '' };
+                out.drive = { url: str(dr.url, 300), k: dr.k, rev: Math.floor(num(dr.rev)), pk: /^[0-9a-f]{64}$/.test(str(dr.pk, 64)) ? dr.pk : '', acc: !!dr.acc };
+            }
+            var ac = d.account && typeof d.account === 'object' ? d.account : null;
+            if (ac && out.drive.url && typeof ac.email === 'string' && ac.email.length <= 120 && /^[0-9a-f]{64}$/.test(str(ac.session, 64)) && ['admin', 'staff'].indexOf(ac.role) >= 0 && ['approved', 'pending', 'disabled'].indexOf(ac.status) >= 0) {
+                out.account = { email: ac.email, session: ac.session, role: ac.role, status: ac.status, staffId: str(ac.staffId, 40) };
             }
             return out;
         }
@@ -530,7 +559,10 @@
         function staffName(id) { var s = staffById(id); return s ? s.name : '미지정'; }
         function staffColor(id) { for (var i = 0; i < db.staff.length; i++) if (db.staff[i].id === id) return PALETTE[i % PALETTE.length]; return '#9AA38A'; }
         function whoTag(id, label) { return h('span', { class: 'who' }, h('i', { style: '--c:' + staffColor(id) }), label || staffName(id)); }
+        function isAdminUser() { return !db.account || db.account.role === 'admin'; }   // 계정 로그인을 쓰지 않는 기기는 지금처럼 모든 기능
+        function isStaffUser() { return !!(db.account && db.account.role === 'staff'); }
         function pickMe() {
+            if (db.account && db.account.role === 'staff' && staffById(db.account.staffId)) return db.account.staffId;   // 직원은 관리자가 연결해 준 본인 이름으로 고정
             var m = lsGet(ME_KEY); if (staffById(m)) return m;
             var adm = db.staff.filter(function (x) { return x.adm; })[0];   // 처음 접속하면 관리자로 시작
             return adm ? adm.id : (db.staff[0] ? db.staff[0].id : '');
@@ -546,7 +578,7 @@
         }
         function lock() {   // 잠그면 암호키와 데이터를 메모리에서도 지우고 화면을 비웁니다
             authed = false; cryptoKey = null; db = null; me = '';
-            stopPoll(); clearTimeout(pushTimer); teamCache = null; syncQueued = false; driveState = { status: 'idle', at: null, msg: '' };
+            stopPoll(); stopGatePoll(); clearTimeout(pushTimer); teamCache = null; syncQueued = false; driveState = { status: 'idle', at: null, msg: '' }; acctUi = { list: null, err: '', loading: false, at: 0, enforced: null }; gateMode = 'login';
             state.view = 'today'; state.who = 'all'; state.status = 'all'; state.date = ''; state.open = Object.create(null);
             var d = document.getElementById('dlg'); if (d.open) closeDlg(); else d.textContent = '';
             var t = document.getElementById('toast'); t.hidden = true; t.textContent = '';
@@ -611,8 +643,8 @@
             app.appendChild(h('div', { class: 'login' },
                 h('div', { class: 'login-box' },
                     h('div', { class: 'login-brand' }, '사거리인터넷'),
-                    h('h1', {}, setup ? '관리자 비밀번호 만들기' : '관리자 로그인'),
-                    h('p', { class: 'sub' }, setup ? '처음 사용하시네요. 저장되는 모든 내용이 이 비밀번호로 암호화돼요.' : '직원 전용 페이지입니다.'),
+                    h('h1', {}, setup ? '이 기기 비밀번호 만들기' : '이 기기 비밀번호 입력'),
+                    h('p', { class: 'sub' }, setup ? '처음 사용하시네요. 이 기기에 저장되는 모든 내용이 이 비밀번호로 암호화돼요.' : '직원 전용 페이지입니다. 이 기기의 잠금 비밀번호를 입력해 주세요.'),
                     form,
                     inviteNote(),
                     inAppNote(),
@@ -814,7 +846,7 @@
         function renderToday() {
             var now = new Date(), today = ymd(now);
             var evs = db.events.filter(function (e) { return e.date === today; }).sort(byTime);
-            var meStaff = staffById(me), isAdmin = !!(meStaff && meStaff.adm);
+            var meStaff = staffById(me), isAdmin = !!(meStaff && meStaff.adm) && isAdminUser();
             var notices = db.notices.slice().sort(noticeSort).slice(0, 5);
             var staffSorted = db.staff.slice().sort(byO);
             function tasksOf(sid) { return db.tasks.filter(function (t) { return t.staffId === sid && (state.showDone || t.status !== 'done'); }).sort(taskSort); }
@@ -1205,7 +1237,9 @@
         function driveCall(url, action, payload) {
             if (!DRIVE_URL_RE.test(url)) return Promise.reject(new Error('url'));
             var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, DRIVE_TIMEOUT_MS);
-            var body = JSON.stringify(Object.assign({ action: action }, payload || {}));
+            var base = { action: action };
+            if (db && db.account && db.account.session) base.session = db.account.session;   // 계정 로그인 확인표(서버가 승인된 계정인지 확인)
+            var body = JSON.stringify(Object.assign(base, payload || {}));
             return fetch(url, {
                 method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: body,   // 사전 확인(preflight) 없이 보내는 형식
                 redirect: 'follow', credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store', signal: ctl.signal
@@ -1222,6 +1256,7 @@
             }, function (e) { clearTimeout(timer); throw e; });
         }
         function driveErrText(e) {
+            if (e && e.code === 'bad_action') return '서버 프로그램(Apps Script)이 예전 버전이에요. 새 코드로 바꿔서 "새 버전"으로 다시 배포해 주세요.';
             if (e && e.serverMessage) return e.serverMessage;
             if (e && e.name === 'AbortError') return '드라이브 응답이 너무 늦어요. 잠시 뒤 다시 시도해 주세요.';
             if (e && e.code === 'http') return '드라이브 연결 서버가 오류를 돌려줬어요. 연결 주소와 배포 설정을 확인해 주세요.';
@@ -1343,7 +1378,7 @@
             });
         }
         function doSync() {
-            if (!driveOn() || !authed) return Promise.resolve({ ok: false });
+            if (!driveOn() || !authed || accountGate()) return Promise.resolve({ ok: false });
             var team = null, info = { changedLocal: false, pushed: false, changedRev: false, marked: false, conflicts: 0 };
             if (driveState.status !== 'error' && driveState.status !== 'keyerror') driveState.status = 'syncing';
             function attempt() {
@@ -1367,10 +1402,12 @@
                 driveState = { status: 'ok', at: new Date(), msg: '' };
                 if (info.changedLocal || info.changedRev || info.pushed || info.marked) saveDb();
                 if (info.changedLocal || !wasOk) render();
+                fetchAcctQuiet();
                 if (info.conflicts) toast('같은 항목을 동시에 고친 내용이 있어서 한쪽을 "[충돌본]"으로 함께 보관했어요. 확인한 뒤 필요 없는 쪽을 삭제해 주세요.');
                 return { ok: true, changed: info.changedLocal, pushed: info.pushed, conflicts: info.conflicts };
             }).catch(function (e) {
                 if (!authed || !db || !driveOn()) return { ok: false, error: e };
+                if (e && AUTH_CODES.indexOf(e.code) >= 0) { handleAuthError(e); return { ok: false, error: e, auth: true }; }
                 var key = e && (e.code === 'bad_key' || e.code === 'decrypt');
                 var msg = driveErrText(e), changed = driveState.status !== (key ? 'keyerror' : 'error') || driveState.msg !== msg;
                 driveState = { status: key ? 'keyerror' : 'error', at: driveState.at, msg: msg };
@@ -1380,14 +1417,14 @@
         }
                 function syncJob(fn) { var p = syncChain.then(fn); syncChain = p.catch(function () { /* 다음 작업은 계속 */ }); return p; }
         function runSync() {   // 자동 동기화: 이미 대기 중인 게 있으면 합침, 팀 코드가 틀린 상태면 멈춤
-            if (!driveOn() || !authed || driveState.status === 'keyerror') return Promise.resolve({ ok: false });
+            if (!driveOn() || !authed || accountGate() || driveState.status === 'keyerror') return Promise.resolve({ ok: false });
             if (syncQueued) return syncChain;
             syncQueued = true;
             syncChain = syncChain.then(function () { syncQueued = false; return doSync(); }).catch(function () { return { ok: false }; });
             return syncChain;
         }
         function requestSync(delay) {
-            if (!driveOn() || !authed || driveState.status === 'keyerror') return;
+            if (!driveOn() || !authed || accountGate() || driveState.status === 'keyerror') return;
             clearTimeout(pushTimer); pushTimer = setTimeout(function () { runSync(); }, delay || 0);
         }
         function startPoll() { stopPoll(); pollTimer = setInterval(function () { if (document.visibilityState === 'visible') runSync(); }, DRIVE_POLL_MS); }
@@ -1419,15 +1456,16 @@
                 });
             }).then(function (j) {
                 if (!authed || !db) return;
-                db.drive = { url: url, k: K, rev: j.rev, pk: '' }; teamCache = team; driveState = { status: 'ok', at: new Date(), msg: '' };
+                db.drive = { url: url, k: K, rev: j.rev, pk: '', acc: false }; teamCache = team; driveState = { status: 'ok', at: new Date(), msg: '' };
                 startPoll(); commit(); showTeamCode(makeTeamCode(url, K), true);
             }).catch(function (e) { if (authed && db) toast(driveErrText(e)); });
         }
         function connectJoin(p) {
-            var prev = db.drive; db.drive = { url: p.url, k: p.k, rev: 0, pk: '' }; teamCache = null; driveState = { status: 'idle', at: null, msg: '' };
+            var prev = db.drive; db.drive = { url: p.url, k: p.k, rev: 0, pk: '', acc: false }; teamCache = null; driveState = { status: 'idle', at: null, msg: '' };
             toast('드라이브에서 불러오는 중...');
             return syncJob(doSync).then(function (r) {
                 if (!authed || !db) return;
+                if (!r.ok && r.auth) { startPoll(); commit('팀에 참여했어요. 이어서 계정으로 로그인해 주세요.'); return; }   // 계정 로그인이 켜진 팀
                 if (!r.ok) { db.drive = prev; teamCache = null; driveState = { status: 'idle', at: null, msg: '' }; toast(driveErrText(r.error)); render(); return; }
                 startPoll(); commit('공유 저장소에 연결했어요. 이제 직원들과 같은 내용을 봐요.');
             });
@@ -1527,7 +1565,7 @@
         function disconnectDrive() {
             if (!confirm('공유 저장소 연결을 끊을까요?\n이 기기의 내용은 그대로 남지만, 이후 변경은 드라이브·다른 직원에게 전달되지 않아요.\n(드라이브에 저장된 파일은 지워지지 않아요.)')) return;
             stopPoll(); clearTimeout(pushTimer); teamCache = null; driveState = { status: 'idle', at: null, msg: '' };
-            db.drive = { url: '', k: '', rev: 0, pk: '' };
+            db.drive = { url: '', k: '', rev: 0, pk: '', acc: false }; db.account = null; acctUi = { list: null, err: '', loading: false, at: 0, enforced: null };
             commit('공유 저장소 연결을 끊었어요.');
         }
 
@@ -1567,7 +1605,7 @@
             else if (st.status === 'ok' && st.at) { line = '연결됨: ' + fmtClock(st.at) + '에 드라이브와 맞췄어요.'; cls += ' good'; }
             else { line = '연결됨: 드라이브와 맞추는 중이에요.'; cls += ' good'; }
             var counts = '이 기기에 있는 내용: 직원 ' + db.staff.length + '명, 일정 ' + db.events.length + '건, 공지 ' + db.notices.length + '건, 업무 ' + db.tasks.length + '건' + (on ? ' (서버 버전 ' + db.drive.rev + ')' : '');
-            return h('div', { class: 'set-block' },
+            return h('div', { class: 'set-block', 'data-block': 'drive' },
                 h('h2', {}, '공유 저장소 (구글 드라이브)'),
                 h('p', {}, '직원·일정·공지·업무를 암호화해서 구글 드라이브의 "사거리인터넷_ADMIN" 폴더에 저장하고, 연결한 모든 직원이 같은 내용을 봐요. 팀 키가 없으면 드라이브에서 파일을 열어도 내용을 읽을 수 없어요.'),
                 h('div', { class: cls, role: 'status' }, line),
@@ -1581,6 +1619,259 @@
                     h('button', { type: 'button', class: 'btn btn-dark', onclick: openInitForm }, '처음 연결하기 (관리자)'),
                     h('button', { type: 'button', class: 'btn', onclick: openJoinForm }, '팀 연결 코드로 참여 (직원)')),
                 on ? h('p', { class: 'drive-tip' }, '직원이 퇴사하면 [팀 키 교체]를 눌러 주세요. 예전 코드로는 더 이상 접속할 수 없어요. 일정·공지·업무는 몇 초 안에 자동으로 저장되고, 90초마다 다른 직원의 변경 사항을 확인해요.') : null);
+        }
+
+        /* ---------- 직원 계정: 이메일 로그인 / 가입 승인 / 직원 이름 연결 ---------- */
+        // 비밀번호는 이 기기에서 '한 방향 변환값'으로 바뀐 뒤에만 서버로 가요. 서버는 그 값을 한 번 더 섞어 저장해서 원래 비밀번호는 누구도 알 수 없어요.
+        function acctNorm(v) { return String(v || '').trim().toLowerCase(); }
+        function acctOk(v) { return v.length <= 120 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+        function acctToken(email, pw) {
+            return crypto.subtle.digest('SHA-256', enc.encode('sageori-acct-v1|' + email)).then(function (salt) {
+                return crypto.subtle.importKey('raw', enc.encode(pw), 'PBKDF2', false, ['deriveBits']).then(function (base) {
+                    return crypto.subtle.deriveBits({ name: 'PBKDF2', salt: salt, iterations: ACCT_ITER, hash: 'SHA-256' }, base, 256);
+                });
+            }).then(hexOf);
+        }
+        function acctCall(action, payload) {
+            return ensureTeam().then(function (t) { return driveCall(db.drive.url, action, Object.assign({ token: t.token }, payload || {})); });
+        }
+        function acctValid(res) {
+            return res && typeof res.session === 'string' && /^[0-9a-f]{64}$/.test(res.session) && res.account && typeof res.account.email === 'string' &&
+                ['admin', 'staff'].indexOf(res.account.role) >= 0 && ['approved', 'pending', 'disabled'].indexOf(res.account.status) >= 0;
+        }
+        function setAccount(res) {
+            db.account = { email: res.account.email, session: res.session, role: res.account.role, status: res.account.status, staffId: String(res.account.staffId || '').slice(0, 40) };
+            db.drive.acc = true; me = pickMe();
+        }
+        function accountGate() {   // 계정 로그인이 필요한 상태인지: null | 'login' | 'pending' | 'disabled'
+            if (!db || !driveOn() || !db.drive.acc) return null;
+            var a = db.account;
+            if (!a || !a.session) return 'login';
+            if (a.status === 'pending') return 'pending';
+            if (a.status === 'disabled') return 'disabled';
+            return null;
+        }
+        function handleAuthError(e) {   // 서버가 "로그인 필요 / 승인 대기 / 사용 중지"라고 알려준 경우
+            db.drive.acc = true;
+            if (e.code === 'login_required') db.account = null;                // 로그인이 풀림(유효기간 지남, 삭제, 다른 기기에서 로그아웃)
+            else if (db.account) db.account.status = e.code;
+            driveState = { status: 'idle', at: driveState.at, msg: '' };
+            saveDb(); render();
+        }
+        function leaveGateAccountsOff() {   // 서버가 계정 로그인을 꺼 둔 상태(비상 초기화 뒤): 팀 연결만으로 사용
+            db.drive.acc = false; db.account = null; gateMode = 'login';
+            saveDb(); render(); requestSync(0); toast('지금은 계정 로그인이 꺼져 있어서 팀 연결만으로 사용해요.');
+        }
+        function stopGatePoll() { if (gatePoll) clearInterval(gatePoll); gatePoll = null; }
+        function checkAccountStatus(manual) {   // 승인 여부(또는 중지 여부) 다시 확인
+            if (!authed || !db || !db.account) return;
+            acctCall('me').then(function (res) {
+                if (!authed || !db || !db.account) return;
+                var a = res.account; db.account.status = a.status; db.account.role = a.role; db.account.staffId = String(a.staffId || '').slice(0, 40); me = pickMe();
+                saveDb(); render();
+                if (a.status === 'approved') { requestSync(0); toast('승인되었어요. 환영합니다!'); }
+                else if (manual) toast(a.status === 'pending' ? '아직 승인 대기 중이에요. 관리자에게 승인을 요청해 주세요.' : '아직 사용이 중지된 상태예요.');
+            }, function (er) {
+                if (!authed || !db) return;
+                if (er && er.code === 'login_required') { db.account = null; saveDb(); render(); return; }
+                if (er && er.code === 'accounts_off') { leaveGateAccountsOff(); return; }
+                if (manual) toast(driveErrText(er));
+            });
+        }
+        function acctLogout() {
+            if (!db) return;
+            var done = function () { if (!authed || !db) return; db.account = null; gateMode = 'login'; saveDb(); render(); toast('로그아웃했어요.'); };
+            if (db.account && driveOn()) acctCall('logout').then(done, done); else done();   // 서버에서도 이 기기의 로그인을 해제
+        }
+        function renderAccountGate(gate) {
+            var app = document.getElementById('app'); app.textContent = ''; stopGatePoll();
+            var box = h('div', { class: 'login-box', 'data-gate': gate }, h('div', { class: 'login-brand' }, '사거리인터넷'));
+            var links = h('div', { class: 'gate-links' },
+                h('button', { type: 'button', class: 'link-btn', onclick: openJoinForm }, '팀 연결 코드 다시 입력'),
+                h('button', { type: 'button', class: 'link-btn', onclick: lock }, '이 기기 잠그기'));
+            if (gate === 'pending' || gate === 'disabled') {
+                var isPending = gate === 'pending';
+                box.appendChild(h('h1', {}, isPending ? '승인을 기다리고 있어요' : '사용이 중지된 계정이에요'));
+                box.appendChild(h('p', { class: 'sub' }, isPending ? '가입 신청이 접수됐어요. 관리자가 승인하면 바로 사용할 수 있어요. (15초마다 자동으로 확인해요)' : '관리자가 이 계정의 사용을 중지했어요. 관리자에게 문의해 주세요.'));
+                box.appendChild(h('div', { class: 'gate-acct' }, db.account.email));
+                box.appendChild(h('div', { class: 'gate-actions' },
+                    h('button', { type: 'button', class: 'btn btn-primary', onclick: function () { checkAccountStatus(true); } }, isPending ? '승인 여부 확인' : '상태 다시 확인'),
+                    h('button', { type: 'button', class: 'btn', onclick: acctLogout }, '다른 계정으로 로그인')));
+                box.appendChild(links);
+                if (isPending) gatePoll = setInterval(function () { checkAccountStatus(false); }, ACCT_POLL_MS);
+            } else {
+                var signup = gateMode === 'signup';
+                var email = h('input', { type: 'email', id: 'acct-email', autocomplete: 'username', placeholder: '이메일', 'aria-label': '이메일', maxlength: 120 });
+                var pw = h('input', { type: 'password', id: 'acct-pw', autocomplete: signup ? 'new-password' : 'current-password', placeholder: signup ? '비밀번호 (' + MIN_PW + '자 이상)' : '비밀번호', 'aria-label': '비밀번호', maxlength: 100 });
+                var pw2 = signup ? h('input', { type: 'password', id: 'acct-pw2', autocomplete: 'new-password', placeholder: '비밀번호 한 번 더', 'aria-label': '비밀번호 확인', maxlength: 100 }) : null;
+                var err = h('div', { class: 'err', role: 'alert', style: 'padding:0' });
+                var label = signup ? '가입 신청하기' : '로그인', btn = h('button', { type: 'submit', class: 'btn btn-primary' }, label);
+                function busy(on) { btn.disabled = on; btn.textContent = on ? '확인 중...' : label; }
+                var form = h('form', { novalidate: true }, email, pw, pw2, err, btn);
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault(); err.textContent = '';
+                    if (btn.disabled) return;
+                    var em = acctNorm(email.value), pass = pw.value;
+                    if (!acctOk(em)) { err.textContent = '이메일 주소를 올바르게 입력해 주세요.'; email.focus(); return; }
+                    if (signup) {
+                        var prob = pwProblem(pass);
+                        if (prob) { err.textContent = prob; pw.focus(); return; }
+                        if (pass !== pw2.value) { err.textContent = '두 비밀번호가 서로 달라요. 다시 확인해 주세요.'; pw2.focus(); return; }
+                    } else if (!pass) { err.textContent = '비밀번호를 입력해 주세요.'; pw.focus(); return; }
+                    busy(true);
+                    acctToken(em, pass).then(function (tok) { return acctCall(signup ? 'signup' : 'login', { email: em, pw: tok }); }).then(function (res) {
+                        if (!authed || !db) return;
+                        if (!acctValid(res)) { var se = new Error('shape'); se.code = 'shape'; throw se; }
+                        setAccount(res); gateMode = 'login'; saveDb(); render();
+                        if (db.account.status === 'approved') { requestSync(0); toast('로그인했어요.'); } else toast('가입 신청이 접수됐어요. 관리자 승인을 기다려 주세요.');
+                    }).catch(function (er) {
+                        if (!authed || !db) return;
+                        if (er && er.code === 'accounts_off') { leaveGateAccountsOff(); return; }
+                        busy(false); err.textContent = driveErrText(er); pw.value = ''; if (pw2) pw2.value = '';
+                    });
+                });
+                var tabs = h('div', { class: 'gate-tabs' },
+                    h('button', { type: 'button', class: 'btn' + (!signup ? ' on' : ''), 'aria-pressed': !signup ? 'true' : 'false', onclick: function () { gateMode = 'login'; render(); } }, '로그인'),
+                    h('button', { type: 'button', class: 'btn' + (signup ? ' on' : ''), 'aria-pressed': signup ? 'true' : 'false', onclick: function () { gateMode = 'signup'; render(); } }, '가입하기'));
+                box.appendChild(h('h1', {}, signup ? '직원 가입하기' : '이메일로 로그인'));
+                box.appendChild(h('p', { class: 'sub' }, signup ? '개인 이메일과 비밀번호로 가입하면 관리자가 확인한 뒤 승인해요. 승인되기 전에는 내용을 볼 수 없어요.' : '관리자에게 승인받은 개인 이메일과 비밀번호를 입력해 주세요.'));
+                box.appendChild(tabs); box.appendChild(form);
+                box.appendChild(h('p', { class: 'login-note' }, '비밀번호는 이 기기 밖으로 그대로 나가지 않아요. 비밀번호를 잊었다면 관리자에게 계정을 지워 달라고 한 뒤 다시 가입해 주세요.'));
+                box.appendChild(links);
+            }
+            app.appendChild(h('div', { class: 'login' }, box));
+            var first = box.querySelector('input'); if (first) first.focus();
+        }
+
+        /* --- 관리자: 직원 계정 관리 (설정) --- */
+        function pendingCount() { return acctUi.list ? acctUi.list.filter(function (a) { return a.status === 'pending'; }).length : 0; }
+        function pendingNote() {   // 승인을 기다리는 가입이 있으면 관리자에게 알림
+            var n = pendingCount();
+            if (!n || !db || !db.account || db.account.role !== 'admin' || state.view === 'settings') return null;
+            return h('div', { class: 'mode-note warn', 'data-note': 'pending' }, h('span', {}, h('b', {}, '가입 승인 대기 '), '승인을 기다리는 직원 가입 신청이 ' + n + '건 있어요.'),
+                h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { state.view = 'settings'; render(); window.scrollTo(0, 0); refreshAccounts(false); } }, '승인하러 가기'));
+        }
+        function fetchAcctQuiet() {   // 동기화할 때 조용히 승인 대기 건수 확인 (관리자만, 1분에 한 번)
+            if (!db || !db.account || db.account.role !== 'admin' || Date.now() - acctUi.at < ACCT_QUIET_MS) return;
+            acctUi.at = Date.now();
+            acctCall('accounts').then(function (r) {
+                if (!authed || !db) return;
+                var before = pendingCount(); acctUi.list = r.accounts; if (pendingCount() !== before) render();
+            }, function () { /* 조용히 무시 */ });
+        }
+        function refreshAccounts(manual) {
+            if (!driveOn() || !authed || !db || acctUi.loading) return;
+            acctUi.loading = true; acctUi.err = '';
+            acctCall('ping').then(function (res) {
+                acctUi.enforced = !!res.accounts;
+                if (res.accounts && !db.drive.acc) { db.drive.acc = true; saveDb(); }
+                if (!res.accounts || !db.account || db.account.role !== 'admin') { acctUi.list = null; return null; }
+                return acctCall('accounts').then(function (r) { acctUi.list = r.accounts; });
+            }).catch(function (er) {
+                if (er && AUTH_CODES.indexOf(er.code) >= 0) { if (authed && db) handleAuthError(er); return; }
+                acctUi.err = driveErrText(er);
+            }).then(function () {
+                acctUi.loading = false; acctUi.at = Date.now();
+                if (authed && db && state.view === 'settings') render();
+                if (manual && !acctUi.err) toast('계정 목록을 새로 불러왔어요.');
+            });
+        }
+        function acctOp(email, op, staffId, okMsg) {
+            toast('처리하는 중...');
+            return acctCall('accountSet', { email: email, op: op, staffId: staffId || '' }).then(function (r) {
+                if (!authed || !db) return;
+                acctUi.list = r.accounts; render(); toast(okMsg);
+            }, function (er) {
+                if (!authed || !db) return;
+                if (er && AUTH_CODES.indexOf(er.code) >= 0) { handleAuthError(er); return; }
+                toast(driveErrText(er));
+            });
+        }
+        function freeStaffOptions(exceptEmail) {   // 아직 다른 계정과 연결되지 않은 직원 이름들
+            var taken = Object.create(null);
+            (acctUi.list || []).forEach(function (a) { if (a.staffId && a.email !== exceptEmail) taken[a.staffId] = 1; });
+            return [{ v: '', t: '직원 이름을 선택해 주세요' }].concat(db.staff.filter(function (x) { return !taken[x.id]; }).map(function (x) { return { v: x.id, t: x.name + (x.role ? ' ' + x.role : '') }; }));
+        }
+        function openApproveForm(a, matchOnly) {
+            var opts = freeStaffOptions(a.email);
+            if (opts.length < 2) { toast('연결할 수 있는 직원 이름이 없어요. 먼저 "직원 관리"에서 직원을 추가해 주세요.'); return; }
+            openForm({
+                title: matchOnly ? '직원 이름 바꾸기' : '가입 승인', saveText: matchOnly ? '변경 저장' : '승인하기',
+                fields: [{ key: 'staffId', label: a.email + ' 은(는) 누구인가요?', type: 'select', options: opts, required: true, value: matchOnly ? a.staffId : '', hint: '선택한 직원 이름으로 연결돼요. 이 직원은 로그인하면 자동으로 이 이름으로 일해요.' }],
+                onSave: function (v) { acctOp(a.email, matchOnly ? 'match' : 'approve', v.staffId, matchOnly ? '직원 이름을 바꿨어요.' : '승인했어요. 이제 이 직원은 로그인하면 바로 사용할 수 있어요.'); }
+            });
+        }
+        function openAdminCreateForm() {
+            openForm({
+                title: '관리자 계정 만들기', saveText: '관리자 계정 만들기',
+                fields: [
+                    { key: 'email', label: '관리자 이메일', required: true, max: 120, value: 'ssangmin0000@gmail.com', hint: '관리자로 등록할 수 있는 이메일이에요.' },
+                    { key: 'pw', label: '계정 비밀번호', type: 'password', required: true, max: 100, hint: MIN_PW + '자 이상, 이 기기 비밀번호와 다르게 만들어 주세요.' },
+                    { key: 'pw2', label: '계정 비밀번호 확인', type: 'password', required: true, max: 100 },
+                    { key: 'code', label: '관리자 코드', type: 'password', required: true, max: 100, hint: 'Apps Script에서 createAdminInvite 함수를 실행하면 실행 로그에 나오는 32자리 코드예요.' }
+                ],
+                validate: function (v) {
+                    if (!acctOk(acctNorm(v.email))) return '이메일 주소를 올바르게 입력해 주세요.';
+                    var pr = pwProblem(v.pw); if (pr) return pr;
+                    if (v.pw !== v.pw2) return '두 비밀번호가 서로 달라요.';
+                    if (!/^[0-9a-f]{32}$/.test(v.code.trim())) return '관리자 코드는 영문 소문자·숫자 32자리예요. 실행 로그에 나온 코드를 그대로 붙여넣어 주세요.';
+                    return null;
+                },
+                onSave: function (v) {
+                    var em = acctNorm(v.email), adm = db.staff.filter(function (x) { return x.adm; })[0];
+                    toast('관리자 계정을 만드는 중...');
+                    acctToken(em, v.pw).then(function (tok) { return acctCall('adminInit', { setup: v.code.trim(), email: em, pw: tok, staffId: adm ? adm.id : '' }); }).then(function (res) {
+                        if (!authed || !db) return;
+                        if (!acctValid(res)) { var se = new Error('shape'); se.code = 'shape'; throw se; }
+                        setAccount(res); acctUi = { list: null, err: '', loading: false, at: 0, enforced: true };
+                        commit('관리자 계정을 만들었어요. 이제 모든 기기에서 이메일 로그인이 필요해요.'); refreshAccounts(false);
+                    }).catch(function (er) { if (authed && db) toast(driveErrText(er)); });
+                }
+            });
+        }
+        function accountBlock() {
+            var A = acctUi, kids = [h('h2', {}, '직원 계정 (가입 승인)'), h('p', {}, '직원이 개인 이메일로 가입하면 여기에서 승인하고 직원 이름과 연결해요. 승인된 직원만 공유 내용을 볼 수 있고, 관리자 외에는 설정 화면의 "팀 추가"만 보여요.')];
+            if (!driveOn()) { kids.push(h('div', { class: 'drive-line' }, '먼저 아래 "공유 저장소"에서 드라이브를 연결해 주세요.')); return h('div', { class: 'set-block', 'data-block': 'accounts' }, kids); }
+            var enforced = A.enforced === null ? !!db.drive.acc : A.enforced, isAdm = !!(db.account && db.account.role === 'admin'), line, cls = 'drive-line';
+            if (A.err) { line = '확인 문제: ' + A.err; cls += ' bad'; }
+            else if (A.loading && A.enforced === null) line = '계정 상태를 확인하는 중이에요...';
+            else if (!enforced) line = '계정 로그인: 꺼짐. 관리자 계정을 만들면 켜지고, 그때부터 모든 기기가 이메일로 로그인해야 해요.';
+            else if (!isAdm) line = '계정 로그인: 켜짐. 관리자 계정으로 로그인해야 직원 계정을 관리할 수 있어요.';
+            else { line = '계정 로그인: 켜짐. 관리자 ' + db.account.email; cls += ' good'; }
+            kids.push(h('div', { class: cls, role: 'status' }, line));
+            var acts = [];
+            if (!enforced) acts.push(h('button', { type: 'button', class: 'btn btn-dark', onclick: openAdminCreateForm }, '관리자 계정 만들기'));
+            acts.push(h('button', { type: 'button', class: 'btn', onclick: function () { refreshAccounts(true); } }, '새로고침'));
+            kids.push(h('div', { class: 'actions' }, acts));
+            if (enforced && isAdm && A.list) {
+                var nameOf = function (id) { var st = staffById(id); return id ? (st ? st.name : '(없는 직원)') : '연결 안 됨'; };
+                var group = function (title, status, rowFn) {
+                    var items = A.list.filter(function (a) { return a.role !== 'admin' && a.status === status; });
+                    return h('div', { class: 'acct-group', 'data-group': status }, h('h3', {}, title + ' ' + items.length + '명'),
+                        items.length ? h('div', { class: 'panel' }, items.map(rowFn)) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, status === 'pending' ? '승인을 기다리는 가입이 없어요.' : '없어요.')));
+                };
+                var adminRow = A.list.filter(function (a) { return a.role === 'admin'; })[0];
+                if (adminRow) kids.push(h('div', { class: 'acct-group' }, h('h3', {}, '관리자'), h('div', { class: 'panel' }, h('div', { class: 'acct-row', 'data-email': adminRow.email },
+                    h('div', {}, h('b', {}, adminRow.email), h('span', { class: 'acct-badge ok' }, '관리자'), h('div', { class: 'acct-sub' }, '직원 이름: ' + nameOf(adminRow.staffId))), h('div', {})))));
+                kids.push(group('승인 대기', 'pending', function (a) {
+                    return h('div', { class: 'acct-row', 'data-email': a.email }, h('div', {}, h('b', {}, a.email), h('span', { class: 'acct-badge wait' }, '승인 대기'), h('div', { class: 'acct-sub' }, '가입 ' + String(a.createdAt).slice(0, 16))),
+                        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-sm btn-primary', onclick: function () { openApproveForm(a, false); } }, '승인'),
+                            h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { if (confirm(a.email + ' 가입 신청을 거절(삭제)할까요?')) acctOp(a.email, 'delete', '', '가입 신청을 거절했어요.'); } }, '거절')));
+                }));
+                kids.push(group('승인된 직원', 'approved', function (a) {
+                    return h('div', { class: 'acct-row', 'data-email': a.email }, h('div', {}, h('b', {}, a.email), h('span', { class: 'acct-badge ok' }, '사용 중'), h('div', { class: 'acct-sub' }, '직원 이름: ' + nameOf(a.staffId))),
+                        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { openApproveForm(a, true); } }, '직원 이름 변경'),
+                            h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { if (confirm(a.email + ' 계정의 사용을 중지할까요?\n이미 로그인한 기기에서도 바로 내용을 볼 수 없게 돼요.')) acctOp(a.email, 'disable', '', '사용을 중지했어요.'); } }, '사용 중지'),
+                            h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { if (confirm(a.email + ' 계정을 삭제할까요?\n삭제하면 모든 기기에서 로그인이 풀리고, 다시 쓰려면 새로 가입해야 해요.')) acctOp(a.email, 'delete', '', '계정을 삭제했어요.'); } }, '삭제')));
+                }));
+                kids.push(group('사용 중지', 'disabled', function (a) {
+                    return h('div', { class: 'acct-row', 'data-email': a.email }, h('div', {}, h('b', {}, a.email), h('span', { class: 'acct-badge off' }, '중지됨'), h('div', { class: 'acct-sub' }, '직원 이름: ' + nameOf(a.staffId))),
+                        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { acctOp(a.email, 'enable', '', '다시 사용할 수 있게 했어요.'); } }, '다시 사용'),
+                            h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { if (confirm(a.email + ' 계정을 삭제할까요?')) acctOp(a.email, 'delete', '', '계정을 삭제했어요.'); } }, '삭제')));
+                }));
+                kids.push(h('div', { class: 'drive-tip' }, '비밀번호를 잊은 직원은 [삭제] 후 다시 가입하게 해 주세요. 직원이 퇴사하면 [사용 중지] 후 [팀 키 교체]를 해 두면 가장 안전해요.'));
+            }
+            return h('div', { class: 'set-block', 'data-block': 'accounts' }, kids);
         }
 
         /* ---------- 화면: 설정 ---------- */
@@ -1600,7 +1891,7 @@
                 ],
                 validate: function (v) { return pwProblem(v.pw) || (v.pw !== v.pw2 ? '두 비밀번호가 서로 달라요.' : null); },
                 onSave: function (v) {
-                    var salt = b64e(randBytes(16)), snapshot = JSON.stringify(db);
+                    var salt = b64e(randBytes(16)), snapshot = JSON.stringify(Object.assign({}, db, { account: null }));   // 로그인 정보는 백업에 넣지 않음
                     deriveKey(v.pw, salt, KDF_ITER).then(function (key) { return encryptText(key, snapshot, 'backup'); }).then(function (blob) {
                         var file = { app: 'sageori-admin-backup', v: 2, kdf: 'PBKDF2-SHA256', iter: KDF_ITER, salt: salt, iv: blob.iv, ct: blob.ct, createdAt: new Date().toISOString() };
                         downloadFile('사거리인터넷-admin-암호화백업-' + ymd(new Date()) + '.json', JSON.stringify(file));
@@ -1677,7 +1968,17 @@
                 location.reload();
             });
         }
+        function renderStaffSettings() {   // 관리자가 아닌 직원: '팀 추가'만 보임
+            var on = driveOn(), cls = 'drive-line' + (on ? ' good' : '');
+            return h('div', {},
+                h('div', { class: 'page-head' }, h('h1', {}, '설정')),
+                h('div', { class: 'set-block', 'data-staff-settings': 'yes' }, h('h2', {}, '팀 추가'),
+                    h('p', {}, '관리자에게 받은 팀 연결 코드로 이 기기를 팀에 연결해요. 이미 연결되어 있다면 코드가 바뀐 경우에만 다시 입력하면 돼요.'),
+                    h('div', { class: cls, role: 'status' }, on ? '팀에 연결되어 있어요.' : '아직 팀에 연결되지 않았어요.'),
+                    h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-dark', onclick: openJoinForm }, on ? '팀 연결 코드로 다시 참여' : '팀 연결 코드로 참여'))));
+        }
         function renderSettings() {
+            if (!isAdminUser()) return renderStaffSettings();
             var file = h('input', { type: 'file', accept: '.json,application/json', hidden: true, id: 'import-file' });
             file.addEventListener('change', function () { importBackup(this.files[0]); this.value = ''; });
             return h('div', {},
@@ -1694,13 +1995,14 @@
                                 h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editStaff(s); } }, '수정'),
                                 h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { removeStaff(s); } }, '삭제')));
                     }))),
+                accountBlock(),
                 driveBlock(),
                 h('div', { class: 'set-block' }, h('h2', {}, '암호화 백업'),
                     h('p', {}, '지금은 입력한 내용이 이 브라우저에만 저장돼요. 브라우저 기록을 지우면 사라지니, 중요한 내용은 암호화 백업 파일로 보관해 주세요. 백업 비밀번호는 파일과 따로 기억해 두세요.'),
                     h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-dark', onclick: exportBackup }, '암호화 백업 만들기'), h('button', { type: 'button', class: 'btn', onclick: function () { file.click(); } }, '백업 파일 불러오기'), file)),
                 h('div', { class: 'set-block' }, h('h2', {}, '보안'),
-                    h('p', {}, '이 기기에 저장된 내용은 비밀번호로 암호화돼요(AES-256). 비밀번호를 잊으면 복구할 수 없어요. 자리를 비울 때는 [지금 잠그기]를 눌러 주세요.'),
-                    h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', onclick: changePassword }, '비밀번호 변경'), h('button', { type: 'button', class: 'btn', onclick: lock }, '지금 잠그기'))),
+                    h('p', {}, '이 기기에 저장된 내용은 "이 기기 비밀번호"로 암호화돼요(AES-256). 이 비밀번호를 잊으면 복구할 수 없어요. (이메일 계정 비밀번호와는 별개예요.) 자리를 비울 때는 [지금 잠그기]를 눌러 주세요.'),
+                    h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', onclick: changePassword }, '이 기기 비밀번호 변경'), h('button', { type: 'button', class: 'btn', onclick: lock }, '지금 잠그기'))),
                 h('div', { class: 'set-block' }, h('h2', {}, '삭제'),
                     h('p', {}, '내용만 지우거나, 비밀번호까지 포함해 이 기기의 ADMIN 흔적을 모두 지울 수 있어요.'),
                     h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-danger', onclick: resetAll }, '내용 모두 지우기'), h('button', { type: 'button', class: 'btn btn-danger', onclick: wipeDevice }, '이 기기에서 완전히 삭제'))));
@@ -1711,6 +2013,10 @@
             var app = document.getElementById('app');
             var ae = document.activeElement, fk = ae && ae.getAttribute ? ae.getAttribute('data-fk') : null;
             if (!authed || !db) { renderLogin(); return; }
+            var gate = accountGate();
+            if (gate) { renderAccountGate(gate); return; }   // 계정 로그인이 필요하면 이 화면부터
+            stopGatePoll();
+            if (isStaffUser()) { var forced = pickMe(); if (forced !== me) me = forced; }
             var view = state.view, content;
             if (view === 'calendar') content = renderCalendar();
             else if (view === 'notices') content = renderNotices();
@@ -1723,7 +2029,7 @@
             meSel.addEventListener('change', function () { me = this.value; lsSet(ME_KEY, me); render(); });
 
             var nav = h('nav', { class: 'nav', 'aria-label': '메뉴' }, VIEWS.map(function (v) {
-                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; render(); window.scrollTo(0, 0); } }, v.t);
+                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); } }, v.t);
             }));
             var note = driveBanner();
             var appWarn = inAppBrowser() ? h('div', { class: 'mode-note warn', 'data-note': 'inapp' }, h('span', {}, h('b', {}, '앱 안에서 열린 화면이에요 '), '이 안에서는 저장이 불안정할 수 있어요. 화면 메뉴(⋯ 또는 공유 버튼)의 "다른 브라우저로 열기"로 사파리·크롬에서 열어 주세요.')) : null;
@@ -1733,8 +2039,11 @@
                 h('aside', { class: 'rail' },
                     h('div', { class: 'brand' }, '사거리인터넷', h('small', {}, 'ADMIN')),
                     nav,
-                    h('div', { class: 'rail-foot' }, h('label', { for: 'me-sel' }, '내 이름'), meSel, h('button', { type: 'button', class: 'btn btn-sm', onclick: lock }, '잠그기'))),
-                h('main', { class: 'main' }, appWarn, note, content, driveFooter())));
+                    isStaffUser()
+                        ? h('div', { class: 'rail-foot' }, h('label', {}, '로그인 중'), h('div', { class: 'me-fixed', 'data-fixed-me': 'yes' }, staffName(me)), h('div', { class: 'acct-email' }, db.account.email),
+                            h('button', { type: 'button', class: 'btn btn-sm', onclick: acctLogout }, '로그아웃'), h('button', { type: 'button', class: 'btn btn-sm', onclick: lock }, '잠그기'))
+                        : h('div', { class: 'rail-foot' }, h('label', { for: 'me-sel' }, '내 이름'), meSel, h('button', { type: 'button', class: 'btn btn-sm', onclick: lock }, '잠그기'))),
+                h('main', { class: 'main' }, appWarn, pendingNote(), note, content, driveFooter())));
             if (fk) { var again = document.querySelector('[data-fk="' + fk + '"]'); if (again) again.focus(); }
         }
 
