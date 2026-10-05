@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3xI5aA9HKfm5MgzxbJVHr4d15EmwPJsAxlps/YkQ+As='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KW6KKxy2xIx6qMYj5hv7c/6bpDKNB/xqUHfKOzTL7GQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -122,6 +122,13 @@
         .acct-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
         .acct-badge { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 800; border-radius: 4px; padding: 1px 7px; vertical-align: middle; }
         .acct-badge.ok { background: #DDF0DD; color: #1F6B2A; } .acct-badge.wait { background: #FFF3BF; color: #7A5B00; } .acct-badge.off { background: #E4E6DD; color: #5F6A4F; }
+        .forms-sub { color: var(--muted); margin: 0 0 18px; }
+        .forms-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+        .form-card { display: grid; gap: 6px; text-align: left; padding: 28px 24px; min-height: 130px; background: #fff; border: 2px solid var(--line); border-radius: 12px; cursor: pointer; font: inherit; color: var(--ink); }
+        .form-card b { font-size: 21px; font-weight: 800; letter-spacing: -0.6px; } .form-card span { font-size: 14px; color: var(--muted); }
+        .form-card:hover { border-color: var(--olive-700); background: #FBFCF4; }
+        .teamjson { margin-top: 14px; padding: 14px 16px; background: #FFF8DB; border: 1px solid #F0DC8A; border-radius: 10px; }
+        .teamjson h3 { font-size: 15px; font-weight: 800; margin: 0 0 6px; } .teamjson p { font-size: 13.5px; margin: 0 0 8px; } .teamjson .code-box { min-height: 56px; }
         .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
         .page-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
         .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -263,6 +270,7 @@
         }
         @media (max-width: 700px) {
             .acct-row { grid-template-columns: minmax(0, 1fr); }
+            .forms-grid { grid-template-columns: minmax(0, 1fr); }
             .acct-email { display: none; }
             .cal-cell { min-height: 56px; padding: 4px 2px; align-items: center; gap: 2px; }
             .cal-cell .chip, .cal-cell .more { display: none; }
@@ -315,7 +323,7 @@
         var PALETTE = ['#5C6B1E', '#B58900', '#E64A19', '#00796B', '#3949AB', '#8E3B6B', '#6D4C41', '#455A64'];
         var STATUS = [{ v: 'todo', t: '할 일' }, { v: 'doing', t: '진행 중' }, { v: 'done', t: '완료' }];
         var PRIORITY = [{ v: 'high', t: '높음' }, { v: 'normal', t: '보통' }, { v: 'low', t: '낮음' }];
-        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'settings', t: '설정' }];
+        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'settings', t: '설정' }];
 
         // 공유 저장소 주소는 반드시 구글 Apps Script 웹 앱 주소여야 합니다 (그 밖의 주소로는 어떤 요청도 보내지 않음)
         var DRIVE_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,200}\/exec$/;
@@ -324,6 +332,10 @@
         var ACCT_QUIET_MS = 60000;      // 관리자 화면: 승인 대기 건수는 동기화할 때 최대 1분에 한 번 확인
         var ACCT_ITER = 300000;         // 계정 비밀번호를 한 방향 변환값으로 바꾸는 반복 횟수
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
+        var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
+        var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
+        var teamUrl = '', teamCfgDone = false, legacyOpen = false, keysOffered = false;
+        var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
         var DRIVE_PUSH_DELAY_MS = 1500; // 내용을 바꾼 뒤 이 시간 뒤에 드라이브로 저장
         var driveState = { status: 'idle', at: null, msg: '' };   // idle / syncing / ok / error / keyerror
@@ -332,7 +344,7 @@
         var teamCache = null, syncChain = Promise.resolve(), syncQueued = false, pollTimer = null, pushTimer = null;
         var db = null, me = '', authed = false, cryptoKey = null, idleTimer = null, toastTimer = null, pendingToast = '';
         var now0 = new Date();
-        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false, date: '' };
+        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false, date: '', form: '' };
 
         /* ---------- 공통 도구 ---------- */
         function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -446,7 +458,7 @@
             }
             var ac = d.account && typeof d.account === 'object' ? d.account : null;
             if (ac && out.drive.url && typeof ac.email === 'string' && ac.email.length <= 120 && /^[0-9a-f]{64}$/.test(str(ac.session, 64)) && ['admin', 'staff'].indexOf(ac.role) >= 0 && ['approved', 'pending', 'disabled'].indexOf(ac.status) >= 0) {
-                out.account = { email: ac.email, session: ac.session, role: ac.role, status: ac.status, staffId: str(ac.staffId, 40) };
+                out.account = { email: ac.email, session: ac.session, role: ac.role, status: ac.status, staffId: str(ac.staffId, 40), priv: /^[A-Za-z0-9+\/=]{100,3000}$/.test(str(ac.priv, 3000)) ? ac.priv : '', hk: ac.hk === true };
             }
             return out;
         }
@@ -575,9 +587,11 @@
             if (pendingToast) { toast(pendingToast); pendingToast = ''; }
             if (driveOn()) { startPoll(); requestSync(0); }   // 공유 저장소: 로그인하면 바로 최신 내용으로 맞춤
             if (pendingJoin) setTimeout(offerPendingJoin, 50);
+            if (db.account) setTimeout(maybeOfferKeys, 800);
         }
         function lock() {   // 잠그면 암호키와 데이터를 메모리에서도 지우고 화면을 비웁니다
             authed = false; cryptoKey = null; db = null; me = '';
+            uni = { mode: 'login', pending: null }; keysOffered = false;
             stopPoll(); stopGatePoll(); clearTimeout(pushTimer); teamCache = null; syncQueued = false; driveState = { status: 'idle', at: null, msg: '' }; acctUi = { list: null, err: '', loading: false, at: 0, enforced: null }; gateMode = 'login';
             state.view = 'today'; state.who = 'all'; state.status = 'all'; state.date = ''; state.open = Object.create(null);
             var d = document.getElementById('dlg'); if (d.open) closeDlg(); else d.textContent = '';
@@ -597,6 +611,8 @@
                     h('p', { class: 'sub' }, '이 페이지는 내용을 암호화해서 저장해요. 주소가 https:// 로 시작하는 보안 연결과 최신 브라우저에서만 쓸 수 있어요.'))));
                 return;
             }
+            if (!teamCfgDone) { app.appendChild(h('div', { class: 'login' }, h('div', { class: 'login-box' }, h('div', { class: 'login-brand' }, '사거리인터넷'), h('p', { class: 'sub' }, '불러오는 중이에요...')))); return; }
+            if (teamUrl && !legacyOpen) { renderUnifiedLogin(); return; }
             var auth = loadAuth(), setup = !auth, legacy = setup && !!lsGet(LEGACY_DB_KEY);
             var pw = h('input', { type: 'password', id: 'pw', autocomplete: setup ? 'new-password' : 'current-password', placeholder: setup ? '비밀번호 (' + MIN_PW + '자 이상)' : '비밀번호', 'aria-label': '비밀번호', maxlength: 100 });
             var pw2 = setup ? h('input', { type: 'password', id: 'pw2', autocomplete: 'new-password', placeholder: '비밀번호 한 번 더', 'aria-label': '비밀번호 확인', maxlength: 100 }) : null;
@@ -648,6 +664,7 @@
                     form,
                     inviteNote(),
                     inAppNote(),
+                    teamUrl && legacyOpen ? h('p', { class: 'login-note' }, h('button', { type: 'button', class: 'link-btn', onclick: function () { legacyOpen = false; render(); } }, '아이디(이메일)로 로그인하기')) : null,
                     setup ? h('p', { class: 'login-note warn' }, '비밀번호를 잊으면 저장된 내용을 되살릴 수 없어요. 안전한 곳에 적어 두세요.') : null,
                     setup ? h('p', { class: 'login-note' }, '여러 단어를 이어 붙인 문장 형태(14자 이상)로 만들수록 안전해요. 다른 사이트에서 쓰는 비밀번호는 피해 주세요.') : null,
                     legacy ? h('p', { class: 'login-note' }, '이전 버전에서 저장된 내용을 찾았어요. 새 비밀번호로 암호화해서 그대로 옮겨 드려요.') : null,
@@ -1396,6 +1413,12 @@
                     return attempt();
                 }
                 throw e;
+            }).catch(function (e) {
+                if (e && e.code === 'bad_key' && db && db.account && db.account.priv && db.account.session && !info.recovered) {   // 관리자가 팀 키를 바꿈 → 내 계정 보관함에서 새 키를 받아 다시 시도
+                    info.recovered = true;
+                    return recoverTeamKey().then(function () { info.changedRev = true; return attempt(); });
+                }
+                throw e;
             }).then(function () {
                 if (!authed || !db || !driveOn()) return { ok: false };
                 var wasOk = driveState.status === 'ok';
@@ -1532,12 +1555,12 @@
             });
         }
         function rotateTeamKey() {
-            if (!confirm('팀 키를 교체할까요?\n교체하면 예전 코드를 가진 사람(퇴사한 직원 등)은 더 이상 접속할 수 없어요.\n다른 직원들은 새 코드를 한 번씩 입력해야 해요.\n(교체 전에 이미 받아 간 내용은 그 사람의 기기에 남아 있을 수 있어요.)')) return;
+            if (!confirm('팀 키를 교체할까요?\n교체하면 예전 코드를 가진 사람(퇴사한 직원 등)은 더 이상 접속할 수 없어요.\n아이디로 로그인하는 직원은 새 키를 자동으로 받아요.\n(교체 전에 이미 받아 간 내용은 그 사람의 기기에 남아 있을 수 있어요.)')) return;
             toast('팀 키를 교체하는 중...');
-            var K2 = hexOf(randBytes(32)), team2 = null, verifier2 = '';
+            var K2 = hexOf(randBytes(32)), team2 = null, verifier2 = '', wraps2;
             function rotateLoop(team, tries) {
                 return encryptText(team2.encKey, JSON.stringify(dataSnapshot()), 'drive-v1').then(function (blob) {
-                    return driveCall(db.drive.url, 'rotate', { token: team.token, newVerifier: verifier2, baseRev: db.drive.rev, blob: blob });
+                    return driveCall(db.drive.url, 'rotate', { token: team.token, newVerifier: verifier2, baseRev: db.drive.rev, blob: blob, wraps: wraps2 });
                 }).catch(function (e) {
                     if (e && e.code === 'conflict' && tries < 4) return mergeRemote(e.reply, team).then(function () { return rotateLoop(team, tries + 1); });
                     throw e;
@@ -1548,8 +1571,11 @@
                     if (!r.ok) throw r.error || new Error('sync');
                     return deriveTeam(K2);
                 }).then(function (t) { team2 = t; return sha256hex(t.token); }).then(function (v) {
-                    verifier2 = v; db.drive.pk = K2;                    // 응답을 못 받는 경우를 대비해 새 키를 먼저 이 기기에 안전하게 저장
-                    return saveDb().then(ensureTeam);
+                    verifier2 = v;
+                    return (db.drive.acc ? buildWraps(K2) : Promise.resolve(undefined)).then(function (w) {
+                        wraps2 = w; db.drive.pk = K2;                    // 응답을 못 받는 경우를 대비해 새 키를 먼저 이 기기에 안전하게 저장
+                        return saveDb().then(ensureTeam);
+                    });
                 }).then(function (team) { return rotateLoop(team, 0); }).then(function (j) {
                     db.drive.k = K2; db.drive.pk = ''; db.drive.rev = j.rev; teamCache = team2; driveState = { status: 'ok', at: new Date(), msg: '' };
                 });
@@ -1623,6 +1649,41 @@
 
         /* ---------- 직원 계정: 이메일 로그인 / 가입 승인 / 직원 이름 연결 ---------- */
         // 비밀번호는 이 기기에서 '한 방향 변환값'으로 바뀐 뒤에만 서버로 가요. 서버는 그 값을 한 번 더 섞어 저장해서 원래 비밀번호는 누구도 알 수 없어요.
+        /* --- 계정 보관함(키): 팀 키를 '그 사람의 공개키'로 잠가서 서버에 두고, 개인 열쇠는 '그 사람의 비밀번호'로 잠가 둠 --- */
+        function genAcctKeys(pw) {
+            return crypto.subtle.generateKey({ name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' }, true, ['encrypt', 'decrypt']).then(function (kp) {
+                return Promise.all([crypto.subtle.exportKey('spki', kp.publicKey), crypto.subtle.exportKey('pkcs8', kp.privateKey)]);
+            }).then(function (r) {
+                var salt = b64e(randBytes(16)), pub = b64e(r[0]), priv = b64e(r[1]);
+                return deriveKey(pw, salt, ACCT_ITER).then(function (key) { return encryptText(key, priv, 'acct-priv'); }).then(function (blob) {
+                    return { pub: pub, priv: priv, encPriv: { salt: salt, iv: blob.iv, ct: blob.ct } };
+                });
+            });
+        }
+        function openEncPriv(pw, ep) { return deriveKey(pw, ep.salt, ACCT_ITER).then(function (key) { return decryptText(key, { iv: ep.iv, ct: ep.ct }, 'acct-priv'); }); }
+        function wrapTeamKey(pubB64, k) {
+            return crypto.subtle.importKey('spki', b64d(pubB64), { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['encrypt']).then(function (pk) {
+                return crypto.subtle.encrypt({ name: 'RSA-OAEP' }, pk, bytesOfHex(k));
+            }).then(b64e);
+        }
+        function unwrapTeamKey(privB64, wk) {
+            return crypto.subtle.importKey('pkcs8', b64d(privB64), { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['decrypt']).then(function (sk) {
+                return crypto.subtle.decrypt({ name: 'RSA-OAEP' }, sk, b64d(wk));
+            }).then(function (buf) { var k = hexOf(buf); if (!/^[0-9a-f]{64}$/.test(k)) throw new Error('badkey'); return k; });
+        }
+        function buildWraps(k2) {   // 팀 키를 바꿀 때: 승인된 모든 계정에 새 키를 각자의 공개키로 잠가서 보냄
+            return acctCall('accounts').then(function (r) {
+                return Promise.all(r.accounts.filter(function (a) { return a.status === 'approved' && a.pub; }).map(function (a) {
+                    return wrapTeamKey(a.pub, k2).then(function (w) { return [a.email, w]; });
+                }));
+            }).then(function (pairs) { var o = {}; pairs.forEach(function (p) { o[p[0]] = p[1]; }); return o; });
+        }
+        function recoverTeamKey() {   // 관리자가 팀 키를 바꿨을 때: 내 계정 보관함에서 새 팀 키를 받아 옴
+            return driveCall(db.drive.url, 'me', {}).then(function (res) {
+                if (!res.keys || !res.keys.wk || !db.account.priv) throw new Error('nokey');
+                return unwrapTeamKey(db.account.priv, res.keys.wk);
+            }).then(function (k) { if (k === db.drive.k) throw new Error('same'); db.drive.k = k; teamCache = null; return k; });
+        }
         function acctNorm(v) { return String(v || '').trim().toLowerCase(); }
         function acctOk(v) { return v.length <= 120 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
         function acctToken(email, pw) {
@@ -1639,8 +1700,9 @@
             return res && typeof res.session === 'string' && /^[0-9a-f]{64}$/.test(res.session) && res.account && typeof res.account.email === 'string' &&
                 ['admin', 'staff'].indexOf(res.account.role) >= 0 && ['approved', 'pending', 'disabled'].indexOf(res.account.status) >= 0;
         }
-        function setAccount(res) {
-            db.account = { email: res.account.email, session: res.session, role: res.account.role, status: res.account.status, staffId: String(res.account.staffId || '').slice(0, 40) };
+        function setAccount(res, priv) {
+            var keep = db.account && db.account.email === res.account.email ? db.account.priv : '';
+            db.account = { email: res.account.email, session: res.session, role: res.account.role, status: res.account.status, staffId: String(res.account.staffId || '').slice(0, 40), priv: priv || keep || '', hk: !!res.account.hasKeys };
             db.drive.acc = true; me = pickMe();
         }
         function accountGate() {   // 계정 로그인이 필요한 상태인지: null | 'login' | 'pending' | 'disabled'
@@ -1662,6 +1724,32 @@
             db.drive.acc = false; db.account = null; gateMode = 'login';
             saveDb(); render(); requestSync(0); toast('지금은 계정 로그인이 꺼져 있어서 팀 연결만으로 사용해요.');
         }
+        function maybeOfferKeys() {   // 예전 방식으로 가입한 계정에는 한 번만 '보관함 만들기'를 안내 (이후 어느 기기에서든 아이디로 로그인 가능)
+            if (keysOffered || !authed || !db || !driveOn() || !db.account || db.account.status !== 'approved' || db.account.hk === true) return;
+            keysOffered = true;
+            driveCall(db.drive.url, 'me', {}).then(function (res) {
+                if (!authed || !db || !db.account) return;
+                if (res.account && res.account.hasKeys) { db.account.hk = true; saveDb(); return; }
+                openForm({
+                    title: '계정 보관함 만들기', saveText: '보관함 만들기',
+                    fields: [{ key: 'pw', label: '계정 비밀번호', type: 'password', required: true, max: 100, hint: '한 번만 하는 설정이에요. 이후에는 어느 기기에서든 이 이메일과 비밀번호만으로 로그인할 수 있어요. 로그인할 때 쓰는 계정 비밀번호를 입력해 주세요.' }],
+                    onSave: function (v) { makeKeysForAccount(v.pw); }
+                });
+            }, function () { keysOffered = false; });
+        }
+        function makeKeysForAccount(pw) {
+            toast('보관함을 만드는 중...');
+            var em = db.account.email, kk = null;
+            acctToken(em, pw).then(function (tok) { return driveCall(db.drive.url, 'login', { email: em, pw: tok }); })   // 비밀번호가 맞는지 먼저 확인
+                .then(function (lr) { db.account.session = lr.session; return genAcctKeys(pw); })
+                .then(function (k) { kk = k; return wrapTeamKey(k.pub, db.drive.k); })
+                .then(function (wk) { return acctCall('setKeys', { pub: kk.pub, encPriv: kk.encPriv, wk: wk }); })
+                .then(function () {
+                    if (!authed || !db || !db.account) return;
+                    db.account.priv = kk.priv; db.account.hk = true; saveDb();
+                    toast('보관함을 만들었어요. 이제 어느 기기에서든 이 이메일과 비밀번호로 로그인할 수 있어요.');
+                }).catch(function (er) { if (authed && db) { keysOffered = false; toast(driveErrText(er)); } });
+        }
         function stopGatePoll() { if (gatePoll) clearInterval(gatePoll); gatePoll = null; }
         function checkAccountStatus(manual) {   // 승인 여부(또는 중지 여부) 다시 확인
             if (!authed || !db || !db.account) return;
@@ -1680,7 +1768,11 @@
         }
         function acctLogout() {
             if (!db) return;
-            var done = function () { if (!authed || !db) return; db.account = null; gateMode = 'login'; saveDb(); render(); toast('로그아웃했어요.'); };
+            var done = function () {
+                if (!authed || !db) return;
+                if (teamUrl) { lock(); toast('로그아웃했어요.'); return; }   // 아이디 로그인 방식: 로그인 화면으로 (이 기기에 저장된 내용은 암호화된 채로 유지)
+                db.account = null; gateMode = 'login'; saveDb(); render(); toast('로그아웃했어요.');
+            };
             if (db.account && driveOn()) acctCall('logout').then(done, done); else done();   // 서버에서도 이 기기의 로그인을 해제
         }
         function renderAccountGate(gate) {
@@ -1692,13 +1784,13 @@
             if (gate === 'pending' || gate === 'disabled') {
                 var isPending = gate === 'pending';
                 box.appendChild(h('h1', {}, isPending ? '승인을 기다리고 있어요' : '사용이 중지된 계정이에요'));
-                box.appendChild(h('p', { class: 'sub' }, isPending ? '가입 신청이 접수됐어요. 관리자가 승인하면 바로 사용할 수 있어요. (15초마다 자동으로 확인해요)' : '관리자가 이 계정의 사용을 중지했어요. 관리자에게 문의해 주세요.'));
+                box.appendChild(h('p', { class: 'sub' }, isPending ? '가입 신청이 접수됐어요. 관리자가 승인하면 바로 사용할 수 있어요. (15초마다 자동으로 확인해요)' : '관리자가 이 계정의 사용을 중지했어요. 관리자에게 문의해 주세요. (다시 사용하게 되면 이 화면이 자동으로 열려요)'));
                 box.appendChild(h('div', { class: 'gate-acct' }, db.account.email));
                 box.appendChild(h('div', { class: 'gate-actions' },
                     h('button', { type: 'button', class: 'btn btn-primary', onclick: function () { checkAccountStatus(true); } }, isPending ? '승인 여부 확인' : '상태 다시 확인'),
                     h('button', { type: 'button', class: 'btn', onclick: acctLogout }, '다른 계정으로 로그인')));
                 box.appendChild(links);
-                if (isPending) gatePoll = setInterval(function () { checkAccountStatus(false); }, ACCT_POLL_MS);
+                gatePoll = setInterval(function () { checkAccountStatus(false); }, ACCT_POLL_MS);   // 승인 대기·사용 중지 모두: 관리자가 처리하면 자동으로 열림
             } else {
                 var signup = gateMode === 'signup';
                 var email = h('input', { type: 'email', id: 'acct-email', autocomplete: 'username', placeholder: '이메일', 'aria-label': '이메일', maxlength: 120 });
@@ -1719,11 +1811,20 @@
                         if (pass !== pw2.value) { err.textContent = '두 비밀번호가 서로 달라요. 다시 확인해 주세요.'; pw2.focus(); return; }
                     } else if (!pass) { err.textContent = '비밀번호를 입력해 주세요.'; pw.focus(); return; }
                     busy(true);
-                    acctToken(em, pass).then(function (tok) { return acctCall(signup ? 'signup' : 'login', { email: em, pw: tok }); }).then(function (res) {
+                    var keyP = signup ? genAcctKeys(pass) : Promise.resolve(null);
+                    keyP.then(function (k) {
+                        return acctToken(em, pass).then(function (tok) {
+                            return acctCall(signup ? 'signup' : 'login', k ? { email: em, pw: tok, pub: k.pub, encPriv: k.encPriv } : { email: em, pw: tok });
+                        }).then(function (res) {
+                            if (k || !res.keys || !res.keys.encPriv) return { res: res, priv: k ? k.priv : '' };
+                            return openEncPriv(pass, res.keys.encPriv).then(function (p) { return { res: res, priv: p }; }, function () { return { res: res, priv: '' }; });
+                        });
+                    }).then(function (o) {
+                        var res = o.res;
                         if (!authed || !db) return;
                         if (!acctValid(res)) { var se = new Error('shape'); se.code = 'shape'; throw se; }
-                        setAccount(res); gateMode = 'login'; saveDb(); render();
-                        if (db.account.status === 'approved') { requestSync(0); toast('로그인했어요.'); } else toast('가입 신청이 접수됐어요. 관리자 승인을 기다려 주세요.');
+                        setAccount(res, o.priv); gateMode = 'login'; saveDb(); render();
+                        if (db.account.status === 'approved') { requestSync(0); toast('로그인했어요.'); setTimeout(maybeOfferKeys, 500); } else toast('가입 신청이 접수됐어요. 관리자 승인을 기다려 주세요.');
                     }).catch(function (er) {
                         if (!authed || !db) return;
                         if (er && er.code === 'accounts_off') { leaveGateAccountsOff(); return; }
@@ -1776,9 +1877,9 @@
                 if (manual && !acctUi.err) toast('계정 목록을 새로 불러왔어요.');
             });
         }
-        function acctOp(email, op, staffId, okMsg) {
+        function acctOp(email, op, staffId, okMsg, extra) {
             toast('처리하는 중...');
-            return acctCall('accountSet', { email: email, op: op, staffId: staffId || '' }).then(function (r) {
+            return acctCall('accountSet', Object.assign({ email: email, op: op, staffId: staffId || '' }, extra || {})).then(function (r) {
                 if (!authed || !db) return;
                 acctUi.list = r.accounts; render(); toast(okMsg);
             }, function (er) {
@@ -1798,7 +1899,14 @@
             openForm({
                 title: matchOnly ? '직원 이름 바꾸기' : '가입 승인', saveText: matchOnly ? '변경 저장' : '승인하기',
                 fields: [{ key: 'staffId', label: a.email + ' 은(는) 누구인가요?', type: 'select', options: opts, required: true, value: matchOnly ? a.staffId : '', hint: '선택한 직원 이름으로 연결돼요. 이 직원은 로그인하면 자동으로 이 이름으로 일해요.' }],
-                onSave: function (v) { acctOp(a.email, matchOnly ? 'match' : 'approve', v.staffId, matchOnly ? '직원 이름을 바꿨어요.' : '승인했어요. 이제 이 직원은 로그인하면 바로 사용할 수 있어요.'); }
+                onSave: function (v) {
+                    if (matchOnly) { acctOp(a.email, 'match', v.staffId, '직원 이름을 바꿨어요.'); return; }
+                    var info = (acctUi.list || []).filter(function (x) { return x.email === a.email; })[0];
+                    if (!info || !info.pub) { toast('이 직원은 예전 방식으로 가입해서 보관함이 없어요. 거절(삭제)한 뒤 다시 가입하게 해 주세요.'); return; }
+                    wrapTeamKey(info.pub, db.drive.k).then(function (wk) {   // 이 직원의 공개키로 팀 키를 잠가서 함께 올림 (서버도 팀 키를 알 수 없음)
+                        acctOp(a.email, 'approve', v.staffId, '승인했어요. 이제 이 직원은 어느 기기에서든 이메일과 비밀번호로 로그인하면 바로 사용할 수 있어요.', { wk: wk });
+                    }, function () { toast('팀 키를 직원에게 전달하지 못했어요. 다시 시도해 주세요.'); });
+                }
             });
         }
         function openAdminCreateForm() {
@@ -1820,14 +1928,25 @@
                 onSave: function (v) {
                     var em = acctNorm(v.email), adm = db.staff.filter(function (x) { return x.adm; })[0];
                     toast('관리자 계정을 만드는 중...');
-                    acctToken(em, v.pw).then(function (tok) { return acctCall('adminInit', { setup: v.code.trim(), email: em, pw: tok, staffId: adm ? adm.id : '' }); }).then(function (res) {
+                    var kk = null;
+                    genAcctKeys(v.pw).then(function (k) { kk = k; return Promise.all([wrapTeamKey(k.pub, db.drive.k), acctToken(em, v.pw)]); }).then(function (r) {
+                        return acctCall('adminInit', { setup: v.code.trim(), email: em, pw: r[1], staffId: adm ? adm.id : '', pub: kk.pub, encPriv: kk.encPriv, wk: r[0] });
+                    }).then(function (res) {
                         if (!authed || !db) return;
                         if (!acctValid(res)) { var se = new Error('shape'); se.code = 'shape'; throw se; }
-                        setAccount(res); acctUi = { list: null, err: '', loading: false, at: 0, enforced: true };
+                        setAccount(res, kk.priv); acctUi = { list: null, err: '', loading: false, at: 0, enforced: true };
                         commit('관리자 계정을 만들었어요. 이제 모든 기기에서 이메일 로그인이 필요해요.'); refreshAccounts(false);
                     }).catch(function (er) { if (authed && db) toast(driveErrText(er)); });
                 }
             });
+        }
+        function teamJsonBox() {   // 운영: 서버 주소를 모든 기기에 알려 주는 team.json 만들기 안내
+            var txt = JSON.stringify({ url: db.drive.url }), area = h('textarea', { class: 'code-box', readonly: true, 'aria-label': 'team.json 내용' }); area.value = txt; area.style.minHeight = '56px';
+            return h('div', { class: 'teamjson', 'data-teamjson': 'off' },
+                h('h3', {}, '어느 기기에서든 아이디로 로그인하게 하기'),
+                h('p', {}, '아래 내용을 GitHub의 ADMIN-01 폴더에 "team.json" 이름의 새 파일로 만들어 저장해 주세요. 그러면 모든 기기에서 이메일과 비밀번호만으로 로그인돼요. (이 주소만으로는 내용을 볼 수 없어요.)'),
+                area,
+                h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', onclick: function () { copyText(txt, area).then(function (okc) { toast(okc ? 'team.json 내용을 복사했어요.' : '길게 눌러(또는 Ctrl+C) 직접 복사해 주세요.'); }); } }, '내용 복사')));
         }
         function accountBlock() {
             var A = acctUi, kids = [h('h2', {}, '직원 계정 (가입 승인)'), h('p', {}, '직원이 개인 이메일로 가입하면 여기에서 승인하고 직원 이름과 연결해요. 승인된 직원만 공유 내용을 볼 수 있고, 관리자 외에는 설정 화면의 "팀 추가"만 보여요.')];
@@ -1839,6 +1958,7 @@
             else if (!isAdm) line = '계정 로그인: 켜짐. 관리자 계정으로 로그인해야 직원 계정을 관리할 수 있어요.';
             else { line = '계정 로그인: 켜짐. 관리자 ' + db.account.email; cls += ' good'; }
             kids.push(h('div', { class: cls, role: 'status' }, line));
+            if (enforced && isAdm) kids.push(teamUrl ? h('div', { class: 'drive-line good', 'data-teamjson': 'on' }, '아이디 로그인: 켜짐. 어느 기기에서든 이메일과 비밀번호만으로 들어와요.') : teamJsonBox());
             var acts = [];
             if (!enforced) acts.push(h('button', { type: 'button', class: 'btn btn-dark', onclick: openAdminCreateForm }, '관리자 계정 만들기'));
             acts.push(h('button', { type: 'button', class: 'btn', onclick: function () { refreshAccounts(true); } }, '새로고침'));
@@ -1872,6 +1992,190 @@
                 kids.push(h('div', { class: 'drive-tip' }, '비밀번호를 잊은 직원은 [삭제] 후 다시 가입하게 해 주세요. 직원이 퇴사하면 [사용 중지] 후 [팀 키 교체]를 해 두면 가장 안전해요.'));
             }
             return h('div', { class: 'set-block', 'data-block': 'accounts' }, kids);
+        }
+
+        /* ---------- 아이디(이메일) 로그인: 어느 기기에서든 이메일 + 비밀번호만으로 ---------- */
+        // 이 기기의 저장 내용은 같은 비밀번호로 암호화하고, 팀 키는 내 계정 보관함(서버)에서 비밀번호로 풀어 받아요.
+        function loadTeamConfig() {   // 운영: ADMIN-01/team.json 의 서버 주소를 읽음 (없으면 예전 방식)
+            var done = function (u) { teamUrl = u || ''; teamCfgDone = true; if (!authed) render(); };
+            try {
+                var ctl = new AbortController(), tm = setTimeout(function () { ctl.abort(); }, 4000);
+                fetch('team.json', { cache: 'no-store', credentials: 'omit', signal: ctl.signal }).then(function (r) { clearTimeout(tm); if (!r.ok) throw new Error('none'); return r.json(); })
+                    .then(function (j) { done(j && typeof j.url === 'string' && DRIVE_URL_RE.test(j.url) ? j.url : ''); }, function () { clearTimeout(tm); done(''); });
+            } catch (e) { done(''); }
+        }
+        function isNetErr(er) { return !!er && (!er.code || er.code === 'http'); }
+        function offHint(er) {
+            if (er && (er.code === 'accounts_off' || er.code === 'not_initialized')) return '계정 로그인이 아직 켜지지 않았어요. 아래 "예전 방식으로 열기"로 들어가 관리자 계정을 먼저 만들어 주세요.';
+            if (isNetErr(er)) return '서버에 연결할 수 없어요. 인터넷 연결을 확인해 주세요.';
+            return driveErrText(er);
+        }
+        function uniFail(ui, msg) { cryptoKey = null; db = null; ui.busy(false); ui.err(msg); ui.clearPw(); }
+        function applyLoginRes(res, pw) {   // 로그인 결과를 이 기기에 반영 (팀 키가 바뀌었으면 새 키로)
+            var a = res.account, prev = db.account && db.account.email === a.email ? db.account : {};
+            db.account = { email: a.email, session: res.session, role: a.role, status: a.status, staffId: String(a.staffId || '').slice(0, 40), priv: prev.priv || '', hk: !!a.hasKeys };
+            db.drive.acc = true;
+            if (a.status !== 'approved' || !res.keys || !res.keys.wk || !res.keys.encPriv) return Promise.resolve();
+            return openEncPriv(pw, res.keys.encPriv).then(function (priv) {
+                db.account.priv = priv;
+                return unwrapTeamKey(priv, res.keys.wk);
+            }).then(function (k) {
+                if (!db.drive.url || db.drive.url !== teamUrl) { db.drive.url = teamUrl; db.drive.rev = 0; }
+                if (k !== db.drive.k) { db.drive.k = k; teamCache = null; }
+            }).catch(function () { /* 열쇠를 못 풀어도 이 기기에 있던 키로 계속 */ });
+        }
+        function uniBootstrap(email, pw, res) {   // 새 기기(또는 내용을 비운 기기): 계정 보관함에서 팀 키를 풀어 이 기기에 저장 공간을 만듦
+            var kk = null;
+            return openEncPriv(pw, res.keys.encPriv).then(function (priv) {
+                return unwrapTeamKey(priv, res.keys.wk).then(function (k) { kk = { priv: priv, k: k }; });
+            }).then(function () {
+                [DB_KEY, DB_KEY + '_corrupt', AUTH_KEY, GUARD_KEY, ME_KEY].forEach(lsDel);
+                return makeAuth(pw);
+            }).then(function (r) {
+                if (!lsSet(AUTH_KEY, JSON.stringify(r.auth))) throw new Error('store');
+                cryptoKey = r.key; db = seedDb();
+                db.drive = { url: teamUrl, k: kk.k, rev: 0, pk: '', acc: true };
+                db.account = { email: res.account.email, session: res.session, role: res.account.role, status: res.account.status, staffId: String(res.account.staffId || '').slice(0, 40), priv: kk.priv, hk: true };
+                me = pickMe(); teamCache = null; driveState = { status: 'idle', at: null, msg: '' }; uni = { mode: 'login', pending: null };
+                return writeDbNow(r.key, db);
+            }).then(function () { stopGatePoll(); startSession(); });
+        }
+        function uniReplace(email, pw, res, ui, hadLocal) {   // 서버 로그인은 되었고, 이 기기에는 쓸 수 있는 내용이 없는 경우
+            var a = res.account;
+            if (a.status !== 'approved') { cryptoKey = null; db = null; uni.pending = { email: email, pw: pw, session: res.session, status: a.status }; lsSet(LAST_EMAIL_KEY, email); render(); return Promise.resolve(); }
+            if (!res.keys || !res.keys.wk || !res.keys.encPriv) { uniFail(ui, '이 계정은 보관함이 아직 없어요. 아래 "예전 방식으로 열기"로 한 번 들어가 "계정 보관함 만들기"를 해 주세요.'); return Promise.resolve(); }
+            if (hadLocal && !confirm('이 기기에 저장된 예전 내용은 다른 비밀번호(또는 다른 계정)로 잠겨 있어요.\n지우고 서버에서 새로 받을게요. (내용은 모두 서버에 저장되어 있어요)\n계속할까요?')) { uniFail(ui, '취소했어요.'); return Promise.resolve(); }
+            lsSet(LAST_EMAIL_KEY, email);
+            return uniBootstrap(email, pw, res).catch(function () { uniFail(ui, '계정 보관함의 키를 풀지 못했어요. 비밀번호가 맞는지 확인하거나 관리자에게 문의해 주세요.'); });
+        }
+        function uniDecide(email, pw, S, L, ui) {
+            var res = S.res, er = S.er;
+            if (L.key) {   // 이 기기의 저장 내용이 이 비밀번호로 열림
+                cryptoKey = L.key;
+                return openDb().then(function () {
+                    var mine = !!(db.account && db.account.email === email);
+                    if (er && !isNetErr(er)) { uniFail(ui, driveErrText(er)); return; }   // 서버가 거절(비밀번호가 바뀌었거나 계정이 없음)
+                    if (er) {   // 서버에 연결할 수 없음: 이 기기에서 쓰던 계정이면 저장된 내용으로 열기
+                        if (mine && db.account.session) { lsSet(LAST_EMAIL_KEY, email); guardReset(); startSession(); return; }
+                        uniFail(ui, offHint(er)); return;
+                    }
+                    if (!mine) return uniReplace(email, pw, res, ui, true);   // 다른 계정이 쓰던 기기
+                    lsSet(LAST_EMAIL_KEY, email); guardReset();
+                    return applyLoginRes(res, pw).then(function () { saveDb(); startSession(); });
+                });
+            }
+            if (er) {
+                if (L.bad && er.code === 'bad_login') { var g = guardFail(), w = guardWait(); uniFail(ui, w > 0 ? '5번 틀려서 ' + fmtWait(w) + ' 동안 잠겼어요.' : '이메일 또는 비밀번호가 맞지 않아요. (' + g.fails + '/5)'); return Promise.resolve(); }
+                uniFail(ui, offHint(er)); return Promise.resolve();
+            }
+            return uniReplace(email, pw, res, ui, !!L.bad);
+        }
+        function uniLogin(email, pw, ui) {
+            var auth = loadAuth(), wait = auth ? guardWait() : 0;
+            if (wait > 0) { ui.err('비밀번호를 여러 번 틀려서 잠겼어요. ' + fmtWait(wait) + ' 뒤에 다시 시도해 주세요.'); return; }
+            ui.busy(true, '확인 중...');
+            var srv = acctToken(email, pw).then(function (tok) {
+                return driveCall(teamUrl, 'login', { email: email, pw: tok }).then(function (r) { return { res: r }; }, function (e) { return { er: e }; });
+            });
+            var loc = auth ? verifyPw(pw, auth).then(function (key) { return { key: key }; }, function () { return { bad: true }; }) : Promise.resolve({ none: true });
+            Promise.all([srv, loc]).then(function (r) {
+                if (r[0].res && !acctValid(r[0].res)) { var se = new Error('shape'); se.code = 'shape'; r[0] = { er: se }; }
+                return uniDecide(email, pw, r[0], r[1], ui);
+            }).catch(function () { cryptoKey = null; db = null; ui.busy(false); ui.err('처리 중 오류가 났어요. 새로고침한 뒤 다시 시도해 주세요.'); });
+        }
+        function uniSignup(email, pw, ui) {
+            ui.busy(true, '가입 정보를 만드는 중...');
+            genAcctKeys(pw).then(function (k) {
+                return acctToken(email, pw).then(function (tok) { return driveCall(teamUrl, 'signup', { email: email, pw: tok, pub: k.pub, encPriv: k.encPriv }); }).then(function (res) { return { res: res, k: k }; });
+            }).then(function (o) {
+                if (!acctValid(o.res)) { var se = new Error('shape'); se.code = 'shape'; throw se; }
+                uni.pending = { email: email, pw: pw, session: o.res.session, status: o.res.account.status }; lsSet(LAST_EMAIL_KEY, email);
+                render(); toast('가입 신청이 접수됐어요. 관리자 승인을 기다려 주세요.');
+            }).catch(function (er) { ui.busy(false); ui.err(er && (er.code === 'accounts_off' || er.code === 'not_initialized') ? offHint(er) : driveErrText(er)); ui.clearPw(); });
+        }
+        function uniCheck(manual) {   // 승인(또는 중지) 여부 확인. 승인되면 이 기기에 저장 공간을 만들고 바로 시작
+            var p = uni.pending;
+            if (!p || authed) return;
+            driveCall(teamUrl, 'me', { session: p.session }).then(function (res) {
+                if (!uni.pending || authed) return;
+                var a = res.account;
+                if (a.status === 'approved' && res.keys && res.keys.wk && res.keys.encPriv) {
+                    uniBootstrap(p.email, p.pw, { session: p.session, account: a, keys: res.keys }).catch(function () { if (manual) toast('계정 보관함의 키를 풀지 못했어요. 관리자에게 문의해 주세요.'); });
+                    return;
+                }
+                p.status = a.status; render();
+                if (manual) toast(a.status === 'pending' ? '아직 승인 대기 중이에요. 관리자에게 승인을 요청해 주세요.' : '아직 사용이 중지된 상태예요.');
+            }, function (er) {
+                if (!uni.pending) return;
+                if (er && er.code === 'login_required') { uni.pending = null; render(); toast('로그인이 풀렸어요. 다시 로그인해 주세요.'); return; }
+                if (manual) toast(offHint(er));
+            });
+        }
+        function renderUnifiedLogin() {
+            var app = document.getElementById('app'); app.textContent = ''; stopGatePoll();
+            var box = h('div', { class: 'login-box', 'data-uni': uni.pending ? uni.pending.status : uni.mode }, h('div', { class: 'login-brand' }, '사거리인터넷'));
+            var legacyLink = h('div', { class: 'gate-links' }, h('button', { type: 'button', class: 'link-btn', onclick: function () { legacyOpen = true; uni.pending = null; render(); } }, '예전 방식(이 기기 비밀번호)으로 열기'));
+            if (uni.pending) {
+                var p = uni.pending, isPending = p.status === 'pending';
+                box.appendChild(h('h1', {}, isPending ? '승인을 기다리고 있어요' : '사용이 중지된 계정이에요'));
+                box.appendChild(h('p', { class: 'sub' }, isPending ? '가입 신청이 접수됐어요. 관리자가 승인하면 이 화면이 자동으로 열려요. (15초마다 확인해요)' : '관리자가 이 계정의 사용을 중지했어요. 관리자에게 문의해 주세요.'));
+                box.appendChild(h('div', { class: 'gate-acct' }, p.email));
+                box.appendChild(h('div', { class: 'gate-actions' },
+                    h('button', { type: 'button', class: 'btn btn-primary', onclick: function () { uniCheck(true); } }, isPending ? '승인 여부 확인' : '상태 다시 확인'),
+                    h('button', { type: 'button', class: 'btn', onclick: function () { uni.pending = null; render(); } }, '다른 계정으로 로그인')));
+                app.appendChild(h('div', { class: 'login' }, box));
+                gatePoll = setInterval(function () { uniCheck(false); }, ACCT_POLL_MS);
+                return;
+            }
+            var signup = uni.mode === 'signup';
+            var email = h('input', { type: 'email', id: 'uni-email', autocomplete: 'username', placeholder: '이메일', 'aria-label': '이메일', maxlength: 120 });
+            email.value = lsGet(LAST_EMAIL_KEY) || '';
+            var pw = h('input', { type: 'password', id: 'uni-pw', autocomplete: signup ? 'new-password' : 'current-password', placeholder: signup ? '비밀번호 (' + MIN_PW + '자 이상)' : '비밀번호', 'aria-label': '비밀번호', maxlength: 100 });
+            var pw2 = signup ? h('input', { type: 'password', id: 'uni-pw2', autocomplete: 'new-password', placeholder: '비밀번호 한 번 더', 'aria-label': '비밀번호 확인', maxlength: 100 }) : null;
+            var err = h('div', { class: 'err', role: 'alert', style: 'padding:0' });
+            var label = signup ? '가입 신청하기' : '로그인', btn = h('button', { type: 'submit', class: 'btn btn-primary' }, label);
+            var ui = { busy: function (on, t) { btn.disabled = on; btn.textContent = on ? (t || '확인 중...') : label; }, err: function (t) { err.textContent = t; }, clearPw: function () { pw.value = ''; if (pw2) pw2.value = ''; pw.focus(); } };
+            var form = h('form', { novalidate: true }, email, pw, pw2, err, btn);
+            form.addEventListener('submit', function (e) {
+                e.preventDefault(); err.textContent = '';
+                if (btn.disabled) return;
+                var em = acctNorm(email.value), pass = pw.value;
+                if (!acctOk(em)) { err.textContent = '이메일 주소를 올바르게 입력해 주세요.'; email.focus(); return; }
+                if (signup) {
+                    var prob = pwProblem(pass);
+                    if (prob) { err.textContent = prob; pw.focus(); return; }
+                    if (pass !== pw2.value) { err.textContent = '두 비밀번호가 서로 달라요. 다시 확인해 주세요.'; pw2.focus(); return; }
+                    uniSignup(em, pass, ui);
+                } else if (!pass) { err.textContent = '비밀번호를 입력해 주세요.'; pw.focus(); } else uniLogin(em, pass, ui);
+            });
+            var tabs = h('div', { class: 'gate-tabs' },
+                h('button', { type: 'button', class: 'btn' + (!signup ? ' on' : ''), 'aria-pressed': !signup ? 'true' : 'false', onclick: function () { uni.mode = 'login'; render(); } }, '로그인'),
+                h('button', { type: 'button', class: 'btn' + (signup ? ' on' : ''), 'aria-pressed': signup ? 'true' : 'false', onclick: function () { uni.mode = 'signup'; render(); } }, '가입하기'));
+            box.appendChild(h('h1', {}, signup ? '직원 가입하기' : '이메일로 로그인'));
+            box.appendChild(h('p', { class: 'sub' }, signup ? '개인 이메일과 비밀번호로 가입하면 관리자가 확인한 뒤 승인해요. 승인되면 어느 기기에서든 같은 이메일과 비밀번호로 들어올 수 있어요.' : '이메일과 비밀번호만 입력하면 돼요. 새 기기에서도 똑같이 로그인하면 내용이 그대로 보여요.'));
+            box.appendChild(tabs); box.appendChild(form);
+            var an = inAppNote(); if (an) box.appendChild(an);
+            box.appendChild(h('p', { class: 'login-note' }, '비밀번호는 서버로 그대로 나가지 않고, 이 기기의 내용은 이 비밀번호로 암호화돼요. ' + Math.round(IDLE_MS / 60000) + '분 동안 조작이 없으면 자동으로 잠겨요. 비밀번호를 잊었다면 관리자에게 계정을 지워 달라고 한 뒤 다시 가입해 주세요.'));
+            box.appendChild(legacyLink);
+            app.appendChild(h('div', { class: 'login' }, box));
+            (email.value ? pw : email).focus();
+        }
+
+        /* ---------- 화면: 가입 확인서 ---------- */
+        function renderForms() {
+            var f = state.form;
+            if (f === 'mobile' || f === 'wired') {
+                return h('div', {},
+                    h('div', { class: 'page-head' }, h('h1', {}, f === 'mobile' ? '모바일 가입 확인서' : '유선 가입 확인서'),
+                        h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'forms-back', onclick: function () { state.form = ''; render(); } }, '← 가입 확인서'))),
+                    h('div', { class: 'panel' }, h('div', { class: 'empty', 'data-form-empty': f }, '이 화면의 기능은 다음 업무에서 만들 예정이에요.')));
+            }
+            return h('div', {},
+                h('div', { class: 'page-head' }, h('h1', {}, '가입 확인서')),
+                h('p', { class: 'forms-sub' }, '만들 가입 확인서의 종류를 선택해 주세요.'),
+                h('div', { class: 'forms-grid' },
+                    h('button', { type: 'button', class: 'form-card', 'data-form': 'mobile', onclick: function () { state.form = 'mobile'; render(); window.scrollTo(0, 0); } }, h('b', {}, '모바일 가입 확인서'), h('span', {}, '휴대폰 가입 확인서')),
+                    h('button', { type: 'button', class: 'form-card', 'data-form': 'wired', onclick: function () { state.form = 'wired'; render(); window.scrollTo(0, 0); } }, h('b', {}, '유선 가입 확인서'), h('span', {}, '인터넷·TV 등 유선 가입 확인서'))));
         }
 
         /* ---------- 화면: 설정 ---------- */
@@ -2001,8 +2305,8 @@
                     h('p', {}, '지금은 입력한 내용이 이 브라우저에만 저장돼요. 브라우저 기록을 지우면 사라지니, 중요한 내용은 암호화 백업 파일로 보관해 주세요. 백업 비밀번호는 파일과 따로 기억해 두세요.'),
                     h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-dark', onclick: exportBackup }, '암호화 백업 만들기'), h('button', { type: 'button', class: 'btn', onclick: function () { file.click(); } }, '백업 파일 불러오기'), file)),
                 h('div', { class: 'set-block' }, h('h2', {}, '보안'),
-                    h('p', {}, '이 기기에 저장된 내용은 "이 기기 비밀번호"로 암호화돼요(AES-256). 이 비밀번호를 잊으면 복구할 수 없어요. (이메일 계정 비밀번호와는 별개예요.) 자리를 비울 때는 [지금 잠그기]를 눌러 주세요.'),
-                    h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', onclick: changePassword }, '이 기기 비밀번호 변경'), h('button', { type: 'button', class: 'btn', onclick: lock }, '지금 잠그기'))),
+                    h('p', {}, teamUrl && db.account ? '이 기기에 저장된 내용은 계정 비밀번호로 암호화돼요(AES-256). 자리를 비울 때는 [지금 잠그기]를 눌러 주세요.' : '이 기기에 저장된 내용은 "이 기기 비밀번호"로 암호화돼요(AES-256). 이 비밀번호를 잊으면 복구할 수 없어요. (이메일 계정 비밀번호와는 별개예요.) 자리를 비울 때는 [지금 잠그기]를 눌러 주세요.'),
+                    h('div', { class: 'actions' }, teamUrl && db.account ? null : h('button', { type: 'button', class: 'btn', onclick: changePassword }, '이 기기 비밀번호 변경'), h('button', { type: 'button', class: 'btn', onclick: lock }, '지금 잠그기'))),
                 h('div', { class: 'set-block' }, h('h2', {}, '삭제'),
                     h('p', {}, '내용만 지우거나, 비밀번호까지 포함해 이 기기의 ADMIN 흔적을 모두 지울 수 있어요.'),
                     h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-danger', onclick: resetAll }, '내용 모두 지우기'), h('button', { type: 'button', class: 'btn btn-danger', onclick: wipeDevice }, '이 기기에서 완전히 삭제'))));
@@ -2021,6 +2325,7 @@
             if (view === 'calendar') content = renderCalendar();
             else if (view === 'notices') content = renderNotices();
             else if (view === 'tasks') content = renderTasks();
+            else if (view === 'forms') content = renderForms();
             else if (view === 'settings') content = renderSettings();
             else content = renderToday();
 
@@ -2029,7 +2334,7 @@
             meSel.addEventListener('change', function () { me = this.value; lsSet(ME_KEY, me); render(); });
 
             var nav = h('nav', { class: 'nav', 'aria-label': '메뉴' }, VIEWS.map(function (v) {
-                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); } }, v.t);
+                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; if (v.v === 'forms') state.form = ''; render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); } }, v.t);
             }));
             var note = driveBanner();
             var appWarn = inAppBrowser() ? h('div', { class: 'mode-note warn', 'data-note': 'inapp' }, h('span', {}, h('b', {}, '앱 안에서 열린 화면이에요 '), '이 안에서는 저장이 불안정할 수 있어요. 화면 메뉴(⋯ 또는 공유 버튼)의 "다른 브라우저로 열기"로 사파리·크롬에서 열어 주세요.')) : null;
@@ -2049,6 +2354,9 @@
 
         /* ---------- 시작 ---------- */
         readInvite();
+        if (BUILD_TEAM_URL && DRIVE_URL_RE.test(BUILD_TEAM_URL)) { teamUrl = BUILD_TEAM_URL; teamCfgDone = true; }
+        else if (location.protocol === 'file:') teamCfgDone = true;   // 내 컴퓨터에서 직접 연 파일에서는 읽지 않음
+        else loadTeamConfig();
         render();
         var bootMsg = document.getElementById('boot-msg'); if (bootMsg) bootMsg.remove();
     })();
