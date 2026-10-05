@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+6Nz7xx5ngbUIGExwKzFX1nzJQh1POU91jnJeARvbas='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hqJ2q86HRfqN1Nccq01X2LB81xhUgr2NMe03yGfojX8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -246,7 +246,7 @@
         .mf-sheet { --mf-green: #146B3A; --mf-dark: #5B5D61; --mf-sub: #D3D5D8; --mf-beige: #FDF4DE; --mf-red: #D12E48; --mf-line: #9A9CA0; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 26px 26px 18px; max-width: 960px; width: 100%; margin: 0 auto; color: #222; font-size: 14px; }
         .mf-top { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px 20px; flex-wrap: wrap; }
         .mf-use { display: flex; align-items: center; gap: 6px; font-size: 13.5px; color: #444; }
-        .mf-use .mf-in { flex: 0 1 150px; }
+        .mf-sheet .mf-use .mf-in { flex: 0 0 96px; width: 96px; min-width: 0; }
         .mf-pill { background: var(--mf-green); color: #fff; font-weight: 800; border-radius: 999px; padding: 2px 11px; font-size: 12.5px; white-space: nowrap; }
         .mf-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; color: var(--mf-green); margin-top: 8px; }
         .mf-title b { font-size: 40px; font-weight: 900; letter-spacing: 6px; line-height: 1.1; }
@@ -254,7 +254,9 @@
         .mf-top-r { display: grid; gap: 8px; justify-items: end; }
         .mf-shop { font-size: 22px; font-weight: 900; color: #555; letter-spacing: -0.5px; }
         .mf-cust { display: flex; align-items: center; gap: 6px; }
-        .mf-cust .mf-in { flex: 0 1 170px; }
+        .mf-sheet .mf-cust .mf-in { flex: 0 0 96px; width: 96px; min-width: 0; text-align: right; padding-right: 2px; }
+        .mf-cust { gap: 6px 0; } .mf-cust .mf-k { margin-right: 6px; }
+        .mf-fixno { font-size: 16px; font-weight: 400; border-bottom: 1.5px solid #B9BCB2; padding: 6px 4px 6px 0; line-height: 1.3; }
         .mf-type { display: flex; align-items: center; gap: 8px 20px; flex-wrap: wrap; margin: 14px 0 6px; }
         .mf-sec { display: grid; grid-template-columns: 116px minmax(0, 1fr); border: 1px solid var(--mf-line); margin-top: 8px; }
         .mf-lab { background: var(--mf-dark); color: #fff; font-weight: 800; word-break: keep-all; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; font-size: 14.5px; }
@@ -274,6 +276,8 @@
         .mf-k.strong { color: var(--mf-green); font-weight: 800; }
         .mf-sheet .mf-in { flex: 1 1 110px; width: auto; min-width: 64px; border: none; border-bottom: 1.5px solid #B9BCB2; border-radius: 0; background: transparent; padding: 6px 4px; font-size: 16px; line-height: 1.3; }
         .mf-sheet .mf-in.short { flex: 0 1 76px; text-align: center; }
+        .mf-sheet .mf-in.mid { flex: 0 1 180px; min-width: 120px; }
+        @media (max-width: 700px) { .mf-sheet .mf-in.mid { flex: 1 1 100px; min-width: 0; } }
         .mf-sheet .mf-in:focus { outline: none; background: #FFF6CC; border-bottom-color: var(--olive-700); }
         .mf-sheet .mf-area { flex-basis: 100%; min-height: 70px; border: 1px solid #D6D0BC; border-radius: 6px; background: rgba(255,255,255,.7); resize: vertical; }
         .mf-ck { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; padding: 4px 2px; font-weight: 600; }
@@ -437,7 +441,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-05.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-05.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2334,7 +2338,7 @@
                     h('div', {},
                         h('div', { class: 'mf-use' }, h('span', { class: 'mf-pill' }, '인터넷'), '(', inp('netUse', '이용 중인 인터넷'), ')이용중'),
                         h('div', { class: 'mf-title' }, h('b', {}, '가입 확인서'), h('span', {}, '_ 모바일.인터넷'))),
-                    h('div', { class: 'mf-top-r' }, h('div', { class: 'mf-shop' }, '사거리핸드폰'), h('div', { class: 'mf-cust' }, k('고객등록번호 :'), inp('custNo', '고객등록번호', { max: 30 })))),
+                    h('div', { class: 'mf-top-r' }, h('div', { class: 'mf-shop' }, '사거리핸드폰'), h('div', { class: 'mf-cust' }, k('고객등록번호 :'), inp('custNo', '고객등록번호 앞자리 (뒤 70001401은 고정)', { max: 12 }), h('span', { class: 'mf-fixno', 'data-fixno': '70001401' }, '70001401')))),
                 h('div', { class: 'mf-type' }, h('b', {}, '유형 선택'), chk('tNew', '신규', 'type'), chk('tPort', '번호이동', 'type'), chk('tRe', '재가입', 'type')),
 
                 sec('가입자 정보', 'green',
@@ -2370,8 +2374,8 @@
 
                 sec('결합 정보', '',
                     grp('할인방법', row(
-                        tcell(chk('cOld', '기존 결합', 'comb'), k('('), inp('cOldN', '기존 결합 인원', { mode: 'numeric', cls: 'short', max: 3 }), k('인)')),
-                        tcell(chk('cNew', '결합', 'comb'), k('('), inp('cNewN', '결합 인원', { mode: 'numeric', cls: 'short', max: 3 }), k('인)')),
+                        tcell(chk('cOld', '기존 결합', 'comb'), k('('), inp('cOldN', '기존 결합 내용', { cls: 'mid', max: 20 }), k('인)')),
+                        tcell(chk('cNew', '결합', 'comb'), k('('), inp('cNewN', '결합 내용', { cls: 'mid', max: 20 }), k('인)')),
                         tcell(chk('cNone', '미결합', 'comb'))))),
 
                 sec('추가 서비스', '', row(wcell(inp('extra', '추가 서비스', { max: 150 })))),
@@ -2438,6 +2442,11 @@
             sheet.addEventListener('change', function (e) {   // 하나만 고르는 칸
                 var t = e.target, g = t.getAttribute ? t.getAttribute('data-grp') : null;
                 if (t.type === 'checkbox' && t.checked && g && MF_ONE[g]) [].forEach.call(sheet.querySelectorAll('input[data-grp="' + g + '"]'), function (x) { if (x !== t) x.checked = false; });
+                var KEEP = { dSel: '3', dSub: '6' }, kp = sheet.querySelector('[data-mf="keep1"]');   // 선택약정 3개월, 공시지원금 6개월 (직접 고칠 수 있음)
+                if (t.type === 'checkbox' && KEEP.hasOwnProperty(t.name) && kp) {
+                    if (t.checked) { kp.value = KEEP[t.name]; kp.setAttribute('data-auto', KEEP[t.name]); }
+                    else if (kp.value === kp.getAttribute('data-auto')) { kp.value = ''; kp.removeAttribute('data-auto'); }   // 체크를 풀면 자동으로 넣은 값만 지움
+                }
             });
             sheet.addEventListener('focusout', function (e) {   // 칸을 벗어나면 금액·전화번호 모양 정리
                 if (mfMoving) return;
