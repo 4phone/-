@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hqJ2q86HRfqN1Nccq01X2LB81xhUgr2NMe03yGfojX8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-K+k6cjoex8ocFjXH0yuUtrmSJ+EIKySeoahZH0KJLL4='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -277,7 +277,11 @@
         .mf-sheet .mf-in { flex: 1 1 110px; width: auto; min-width: 64px; border: none; border-bottom: 1.5px solid #B9BCB2; border-radius: 0; background: transparent; padding: 6px 4px; font-size: 16px; line-height: 1.3; }
         .mf-sheet .mf-in.short { flex: 0 1 76px; text-align: center; }
         .mf-sheet .mf-in.mid { flex: 0 1 180px; min-width: 120px; }
-        @media (max-width: 700px) { .mf-sheet .mf-in.mid { flex: 1 1 100px; min-width: 0; } }
+        .mf-sheet .mf-in.amt { flex: 0 1 130px; min-width: 90px; }
+        .mf-sheet .mf-in.telw { flex: 0 1 150px; min-width: 128px; }
+        .mf-sheet .mf-area.memo { min-height: 170px; line-height: 1.5; }
+        .mf-appname { display: flex; align-items: center; gap: 6px; flex: 1 1 120px; min-width: 0; }
+        @media (max-width: 700px) { .mf-sheet .mf-in.mid, .mf-sheet .mf-in.amt { flex: 1 1 90px; min-width: 0; } }
         .mf-sheet .mf-in:focus { outline: none; background: #FFF6CC; border-bottom-color: var(--olive-700); }
         .mf-sheet .mf-area { flex-basis: 100%; min-height: 70px; border: 1px solid #D6D0BC; border-radius: 6px; background: rgba(255,255,255,.7); resize: vertical; }
         .mf-ck { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; padding: 4px 2px; font-weight: 600; }
@@ -334,7 +338,7 @@
             .mf-sheet, .mf-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .mf-sheet .mf-in { font-size: 14px; padding: 1px 3px; border-bottom-color: #AAA; }
             .mf-sheet .mf-in::placeholder { color: transparent; }
-            .mf-sheet .mf-area { min-height: 30px; padding: 2px 4px; resize: none; }
+            .mf-sheet .mf-area, .mf-sheet .mf-area.memo { min-height: 30px; padding: 2px 4px; resize: none; }
             .mf-cell { padding: 3px 8px; gap: 3px 6px; }
             .mf-ck { padding: 0; } .mf-ck input { width: 16px; height: 16px; }
             .mf-sec { margin-top: 5px; } .mf-info { margin-top: 2px; font-size: 11.5px; }
@@ -441,7 +445,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-05.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-05.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -695,7 +699,7 @@
             if (pendingToast) { toast(pendingToast); pendingToast = ''; }
             if (driveOn()) { startPoll(); requestSync(0); }   // 공유 저장소: 로그인하면 바로 최신 내용으로 맞춤
             if (pendingJoin) setTimeout(offerPendingJoin, 50);
-            if (db.account) setTimeout(maybeOfferKeys, 800);
+            if (db.account) { setTimeout(maybeOfferKeys, 800); setTimeout(refreshMyProf, 1200); }
         }
         function lock() {   // 잠그면 암호키와 데이터를 메모리에서도 지우고 화면을 비웁니다
             authed = false; cryptoKey = null; db = null; me = ''; mform = null;   // 작성 중인 가입 확인서(고객 개인정보)도 지움
@@ -1809,9 +1813,38 @@
             return res && typeof res.session === 'string' && /^[0-9a-f]{64}$/.test(res.session) && res.account && typeof res.account.email === 'string' &&
                 ['admin', 'staff'].indexOf(res.account.role) >= 0 && ['approved', 'pending', 'disabled'].indexOf(res.account.status) >= 0;
         }
+        function withProf(o, a) {   // 계정의 이름·생년월일·핸드폰 번호 (이 기기 안에만 보관)
+            o.name = String(a && a.name || '').slice(0, 20);
+            o.birth = String(a && a.birth || '').replace(/\D/g, '').slice(0, 8);
+            o.phone = String(a && a.phone || '').replace(/\D/g, '').slice(0, 11);
+            return o;
+        }
+        function profLine(a) { return [a.name, a.birth ? '생년월일 ' + a.birth : '', a.phone ? mfPhone(a.phone) : ''].filter(Boolean).join(' · '); }
+        function profFields(prefix) {   // 가입할 때 입력: 이름, 생년월일, 핸드폰 번호
+            var name = h('input', { type: 'text', id: prefix + '-name', autocomplete: 'name', placeholder: '이름', 'aria-label': '이름', maxlength: 20 });
+            var birth = h('input', { type: 'text', id: prefix + '-birth', inputmode: 'numeric', autocomplete: 'off', placeholder: '생년월일 6자리 (예: 880202)', 'aria-label': '생년월일 6자리', maxlength: 8 });
+            var phone = h('input', { type: 'tel', id: prefix + '-phone', inputmode: 'tel', autocomplete: 'tel', placeholder: '핸드폰 번호 (예: 01012345678)', 'aria-label': '핸드폰 번호', maxlength: 13 });
+            return {
+                els: [name, birth, phone],
+                read: function () { return { name: name.value.trim().slice(0, 20), birth: birth.value.replace(/\D/g, ''), phone: phone.value.replace(/\D/g, '') }; },
+                check: function (p) {
+                    if (!p.name) { name.focus(); return '이름을 입력해 주세요.'; }
+                    if (!/^\d{6}$/.test(p.birth)) { birth.focus(); return '생년월일은 숫자 6자리로 입력해 주세요. (예: 880202)'; }
+                    if (!/^01\d{8,9}$/.test(p.phone)) { phone.focus(); return '핸드폰 번호를 정확히 입력해 주세요. (예: 01012345678)'; }
+                    return null;
+                }
+            };
+        }
+        function refreshMyProf() {   // 로그인할 때 내 계정 정보(이름·핸드폰 번호)를 서버에서 새로 받아 둠
+            if (!db || !db.account || !db.account.session || !driveOn()) return;
+            driveCall(db.drive.url, 'me', {}).then(function (res) {
+                if (!authed || !db || !db.account || !res || !res.account || res.account.email !== db.account.email) return;
+                withProf(db.account, res.account); saveDb(); if (mform) mfSeller(mform.el, false);
+            }, function () { /* 조용히 무시 */ });
+        }
         function setAccount(res, priv) {
             var keep = db.account && db.account.email === res.account.email ? db.account.priv : '';
-            db.account = { email: res.account.email, session: res.session, role: res.account.role, status: res.account.status, staffId: String(res.account.staffId || '').slice(0, 40), priv: priv || keep || '', hk: !!res.account.hasKeys };
+            db.account = withProf({ email: res.account.email, session: res.session, role: res.account.role, status: res.account.status, staffId: String(res.account.staffId || '').slice(0, 40), priv: priv || keep || '', hk: !!res.account.hasKeys }, res.account);
             db.drive.acc = true; me = pickMe();
         }
         function accountGate() {   // 계정 로그인이 필요한 상태인지: null | 'login' | 'pending' | 'disabled'
@@ -1864,7 +1897,7 @@
             if (!authed || !db || !db.account) return;
             acctCall('me').then(function (res) {
                 if (!authed || !db || !db.account) return;
-                var a = res.account; db.account.status = a.status; db.account.role = a.role; db.account.staffId = String(a.staffId || '').slice(0, 40); me = pickMe();
+                var a = res.account; db.account.status = a.status; db.account.role = a.role; db.account.staffId = String(a.staffId || '').slice(0, 40); withProf(db.account, a); me = pickMe();
                 saveDb(); render();
                 if (a.status === 'approved') { requestSync(0); toast('승인되었어요. 환영합니다!'); }
                 else if (manual) toast(a.status === 'pending' ? '아직 승인 대기 중이에요. 관리자에게 승인을 요청해 주세요.' : '아직 사용이 중지된 상태예요.');
@@ -1905,10 +1938,11 @@
                 var email = h('input', { type: 'email', id: 'acct-email', autocomplete: 'username', placeholder: '이메일', 'aria-label': '이메일', maxlength: 120 });
                 var pw = h('input', { type: 'password', id: 'acct-pw', autocomplete: signup ? 'new-password' : 'current-password', placeholder: signup ? '비밀번호 (' + MIN_PW + '자 이상)' : '비밀번호', 'aria-label': '비밀번호', maxlength: 100 });
                 var pw2 = signup ? h('input', { type: 'password', id: 'acct-pw2', autocomplete: 'new-password', placeholder: '비밀번호 한 번 더', 'aria-label': '비밀번호 확인', maxlength: 100 }) : null;
+                var pf = signup ? profFields('acct') : null, prof = null;
                 var err = h('div', { class: 'err', role: 'alert', style: 'padding:0' });
                 var label = signup ? '가입 신청하기' : '로그인', btn = h('button', { type: 'submit', class: 'btn btn-primary' }, label);
                 function busy(on) { btn.disabled = on; btn.textContent = on ? '확인 중...' : label; }
-                var form = h('form', { novalidate: true }, email, pw, pw2, err, btn);
+                var form = h('form', { novalidate: true }, email, pw, pw2, pf ? pf.els : null, err, btn);
                 form.addEventListener('submit', function (e) {
                     e.preventDefault(); err.textContent = '';
                     if (btn.disabled) return;
@@ -1918,12 +1952,14 @@
                         var prob = pwProblem(pass);
                         if (prob) { err.textContent = prob; pw.focus(); return; }
                         if (pass !== pw2.value) { err.textContent = '두 비밀번호가 서로 달라요. 다시 확인해 주세요.'; pw2.focus(); return; }
+                        prof = pf.read(); var pp = pf.check(prof);
+                        if (pp) { err.textContent = pp; return; }
                     } else if (!pass) { err.textContent = '비밀번호를 입력해 주세요.'; pw.focus(); return; }
                     busy(true);
                     var keyP = signup ? genAcctKeys(pass) : Promise.resolve(null);
                     keyP.then(function (k) {
                         return acctToken(em, pass).then(function (tok) {
-                            return acctCall(signup ? 'signup' : 'login', k ? { email: em, pw: tok, pub: k.pub, encPriv: k.encPriv } : { email: em, pw: tok });
+                            return acctCall(signup ? 'signup' : 'login', k ? Object.assign({ email: em, pw: tok, pub: k.pub, encPriv: k.encPriv }, prof) : { email: em, pw: tok });
                         }).then(function (res) {
                             if (k || !res.keys || !res.keys.encPriv) return { res: res, priv: k ? k.priv : '' };
                             return openEncPriv(pass, res.keys.encPriv).then(function (p) { return { res: res, priv: p }; }, function () { return { res: res, priv: '' }; });
@@ -2007,7 +2043,7 @@
             if (opts.length < 2) { toast('연결할 수 있는 직원 이름이 없어요. 먼저 "직원 관리"에서 직원을 추가해 주세요.'); return; }
             openForm({
                 title: matchOnly ? '직원 이름 바꾸기' : '가입 승인', saveText: matchOnly ? '변경 저장' : '승인하기',
-                fields: [{ key: 'staffId', label: a.email + ' 은(는) 누구인가요?', type: 'select', options: opts, required: true, value: matchOnly ? a.staffId : '', hint: '선택한 직원 이름으로 연결돼요. 이 직원은 로그인하면 자동으로 이 이름으로 일해요.' }],
+                fields: [{ key: 'staffId', label: a.email + (a.name ? ' (' + a.name + ')' : '') + ' 은(는) 누구인가요?', type: 'select', options: opts, required: true, value: matchOnly ? a.staffId : '', hint: '선택한 직원 이름으로 연결돼요. 이 직원은 로그인하면 자동으로 이 이름으로 일해요.' }],
                 onSave: function (v) {
                     if (matchOnly) { acctOp(a.email, 'match', v.staffId, '직원 이름을 바꿨어요.'); return; }
                     var info = (acctUi.list || []).filter(function (x) { return x.email === a.email; })[0];
@@ -2025,12 +2061,17 @@
                     { key: 'email', label: '관리자 이메일', required: true, max: 120, value: 'ssangmin0000@gmail.com', hint: '관리자로 등록할 수 있는 이메일이에요.' },
                     { key: 'pw', label: '계정 비밀번호', type: 'password', required: true, max: 100, hint: MIN_PW + '자 이상, 이 기기 비밀번호와 다르게 만들어 주세요.' },
                     { key: 'pw2', label: '계정 비밀번호 확인', type: 'password', required: true, max: 100 },
+                    { key: 'pname', label: '이름', required: true, max: 20, value: '전상민' },
+                    { key: 'pbirth', label: '생년월일 6자리', required: true, max: 8, hint: '예: 880202' },
+                    { key: 'pphone', label: '핸드폰 번호', required: true, max: 13, hint: '예: 01012345678' },
                     { key: 'code', label: '관리자 코드', type: 'password', required: true, max: 100, hint: 'Apps Script에서 createAdminInvite 함수를 실행하면 실행 로그에 나오는 32자리 코드예요.' }
                 ],
                 validate: function (v) {
                     if (!acctOk(acctNorm(v.email))) return '이메일 주소를 올바르게 입력해 주세요.';
                     var pr = pwProblem(v.pw); if (pr) return pr;
                     if (v.pw !== v.pw2) return '두 비밀번호가 서로 달라요.';
+                    if (!/^\d{6}$/.test(v.pbirth.replace(/\D/g, ''))) return '생년월일은 숫자 6자리로 입력해 주세요. (예: 880202)';
+                    if (!/^01\d{8,9}$/.test(v.pphone.replace(/\D/g, ''))) return '핸드폰 번호를 정확히 입력해 주세요. (예: 01012345678)';
                     if (!/^[0-9a-f]{32}$/.test(v.code.trim())) return '관리자 코드는 영문 소문자·숫자 32자리예요. 실행 로그에 나온 코드를 그대로 붙여넣어 주세요.';
                     return null;
                 },
@@ -2039,7 +2080,7 @@
                     toast('관리자 계정을 만드는 중...');
                     var kk = null;
                     genAcctKeys(v.pw).then(function (k) { kk = k; return Promise.all([wrapTeamKey(k.pub, db.drive.k), acctToken(em, v.pw)]); }).then(function (r) {
-                        return acctCall('adminInit', { setup: v.code.trim(), email: em, pw: r[1], staffId: adm ? adm.id : '', pub: kk.pub, encPriv: kk.encPriv, wk: r[0] });
+                        return acctCall('adminInit', { setup: v.code.trim(), email: em, pw: r[1], staffId: adm ? adm.id : '', pub: kk.pub, encPriv: kk.encPriv, wk: r[0], name: v.pname.slice(0, 20), birth: v.pbirth.replace(/\D/g, ''), phone: v.pphone.replace(/\D/g, '') });
                     }).then(function (res) {
                         if (!authed || !db) return;
                         if (!acctValid(res)) { var se = new Error('shape'); se.code = 'shape'; throw se; }
@@ -2081,20 +2122,20 @@
                 };
                 var adminRow = A.list.filter(function (a) { return a.role === 'admin'; })[0];
                 if (adminRow) kids.push(h('div', { class: 'acct-group' }, h('h3', {}, '관리자'), h('div', { class: 'panel' }, h('div', { class: 'acct-row', 'data-email': adminRow.email },
-                    h('div', {}, h('b', {}, adminRow.email), h('span', { class: 'acct-badge ok' }, '관리자'), h('div', { class: 'acct-sub' }, '직원 이름: ' + nameOf(adminRow.staffId))), h('div', {})))));
+                    h('div', {}, h('b', {}, adminRow.email), h('span', { class: 'acct-badge ok' }, '관리자'), h('div', { class: 'acct-sub' }, '직원 이름: ' + nameOf(adminRow.staffId)), profLine(adminRow) ? h('div', { class: 'acct-sub', 'data-prof': 'yes' }, profLine(adminRow)) : null), h('div', {})))));
                 kids.push(group('승인 대기', 'pending', function (a) {
-                    return h('div', { class: 'acct-row', 'data-email': a.email }, h('div', {}, h('b', {}, a.email), h('span', { class: 'acct-badge wait' }, '승인 대기'), h('div', { class: 'acct-sub' }, '가입 ' + String(a.createdAt).slice(0, 16))),
+                    return h('div', { class: 'acct-row', 'data-email': a.email }, h('div', {}, h('b', {}, a.email), h('span', { class: 'acct-badge wait' }, '승인 대기'), h('div', { class: 'acct-sub' }, '가입 ' + String(a.createdAt).slice(0, 16)), profLine(a) ? h('div', { class: 'acct-sub', 'data-prof': 'yes' }, profLine(a)) : null),
                         h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-sm btn-primary', onclick: function () { openApproveForm(a, false); } }, '승인'),
                             h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { if (confirm(a.email + ' 가입 신청을 거절(삭제)할까요?')) acctOp(a.email, 'delete', '', '가입 신청을 거절했어요.'); } }, '거절')));
                 }));
                 kids.push(group('승인된 직원', 'approved', function (a) {
-                    return h('div', { class: 'acct-row', 'data-email': a.email }, h('div', {}, h('b', {}, a.email), h('span', { class: 'acct-badge ok' }, '사용 중'), h('div', { class: 'acct-sub' }, '직원 이름: ' + nameOf(a.staffId))),
+                    return h('div', { class: 'acct-row', 'data-email': a.email }, h('div', {}, h('b', {}, a.email), h('span', { class: 'acct-badge ok' }, '사용 중'), h('div', { class: 'acct-sub' }, '직원 이름: ' + nameOf(a.staffId)), profLine(a) ? h('div', { class: 'acct-sub', 'data-prof': 'yes' }, profLine(a)) : null),
                         h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { openApproveForm(a, true); } }, '직원 이름 변경'),
                             h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { if (confirm(a.email + ' 계정의 사용을 중지할까요?\n이미 로그인한 기기에서도 바로 내용을 볼 수 없게 돼요.')) acctOp(a.email, 'disable', '', '사용을 중지했어요.'); } }, '사용 중지'),
                             h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { if (confirm(a.email + ' 계정을 삭제할까요?\n삭제하면 모든 기기에서 로그인이 풀리고, 다시 쓰려면 새로 가입해야 해요.')) acctOp(a.email, 'delete', '', '계정을 삭제했어요.'); } }, '삭제')));
                 }));
                 kids.push(group('사용 중지', 'disabled', function (a) {
-                    return h('div', { class: 'acct-row', 'data-email': a.email }, h('div', {}, h('b', {}, a.email), h('span', { class: 'acct-badge off' }, '중지됨'), h('div', { class: 'acct-sub' }, '직원 이름: ' + nameOf(a.staffId))),
+                    return h('div', { class: 'acct-row', 'data-email': a.email }, h('div', {}, h('b', {}, a.email), h('span', { class: 'acct-badge off' }, '중지됨'), h('div', { class: 'acct-sub' }, '직원 이름: ' + nameOf(a.staffId)), profLine(a) ? h('div', { class: 'acct-sub', 'data-prof': 'yes' }, profLine(a)) : null),
                         h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { acctOp(a.email, 'enable', '', '다시 사용할 수 있게 했어요.'); } }, '다시 사용'),
                             h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { if (confirm(a.email + ' 계정을 삭제할까요?')) acctOp(a.email, 'delete', '', '계정을 삭제했어요.'); } }, '삭제')));
                 }));
@@ -2138,7 +2179,7 @@
         function uniFail(ui, msg) { cryptoKey = null; db = null; ui.busy(false); ui.err(msg); ui.clearPw(); }
         function applyLoginRes(res, pw) {   // 로그인 결과를 이 기기에 반영 (팀 키가 바뀌었으면 새 키로)
             var a = res.account, prev = db.account && db.account.email === a.email ? db.account : {};
-            db.account = { email: a.email, session: res.session, role: a.role, status: a.status, staffId: String(a.staffId || '').slice(0, 40), priv: prev.priv || '', hk: !!a.hasKeys };
+            db.account = withProf({ email: a.email, session: res.session, role: a.role, status: a.status, staffId: String(a.staffId || '').slice(0, 40), priv: prev.priv || '', hk: !!a.hasKeys }, a);
             db.drive.acc = true;
             if (a.status !== 'approved' || !res.keys || !res.keys.wk || !res.keys.encPriv) return Promise.resolve();
             return openEncPriv(pw, res.keys.encPriv).then(function (priv) {
@@ -2160,7 +2201,7 @@
                 if (!lsSet(AUTH_KEY, JSON.stringify(r.auth))) throw new Error('store');
                 cryptoKey = r.key; db = seedDb();
                 db.drive = { url: teamUrl, k: kk.k, rev: 0, pk: '', acc: true };
-                db.account = { email: res.account.email, session: res.session, role: res.account.role, status: res.account.status, staffId: String(res.account.staffId || '').slice(0, 40), priv: kk.priv, hk: true };
+                db.account = withProf({ email: res.account.email, session: res.session, role: res.account.role, status: res.account.status, staffId: String(res.account.staffId || '').slice(0, 40), priv: kk.priv, hk: true }, res.account);
                 me = pickMe(); teamCache = null; driveState = { status: 'idle', at: null, msg: '' }; uni = { mode: 'login', pending: null };
                 return writeDbNow(r.key, db);
             }).then(function () { stopGatePoll(); startSession(); });
@@ -2208,10 +2249,10 @@
                 return uniDecide(email, pw, r[0], r[1], ui);
             }).catch(function () { cryptoKey = null; db = null; ui.busy(false); ui.err('처리 중 오류가 났어요. 새로고침한 뒤 다시 시도해 주세요.'); });
         }
-        function uniSignup(email, pw, ui) {
+        function uniSignup(email, pw, ui, prof) {
             ui.busy(true, '가입 정보를 만드는 중...');
             genAcctKeys(pw).then(function (k) {
-                return acctToken(email, pw).then(function (tok) { return driveCall(teamUrl, 'signup', { email: email, pw: tok, pub: k.pub, encPriv: k.encPriv }); }).then(function (res) { return { res: res, k: k }; });
+                return acctToken(email, pw).then(function (tok) { return driveCall(teamUrl, 'signup', Object.assign({ email: email, pw: tok, pub: k.pub, encPriv: k.encPriv }, prof)); }).then(function (res) { return { res: res, k: k }; });
             }).then(function (o) {
                 if (!acctValid(o.res)) { var se = new Error('shape'); se.code = 'shape'; throw se; }
                 uni.pending = { email: email, pw: pw, session: o.res.session, status: o.res.account.status }; lsSet(LAST_EMAIL_KEY, email);
@@ -2257,10 +2298,11 @@
             email.value = lsGet(LAST_EMAIL_KEY) || '';
             var pw = h('input', { type: 'password', id: 'uni-pw', autocomplete: signup ? 'new-password' : 'current-password', placeholder: signup ? '비밀번호 (' + MIN_PW + '자 이상)' : '비밀번호', 'aria-label': '비밀번호', maxlength: 100 });
             var pw2 = signup ? h('input', { type: 'password', id: 'uni-pw2', autocomplete: 'new-password', placeholder: '비밀번호 한 번 더', 'aria-label': '비밀번호 확인', maxlength: 100 }) : null;
+            var pf = signup ? profFields('uni') : null;
             var err = h('div', { class: 'err', role: 'alert', style: 'padding:0' });
             var label = signup ? '가입 신청하기' : '로그인', btn = h('button', { type: 'submit', class: 'btn btn-primary' }, label);
             var ui = { busy: function (on, t) { btn.disabled = on; btn.textContent = on ? (t || '확인 중...') : label; }, err: function (t) { err.textContent = t; }, clearPw: function () { pw.value = ''; if (pw2) pw2.value = ''; pw.focus(); } };
-            var form = h('form', { novalidate: true }, email, pw, pw2, err, btn);
+            var form = h('form', { novalidate: true }, email, pw, pw2, pf ? pf.els : null, err, btn);
             form.addEventListener('submit', function (e) {
                 e.preventDefault(); err.textContent = '';
                 if (btn.disabled) return;
@@ -2270,7 +2312,9 @@
                     var prob = pwProblem(pass);
                     if (prob) { err.textContent = prob; pw.focus(); return; }
                     if (pass !== pw2.value) { err.textContent = '두 비밀번호가 서로 달라요. 다시 확인해 주세요.'; pw2.focus(); return; }
-                    uniSignup(em, pass, ui);
+                    var prof = pf.read(), pp = pf.check(prof);
+                    if (pp) { err.textContent = pp; return; }
+                    uniSignup(em, pass, ui, prof);
                 } else if (!pass) { err.textContent = '비밀번호를 입력해 주세요.'; pw.focus(); } else uniLogin(em, pass, ui);
             });
             var tabs = h('div', { class: 'gate-tabs' },
@@ -2331,7 +2375,7 @@
                 b.addEventListener('click', function () { openSignPad(M, key, label); });
                 return b;
             }
-            var now = new Date(), who = me && staffById(me) ? staffName(me) : '';
+            var now = new Date();
 
             var sheet = h('div', { class: 'mf-sheet', 'data-form': 'mobile' },
                 h('div', { class: 'mf-top' },
@@ -2362,15 +2406,13 @@
                         row(cell(k('가입 요금제'), inp('plan1', '가입 요금제')), tcell(k('유지기간'), inp('keep1', '가입 요금제 유지기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')), cell(k('청구금액'), inp('bill1', '가입 요금제 청구금액(원)', MONEY), k('원'))),
                         row(cell(k('변경 요금제'), inp('plan2', '변경 요금제')), tcell(k('유지기간'), inp('keep2', '변경 요금제 유지기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')), cell(k('청구금액'), inp('bill2', '변경 요금제 청구금액(원)', MONEY), k('원')))),
                     grp('핸드폰 보험',
-                        row(cell(chk('insY', '신청', 'ins'), k('('), inp('insFee', '핸드폰 보험료(원)', MONEY), k('원)')), tcell(chk('insN', '미신청', 'ins'))),
+                        row(cell(chk('insY', '신청', 'ins'), k('( 보험명'), inp('insName', '핸드폰 보험 이름'), k('/'), inp('insFee', '핸드폰 보험료(원)', { mode: 'numeric', kind: 'money', max: 15, cls: 'amt' }), k('원)')), tcell(chk('insN', '미신청', 'ins'))),
                         row(wcell(note('*개통일로 부터 30일 내에만 신청이 가능합니다.'))))),
 
                 sec('제휴 카드', '',
                     grp('할인방법',
-                        row(cell(k('신청여부'), chk('cardY', '신청', 'card'), chk('cardN', '미신청', 'card')), cell(k('할인금액'), inp('cardDisc', '제휴카드 할인금액(원)', MONEY), k('원'))),
-                        row(cell(k('명의자'), inp('cardOwner', '제휴카드 명의자')), cell(k('생년월일'), inp('cardBirth', '제휴카드 명의자 생년월일', BIRTH))),
-                        row(cell(k('카드사명'), inp('cardCo', '카드사명'))),
-                        row(wcell(note('*제휴카드 발급후 담당자에게 카드번호와 유효기간을 알려주셔야 등록이 가능합니다.'))))),
+                        row(cell(k('신청여부'), chk('cardY', '신청', 'card'), chk('cardN', '미신청', 'card')), cell(k('할인금액'), inp('cardDisc', '제휴카드 할인금액(원)', { mode: 'numeric', kind: 'money', max: 15, cls: 'amt' }), k('원'))),
+                        row(cell(k('명의자'), inp('cardOwner', '제휴카드 명의자')), cell(k('생년월일'), inp('cardBirth', '제휴카드 명의자 생년월일', BIRTH)), cell(k('카드사명'), inp('cardCo', '카드사명')), wcell(note('*제휴카드 발급후 담당자에게 카드번호와 유효기간을 알려주셔야 등록이 가능합니다.'))))),
 
                 sec('결합 정보', '',
                     grp('할인방법', row(
@@ -2383,7 +2425,7 @@
 
                 sec('기타 정보', 'beige',
                     row(wcell(note('*[중요] 요금제 변경은 자동으로 변경되지 않기 때문에 반드시 매장에 방문하시거나, 담당직원과 연락하여 변경하시기 바랍니다.'), chk('impOk', '확인'))),
-                    row(wcell(h('textarea', { class: 'mf-in mf-area', name: 'etcMemo', 'data-mf': 'etcMemo', 'aria-label': '기타 정보 메모', rows: 3, maxlength: 1000, placeholder: '기타 내용 (필요할 때만)' }))),
+                    row(wcell(h('textarea', { class: 'mf-in mf-area memo', name: 'etcMemo', 'data-mf': 'etcMemo', 'aria-label': '기타 정보 메모', rows: 2, maxlength: 3000, placeholder: '기타 내용 (필요할 때만, 길게 적어도 돼요)' }))),
                     row(wcell(k('중고폰 보상신청 -'), chk('usedY', '신청', 'used'), k('( 모델명 :'), inp('usedModel', '중고폰 모델명'), k(')'), chk('usedN', '미신청', 'used'))),
                     row(wcell(k('잔여 할부금 - ('), inp('remain', '잔여 할부금(원)', MONEY), k('원) ['), chk('rPay', '납부'), chk('rSup', '지원'), chk('rDbl', '이중할부'), k('] PAY [ -'), inp('payAmt', 'PAY 금액(원)', MONEY), k('원 ]'))),
                     row(wcell(k('할인 위약금 - ('), inp('penalty', '할인 위약금(원)', MONEY), k('원) ['), chk('pPay', '납부'), chk('pSup', '지원'), chk('pFree', '청구면제'), k('] FRE [ -'), inp('freAmt', 'FRE 금액(원)', MONEY), k('원 ]')))),
@@ -2411,13 +2453,15 @@
                 h('div', { class: 'mf-foot' },
                     h('div', { class: 'mf-date' }, inp('y', '작성 연도', { mode: 'numeric', max: 4 }), k('년'), inp('m', '작성 월', { mode: 'numeric', max: 2 }), k('월'), inp('d', '작성 일', { mode: 'numeric', max: 2 }), k('일')),
                     h('div', { class: 'mf-shopinfo' },
-                        h('div', {}, k('판매점명'), h('b', {}, '사거리핸드폰'), k('연락처'), h('b', {}, '010-2422-2444')),
-                        h('div', {}, k('판매자'), inp('seller', '판매자'), k('연락처'), inp('sellerPhone', '판매자 연락처', TEL))),
-                    h('div', { class: 'mf-applicant' }, h('div', { class: 'mf-applab' }, h('b', {}, '*신청인/가입자'), h('span', {}, '(대리인)')), sign('apply', '신청인/가입자'))),
+                        h('div', {}, k('판매점명'), h('b', {}, '사거리핸드폰'), k('연락처'), inp('shopPhone', '연락처 (로그인한 판매자 번호)', { mode: 'tel', kind: 'tel', max: 13, cls: 'telw' })),
+                        h('div', {}, k('판매자'), inp('seller', '판매자'))),
+                    h('div', { class: 'mf-applicant' }, h('div', { class: 'mf-applab' }, h('b', {}, '*신청인/가입자'), h('span', {}, '(대리인)')),
+                        h('div', { class: 'mf-appname' }, k('성함'), inp('appName', '신청인/가입자 성함', { max: 20 })), sign('apply', '신청인/가입자'))),
                 h('p', { class: 'mf-copy' }, '본 신청서는 사거리핸드폰 업무용으로 제작된 것으로 사거리핸드폰의 사전 허락 없이 사용하거나 임의로 수정할 수 없습니다.'));
 
             function val(n, v) { var x = sheet.querySelector('[data-mf="' + n + '"]'); if (x) x.value = v; }
-            val('y', String(now.getFullYear())); val('m', String(now.getMonth() + 1)); val('d', String(now.getDate())); val('seller', who);
+            val('y', String(now.getFullYear())); val('m', String(now.getMonth() + 1)); val('d', String(now.getDate()));
+            mfSeller(sheet, true);   // 판매자 이름·연락처: 로그인한 계정 정보로 자동 입력 (고칠 수 있음)
 
             // 엔터(휴대폰 키보드의 [다음])를 누르면 다음 빈칸으로
             function nextField(from) {
@@ -2448,6 +2492,10 @@
                     else if (kp.value === kp.getAttribute('data-auto')) { kp.value = ''; kp.removeAttribute('data-auto'); }   // 체크를 풀면 자동으로 넣은 값만 지움
                 }
             });
+            sheet.addEventListener('input', function (e) {   // 메모가 길어지면 칸도 함께 늘어남
+                var t = e.target; if (!t.classList || !t.classList.contains('memo')) return;
+                t.style.height = ''; if (t.scrollHeight > t.clientHeight) t.style.height = (t.scrollHeight + 4) + 'px';
+            });
             sheet.addEventListener('focusout', function (e) {   // 칸을 벗어나면 금액·전화번호 모양 정리
                 if (mfMoving) return;
                 var t = e.target, kd = t.getAttribute ? t.getAttribute('data-kind') : null;
@@ -2467,6 +2515,18 @@
                     } }, '인쇄 / PDF 저장')));
             M.el = h('div', { class: 'mf-wrap' }, sheet, tools);
             return M;
+        }
+        function mfSellerAuto() {   // 로그인한 계정의 이름·핸드폰 번호 (없으면 직원 이름 / 매장 번호)
+            var a = db && db.account, nm = a && a.name ? a.name : (me && staffById(me) ? staffName(me) : '');
+            return { seller: nm, shopPhone: a && a.phone ? mfPhone(a.phone) : '010-2422-2444' };
+        }
+        function mfSeller(root, first) {   // first: 처음 열 때 / 아니면 직접 고치지 않은 칸만 새 값으로
+            if (!root) return;
+            var v = mfSellerAuto();
+            ['seller', 'shopPhone'].forEach(function (n) {
+                var el = root.querySelector('[data-mf="' + n + '"]'); if (!el) return;
+                if (first || el.value === (el.getAttribute('data-auto') || '')) { el.value = v[n]; el.setAttribute('data-auto', v[n]); }
+            });
         }
         function paintSig(M, key) {
             var b = M.box[key]; if (!b) return;
