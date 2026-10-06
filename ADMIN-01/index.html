@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7DCC7VIseNFAsdZfAMauKaepOniugCrKSwIRPRV0keE='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-qCVQGtqnIKdBKlBuwH1BnwfynDuSpbKbRJjJ8j290p0='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -224,7 +224,32 @@
         .ib-row.done .ib-label { color: var(--muted); }
         .ib-time { font-size: 13px; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
         .ib-kind { font-weight: 800; font-size: 14px; }
-        .ib-kind.k-call { color: #2B6CB0; } .ib-kind.k-kakao { color: #8A6D00; } .ib-kind.k-sms { color: #2F855A; } .ib-kind.k-form { color: #C05621; }
+        .ib-kind.k-call { color: #2B6CB0; } .ib-kind.k-kakao { color: #8A6D00; } .ib-kind.k-sms { color: #2F855A; } .ib-kind.k-mail { color: #6B46C1; } .ib-kind.k-form { color: #C05621; }
+        /* 엑셀 버튼 · 홈페이지 인입 */
+        .xl-group { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+        .xl-label { font-size: 13px; font-weight: 800; color: #1D6F42; margin-right: 2px; }
+        .xl-btn { min-width: 46px; }
+        .vs-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+        .vs-tabs .btn.on { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .vs-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+        .vs-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; }
+        .vs-card small { color: var(--muted); font-size: 13px; } .vs-card b { font-size: 22px; letter-spacing: -0.5px; word-break: keep-all; }
+        .vs-panel { margin-bottom: 14px; padding-bottom: 6px; }
+        .vs-h { font-weight: 800; padding: 14px 16px 8px; }
+        .vs-bar { display: grid; grid-template-columns: 170px minmax(0, 1fr) 120px; gap: 12px; align-items: center; padding: 7px 16px; }
+        .vs-bar-name { font-weight: 700; word-break: keep-all; }
+        .vs-bar-track { height: 12px; background: #EEF1E4; border-radius: 999px; overflow: hidden; }
+        .vs-bar-fill { display: block; height: 100%; background: var(--olive-700); border-radius: 999px; }
+        .vs-bar-num { text-align: right; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .vs-row { display: grid; grid-template-columns: 128px 170px minmax(0, 1fr) 70px; gap: 10px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 14px; }
+        .vs-src { font-weight: 700; } .vs-det { color: var(--muted); word-break: break-all; }
+        @media (max-width: 900px) {
+            .vs-cards { grid-template-columns: minmax(0, 1fr); }
+            .vs-bar { grid-template-columns: 110px minmax(0, 1fr) 92px; padding: 7px 12px; }
+            .vs-row { grid-template-columns: minmax(0, 1fr) auto; padding: 10px 12px; }
+            .vs-row .vs-det { grid-column: 1 / -1; }
+            .page-head .actions { flex-wrap: wrap; }
+        }
         .ib-label { font-weight: 700; }
         .ib-sub { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 13px; color: var(--muted); margin-top: 2px; }
         .ib-sub b { color: var(--ink, #222); }
@@ -519,7 +544,7 @@
         var PALETTE = ['#5C6B1E', '#B58900', '#E64A19', '#00796B', '#3949AB', '#8E3B6B', '#6D4C41', '#455A64'];
         var STATUS = [{ v: 'todo', t: '할 일' }, { v: 'doing', t: '진행 중' }, { v: 'done', t: '완료' }];
         var PRIORITY = [{ v: 'high', t: '높음' }, { v: 'normal', t: '보통' }, { v: 'low', t: '낮음' }];
-        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'calls', t: '콜 인입' }, { v: 'settings', t: '설정' }];
+        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'calls', t: '콜 인입' }, { v: 'visits', t: '홈페이지 인입' }, { v: 'settings', t: '설정' }];
 
         // 공유 저장소 주소는 반드시 구글 Apps Script 웹 앱 주소여야 합니다 (그 밖의 주소로는 어떤 요청도 보내지 않음)
         var DRIVE_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,200}\/exec$/;
@@ -530,7 +555,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-06.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-06.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -3142,17 +3167,18 @@
         /* ---------- 콜 인입: 고객 홈페이지의 전화·카톡·문자 버튼, 접수 완료를 실시간으로 ---------- */
         // 기록은 공유 저장소 서버(Apps Script)에 있고, 이 화면은 20초마다(다른 메뉴에서는 1분마다) 새 기록을 확인해요.
         // 고객 성함·연락처가 들어 있어서 이 기기에는 저장하지 않고, 잠그면 화면 메모리에서도 지워요.
-        var IB_KIND = { call: ['📞', '전화'], kakao: ['💬', '카톡'], sms: ['✉️', '문자'], form: ['📝', '접수'] };
+        var IB_KIND = { call: ['📞', '전화'], kakao: ['💬', '카톡'], sms: ['✉️', '문자'], mail: ['📧', '메일'], form: ['📝', '접수'] };
         var IB_POLL_MS = 20000;
         function ibFresh() { return { items: [], rev: -1, at: 0, err: '', known: null, busy: false, timer: null, tick: 0, open: Object.create(null), draft: Object.create(null), kind: 'all', todo: false, pend: false, saving: Object.create(null) }; }
         var ib = ibFresh();
-        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); }
+        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); vs = vsFresh(); }   // 잠그면 콜 인입·홈페이지 인입 기록도 지움
         function ibStart() {   // 로그인하면 시작 (공유 저장소를 쓰는 기기만)
             if (ib.timer || !driveOn()) return;
             ib.timer = setInterval(function () {
                 if (!authed || !db || document.visibilityState !== 'visible') return;
                 ib.tick++;
                 if (state.view === 'calls' || ib.tick % 3 === 0) ibLoad(false);   // 콜 인입 화면은 20초, 다른 화면은 1분마다
+                if (state.view === 'visits' && ib.tick % 3 === 0) vsLoad();       // 홈페이지 인입 화면은 1분마다
             }, IB_POLL_MS);
             ibLoad(false);
         }
@@ -3246,7 +3272,7 @@
         }
         function renderCalls() {
             var head = h('div', { class: 'page-head' }, h('h1', {}, '콜 인입'),
-                h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'ib-refresh', onclick: function () { ib.busy = false; ibLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침')));
+                h('div', { class: 'actions' }, excelButtons(ibExcel, 'ib'), h('button', { type: 'button', class: 'btn', 'data-fk': 'ib-refresh', onclick: function () { ib.busy = false; ibLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침')));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '콜 인입은 구글 드라이브 공유 저장소를 연결한 기기에서 볼 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
             if (ib.rev < 0 && !ib.busy && !ib.err) setTimeout(function () { ibLoad(true); }, 0);
             var kindSel = h('select', { id: 'ib-kind', 'data-fk': 'ib-kind', 'aria-label': '종류 필터' }, h('option', { value: 'all' }, '전체'),
@@ -3295,6 +3321,193 @@
                 h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '확인 안 함 ' + n + '건 · 전체 ' + ib.items.length + '건 (최근 300건)')),
                 h('div', { class: 'panel' }, rows.length ? rows : h('div', { class: 'empty' }, ib.at || ib.err ? (ib.items.length ? '조건에 맞는 기록이 없어요.' : '아직 들어온 기록이 없어요. 고객이 홈페이지에서 전화·카톡·문자 버튼을 누르면 여기에 올라와요.') : '불러오는 중이에요...')),
                 h('p', { class: 'ib-help' }, '※ 홈페이지에서는 고객이 어떤 버튼을 언제 눌렀는지만 알 수 있어요. 전화를 건 고객의 번호나 실제 통화 연결 여부는 알 수 없어서 기록되지 않아요. 접수 완료 건은 고객이 적은 성함·연락처가 함께 보여요(번호를 누르면 전화 연결).'));
+        }
+
+        /* ---------- 엑셀(.xlsx) 파일 만들기: 외부 프로그램 없이 이 화면에서 직접 ---------- */
+        var CRC_T = null;
+        function crc32(u8) {
+            if (!CRC_T) { CRC_T = new Uint32Array(256); for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; CRC_T[n] = c >>> 0; } }
+            var crc = 0xFFFFFFFF; for (var i = 0; i < u8.length; i++) crc = CRC_T[(crc ^ u8[i]) & 0xFF] ^ (crc >>> 8);
+            return (crc ^ 0xFFFFFFFF) >>> 0;
+        }
+        function zipStore(files) {   // 압축 없이 묶는 ZIP (엑셀 파일의 기본 형식)
+            var enc = new TextEncoder(), parts = [], central = [], offset = 0;
+            function u16(v) { return [v & 255, (v >>> 8) & 255]; }
+            function u32(v) { return [v & 255, (v >>> 8) & 255, (v >>> 16) & 255, (v >>> 24) & 255]; }
+            files.forEach(function (f) {
+                var name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+                var head = [].concat(u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0x21), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0));
+                parts.push(new Uint8Array(head), name, data);
+                central.push(new Uint8Array([].concat(u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0x21), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset))), name);
+                offset += head.length + name.length + data.length;
+            });
+            var cdSize = central.reduce(function (s, p) { return s + p.length; }, 0);
+            var end = new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length), u32(cdSize), u32(offset), u16(0)));
+            return new Blob(parts.concat(central, [end]), { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        }
+        function xmlEsc(v) { return String(v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+        function colName(i) { var s = ''; i++; while (i > 0) { var m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+        function xlsxBlob(sheets) {   // sheets: [{ name, widths: [..], rows: [[값...], ...], head: [굵게 할 줄 번호...], freeze: 고정할 줄 수 }]
+            var files = [], wbSheets = '', wbRels = '', ct = '';
+            sheets.forEach(function (sh, si) {
+                var n = si + 1, bold = {};
+                (sh.head || [0]).forEach(function (r) { bold[r] = 1; });
+                var cols = (sh.widths || []).map(function (w, i) { return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>'; }).join('');
+                var rows = sh.rows.map(function (row, ri) {
+                    return '<row r="' + (ri + 1) + '">' + row.map(function (v, ci) {
+                        if (v === null || v === undefined || v === '') return '';
+                        var ref = colName(ci) + (ri + 1), st = bold[ri] ? ' s="1"' : '';
+                        if (typeof v === 'number' && isFinite(v)) return '<c r="' + ref + '"' + st + '><v>' + v + '</v></c>';
+                        return '<c r="' + ref + '" t="inlineStr"' + st + '><is><t xml:space="preserve">' + xmlEsc(v) + '</t></is></c>';
+                    }).join('') + '</row>';
+                }).join('');
+                files.push({ name: 'xl/worksheets/sheet' + n + '.xml', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+                    + (sh.freeze ? '<sheetViews><sheetView workbookViewId="0"><pane ySplit="' + sh.freeze + '" topLeftCell="A' + (sh.freeze + 1) + '" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' : '')
+                    + (cols ? '<cols>' + cols + '</cols>' : '') + '<sheetData>' + rows + '</sheetData></worksheet>' });
+                wbSheets += '<sheet name="' + xmlEsc(String(sh.name).slice(0, 31)) + '" sheetId="' + n + '" r:id="rId' + n + '"/>';
+                wbRels += '<Relationship Id="rId' + n + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + n + '.xml"/>';
+                ct += '<Override PartName="/xl/worksheets/sheet' + n + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+            });
+            var sid = sheets.length + 1;
+            wbRels += '<Relationship Id="rId' + sid + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>';
+            files.unshift(
+                { name: '[Content_Types].xml', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' + ct + '</Types>' },
+                { name: '_rels/.rels', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+                { name: 'xl/workbook.xml', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + wbSheets + '</sheets></workbook>' },
+                { name: 'xl/_rels/workbook.xml.rels', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + wbRels + '</Relationships>' },
+                { name: 'xl/styles.xml', text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="11"/><name val="맑은 고딕"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' });
+            return zipStore(files);
+        }
+        function saveBlob(name, blob) {
+            var url = URL.createObjectURL(blob), a = h('a', { href: url, download: name });
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+        }
+        // 기간: 일간(오늘) · 주간(최근 7일) · 10일 · 월간(최근 30일) — 모두 오늘까지 포함
+        var PERIODS = [{ v: 'day', t: '일간', n: 1, s: '오늘' }, { v: 'week', t: '주간', n: 7, s: '최근 7일' }, { v: '10d', t: '10일', n: 10, s: '최근 10일' }, { v: 'month', t: '월간', n: 30, s: '최근 30일' }];
+        function periodRange(v) {
+            var p = PERIODS.filter(function (x) { return x.v === v; })[0] || PERIODS[0], end = new Date(), start = new Date(end.getFullYear(), end.getMonth(), end.getDate() - (p.n - 1));
+            return { from: start.getTime(), to: end.getTime() + 60000, label: ymd(start) + (p.n > 1 ? '~' + ymd(end) : ''), p: p };
+        }
+        function fmtDT(t) { var d = new Date(t); return ymd(d) + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()); }
+        function daysIn(r) { var out = [], d = new Date(r.from); while (d.getTime() < r.to) { out.push(ymd(d)); d.setDate(d.getDate() + 1); } return out; }
+        function excelButtons(onPick, key) {   // 화면 오른쪽 위: 엑셀 일간·주간·10일·월간
+            return h('div', { class: 'xl-group', role: 'group', 'aria-label': '엑셀 내려받기' }, h('span', { class: 'xl-label' }, '엑셀'),
+                PERIODS.map(function (p) { return h('button', { type: 'button', class: 'btn btn-sm xl-btn', 'data-xl': key + '-' + p.v, title: p.s + '(오늘 포함) 엑셀 내려받기', onclick: function () { onPick(p.v, this); } }, p.t); }));
+        }
+
+        /* ---------- 콜 인입 엑셀 ---------- */
+        function ibExcel(pv, btn) {
+            if (!driveOn()) { toast('공유 저장소를 연결한 기기에서 내려받을 수 있어요.'); return; }
+            var r = periodRange(pv), label = btn.textContent;
+            btn.disabled = true; btn.textContent = '만드는 중...';
+            ibCall('ibExport', { from: r.from, to: r.to }).then(function (res) {
+                btn.disabled = false; btn.textContent = label;
+                var items = (Array.isArray(res.items) ? res.items : []).filter(ibOk).map(ibNorm).sort(function (a, b) { return a.t - b.t; });
+                var kinds = Object.keys(IB_KIND), cnt = {}, byDay = {}, days = daysIn(r);
+                kinds.forEach(function (k) { cnt[k] = 0; });
+                days.forEach(function (d) { byDay[d] = {}; kinds.forEach(function (k) { byDay[d][k] = 0; }); });
+                items.forEach(function (x) { cnt[x.kind]++; var d = ymd(new Date(x.t)); if (byDay[d]) byDay[d][x.kind]++; });
+                var sum = [['사거리인터넷 콜 인입 (' + r.p.t + ')'], ['기간', r.label], ['내려받은 시각', fmtDT(Date.now())], [], ['종류', '건수']];
+                kinds.forEach(function (k) { sum.push([IB_KIND[k][1], cnt[k]]); });
+                sum.push(['합계', items.length], []);
+                var head = [0, 4, sum.length];
+                sum.push(['날짜'].concat(kinds.map(function (k) { return IB_KIND[k][1]; }), ['합계']));
+                days.forEach(function (d) { var row = [d], tot = 0; kinds.forEach(function (k) { row.push(byDay[d][k]); tot += byDay[d][k]; }); row.push(tot); sum.push(row); });
+                var det = [['일시', '종류', '누른 버튼 / 접수 종류', '기기', '성함', '연락처', '확인', '확인자', '확인 시각', '댓글']];
+                items.forEach(function (x) {
+                    det.push([fmtDT(x.t), IB_KIND[x.kind][1], x.label, x.dev === 'm' ? '모바일' : 'PC', x.name, x.phone ? mfPhone(x.phone) : '', x.chk ? 'O' : '', x.chk ? x.chk.by : '', x.chk && x.chk.at ? fmtDT(x.chk.at) : '',
+                        x.cm.map(function (c) { return c.by + ': ' + c.text; }).join(' / ')]);
+                });
+                saveBlob('콜인입_' + r.label + '.xlsx', xlsxBlob([
+                    { name: '요약', widths: [18, 10, 10, 10, 10, 10, 10], rows: sum, head: head },
+                    { name: '상세', widths: [20, 8, 30, 8, 10, 15, 6, 10, 20, 50], rows: det, head: [0], freeze: 1 }]));
+                toast('콜 인입 ' + r.label + ' 엑셀을 내려받았어요. (' + items.length + '건)');
+            }, function (e) { btn.disabled = false; btn.textContent = label; toast('엑셀을 만들지 못했어요. ' + driveErrText(e)); });
+        }
+
+        /* ---------- 홈페이지 인입: 고객이 어떤 경로로 홈페이지에 들어왔는지 ---------- */
+        function vsFresh() { return { pv: 'day', items: null, at: 0, err: '', busy: false }; }
+        var vs = vsFresh();
+        function vsOk(x) { return x && typeof x.t === 'number' && typeof x.src === 'string'; }
+        function vsNorm(x) { return { t: x.t, src: String(x.src).slice(0, 30), ref: String(x.ref || '').slice(0, 80), us: String(x.us || '').slice(0, 40), um: String(x.um || '').slice(0, 40), uc: String(x.uc || '').slice(0, 40), dev: x.dev === 'm' ? 'm' : 'pc', page: String(x.page || '').slice(0, 80) }; }
+        function vsFetch(pv) { var r = periodRange(pv); return ibCall('vsList', { from: r.from, to: r.to }).then(function (res) { return { r: r, items: (Array.isArray(res.items) ? res.items : []).filter(vsOk).map(vsNorm) }; }); }
+        function vsLoad() {
+            if (!authed || !db || !driveOn() || vs.busy) return;
+            vs.busy = true;
+            var mine = vs, pv = vs.pv;
+            vsFetch(pv).then(function (o) {
+                if (mine !== vs || !authed || !db) return;
+                vs.busy = false; vs.err = ''; vs.at = Date.now();
+                if (vs.pv !== pv) { vsLoad(); return; }   // 그사이 기간을 바꿨으면 다시
+                vs.items = o.items.slice().reverse();      // 최근 것부터
+                if (state.view === 'visits') render();
+            }, function (e) { if (mine !== vs) return; vs.busy = false; vs.err = driveErrText(e); if (state.view === 'visits') render(); });
+        }
+        function vsCount(items, keyFn) {
+            var m = {}; items.forEach(function (x) { var k = keyFn(x); m[k] = (m[k] || 0) + 1; });
+            return Object.keys(m).map(function (k) { return [k, m[k]]; }).sort(function (a, b) { return b[1] - a[1] || (a[0] < b[0] ? -1 : 1); });
+        }
+        function vsDetail(x) { return [x.ref, x.us ? 'utm: ' + x.us + (x.um ? '/' + x.um : '') + (x.uc ? '/' + x.uc : '') : ''].filter(Boolean).join(' · '); }
+        function vsExcel(pv, btn) {
+            if (!driveOn()) { toast('공유 저장소를 연결한 기기에서 내려받을 수 있어요.'); return; }
+            var label = btn.textContent; btn.disabled = true; btn.textContent = '만드는 중...';
+            vsFetch(pv).then(function (o) {
+                btn.disabled = false; btn.textContent = label;
+                var r = o.r, items = o.items, days = daysIn(r), byDay = {}, srcs = vsCount(items, function (x) { return x.src; });
+                days.forEach(function (d) { byDay[d] = { all: 0, m: 0, pc: 0 }; });
+                items.forEach(function (x) { var d = ymd(new Date(x.t)); if (byDay[d]) { byDay[d].all++; byDay[d][x.dev]++; } });
+                var mob = items.filter(function (x) { return x.dev === 'm'; }).length;
+                var sum = [['사거리인터넷 홈페이지 인입 (' + r.p.t + ')'], ['기간', r.label], ['내려받은 시각', fmtDT(Date.now())], ['총 방문', items.length], []];
+                var head = [0, sum.length];
+                sum.push(['유입 경로', '건수', '비율(%)']);
+                srcs.forEach(function (s) { sum.push([s[0], s[1], items.length ? Math.round(s[1] * 1000 / items.length) / 10 : 0]); });
+                sum.push([]); head.push(sum.length); sum.push(['기기', '건수']);
+                sum.push(['모바일', mob], ['PC', items.length - mob], []);
+                head.push(sum.length); sum.push(['날짜', '방문', '모바일', 'PC']);
+                days.forEach(function (d) { sum.push([d, byDay[d].all, byDay[d].m, byDay[d].pc]); });
+                var det = [['일시', '유입 경로', '참조 사이트', 'utm_source', 'utm_medium', 'utm_campaign', '기기', '첫 화면']];
+                items.forEach(function (x) { det.push([fmtDT(x.t), x.src, x.ref, x.us, x.um, x.uc, x.dev === 'm' ? '모바일' : 'PC', x.page]); });
+                saveBlob('홈페이지인입_' + r.label + '.xlsx', xlsxBlob([
+                    { name: '요약', widths: [24, 10, 10, 10], rows: sum, head: head },
+                    { name: '상세', widths: [20, 22, 26, 16, 14, 18, 8, 24], rows: det, head: [0], freeze: 1 }]));
+                toast('홈페이지 인입 ' + r.label + ' 엑셀을 내려받았어요. (' + items.length + '건)');
+            }, function (e) { btn.disabled = false; btn.textContent = label; toast('엑셀을 만들지 못했어요. ' + driveErrText(e)); });
+        }
+        function renderVisits() {
+            var head = h('div', { class: 'page-head' }, h('h1', {}, '홈페이지 인입'),
+                h('div', { class: 'actions' }, excelButtons(vsExcel, 'vs'), h('button', { type: 'button', class: 'btn', 'data-fk': 'vs-refresh', onclick: function () { vs.busy = false; vsLoad(); toast('새로 확인하고 있어요.'); } }, '새로고침')));
+            if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '홈페이지 인입은 구글 드라이브 공유 저장소를 연결한 기기에서 볼 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
+            if (vs.items === null && !vs.busy && !vs.err) setTimeout(vsLoad, 0);
+            var tabs = h('div', { class: 'vs-tabs', role: 'group', 'aria-label': '기간' }, PERIODS.map(function (p) {
+                return h('button', { type: 'button', class: 'btn btn-sm' + (vs.pv === p.v ? ' on' : ''), 'aria-pressed': vs.pv === p.v ? 'true' : 'false', 'data-fk': 'vs-pv-' + p.v,
+                    onclick: function () { if (vs.pv === p.v) return; vs.pv = p.v; vs.items = null; vs.err = ''; vs.busy = false; render(); vsLoad(); } }, p.s);
+            }));
+            var items = vs.items || [], r = periodRange(vs.pv);
+            var srcs = vsCount(items, function (x) { return x.src; }), top = srcs.length ? srcs[0][1] : 0;
+            var mob = items.filter(function (x) { return x.dev === 'm'; }).length;
+            var status = vs.err ? '연결 오류: ' + vs.err : vs.items === null ? '불러오는 중...' : (vs.at ? pad2(new Date(vs.at).getHours()) + ':' + pad2(new Date(vs.at).getMinutes()) + '에 확인' : '');
+            var rows = items.slice(0, 300).map(function (x) {
+                return h('div', { class: 'vs-row' }, h('div', { class: 'ib-time' }, ibTime(x.t)), h('div', { class: 'vs-src' }, x.src),
+                    h('div', { class: 'vs-det' }, vsDetail(x) || '-'), h('div', {}, h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC')));
+            });
+            return h('div', {}, head,
+                h('p', { class: 'forms-sub' }, '고객이 어떤 경로(네이버 검색, 인스타그램, 카카오톡, 직접 방문 등)로 홈페이지에 들어왔는지 보여줘요. 한 사람이 새로고침해도 한 번만 세요. 오른쪽 위 [엑셀]로 기간별 자료를 내려받을 수 있어요.'),
+                h('div', { class: 'filters' }, tabs, h('span', { class: 'ib-status', role: 'status' }, status)),
+                h('div', { class: 'vs-cards' },
+                    h('div', { class: 'vs-card' }, h('small', {}, '방문 (' + r.label + ')'), h('b', {}, items.length + '건')),
+                    h('div', { class: 'vs-card' }, h('small', {}, '모바일 / PC'), h('b', {}, mob + ' / ' + (items.length - mob))),
+                    h('div', { class: 'vs-card' }, h('small', {}, '가장 많은 경로'), h('b', {}, srcs.length ? srcs[0][0] : '-'))),
+                h('div', { class: 'panel vs-panel' }, h('div', { class: 'vs-h' }, '유입 경로별'),
+                    srcs.length ? srcs.map(function (s) {
+                        var pct = items.length ? Math.round(s[1] * 1000 / items.length) / 10 : 0;
+                        return h('div', { class: 'vs-bar' }, h('span', { class: 'vs-bar-name' }, s[0]),
+                            h('span', { class: 'vs-bar-track' }, h('span', { class: 'vs-bar-fill', style: 'width:' + Math.max(2, Math.round(s[1] * 100 / (top || 1))) + '%' })),
+                            h('span', { class: 'vs-bar-num' }, s[1] + '건 · ' + pct + '%'));
+                    }) : h('div', { class: 'empty' }, vs.items === null ? '불러오는 중이에요...' : '이 기간에 들어온 기록이 없어요.')),
+                h('div', { class: 'panel vs-panel' }, h('div', { class: 'vs-h' }, '최근 방문' + (items.length > 300 ? ' (최근 300건만 표시, 전체는 엑셀)' : '')),
+                    rows.length ? rows : h('div', { class: 'empty' }, vs.items === null ? '불러오는 중이에요...' : '기록이 없어요.')),
+                h('p', { class: 'ib-help' }, '※ 경로는 고객 브라우저가 알려주는 "이전 사이트"와 광고 주소의 utm 표시로 판단해요. 앱 안에서 열거나 주소를 직접 입력하면 "직접 방문"으로 보일 수 있어요. 이름·번호 같은 개인정보는 남기지 않아요.'));
         }
 
         /* ---------- 화면: 설정 ---------- */
@@ -3450,6 +3663,7 @@
             else if (view === 'tasks') content = renderTasks();
             else if (view === 'forms') content = renderForms();
             else if (view === 'calls') { content = renderCalls(); if (!ib.timer && driveOn()) setTimeout(ibStart, 0); }
+            else if (view === 'visits') { content = renderVisits(); if (!ib.timer && driveOn()) setTimeout(ibStart, 0); }
             else if (view === 'settings') content = renderSettings();
             else content = renderToday();
 
@@ -3459,7 +3673,7 @@
 
             var nav = h('nav', { class: 'nav', 'aria-label': '메뉴' }, VIEWS.map(function (v) {
                 var badge = v.v === 'calls' && ibUnchecked() ? h('span', { class: 'nav-badge', 'aria-label': '확인 안 한 콜 ' + ibUnchecked() + '건' }, String(Math.min(ibUnchecked(), 99))) : null;
-                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; if (v.v === 'forms') state.form = ''; render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); if (v.v === 'calls') { ib.busy = false; ibLoad(false); } } }, v.t, badge);
+                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; if (v.v === 'forms') state.form = ''; render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); if (v.v === 'calls') { ib.busy = false; ibLoad(false); } if (v.v === 'visits') { vs.busy = false; vsLoad(); } } }, v.t, badge);
             }));
             var note = driveBanner();
             var appWarn = inAppBrowser() ? h('div', { class: 'mode-note warn', 'data-note': 'inapp' }, h('span', {}, h('b', {}, '앱 안에서 열린 화면이에요 '), '이 안에서는 저장이 불안정할 수 있어요. 화면 메뉴(⋯ 또는 공유 버튼)의 "다른 브라우저로 열기"로 사파리·크롬에서 열어 주세요.')) : null;
