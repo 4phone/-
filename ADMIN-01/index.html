@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-W+UCHvPnik0hGpJxl/GuNk/CIxR7U6Tdd5p1TPE9in0='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-vhGMVxCMoY5/RwfYBsbLUJRKjElUlbfJ2QRZfXF1Ed0='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -521,7 +521,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-06.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-06.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1502,9 +1502,9 @@
             if (confirm(msg)) connectJoin(p); else toast('연결을 취소했어요. 설정에서 언제든 연결할 수 있어요.');
         }
 
-        function driveCall(url, action, payload) {
+        function driveCall(url, action, payload, waitMs) {   // waitMs: 오래 걸리는 요청(드라이브 저장 등)만 따로
             if (!DRIVE_URL_RE.test(url)) return Promise.reject(new Error('url'));
-            var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, DRIVE_TIMEOUT_MS);
+            var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, waitMs || DRIVE_TIMEOUT_MS);
             var base = { action: action };
             if (db && db.account && db.account.session) base.session = db.account.session;   // 계정 로그인 확인표(서버가 승인된 계정인지 확인)
             var body = JSON.stringify(Object.assign(base, payload || {}));
@@ -2825,13 +2825,14 @@
             }
 
             var tools = h('div', { class: 'mf-tools' },
-                h('p', { class: 'mf-tip' }, '작성한 내용은 저장되지 않아요. 다 쓰면 [복사보고]로 카카오톡·텔레그램에 붙여넣거나 [인쇄 / PDF 저장]으로 보관해 주세요. 잠그거나 새로고침하면 지워져요.'),
+                h('p', { class: 'mf-tip' }, '다 쓰면 [드라이브 저장]으로 구글 드라이브 월별 폴더에 보관하거나, [복사보고]로 카카오톡·텔레그램에 붙여넣거나, [인쇄 / PDF 저장]을 이용해 주세요. 이 화면의 작성 내용은 잠그거나 새로고침하면 지워져요.'),
                 h('div', { class: 'actions' },
                     h('button', { type: 'button', class: 'btn', 'data-act': 'mf-new', onclick: function () {
                         if (!confirm('작성한 내용과 서명을 모두 지우고 새로 작성할까요?')) return;
                         if (mforms[M.kind] === M) delete mforms[M.kind];
                         render(); window.scrollTo(0, 0); toast('새 가입 확인서를 열었어요.');
                     } }, '새로 작성'),
+                    h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'mf-drive', onclick: function () { mfDriveSave(M, sheet, this); } }, '드라이브 저장'),
                     h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'mf-copy', onclick: function () {
                         if (!M.sig.apply && !confirm('신청인/가입자 서명이 아직 없어요. 그래도 복사할까요?')) return;
                         mfCopyReport(sheet, opt.file);
@@ -2843,6 +2844,36 @@
             M.sheet = sheet;
             M.el = h('div', { class: 'mf-wrap' }, sheet, tools);
             return M;
+        }
+        function mfDriveSave(M, sheet, btn) {   // 완성한 가입 확인서 → 구글 드라이브 '26년10월' 폴더 (파일 이름: 20일 고객명 / 유선은 뒤에 '유선')
+            var q = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return el; };
+            var val = function (n) { var el = q(n); return el ? el.value.trim() : ''; };
+            if (!driveOn()) { alert('드라이브 저장은 구글 드라이브 공유 저장소를 연결한 기기에서 할 수 있어요. (설정 → 공유 저장소)'); return; }
+            var name = val('name') || val('appName');
+            if (!name) { toast('가입자명(고객명)을 먼저 입력해 주세요. 파일 이름에 들어가요.'); var ne = q('name'); if (ne) { ne.focus(); ne.scrollIntoView({ block: 'center' }); } return; }
+            var y = parseInt(val('y'), 10), m = parseInt(val('m'), 10), d = parseInt(val('d'), 10);
+            if (y >= 0 && y < 100) y += 2000;
+            var dt = new Date(y, m - 1, d);
+            if (!(y >= 2000 && y <= 2099 && m >= 1 && m <= 12 && d >= 1 && dt.getMonth() === m - 1 && dt.getDate() === d)) {
+                toast('가입 확인서 아래쪽의 날짜(년·월·일)를 확인해 주세요. 폴더와 파일 이름에 들어가요.'); var ye = q('y'); if (ye) { ye.focus(); ye.scrollIntoView({ block: 'center' }); } return;
+            }
+            if (!M.sig.apply && !confirm('신청인/가입자 서명이 아직 없어요. 그래도 저장할까요?')) return;
+            if (M.saved && !confirm('이 가입 확인서는 이미 "' + M.saved + '"(으)로 저장했어요.\n한 번 더 저장하면 뒤에 번호가 붙어 따로 저장돼요. 계속할까요?')) return;
+            var b64;
+            try { b64 = mfSnapshot(sheet).toDataURL('image/png').split(',')[1]; } catch (e) { toast('가입 확인서 그림을 만들지 못했어요.'); return; }
+            var label = btn.textContent; btn.disabled = true; btn.textContent = '저장 중...';
+            var folder = String(y % 100).padStart(2, '0') + '년' + m + '월';
+            ensureTeam().then(function (t) {
+                return driveCall(db.drive.url, 'formSave', { token: t.token, kind: M.kind, y: y, m: m, d: d, name: name.slice(0, 20), png: b64 }, 120000);
+            }).then(function (res) {
+                btn.disabled = false; btn.textContent = label;
+                M.saved = String(res.name || '');
+                toast('구글 드라이브 "' + (res.folder || folder) + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.');
+            }, function (e) {
+                btn.disabled = false; btn.textContent = label;
+                if (e && e.name === 'AbortError') toast('드라이브 응답이 늦어요. 이미 저장됐을 수 있으니 드라이브의 "' + folder + '" 폴더를 확인한 뒤 다시 시도해 주세요.');
+                else toast('드라이브에 저장하지 못했어요. ' + driveErrText(e));
+            });
         }
         function mfSellerAuto() {   // 로그인한 계정의 이름·핸드폰 번호 (없으면 직원 이름 / 매장 번호)
             var a = db && db.account, nm = a && a.name ? a.name : (me && staffById(me) ? staffName(me) : ''), ph = a && a.phone ? mfPhone(a.phone) : '010-2422-2444';
