@@ -432,7 +432,7 @@
        - 포인트: 샴페인 골드 / 요금표 머리말: 통신사 대표 색 유지(은은한 광택만 추가)
        =================================================================== */
         :root { --sg-deep: #0A2B32; --sg-teal: #134047; --sg-teal-2: #1F5A5E; --sg-sea: #3D7D74; --sg-mint: #8FD8CB; --sg-gold: #E9CF8F; --sg-gold-2: #F3DFA8; --sg-gold-3: #E2C27A; --sg-paper: #F3F7F6; }
-        body { background-color: var(--sg-paper); }
+        body { background-color: #0A2B32; }   /* 페이지 전체가 청록으로 이어지도록 */
 
         /* 상단 메뉴 */
         .navbar { height: 84px; background: rgba(10,43,50,0.92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(3,20,24,0.22); }
@@ -452,6 +452,7 @@
         /* 첫 화면 */
         .sg-hero { position: relative; overflow: hidden; color: #F4FAF8; background: linear-gradient(118deg, #0A2B32 0%, #134047 38%, #1F5A5E 66%, #3D7D74 100%); }
         .sg-hero-bg { position: absolute; inset: 0; pointer-events: none; }
+        .sg-hero::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 200px; background: linear-gradient(180deg, rgba(23,72,77,0) 0%, #17484D 100%); pointer-events: none; }   /* 아래 본문과 이음매 없이 */
         .sg-blob { position: absolute; border-radius: 50%; }
         .sg-blob-a { left: 36%; top: 12%; width: 620px; height: 620px; background: radial-gradient(circle, rgba(91,170,153,0.38) 0%, rgba(91,170,153,0) 68%); animation: sgDriftA 22s ease-in-out infinite; }
         .sg-blob-b { left: -160px; top: 48%; width: 560px; height: 560px; background: radial-gradient(circle, rgba(233,207,143,0.16) 0%, rgba(233,207,143,0) 70%); animation: sgDriftB 26s ease-in-out infinite; }
@@ -538,28 +539,43 @@
         @keyframes sgCue { 0% { transform: scaleY(0); transform-origin: top; } 45% { transform: scaleY(1); transform-origin: top; } 55% { transform: scaleY(1); transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
         @keyframes sgSweep { 0% { transform: translateX(-120%) skewX(-18deg); } 60%, 100% { transform: translateX(320%) skewX(-18deg); } }
 
+        /* 본문 띠 (설치 사업장 소개 ~ 요금표): 첫 화면과 같은 청록 그라데이션 + SAGEORI 배경 글씨 */
+        .sg-band { position: relative; overflow: hidden; color: #F4FAF8; background: linear-gradient(180deg, #17484D 0%, #0F3A40 30%, #134047 62%, #1A4F53 100%); padding-bottom: 40px; }
+        .sg-band-bg { position: absolute; inset: 0; pointer-events: none; }
+        .sg-band-blob { position: absolute; border-radius: 50%; }
+        .sg-band-blob.b1 { left: -220px; top: 6%; width: 720px; height: 720px; background: radial-gradient(circle, rgba(91,170,153,0.22) 0%, rgba(91,170,153,0) 68%); animation: sgDriftA 28s ease-in-out infinite; }
+        .sg-band-blob.b2 { right: -240px; top: 34%; width: 760px; height: 760px; background: radial-gradient(circle, rgba(233,207,143,0.12) 0%, rgba(233,207,143,0) 70%); animation: sgDriftB 32s ease-in-out infinite; }
+        .sg-band-blob.b3 { left: 20%; bottom: -260px; width: 820px; height: 820px; background: radial-gradient(circle, rgba(143,216,203,0.16) 0%, rgba(143,216,203,0) 70%); animation: sgDriftA 30s ease-in-out infinite; }
+        .sg-band .sg-grain { opacity: 0.07; }
+        .sg-band-mark { position: absolute; left: 50%; transform: translateX(-50%); font-family: 'Cormorant Garamond', serif; font-size: 260px; line-height: 1; letter-spacing: 10px; color: rgba(255,255,255,0.035); white-space: nowrap; pointer-events: none; }
+        .sg-band-mark.m1 { top: 70px; }
+        .sg-band-mark.m2 { bottom: 20px; }
+        .sg-band > :not(.sg-band-bg) { position: relative; z-index: 1; }
+
         /* 본문 공통: 제목 */
-        .sg-sec-eyebrow { display: flex; align-items: center; justify-content: center; gap: 12px; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 19px; letter-spacing: 3px; color: #A6802E; margin-bottom: 10px; }
-        .sg-sec-eyebrow::before, .sg-sec-eyebrow::after { content: ''; width: 36px; height: 1px; background: rgba(166,128,46,0.55); }
+        .sg-sec-eyebrow { display: flex; align-items: center; justify-content: center; gap: 12px; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 19px; letter-spacing: 3px; color: var(--sg-gold); margin-bottom: 10px; }
+        .sg-sec-eyebrow::before, .sg-sec-eyebrow::after { content: ''; width: 36px; height: 1px; background: rgba(233,207,143,0.55); }
         .section-title { font-family: 'Noto Serif KR', serif; font-weight: 700; color: #0E2A30; letter-spacing: -0.04em; }
+        .sg-band .section-title { color: #FFFFFF; }
+        .sg-band .section-title + p { color: rgba(244,250,248,0.72) !important; font-weight: 400 !important; }
         #best-plan-section { padding-top: 90px; }
-        #blog-stories-section { padding-top: 90px; }
+        #blog-stories-section { padding-top: 110px; }
 
-        /* 설치 사업장 소개 */
-        .story-card { background: #FFFFFF; border: 1px solid #DCE7E5; border-radius: 22px; box-shadow: 0 12px 30px rgba(10,43,50,0.07); }
-        .story-card:hover { border-color: #BFD6D2; box-shadow: 0 18px 38px rgba(10,43,50,0.12); }
-        .story-img-box { background: #E6EFED; }
-        .story-label { background: #E6F1EF; color: var(--sg-teal); }
-        .story-desc { color: #3D5A5E; }
-        .story-desc b { color: #0E2A30; }
-        .story-arrow { background: #FFFFFF; color: var(--sg-teal); border: 1px solid #DCE7E5; }
-        .story-arrow:hover { background: var(--sg-teal); color: var(--sg-gold-2); }
+        /* 설치 사업장 소개: 첫 화면 혜택 칸과 같은 유리 카드 */
+        .story-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); border-radius: 22px; box-shadow: 0 18px 40px rgba(3,20,24,0.25); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+        .story-card:hover { border-color: rgba(233,207,143,0.55); box-shadow: 0 22px 46px rgba(3,20,24,0.35); }
+        .story-img-box { background: rgba(255,255,255,0.05); }
+        .story-label { background: rgba(233,207,143,0.16); color: var(--sg-gold-2); border: 1px solid rgba(233,207,143,0.35); }
+        .story-desc { color: rgba(244,250,248,0.74); }
+        .story-desc b { color: #FFFFFF; }
+        .story-arrow { background: rgba(255,255,255,0.08); color: var(--sg-gold-2); border: 1px solid rgba(255,255,255,0.22); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+        .story-arrow:hover { background: linear-gradient(135deg, var(--sg-gold-2) 0%, var(--sg-gold-3) 100%); color: #0E343B; border-color: transparent; }
 
-        /* 베스트 요금 */
-        .prov-section { background: #FFFFFF; border: 1px solid #DCE7E5; border-radius: 26px; box-shadow: 0 14px 34px rgba(10,43,50,0.06); padding: 26px 28px; }
-        .prov-title { color: #0E2A30; font-weight: 700; letter-spacing: -0.03em; border-bottom: 1px solid #E6EFED; }
-        .prov-title img { border: 1px solid #DCE7E5; border-radius: 10px; }
-        .plan-card { border: 1px solid #DCE7E5; border-radius: 18px; box-shadow: 0 8px 22px rgba(10,43,50,0.06); }
+        /* 베스트 요금: 유리 상자 안에 흰 요금 카드 (첫 화면 빠른상담 창처럼) */
+        .prov-section { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); border-radius: 26px; box-shadow: 0 24px 50px rgba(3,20,24,0.25), inset 0 1px 0 rgba(233,207,143,0.22); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); padding: 26px 28px; }
+        .prov-title { color: #FFFFFF; font-weight: 700; letter-spacing: -0.03em; border-bottom: 1px solid rgba(255,255,255,0.12); }
+        .prov-title img { border: 0; border-radius: 10px; background: #FFFFFF; }
+        .plan-card { border: 0; border-radius: 18px; box-shadow: 0 18px 40px rgba(3,20,24,0.32); }
         .plan-card-header { background-image: linear-gradient(135deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 45%, rgba(0,0,0,0.14) 100%) !important; font-weight: 700; letter-spacing: -0.3px; text-shadow: 0 1px 2px rgba(0,0,0,0.12); padding: 15px 20px; }
         .plan-row { border-bottom-color: #E6EFED; }
         .p-speed-tv .speed-badge { color: #0E2A30; }
@@ -571,7 +587,7 @@
         .p-apply-btn:hover { box-shadow: 0 12px 24px rgba(226,194,122,0.40); }
 
         /* SNS · 바닥글: 깊은 청록으로 마무리 */
-        .sns-banner-section { max-width: none; margin: 80px 0 0 0; padding: 70px 20px 50px; border-top: 0; background: linear-gradient(160deg, #0E343B 0%, #134047 60%, #1F5A5E 100%); }
+        .sns-banner-section { max-width: none; margin: 0; padding: 70px 20px 50px; border-top: 1px solid rgba(255,255,255,0.08); background: linear-gradient(180deg, #1A4F53 0%, #134047 55%, #0E343B 100%); }
         .sns-banner-title { font-family: 'Noto Serif KR', serif; color: #FFFFFF; font-weight: 700; }
         .sns-banner-sub { color: rgba(244,250,248,0.72); }
         .sns-icon-btn span { color: rgba(244,250,248,0.9); background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); }
@@ -666,7 +682,10 @@
             .sg-cue { display: none; }
             .sg-sec-eyebrow { font-size: 16px; }
             .prov-section { padding: 20px 16px !important; border-radius: 22px; }
-            .sns-banner-section { margin-top: 50px; padding: 44px 16px 30px; }
+            .sns-banner-section { margin-top: 0; padding: 44px 16px 30px; }
+            .sg-band-mark { font-size: 120px; letter-spacing: 4px; }
+            .sg-band-blob.b1, .sg-band-blob.b2, .sg-band-blob.b3 { width: 420px; height: 420px; }
+            #blog-stories-section { padding-top: 70px; }
             .m-btn-phone { background: #0E343B; color: var(--sg-gold-2); border-right: 0; }
             .m-btn-kakao { background: #FEE500; color: #191600; border-right: 0; }
             .m-btn-direct { background: linear-gradient(135deg, var(--sg-gold-2) 0%, var(--sg-gold-3) 100%); color: #0E343B; }
@@ -686,7 +705,7 @@
         .sg-js .sg-reveal.sg-in { opacity: 1; transform: none; }
 
         @media (prefers-reduced-motion: reduce) {
-            .sg-hero *, .sg-hero *::before, .sg-hero *::after, .sg-cue b { animation: none !important; transition: none !important; }
+            .sg-hero *, .sg-hero *::before, .sg-hero *::after, .sg-cue b, .sg-band-blob { animation: none !important; transition: none !important; }
             .sg-js .sg-reveal { opacity: 1; transform: none; transition: none; }
         }
     </style>
@@ -815,6 +834,13 @@
         <div class="sg-cue sg-a6" aria-hidden="true"><span>scroll</span><i><b></b></i></div>
     </section>
 
+    <!-- 🎨 [추가] 본문 띠: 첫 화면과 같은 청록 그라데이션 + SAGEORI 배경 글씨 -->
+    <div class="sg-band">
+        <div class="sg-band-bg" aria-hidden="true">
+            <span class="sg-band-blob b1"></span><span class="sg-band-blob b2"></span><span class="sg-band-blob b3"></span>
+            <svg class="sg-grain" preserveAspectRatio="none"><filter id="sgGrain2"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"></feTurbulence></filter><rect width="100%" height="100%" filter="url(#sgGrain2)"></rect></svg>
+            <span class="sg-band-mark m1">SAGEORI</span><span class="sg-band-mark m2">SAGEORI</span>
+        </div>
     <!-- 📸 털보아저씨 찐 설치후기 가로 스와이프 슬라이더 섹션 -->
     <div id="blog-stories-section" style="position: relative;">
         <div class="sg-sec-eyebrow sg-reveal">Installation Stories</div>
@@ -874,6 +900,7 @@
         <p style="color:var(--muted-ink); font-size:16px; margin-bottom:40px; font-weight:600;">복잡한 계산은 그만! 가장 혜택이 좋은 통신사별 베스트 요금을 한눈에 확인하세요.</p>
         <div id="best-plan-container"></div>
     </div>
+    </div><!-- /sg-band -->
 
     <!-- PC 전용 셀프 요금설계 대시보드 팝업 -->
     <div id="pc-calc-popup-overlay" class="quick-popup-overlay" onclick="closeSelfCalcPopup(event, 'pc')">
