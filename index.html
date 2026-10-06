@@ -278,6 +278,7 @@
         .footer-row-links a.policy-btn { color: var(--point-color); }
         .footer-row-info { display: flex; flex-wrap: wrap; gap: 10px 24px; color: var(--muted-ink); }
         .footer-row-info span b { color: var(--sub-ink); font-weight: 500; }
+        .footer-mail-link { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
         .footer-copyright { color: #8C9180; font-size: 12px; margin-top: 8px; }
 
         .prov-badge { padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; letter-spacing: 0; }
@@ -517,7 +518,7 @@
                         <span class="privacy-notice-txt">※ 목적: 가입 상담 및 접수 안내 / 항목: 성명, 연락처 / 기간: 목적 달성 즉시 파기</span>
                     </div>
                     
-                    <button class="submit-btn" onclick="submitMainFastForm()">빠른 상담 신청</button>
+                    <button class="submit-btn" onclick="submitMainFastForm()">화끈하게 빠른 상담 신청</button>
                     <a href="tel:18332440" class="phone-call-btn">📞 직통 전화걸기: 1833-2440</a>
                     <a href="sms:01064142444" class="main-sms-routing-btn" onclick="triggerMainFastSms(event)">💬 문자로 상담 접수</a>
                     <!-- 📍 카카오맵 설치 지역 조회 버튼 (문자로 상담 접수 아래로 이동) -->
@@ -1153,7 +1154,7 @@
             <div class="footer-row-info">
                 <span>주소 : <b>경기도 안산시 단원구 화정로1길 6, 1층</b></span>
                 <span>대표번호 : <b>1833-2440</b> / 핸드폰 : <b>010-6414-2444</b></span>
-                <span>이메일 : <b>4phone1@naver.com</b></span>
+                <span>이메일 : <b><a href="mailto:4phone1@naver.com" class="footer-mail-link">4phone1@naver.com</a></b></span>
                 <span>상호 : <b>사거리인터넷</b></span>
                 <span>대표 : <b>전상민</b></span>
                 <span>사업자등록번호 : <b>603-54-00909</b></span>
@@ -2389,7 +2390,7 @@
         }
         function isMobile() { return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '') || window.innerWidth <= 950; }
 
-        // kind: call(전화) · sms(문자) · kakao(카톡) · form(접수 완료)
+        // kind: call(전화) · sms(문자) · kakao(카톡) · mail(메일) · form(접수 완료)
         window.trackInbound = function (kind, label, who) {
             try {
                 label = String(label || '').replace(/\s+/g, ' ').trim().slice(0, 60);
@@ -2410,7 +2411,8 @@
             ['m-btn-phone', '모바일 하단 전화상담'],
             ['m-btn-kakao', '모바일 하단 카톡상담'],
             ['pc-btn-phone', 'PC 우측 상담전화 (번호 보기)'],
-            ['pc-btn-kakao', 'PC 우측 카톡상담']
+            ['pc-btn-kakao', 'PC 우측 카톡상담'],
+            ['footer-mail-link', '바닥글 이메일 (메일 접수)']
         ];
         function nameOf(a) {
             for (var i = 0; i < NAMES.length; i++) if (a.classList.contains(NAMES[i][0])) return typeof NAMES[i][1] === 'function' ? NAMES[i][1]() : NAMES[i][1];
@@ -2424,9 +2426,59 @@
                 if (/^tel:/i.test(href) || a.classList.contains('pc-btn-phone')) kind = 'call';
                 else if (/^sms:/i.test(href)) kind = 'sms';
                 else if (/pf\.kakao\.com/i.test(href)) kind = 'kakao';
+                else if (/^mailto:/i.test(href)) kind = 'mail';
                 if (kind) window.trackInbound(kind, nameOf(a));
             } catch (x) { /* 무시 */ }
         }, true);
+
+        // 🏠 [추가] 홈페이지 인입: 이 창에서 처음 들어왔을 때 한 번만, 어떤 경로로 왔는지 기록 (개인정보는 남기지 않음)
+        function sourceOf() {
+            var q = {}, ua = navigator.userAgent || '', host = '', out;
+            try { new URLSearchParams(location.search).forEach(function (v, k) { q[k.toLowerCase()] = String(v).slice(0, 40); }); } catch (e) { /* 무시 */ }
+            try { host = document.referrer ? new URL(document.referrer).hostname.toLowerCase() : ''; } catch (e) { host = ''; }
+            if (host && host === location.hostname.toLowerCase()) host = '';   // 우리 홈페이지 안에서 이동
+            var us = (q.utm_source || '').toLowerCase();
+            var UTM = { naver: '네이버', naver_blog: '네이버 블로그', blog: '블로그', instagram: '인스타그램', ig: '인스타그램', facebook: '페이스북', fb: '페이스북', kakao: '카카오톡', kakaotalk: '카카오톡', daangn: '당근', karrot: '당근', youtube: '유튜브', google: '구글', band: '밴드' };
+            if (us) out = '광고·링크: ' + (UTM[us] || q.utm_source);
+            else if (host) {
+                if (/(^|\.)search\.naver\.com$/.test(host)) out = '네이버 검색';
+                else if (/(^|\.)blog\.naver\.com$/.test(host)) out = '네이버 블로그';
+                else if (/(^|\.)cafe\.naver\.com$/.test(host)) out = '네이버 카페';
+                else if (/(^|\.)(map|place|pcmap|m\.place|m\.map)\.naver\.com$|(^|\.)naver\.me$/.test(host)) out = '네이버 지도·플레이스';
+                else if (/(^|\.)naver\.com$/.test(host)) out = '네이버';
+                else if (/(^|\.)google\./.test(host)) out = '구글 검색';
+                else if (/(^|\.)daum\.net$/.test(host)) out = '다음 검색';
+                else if (/(^|\.)kakao\.com$/.test(host)) out = '카카오';
+                else if (/(^|\.)instagram\.com$/.test(host)) out = '인스타그램';
+                else if (/(^|\.)(facebook\.com|fb\.com)$/.test(host)) out = '페이스북';
+                else if (/(^|\.)(youtube\.com|youtu\.be)$/.test(host)) out = '유튜브';
+                else if (/(^|\.)(daangn\.com|karrotmarket\.com)$/.test(host)) out = '당근';
+                else if (/(^|\.)bing\.com$/.test(host)) out = '빙 검색';
+                else if (/(^|\.)zum\.com$/.test(host)) out = '줌 검색';
+                else if (/(^|\.)tistory\.com$/.test(host)) out = '티스토리';
+                else if (/(^|\.)band\.us$/.test(host)) out = '밴드';
+                else out = '기타 사이트';
+            }
+            else if (/KAKAOTALK/i.test(ua)) out = '카카오톡';
+            else if (/Instagram/i.test(ua)) out = '인스타그램 앱';
+            else if (/NAVER\(inapp|NAVER/.test(ua)) out = '네이버 앱';
+            else if (/FBAN|FBAV/.test(ua)) out = '페이스북 앱';
+            else if (/DaumApps/i.test(ua)) out = '다음 앱';
+            else if (/BAND\//.test(ua)) out = '밴드';
+            else if (/daangn|karrot/i.test(ua)) out = '당근';
+            else out = '직접 방문';
+            return { src: out, ref: host, us: q.utm_source || '', um: q.utm_medium || '', uc: q.utm_campaign || '' };
+        }
+        try {
+            var bot = /bot|crawl|spider|slurp|yeti|daum(oa)?-?bot|headlesschrome|lighthouse|preview/i.test(navigator.userAgent || '');
+            var first = true;
+            try { first = sessionStorage.getItem('sg_visit') !== '1'; sessionStorage.setItem('sg_visit', '1'); } catch (e) { first = true; }
+            if (first && !bot) {
+                var so = sourceOf();
+                var vev = { action: 'visit', src: so.src, ref: so.ref, us: so.us, um: so.um, uc: so.uc, dev: isMobile() ? 'm' : 'pc', page: String(location.pathname || '/').slice(0, 80) };
+                if (IB_URL) send(vev); else if (waiting.length < 20) waiting.push(vev);
+            }
+        } catch (e) { /* 기록 실패는 고객 화면에 영향 없음 */ }
     })();
     </script>
 <!-- MR Script Ver 2.0 -->
