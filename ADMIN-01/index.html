@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hEZY7eNOIL6pMT2L51JAK5uW8m+anf7uk+jzFbaU1Xk='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-W+UCHvPnik0hGpJxl/GuNk/CIxR7U6Tdd5p1TPE9in0='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -200,7 +200,7 @@
         .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
         .filters label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
         .filters select { width: auto; min-width: 120px; padding: 8px 10px; }
-        .t-head, .t-row { display: grid; grid-template-columns: 46px minmax(0, 2.4fr) minmax(0, 1fr) 158px 74px 112px 96px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
+        .t-head, .t-row { display: grid; grid-template-columns: 46px minmax(0, 2.4fr) minmax(0, 1fr) 158px 74px 112px 108px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
         .t-head { background: #F7F9F0; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 700; color: var(--muted); }
         .t-row { border-bottom: 1px solid var(--line); }
         .t-row:last-child { border-bottom: none; }
@@ -214,6 +214,44 @@
         .pri { font-size: 13px; font-weight: 700; }
         .pri.high { color: var(--orange); } .pri.low { color: var(--hint); }
         .t-actions { display: flex; gap: 6px; justify-content: flex-end; }
+        .t-drag { min-width: 36px; padding-left: 8px; padding-right: 8px; font-size: 16px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }   /* 끌어서 순서 바꾸기 */
+        .t-row.dragging { background: #FFFBE6; box-shadow: 0 8px 22px rgba(0,0,0,.18); position: relative; z-index: 3; }
+        .t-row.dragging .t-drag { cursor: grabbing; }
+        /* 콜 인입 */
+        .nav-badge { display: inline-block; min-width: 20px; margin-left: 8px; padding: 1px 6px; border-radius: 999px; background: #E53E3E; color: #fff; font-size: 12px; font-weight: 800; text-align: center; line-height: 18px; }
+        .ib-row { display: grid; grid-template-columns: 128px 86px minmax(0, 1fr) 150px 86px; gap: 10px 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); border-left: 5px solid #E53E3E; }
+        .ib-row.done { border-left-color: transparent; background: #FAFBF6; }
+        .ib-row.done .ib-label { color: var(--muted); }
+        .ib-time { font-size: 13px; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
+        .ib-kind { font-weight: 800; font-size: 14px; }
+        .ib-kind.k-call { color: #2B6CB0; } .ib-kind.k-kakao { color: #8A6D00; } .ib-kind.k-sms { color: #2F855A; } .ib-kind.k-form { color: #C05621; }
+        .ib-label { font-weight: 700; }
+        .ib-sub { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 13px; color: var(--muted); margin-top: 2px; }
+        .ib-sub b { color: var(--ink, #222); }
+        .ib-phone { font-weight: 700; color: #2B6CB0; }
+        .ib-dev { background: #F1F4E6; border-radius: 6px; padding: 1px 7px; font-size: 12px; }
+        .ib-chk { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 700; cursor: pointer; }
+        .ib-chk small { flex-basis: 100%; font-weight: 500; color: var(--muted); font-size: 12px; }
+        .ib-act { display: flex; justify-content: flex-end; }
+        .ib-act .btn.on { background: #F1F4E6; }
+        .ib-notes { grid-column: 1 / -1; background: #FAFBF6; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; }
+        .ib-note { border-bottom: 1px dashed var(--line); padding-bottom: 6px; }
+        .ib-note-h { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+        .ib-note-h b { color: var(--ink, #222); }
+        .ib-note-t { white-space: pre-wrap; word-break: break-word; margin-top: 2px; }
+        .ib-note-empty { color: var(--muted); font-size: 13px; }
+        .ib-note-form { display: flex; gap: 8px; align-items: flex-end; }
+        .ib-note-form .ib-in { flex: 1; min-height: 44px; resize: vertical; }
+        .ib-status { font-size: 13px; color: var(--muted); margin-left: auto; align-self: center; }
+        .ib-todo { display: flex; align-items: center; gap: 6px; }
+        .ib-help { margin-top: 12px; font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+        @media (max-width: 900px) {
+            .ib-row { grid-template-columns: minmax(0, 1fr) auto; padding: 12px; }
+            .ib-time { grid-column: 1 / -1; }
+            .ib-kind { grid-row: 2; } .ib-main { grid-column: 1 / -1; }
+            .ib-status { margin-left: 0; flex-basis: 100%; }
+        }
+        body.t-dragging, body.t-dragging * { user-select: none; -webkit-user-select: none; }
 
         /* ---------- 설정 ---------- */
         .set-block { margin-bottom: 26px; }
@@ -288,7 +326,18 @@
         .mf-chip { min-width: 52px; padding: 5px 10px; border: 1px solid #C9CCBF; border-radius: 999px; background: #fff; color: #333; font-size: 13px; font-weight: 700; line-height: 1.2; }
         .mf-chip:hover { border-color: var(--mf-green); }
         .mf-chip.on { background: var(--mf-green); border-color: var(--mf-green); color: #fff; }
-        .mf-snap .mf-chips { display: none; }
+        .mf-snap .mf-chips, .mf-snap .mf-dd, .mf-snap .mf-ddlist { display: none !important; }
+        .mf-combo { position: relative; display: flex; flex: 1 1 120px; min-width: 0; }   /* 칸 + 화살표 목록 */
+        .mf-combo.short { flex: 0 0 auto; }
+        .mf-sheet .mf-combo .mf-in { flex: 1 1 auto; width: 100%; padding-right: 30px; }
+        .mf-sheet .mf-combo.short .mf-in { width: 96px; flex: 0 0 96px; text-align: center; }
+        .mf-dd { position: absolute; right: 0; top: 0; bottom: 1.5px; width: 30px; border: none; background: transparent; color: #555; font-size: 15px; line-height: 1; padding: 0; cursor: pointer; }
+        .mf-dd:hover, .mf-combo.open .mf-dd { color: var(--mf-green); }
+        .mf-ddlist { position: absolute; left: 0; top: calc(100% + 4px); z-index: 25; min-width: max(100%, 170px); max-height: 280px; overflow-y: auto; background: #fff; border: 1px solid #C9CCBF; border-radius: 10px; box-shadow: 0 12px 28px rgba(0,0,0,.18); padding: 6px; }
+        .mf-ddgroup { display: grid; gap: 2px; } .mf-ddgroup.sep { border-top: 1px solid #E1E2E4; margin-top: 4px; padding-top: 4px; }
+        .mf-opt { text-align: left; border: none; background: transparent; padding: 9px 12px; border-radius: 6px; font-size: 15px; font-weight: 600; color: #222; cursor: pointer; }
+        .mf-opt:hover, .mf-opt:focus-visible { background: #F1F4E6; outline: none; }
+        .mf-opt.on { background: var(--mf-green); color: #fff; }
         .mf-sheet.wired { --mf-green: #E2252B; }   /* 유선 가입 확인서는 빨간색 */
         .mf-sheet.wired .mf-info:not(.red) { color: #146B3A; }
         .mf-fine.boxed { border: 1px solid var(--mf-line); border-top: none; }
@@ -357,7 +406,7 @@
         @media print {   /* 가입 확인서 화면에서 인쇄하면 양식만 A4로 */
             @page { size: A4; margin: 8mm; }
             .sh-form { display: block; min-height: 0; }
-            .sh-form .rail, .sh-form .main > :not(.mf-page), .sh-form .mf-page > .page-head, .mf-tools, .toast, dialog, .mf-sign small, .mf-chips { display: none !important; }
+            .sh-form .rail, .sh-form .main > :not(.mf-page), .sh-form .mf-page > .page-head, .mf-tools, .toast, dialog, .mf-sign small, .mf-chips, .mf-dd, .mf-ddlist { display: none !important; }
             body:has(.sh-form) { background: #fff; }
             .sh-form .main { padding: 0; max-width: none; display: block; }
             .mf-sheet { border: none; border-radius: 0; padding: 0; width: 1000px; max-width: none; margin: 0; zoom: .73; font-size: 13px; }   /* PC 화면 배치 그대로 A4 한 장에 */
@@ -461,7 +510,7 @@
         var PALETTE = ['#5C6B1E', '#B58900', '#E64A19', '#00796B', '#3949AB', '#8E3B6B', '#6D4C41', '#455A64'];
         var STATUS = [{ v: 'todo', t: '할 일' }, { v: 'doing', t: '진행 중' }, { v: 'done', t: '완료' }];
         var PRIORITY = [{ v: 'high', t: '높음' }, { v: 'normal', t: '보통' }, { v: 'low', t: '낮음' }];
-        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'settings', t: '설정' }];
+        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'calls', t: '콜 인입' }, { v: 'settings', t: '설정' }];
 
         // 공유 저장소 주소는 반드시 구글 Apps Script 웹 앱 주소여야 합니다 (그 밖의 주소로는 어떤 요청도 보내지 않음)
         var DRIVE_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,200}\/exec$/;
@@ -472,7 +521,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-05.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-06.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -586,7 +635,7 @@
                 out.tasks.push({
                     id: str(t.id, 40) || uid(), title: str(t.title, 120).trim(), staffId: okStaff(t.staffId), due: isYmd(t.due) ? t.due : '',
                     priority: ['high', 'normal', 'low'].indexOf(t.priority) >= 0 ? t.priority : 'normal',
-                    status: ['todo', 'doing', 'done'].indexOf(t.status) >= 0 ? t.status : 'todo', memo: str(t.memo, 2000), u: num(t.u), b: num(t.b)
+                    status: ['todo', 'doing', 'done'].indexOf(t.status) >= 0 ? t.status : 'todo', memo: str(t.memo, 2000), u: num(t.u), b: num(t.b), ord: Math.floor(num(t.ord))
                 });
             });
             var dd = d.del && typeof d.del === 'object' ? d.del : {};
@@ -597,7 +646,8 @@
             }
             var ac = d.account && typeof d.account === 'object' ? d.account : null;
             if (ac && out.drive.url && typeof ac.email === 'string' && ac.email.length <= 120 && /^[0-9a-f]{64}$/.test(str(ac.session, 64)) && ['admin', 'staff'].indexOf(ac.role) >= 0 && ['approved', 'pending', 'disabled'].indexOf(ac.status) >= 0) {
-                out.account = { email: ac.email, session: ac.session, role: ac.role, status: ac.status, staffId: str(ac.staffId, 40), priv: /^[A-Za-z0-9+\/=]{100,3000}$/.test(str(ac.priv, 3000)) ? ac.priv : '', hk: ac.hk === true };
+                out.account = { email: ac.email, session: ac.session, role: ac.role, status: ac.status, staffId: str(ac.staffId, 40), priv: /^[A-Za-z0-9+\/=]{100,3000}$/.test(str(ac.priv, 3000)) ? ac.priv : '', hk: ac.hk === true,
+                    name: str(ac.name, 20), birth: str(ac.birth, 8).replace(/\D/g, ''), phone: str(ac.phone, 11).replace(/\D/g, '') };   // 이름·생년월일·번호도 그대로 (가입 확인서 판매자 자동 입력)
             }
             return out;
         }
@@ -727,11 +777,12 @@
             if (driveOn()) { startPoll(); requestSync(0); }   // 공유 저장소: 로그인하면 바로 최신 내용으로 맞춤
             if (pendingJoin) setTimeout(offerPendingJoin, 50);
             if (db.account) { setTimeout(maybeOfferKeys, 800); setTimeout(refreshMyProf, 1200); }
+            setTimeout(function () { if (authed && db) ibStart(); }, 1500);   // 콜 인입 실시간 확인 시작
         }
         function lock() {   // 잠그면 암호키와 데이터를 메모리에서도 지우고 화면을 비웁니다
-            authed = false; cryptoKey = null; db = null; me = ''; mforms = {};   // 작성 중인 가입 확인서(고객 개인정보)도 지움
+            authed = false; cryptoKey = null; db = null; me = ''; mforms = {}; if (taskDrag) { document.body.classList.remove('t-dragging'); window.removeEventListener('pointermove', taskDragMove, { passive: false }); window.removeEventListener('pointerup', taskDragEnd); window.removeEventListener('pointercancel', taskDragEnd); taskDrag = null; }   // 작성 중인 가입 확인서(고객 개인정보)도 지움
             uni = { mode: 'login', pending: null }; keysOffered = false;
-            stopPoll(); stopGatePoll(); clearTimeout(pushTimer); teamCache = null; syncQueued = false; driveState = { status: 'idle', at: null, msg: '' }; acctUi = { list: null, err: '', loading: false, at: 0, enforced: null }; gateMode = 'login';
+            ibStop(); stopPoll(); stopGatePoll(); clearTimeout(pushTimer); teamCache = null; syncQueued = false; driveState = { status: 'idle', at: null, msg: '' }; acctUi = { list: null, err: '', loading: false, at: 0, enforced: null }; gateMode = 'login';
             state.view = 'today'; state.who = 'all'; state.status = 'all'; state.date = ''; state.open = Object.create(null);
             var d = document.getElementById('dlg'); if (d.open) closeDlg(); else d.textContent = '';
             var t = document.getElementById('toast'); t.hidden = true; t.textContent = '';
@@ -988,8 +1039,12 @@
         function byTime(a, b) { return (a.time || '') < (b.time || '') ? -1 : (a.time || '') > (b.time || '') ? 1 : 0; }
         function taskSort(a, b) {
             var da = a.status === 'done' ? 1 : 0, dbb = b.status === 'done' ? 1 : 0; if (da !== dbb) return da - dbb;
+            var oa = a.ord || 0, ob = b.ord || 0;   // 끌어서 바꾼 순서 (순서를 정한 업무가 먼저, 새 업무는 그 아래에 예전 규칙대로)
+            if (oa && ob && oa !== ob) return oa - ob;
+            if (oa && !ob) return -1; if (ob && !oa) return 1;
             var x = a.due || '9999-99-99', y = b.due || '9999-99-99'; if (x !== y) return x < y ? -1 : 1;
-            var rank = { high: 0, normal: 1, low: 2 }; return rank[a.priority] - rank[b.priority];
+            var rank = { high: 0, normal: 1, low: 2 }; if (rank[a.priority] !== rank[b.priority]) return rank[a.priority] - rank[b.priority];
+            return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
         }
         function dueTag(t) {
             if (!t.due) return h('span', { class: 'due' }, '마감일 없음');
@@ -1156,14 +1211,17 @@
                 var sel = h('select', { class: 'st-' + t.status, 'data-fk': 'st-' + t.id, 'aria-label': t.title + ' 진행 상태' }, STATUS.map(function (s) { return h('option', { value: s.v }, s.t); }));
                 sel.value = t.status;
                 sel.addEventListener('change', function () { t.status = this.value; stamp(t); commit(); });
-                return h('div', { class: 't-row' + (t.priority === 'high' ? ' hi' : '') + (t.status === 'done' ? ' done' : '') },
+                var row = h('div', { class: 't-row' + (t.priority === 'high' ? ' hi' : '') + (t.status === 'done' ? ' done' : ''), 'data-id': t.id, 'data-grp': t.status === 'done' ? 'done' : 'open' },
                     h('div', { class: 't-num' }, num),
                     h('div', { class: 't-main' }, h('div', { class: 't-title', 'data-n': num || null }, t.title), t.memo ? h('div', { class: 't-memo' }, t.memo.split('\n')[0]) : null),
                     h('div', { class: 't-cell', 'data-label': '담당' }, whoTag(t.staffId)),
                     h('div', { class: 't-cell', 'data-label': '마감' }, dueTag(t)),
                     h('div', { class: 't-cell', 'data-label': '우선순위' }, h('span', { class: 'pri ' + t.priority }, PRIORITY.filter(function (p) { return p.v === t.priority; })[0].t)),
                     h('div', { class: 't-cell', 'data-label': '상태' }, sel),
-                    h('div', { class: 't-actions' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editTask(t); } }, '수정')));
+                    h('div', { class: 't-actions' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editTask(t); } }, '수정'),
+                        h('button', { type: 'button', class: 'btn btn-sm t-drag', 'data-fk': 'drag-' + t.id, title: '누른 채 위아래로 끌어서 순서 바꾸기', 'aria-label': t.title + ' 순서 바꾸기 (누른 채 끌기, 키보드는 위·아래 화살표)',
+                            onpointerdown: function (e) { taskDragStart(e, row); }, onkeydown: function (e) { taskKeyMove(e, row); } }, '↕')));
+                return row;
             });
             return h('div', {},
                 h('div', { class: 'page-head' }, h('h1', {}, '업무'), h('div', { class: 'actions' },
@@ -1179,6 +1237,57 @@
                 h('div', { class: 'panel' },
                     rows.length ? [h('div', { class: 't-head' }, h('div', {}, '번호'), h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows]
                         : h('div', { class: 'empty' }, state.date ? '이 날(' + koDate(state.date) + ') 마감인 업무가 없어요. 담당·상태 필터를 걸어 두었다면 함께 확인해 보세요.' : (db.tasks.length ? '조건에 맞는 업무가 없어요. 필터를 바꿔 보세요.' : '아직 등록된 업무가 없어요. 오른쪽 위 [업무 추가]로 시작해 보세요.'))));
+        }
+
+        /* ---------- 업무 순서 바꾸기: [수정] 옆 손잡이(↕)를 누른 채 위아래로 끌기 ---------- */
+        // 할 일·진행 중 업무끼리, 완료한 업무끼리 순서를 바꿔요. 바꾼 순서는 공유 저장소로 다른 직원 화면에도 똑같이 보여요.
+        var taskDrag = null;
+        function taskGroupIds(panel, grp) { return [].map.call(panel.querySelectorAll('.t-row[data-grp="' + grp + '"]'), function (r) { return r.getAttribute('data-id'); }); }
+        function taskReorder(ids, isDone) {   // 보이는 업무의 새 순서를 전체 순서에 반영 (필터로 숨은 업무 자리는 그대로)
+            var group = db.tasks.filter(function (t) { return (t.status === 'done') === isDone; }).sort(taskSort);
+            var vis = Object.create(null), byId = Object.create(null), queue = ids.slice(), changed = false;
+            ids.forEach(function (id) { vis[id] = 1; }); db.tasks.forEach(function (t) { byId[t.id] = t; });
+            group.map(function (t) { return vis[t.id] ? byId[queue.shift()] : t; }).forEach(function (t, i) {
+                if (t && t.ord !== i + 1) { t.ord = i + 1; stamp(t); changed = true; }
+            });
+            return changed;
+        }
+        function taskDragStart(e, row) {
+            if ((e.button && e.button > 0) || taskDrag || !row.parentNode) return;
+            e.preventDefault();
+            var handle = e.currentTarget, grp = row.getAttribute('data-grp');
+            try { handle.setPointerCapture(e.pointerId); } catch (x) { /* 무시 */ }
+            taskDrag = { row: row, pid: e.pointerId, grp: grp, panel: row.parentNode, before: taskGroupIds(row.parentNode, grp).join(',') };
+            row.classList.add('dragging'); document.body.classList.add('t-dragging');
+            window.addEventListener('pointermove', taskDragMove, { passive: false });   // 줄이 움직여도 끊기지 않게 화면 전체에서 받음
+            window.addEventListener('pointerup', taskDragEnd);
+            window.addEventListener('pointercancel', taskDragEnd);
+        }
+        function taskDragMove(e) {
+            var d = taskDrag; if (!d || e.pointerId !== d.pid) return;
+            e.preventDefault();
+            var y = e.clientY, rows = [].filter.call(d.panel.querySelectorAll('.t-row[data-grp="' + d.grp + '"]'), function (r) { return r !== d.row; }), target = null, i;
+            for (i = 0; i < rows.length; i++) { var r = rows[i].getBoundingClientRect(); if (y < r.top + r.height / 2) { target = rows[i]; break; } }
+            if (target) { if (d.row.nextSibling !== target) d.panel.insertBefore(d.row, target); }
+            else if (rows.length) { var last = rows[rows.length - 1]; if (last.nextSibling !== d.row) d.panel.insertBefore(d.row, last.nextSibling); }
+            if (y < 70) window.scrollBy(0, -12); else if (y > window.innerHeight - 50) window.scrollBy(0, 12);   // 화면 끝에 가면 자동으로 스크롤
+        }
+        function taskDragEnd(e) {
+            var d = taskDrag; if (!d || e.pointerId !== d.pid) return;
+            window.removeEventListener('pointermove', taskDragMove, { passive: false }); window.removeEventListener('pointerup', taskDragEnd); window.removeEventListener('pointercancel', taskDragEnd);
+            taskDrag = null; d.row.classList.remove('dragging'); document.body.classList.remove('t-dragging');
+            if (!authed || !db) return;
+            var ids = taskGroupIds(d.panel, d.grp);
+            if (e.type !== 'pointercancel' && ids.join(',') !== d.before && taskReorder(ids, d.grp === 'done')) commit('업무 순서를 바꿨어요.');
+            else render();
+        }
+        function taskKeyMove(e, row) {   // 키보드: 손잡이에서 ↑ ↓
+            if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+            e.preventDefault();
+            var grp = row.getAttribute('data-grp'), ids = taskGroupIds(row.parentNode, grp), id = row.getAttribute('data-id'), i = ids.indexOf(id), j = e.key === 'ArrowUp' ? i - 1 : i + 1;
+            if (i < 0 || j < 0 || j >= ids.length) return;
+            ids[i] = ids[j]; ids[j] = id;
+            if (taskReorder(ids, grp === 'done')) commit();
         }
 
         /* ---------- 마감보고: 지금 보이는 업무 목록을 그림(이미지)으로 만들어 복사 ---------- */
@@ -1435,7 +1544,7 @@
                 d.staff.slice().sort(function (a, b) { return (a.o - b.o) || byId(a, b); }).map(function (x) { return [x.id, x.name, x.role, x.u, x.o, x.adm ? 1 : 0]; }),
                 d.events.slice().sort(byId).map(function (x) { return [x.id, x.title, x.date, x.time, x.staffId, x.memo, x.u]; }),
                 d.notices.slice().sort(byId).map(function (x) { return [x.id, x.title, x.body, x.staffId, x.date, x.pinned ? 1 : 0, x.u]; }),
-                d.tasks.slice().sort(byId).map(function (x) { return [x.id, x.title, x.staffId, x.due, x.priority, x.status, x.memo, x.u]; }),
+                d.tasks.slice().sort(byId).map(function (x) { return [x.id, x.title, x.staffId, x.due, x.priority, x.status, x.memo, x.u, x.ord || 0]; }),
                 Object.keys(d.del).sort().map(function (k) { return [k, d.del[k]]; })
             ]);
         }
@@ -1444,7 +1553,7 @@
             [a.del, b.del].forEach(function (m) { Object.keys(m).forEach(function (id) { if (m[id] > (del[id] || 0)) del[id] = m[id]; }); });
             function alive(it) { var t = del[it.id]; return !(t !== undefined && t >= it.u); }
             function byId(p, q) { return p.id < q.id ? -1 : p.id > q.id ? 1 : 0; }
-            function body(x) { return JSON.stringify(Object.keys(x).filter(function (k) { return k !== 'u' && k !== 'b'; }).sort().map(function (k) { return [k, x[k]]; })); }
+            function body(x) { return JSON.stringify(Object.keys(x).filter(function (k) { return k !== 'u' && k !== 'b' && k !== 'ord'; }).sort().map(function (k) { return [k, x[k]]; })); }
             function conflictCopy(it) {   // 먼저 고친 쪽의 내용을 '[충돌본]' 항목으로 남김 (같은 충돌은 어느 기기에서 만들어도 같은 번호가 되어 한 번만 생김)
                 var c = JSON.parse(JSON.stringify(it));
                 c.id = String(it.id).split('~c')[0] + '~c' + it.u; c.b = 0;
@@ -1453,7 +1562,7 @@
             }
             function pickItem(x, y, copies) {
                 if (!x) return y; if (!y) return x;
-                if (body(x) === body(y)) return x.u >= y.u ? x : y;                     // 내용이 같으면 문제 없음
+                if (body(x) === body(y)) return x.u > y.u ? x : y.u > x.u ? y : ((x.ord || 0) >= (y.ord || 0) ? x : y);   // 내용이 같으면 문제 없음 (순서 정보가 있는 쪽 우선)
                 var newer, older;
                 if (x.u !== y.u) { newer = x.u > y.u ? x : y; older = newer === x ? y : x; }
                 else { newer = body(x) >= body(y) ? x : y; older = newer === x ? y : x; }
@@ -2387,6 +2496,11 @@
             if (d.length === 10) return d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6);
             return t;
         }
+        function mfDdClose(cb) { cb.classList.remove('open'); cb.querySelector('.mf-ddlist').hidden = true; cb.querySelector('.mf-dd').setAttribute('aria-expanded', 'false'); }
+        document.addEventListener('pointerdown', function (e) {   // 목록 밖을 누르면 닫힘
+            var cb = e.target && e.target.closest ? e.target.closest('.mf-combo') : null;
+            [].forEach.call(document.querySelectorAll('.mf-combo.open'), function (x) { if (x !== cb) mfDdClose(x); });
+        }, true);
         function mfAll(fn) { Object.keys(mforms).forEach(function (k) { if (mforms[k]) fn(mforms[k]); }); }
         function mfKit(M) {   // 양식을 만드는 도구 (모바일·유선 공통)
             var K = {};
@@ -2413,13 +2527,17 @@
                 b.addEventListener('click', function () { openSignPad(M, key, label); });
                 return b;
             };
-            K.chips = function (name, lines) {   // 눌러서 바로 입력하는 버튼 (인쇄·복사보고 그림에는 나오지 않음)
-                return h('div', { class: 'mf-chips', 'data-chips': name }, lines.map(function (ln) {
-                    return h('div', { class: 'mf-chipline' }, ln.map(function (c) {
+            K.combo = function (name, label, groups, o) {   // 칸 + 화살표: 누르면 아래로 목록이 열리고, 고르면 칸에 들어감 (직접 입력도 가능)
+                o = o || {};
+                var input = K.inp(name, label, o), listId = 'mfdd-' + M.kind + '-' + name;
+                var list = h('div', { class: 'mf-ddlist', id: listId, role: 'listbox', 'aria-label': label + ' 목록', hidden: true }, groups.map(function (g, gi) {
+                    return h('div', { class: 'mf-ddgroup' + (gi ? ' sep' : '') }, g.map(function (c) {
                         var v = typeof c === 'string' ? c : c[0], t = typeof c === 'string' ? c : c[1];
-                        return h('button', { type: 'button', class: 'mf-chip', 'data-v': v, 'aria-pressed': 'false', tabindex: '-1' }, t);
+                        return h('button', { type: 'button', class: 'mf-opt', role: 'option', 'data-v': v, 'aria-selected': 'false' }, t);
                     }));
                 }));
+                return h('div', { class: 'mf-combo' + (o.cls === 'short' ? ' short' : ''), 'data-combo': name }, input,
+                    h('button', { type: 'button', class: 'mf-dd', 'aria-label': label + ' 목록 열기', 'aria-haspopup': 'listbox', 'aria-expanded': 'false', 'aria-controls': listId }, '▾'), list);
             };
             K.cardSec = function () {   // 제휴 카드 (모바일·유선 같음)
                 var inp = K.inp, chk = K.chk, k = K.k;
@@ -2470,16 +2588,15 @@
                 K.header('사거리핸드폰', '_ 모바일.인터넷', [chk('tNew', '신규', 'type'), chk('tPort', '번호이동', 'type'), chk('tRe', '재가입', 'type'), h('span', { class: 'mf-typegap', 'aria-hidden': 'true' }), chk('noBuy', '비구매')]),
 
                 sec('가입자 정보', 'green',
-                    row(cell(k('가입 통신사'), inp('carrier', '가입 통신사'), K.chips('carrier', [['U+', 'SK', 'KT']].concat(MF_PRE))),
-                        cell(k('(이전 통신사'), inp('prevCarrier', '이전 통신사'), k(')'), K.chips('prevCarrier', [['U+', 'SK', 'KT', '신규']].concat(MF_PRE)))),
+                    row(cell(k('가입 통신사'), K.combo('carrier', '가입 통신사', [['U+', 'SK', 'KT']].concat(MF_PRE))),
+                        cell(k('(이전 통신사'), K.combo('prevCarrier', '이전 통신사', [['U+', 'SK', 'KT', '신규']].concat(MF_PRE)), k(')'))),
                     row(cell(k('가입자명'), inp('name', '가입자명', { max: 20 })), cell(k('생년월일'), inp('birth', '가입자 생년월일', BIRTH)), cell(k('휴대폰 번호'), inp('phone', '가입자 휴대폰 번호', TEL))),
                     row(wcell(k('주소'), inp('addr', '주소', { max: 150 })))),
                 info('[안내] 가입한 항목만 작성해 주세요.'),
 
                 sec('기기 정보', '',
                     grp('기기', row(cell(k('모델명'), inp('model', '기기 모델명')), cell(k('일련번호'), inp('serial', '기기 일련번호')))),
-                    grp('할부정보', row(cell(inp('months', '할부 개월 수', { mode: 'numeric', cls: 'short', max: 3 }), k('개월'),
-                        K.chips('months', [[['0', '0개월'], ['3', '3개월'], ['6', '6개월'], ['12', '12개월'], ['24', '24개월'], ['30', '30개월'], ['36', '36개월']]]))))),
+                    grp('할부정보', row(cell(K.combo('months', '할부 개월 수', [[['0', '0개월'], ['3', '3개월'], ['6', '6개월'], ['12', '12개월'], ['24', '24개월'], ['30', '30개월'], ['36', '36개월']]], { mode: 'numeric', cls: 'short', max: 3 }), k('개월'))))),
 
                 sec('약정 정보', '',
                     grp('할인방법',
@@ -2545,8 +2662,8 @@
                 K.header('사거리인터넷', '_ 인터넷', [chk('tNew', '신규', 'type'), chk('tTrans', '동판', 'type'), chk('tRenew', '재약정', 'type')]),
 
                 sec('가입자 정보', 'green',
-                    row(cell(k('가입 통신사'), inp('carrier', '가입 통신사'), K.chips('carrier', [['U+', 'SK', 'KT']])),
-                        cell(k('(이전 통신사'), inp('prevCarrier', '이전 통신사'), k(')'), K.chips('prevCarrier', [['U+', 'SK', 'KT', '신규']]))),
+                    row(cell(k('가입 통신사'), K.combo('carrier', '가입 통신사', [['U+', 'SK', 'KT']])),
+                        cell(k('(이전 통신사'), K.combo('prevCarrier', '이전 통신사', [['U+', 'SK', 'KT', '신규']]), k(')'))),
                     row(cell(k('가입자명'), inp('name', '가입자명', { max: 20 })), cell(k('생년월일'), inp('birth', '가입자 생년월일', BIRTH)), cell(k('휴대폰 번호'), inp('phone', '가입자 휴대폰 번호', TEL))),
                     row(wcell(k('주소'), inp('addr', '주소', { max: 150 })))),
                 info('[안내] 가입한 항목만 작성해 주세요.'),
@@ -2604,12 +2721,15 @@
             q('y').value = String(now.getFullYear()); q('m').value = String(now.getMonth() + 1); q('d').value = String(now.getDate());
             mfSeller(sheet, true);   // 판매자 이름·연락처: 로그인한 계정 정보로 자동 입력 (고칠 수 있음)
 
-            function chipSync(name) {   // 칸의 값과 같은 버튼을 표시
-                [].forEach.call(sheet.querySelectorAll(name ? '[data-chips="' + name + '"]' : '[data-chips]'), function (box) {
-                    var el = q(box.getAttribute('data-chips')), v = el ? el.value.trim() : '';
-                    [].forEach.call(box.querySelectorAll('.mf-chip'), function (b) { var on = b.getAttribute('data-v') === v; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-                });
+            function ddClose(except) { [].forEach.call(sheet.querySelectorAll('.mf-combo.open'), function (cb) { if (cb !== except) mfDdClose(cb); }); }
+            function ddOpen(cb, focusOpt) {   // 목록 열기 (지금 값과 같은 항목 표시)
+                ddClose(cb);
+                var el = cb.querySelector('.mf-in'), v = el.value.trim(), list = cb.querySelector('.mf-ddlist'), sel = null;
+                [].forEach.call(list.querySelectorAll('.mf-opt'), function (b) { var on = b.getAttribute('data-v') === v; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); if (on) sel = b; });
+                cb.classList.add('open'); list.hidden = false; cb.querySelector('.mf-dd').setAttribute('aria-expanded', 'true');
+                if (focusOpt) (sel || list.querySelector('.mf-opt')).focus();
             }
+
             function linkSet(key, on) {   // '가입자와 동일': 체크하면 가입자 정보를 그대로, 풀면 자동으로 넣은 값만 지움
                 (MF_LINK[key] || []).forEach(function (p) {
                     var src = q(p[0]), dst = q(p[1]); if (!src || !dst) return;
@@ -2655,11 +2775,21 @@
                 e.preventDefault(); nextField(t);
             });
             sheet.addEventListener('compositionend', function (e) { if (pend && pend === e.target) { var t = pend; pend = null; setTimeout(function () { nextField(t); }, 0); } });
-            sheet.addEventListener('click', function (e) {   // 통신사·할부 개월 버튼
-                var b = e.target.closest ? e.target.closest('.mf-chip') : null; if (!b || !sheet.contains(b)) return;
-                var name = b.parentNode.parentNode.getAttribute('data-chips'), el = q(name), v = b.getAttribute('data-v'); if (!el) return;
-                el.value = el.value.trim() === v ? '' : v;   // 같은 버튼을 다시 누르면 지움
-                chipSync(name);
+            sheet.addEventListener('click', function (e) {   // 통신사·할부 개월: 화살표를 누르면 목록, 항목을 누르면 입력
+                var t = e.target.closest ? e.target : null; if (!t) return;
+                var dd = t.closest('.mf-dd'), opt = t.closest('.mf-opt'), cb = t.closest('.mf-combo');
+                if (dd && cb) { if (cb.classList.contains('open')) ddClose(); else ddOpen(cb, false); return; }
+                if (opt && cb) {
+                    var el = cb.querySelector('.mf-in'); el.value = opt.getAttribute('data-v'); ddClose();
+                    try { el.focus({ preventScroll: true }); } catch (x) { el.focus(); }
+                }
+            });
+            sheet.addEventListener('keydown', function (e) {   // 목록: ↓로 열기, ↑↓로 이동, Esc로 닫기
+                var cb = e.target.closest ? e.target.closest('.mf-combo') : null; if (!cb) return;
+                var opts = [].slice.call(cb.querySelectorAll('.mf-opt')), i = opts.indexOf(e.target);
+                if (e.key === 'Escape' && cb.classList.contains('open')) { e.preventDefault(); ddClose(); cb.querySelector('.mf-in').focus(); return; }
+                if (e.key === 'ArrowDown') { e.preventDefault(); if (i < 0) ddOpen(cb, true); else if (opts[i + 1]) opts[i + 1].focus(); return; }
+                if (e.key === 'ArrowUp' && i >= 0) { e.preventDefault(); if (i > 0) opts[i - 1].focus(); else { ddClose(); cb.querySelector('.mf-in').focus(); } }
             });
             sheet.addEventListener('change', function (e) {
                 var t = e.target, g = t.getAttribute ? t.getAttribute('data-grp') : null;
@@ -2675,7 +2805,6 @@
             sheet.addEventListener('input', function (e) {
                 var t = e.target, n = t.getAttribute ? t.getAttribute('data-mf') : null;
                 if (t.classList && t.classList.contains('memo')) { t.style.height = ''; if (t.scrollHeight > t.clientHeight) t.style.height = (t.scrollHeight + 4) + 'px'; }   // 메모가 길어지면 칸도 함께
-                if (n && sheet.querySelector('[data-chips="' + n + '"]')) chipSync(n);
                 if (n) linkFollow(n);
                 if (MF_GIFT.indexOf(n) >= 0) giftSum();
             });
@@ -2711,7 +2840,6 @@
                         if (!M.sig.apply && !confirm('신청인/가입자 서명이 아직 없어요. 그래도 인쇄할까요?')) return;
                         window.print();
                     } }, '인쇄 / PDF 저장')));
-            chipSync();
             M.sheet = sheet;
             M.el = h('div', { class: 'mf-wrap' }, sheet, tools);
             return M;
@@ -2922,6 +3050,164 @@
                     h('button', { type: 'button', class: 'form-card', 'data-form': 'wired', onclick: function () { state.form = 'wired'; render(); window.scrollTo(0, 0); } }, h('b', {}, '유선 가입 확인서'), h('span', {}, '인터넷·TV 등 유선 가입 확인서'))));
         }
 
+        /* ---------- 콜 인입: 고객 홈페이지의 전화·카톡·문자 버튼, 접수 완료를 실시간으로 ---------- */
+        // 기록은 공유 저장소 서버(Apps Script)에 있고, 이 화면은 20초마다(다른 메뉴에서는 1분마다) 새 기록을 확인해요.
+        // 고객 성함·연락처가 들어 있어서 이 기기에는 저장하지 않고, 잠그면 화면 메모리에서도 지워요.
+        var IB_KIND = { call: ['📞', '전화'], kakao: ['💬', '카톡'], sms: ['✉️', '문자'], form: ['📝', '접수'] };
+        var IB_POLL_MS = 20000;
+        function ibFresh() { return { items: [], rev: -1, at: 0, err: '', known: null, busy: false, timer: null, tick: 0, open: Object.create(null), draft: Object.create(null), kind: 'all', todo: false, pend: false, saving: Object.create(null) }; }
+        var ib = ibFresh();
+        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); }
+        function ibStart() {   // 로그인하면 시작 (공유 저장소를 쓰는 기기만)
+            if (ib.timer || !driveOn()) return;
+            ib.timer = setInterval(function () {
+                if (!authed || !db || document.visibilityState !== 'visible') return;
+                ib.tick++;
+                if (state.view === 'calls' || ib.tick % 3 === 0) ibLoad(false);   // 콜 인입 화면은 20초, 다른 화면은 1분마다
+            }, IB_POLL_MS);
+            ibLoad(false);
+        }
+        function ibCall(action, payload) {
+            return ensureTeam().then(function (t) { return driveCall(db.drive.url, action, Object.assign({ token: t.token, by: staffName(me) }, payload || {})); });
+        }
+        function ibOk(x) {   // 서버에서 받은 기록 모양 확인
+            return x && typeof x.id === 'string' && x.id.length <= 40 && typeof x.t === 'number' && IB_KIND.hasOwnProperty(x.kind) && typeof x.label === 'string';
+        }
+        function ibNorm(x) {
+            return { id: x.id, t: x.t, kind: x.kind, label: String(x.label).slice(0, 60), dev: x.dev === 'm' ? 'm' : 'pc', name: typeof x.name === 'string' ? x.name.slice(0, 20) : '', phone: typeof x.phone === 'string' ? x.phone.replace(/\D/g, '').slice(0, 11) : '',
+                chk: x.chk && typeof x.chk.by === 'string' ? { by: x.chk.by.slice(0, 20), at: Number(x.chk.at) || 0 } : null,
+                cm: Array.isArray(x.cm) ? x.cm.filter(function (c) { return c && typeof c.id === 'string' && typeof c.text === 'string'; }).map(function (c) { return { id: c.id, by: String(c.by || '').slice(0, 20), em: String(c.em || ''), text: c.text.slice(0, 500), at: Number(c.at) || 0 }; }) : [] };
+        }
+        function ibUnchecked() { return ib.items.filter(function (x) { return !x.chk; }).length; }
+        function ibLoad(force) {
+            if (!authed || !db || !driveOn() || ib.busy) return;
+            ib.busy = true;
+            var mine = ib;
+            ibCall('ibList', { rev: force ? -1 : ib.rev }).then(function (res) {
+                if (mine !== ib || !authed || !db) return;
+                ib.busy = false; ib.err = ''; ib.at = Date.now();
+                if (res.same) { ibStatus(); return; }
+                var items = (Array.isArray(res.items) ? res.items : []).filter(ibOk).map(ibNorm), fresh = [];
+                if (ib.known) items.forEach(function (x) { if (!ib.known[x.id]) fresh.push(x); });
+                ib.known = ib.known || Object.create(null);
+                items.forEach(function (x) { ib.known[x.id] = 1; });
+                ib.items = items; ib.rev = typeof res.rev === 'number' ? res.rev : -1;
+                if (fresh.length) {   // 새 기록 알림
+                    var f = fresh[0], k = IB_KIND[f.kind];
+                    toast('새 콜 인입' + (fresh.length > 1 ? ' ' + fresh.length + '건' : '') + ': ' + k[0] + ' ' + k[1] + ' · ' + f.label + (f.name ? ' (' + f.name + ')' : ''));
+                }
+                ibPaint();
+            }, function (e) {
+                if (mine !== ib) return;
+                ib.busy = false; ib.err = driveErrText(e);
+                if (state.view === 'calls') ibPaint();
+            });
+        }
+        function ibPaint() {   // 화면·메뉴 숫자 갱신 (댓글을 쓰는 중이면 다 쓴 뒤에)
+            var ae = document.activeElement;
+            if (ae && ae.closest && ae.closest('[data-ib-note]') && (ae.value || '').length) { ib.pend = true; return; }
+            ib.pend = false; render();
+        }
+        function ibStatus() {   // 목록이 그대로일 때는 '마지막 확인 시각'만 바꿈
+            var el = document.getElementById('ib-status'); if (el) el.textContent = ibStatusText();
+        }
+        function ibStatusText() {
+            if (ib.err) return '연결 오류: ' + ib.err;
+            if (!ib.at) return '불러오는 중...';
+            var d = new Date(ib.at);
+            return '실시간 확인 중 · ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()) + '에 확인';
+        }
+        function pad2(n) { return (n < 10 ? '0' : '') + n; }
+        function ibTime(t) {
+            var d = new Date(t), hm = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+            if (ymd(d) === ymd(new Date())) return '오늘 ' + hm + ':' + pad2(d.getSeconds());
+            return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + hm;
+        }
+        function ibReplace(item) {
+            if (!ibOk(item)) return;
+            var n = ibNorm(item);
+            ib.items = ib.items.map(function (x) { return x.id === n.id ? n : x; });
+        }
+        function ibCheck(x, on) {
+            if (ib.saving[x.id]) return;
+            ib.saving[x.id] = 1;
+            var before = x.chk;
+            x.chk = on ? { by: staffName(me), at: Date.now() } : null;   // 바로 화면에 표시
+            render();
+            ibCall('ibCheck', { id: x.id, on: on }).then(function (res) { delete ib.saving[x.id]; ibReplace(res.item); ibPaint(); },
+                function (e) { delete ib.saving[x.id]; x.chk = before; render(); toast('확인 표시를 저장하지 못했어요. ' + driveErrText(e)); });
+        }
+        function ibNote(x, input) {
+            var text = (input.value || '').trim();
+            if (!text) { input.focus(); return; }
+            if (ib.saving[x.id]) return;
+            ib.saving[x.id] = 1;
+            ibCall('ibNote', { id: x.id, text: text.slice(0, 500) }).then(function (res) {
+                delete ib.saving[x.id]; ib.draft[x.id] = ''; input.value = ''; ibReplace(res.item); input.blur(); ibPaint(); toast('댓글을 등록했어요.');
+            }, function (e) { delete ib.saving[x.id]; toast('댓글을 등록하지 못했어요. ' + driveErrText(e)); });
+        }
+        function ibNoteDel(x, c) {
+            if (!confirm('이 댓글을 지울까요?')) return;
+            ibCall('ibNoteDel', { id: x.id, nid: c.id }).then(function (res) { ibReplace(res.item); ibPaint(); toast('댓글을 지웠어요.'); },
+                function (e) { toast(driveErrText(e)); });
+        }
+        function ibMineNote(c) {
+            if (db.account && db.account.email) return c.em === db.account.email || db.account.role === 'admin';
+            return c.by === staffName(me);
+        }
+        function renderCalls() {
+            var head = h('div', { class: 'page-head' }, h('h1', {}, '콜 인입'),
+                h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'ib-refresh', onclick: function () { ib.busy = false; ibLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침')));
+            if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '콜 인입은 구글 드라이브 공유 저장소를 연결한 기기에서 볼 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
+            if (ib.rev < 0 && !ib.busy && !ib.err) setTimeout(function () { ibLoad(true); }, 0);
+            var kindSel = h('select', { id: 'ib-kind', 'data-fk': 'ib-kind', 'aria-label': '종류 필터' }, h('option', { value: 'all' }, '전체'),
+                Object.keys(IB_KIND).map(function (k) { return h('option', { value: k }, IB_KIND[k][0] + ' ' + IB_KIND[k][1]); }));
+            kindSel.value = ib.kind;
+            kindSel.addEventListener('change', function () { ib.kind = this.value; render(); });
+            var todo = h('input', { type: 'checkbox', id: 'ib-todo', 'data-fk': 'ib-todo', checked: ib.todo });
+            todo.addEventListener('change', function () { ib.todo = this.checked; render(); });
+            var list = ib.items.filter(function (x) { return (ib.kind === 'all' || x.kind === ib.kind) && (!ib.todo || !x.chk); });
+            var n = ibUnchecked();
+            var rows = list.map(function (x) {
+                var k = IB_KIND[x.kind], open = !!ib.open[x.id];
+                var chk = h('input', { type: 'checkbox', 'data-fk': 'ib-chk-' + x.id, 'aria-label': '확인 표시', checked: !!x.chk });
+                chk.addEventListener('change', function () { ibCheck(x, this.checked); });
+                var notes = null;
+                if (open) {
+                    var input = h('textarea', { class: 'ib-in', rows: 2, maxlength: 500, 'data-fk': 'ib-note-' + x.id, 'aria-label': '댓글 입력', placeholder: '댓글 (예: 10:40 통화 완료, 내일 설치 예약)' });
+                    input.value = ib.draft[x.id] || '';
+                    input.addEventListener('input', function () { ib.draft[x.id] = this.value; });
+                    input.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); ibNote(x, input); } });
+                    input.addEventListener('blur', function () { if (ib.pend) setTimeout(function () { if (ib.pend) ibPaint(); }, 0); });
+                    notes = h('div', { class: 'ib-notes', 'data-ib-note': x.id },
+                        x.cm.length ? x.cm.map(function (c) {
+                            return h('div', { class: 'ib-note' }, h('div', { class: 'ib-note-h' }, h('b', {}, c.by || '직원'), h('span', {}, ibTime(c.at)),
+                                ibMineNote(c) ? h('button', { type: 'button', class: 'link-btn', 'aria-label': '댓글 지우기', onclick: function () { ibNoteDel(x, c); } }, '지우기') : null),
+                                h('div', { class: 'ib-note-t' }, c.text));
+                        }) : h('div', { class: 'ib-note-empty' }, '아직 댓글이 없어요.'),
+                        h('div', { class: 'ib-note-form' }, input, h('button', { type: 'button', class: 'btn btn-sm btn-primary', onclick: function () { ibNote(x, input); } }, '등록')));
+                }
+                return h('div', { class: 'ib-row' + (x.chk ? ' done' : ''), 'data-ib': x.id },
+                    h('div', { class: 'ib-time' }, ibTime(x.t)),
+                    h('div', { class: 'ib-kind k-' + x.kind }, k[0] + ' ' + k[1]),
+                    h('div', { class: 'ib-main' }, h('div', { class: 'ib-label' }, x.label),
+                        h('div', { class: 'ib-sub' }, h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC'),
+                            x.name ? h('b', {}, x.name) : null,
+                            x.phone ? h('a', { href: 'tel:' + x.phone, class: 'ib-phone' }, mfPhone(x.phone)) : null)),
+                    h('label', { class: 'ib-chk' }, chk, h('span', {}, '확인'), x.chk ? h('small', {}, x.chk.by + (x.chk.at ? ' · ' + ibTime(x.chk.at) : '')) : null),
+                    h('div', { class: 'ib-act' }, h('button', { type: 'button', class: 'btn btn-sm' + (open ? ' on' : ''), 'data-fk': 'ib-open-' + x.id, 'aria-expanded': open ? 'true' : 'false',
+                        onclick: function () { if (ib.open[x.id]) delete ib.open[x.id]; else ib.open[x.id] = 1; render(); } }, '댓글' + (x.cm.length ? ' ' + x.cm.length : ''))),
+                    notes);
+            });
+            return h('div', {}, head,
+                h('p', { class: 'forms-sub' }, '고객이 홈페이지에서 전화·카톡·문자 버튼을 누르거나 접수를 마치면 여기에 바로 올라와요. 확인한 건은 [확인]에 체크하고, 처리 내용은 댓글로 남겨 주세요.'),
+                h('div', { class: 'filters' }, h('label', {}, '종류', kindSel), h('label', { class: 'ib-todo' }, todo, '확인 안 한 것만'),
+                    h('span', { class: 'ib-status', id: 'ib-status', role: 'status' }, ibStatusText())),
+                h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '확인 안 함 ' + n + '건 · 전체 ' + ib.items.length + '건 (최근 300건)')),
+                h('div', { class: 'panel' }, rows.length ? rows : h('div', { class: 'empty' }, ib.at || ib.err ? (ib.items.length ? '조건에 맞는 기록이 없어요.' : '아직 들어온 기록이 없어요. 고객이 홈페이지에서 전화·카톡·문자 버튼을 누르면 여기에 올라와요.') : '불러오는 중이에요...')),
+                h('p', { class: 'ib-help' }, '※ 홈페이지에서는 고객이 어떤 버튼을 언제 눌렀는지만 알 수 있어요. 전화를 건 고객의 번호나 실제 통화 연결 여부는 알 수 없어서 기록되지 않아요. 접수 완료 건은 고객이 적은 성함·연락처가 함께 보여요(번호를 누르면 전화 연결).'));
+        }
+
         /* ---------- 화면: 설정 ---------- */
         function downloadFile(name, text) {
             var url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
@@ -3058,6 +3344,7 @@
 
         /* ---------- 전체 화면 ---------- */
         function render() {
+            if (taskDrag && authed && db) return;   // 업무를 끄는 중: 놓으면 바로 다시 그림
             var app = document.getElementById('app');
             var ae = document.activeElement, fk = ae && ae.getAttribute ? ae.getAttribute('data-fk') : null;
             if (!authed || !db) { renderLogin(); return; }
@@ -3073,6 +3360,7 @@
             else if (view === 'notices') content = renderNotices();
             else if (view === 'tasks') content = renderTasks();
             else if (view === 'forms') content = renderForms();
+            else if (view === 'calls') { content = renderCalls(); if (!ib.timer && driveOn()) setTimeout(ibStart, 0); }
             else if (view === 'settings') content = renderSettings();
             else content = renderToday();
 
@@ -3081,7 +3369,8 @@
             meSel.addEventListener('change', function () { me = this.value; lsSet(ME_KEY, me); render(); });
 
             var nav = h('nav', { class: 'nav', 'aria-label': '메뉴' }, VIEWS.map(function (v) {
-                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; if (v.v === 'forms') state.form = ''; render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); } }, v.t);
+                var badge = v.v === 'calls' && ibUnchecked() ? h('span', { class: 'nav-badge', 'aria-label': '확인 안 한 콜 ' + ibUnchecked() + '건' }, String(Math.min(ibUnchecked(), 99))) : null;
+                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; if (v.v === 'forms') state.form = ''; render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); if (v.v === 'calls') { ib.busy = false; ibLoad(false); } } }, v.t, badge);
             }));
             var note = driveBanner();
             var appWarn = inAppBrowser() ? h('div', { class: 'mode-note warn', 'data-note': 'inapp' }, h('span', {}, h('b', {}, '앱 안에서 열린 화면이에요 '), '이 안에서는 저장이 불안정할 수 있어요. 화면 메뉴(⋯ 또는 공유 버튼)의 "다른 브라우저로 열기"로 사파리·크롬에서 열어 주세요.')) : null;
