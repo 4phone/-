@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-vhGMVxCMoY5/RwfYBsbLUJRKjElUlbfJ2QRZfXF1Ed0='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7DCC7VIseNFAsdZfAMauKaepOniugCrKSwIRPRV0keE='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -367,6 +367,7 @@
         .mf-agree { border: 1px solid var(--mf-line); border-top: none; padding: 8px 10px; font-size: 13.5px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px 14px; }
         .mf-agree-in { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
         .mf-sheet .mf-agree .mf-in { flex: 0 0 auto; width: 120px; min-width: 0; }
+        .mf-agree-in .mf-sign { margin: 0 4px; }
         .mf-foot { display: grid; grid-template-columns: 236px minmax(0, 0.75fr) minmax(0, 1.25fr); border: 1px solid var(--mf-line); border-top: none; }
         .mf-foot > div { min-height: 76px; }
         .mf-date { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 10px; border-right: 1px solid #E1E2E4; }
@@ -388,6 +389,14 @@
         .sig-pad { position: relative; border: 2px dashed #B9A86A; border-radius: 10px; background: #FFFDF5; overflow: hidden; }
         .sig-cv { display: block; width: 100%; height: min(300px, 42vh); touch-action: none; cursor: crosshair; position: relative; z-index: 1; }
         .sig-x { position: absolute; left: 16px; bottom: 10px; color: #DCD2B0; font-weight: 800; font-size: 22px; pointer-events: none; }
+        .sig-pad.guide .sig-cv { height: min(230px, 38vh); }
+        .sig-guide { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: clamp(34px, 10vw, 96px); font-weight: 700; letter-spacing: 0.08em; color: #E9E0C2; pointer-events: none; white-space: nowrap; }   /* 따라 쓰는 흐린 글씨 (저장 그림에는 안 들어감) */
+        .mf-sign.agree { width: 170px; height: 46px; }
+        .mf-sign.agree span { font-size: 16px; font-weight: 700; color: #BFB087; letter-spacing: 2px; }
+        .mf-sign.agree img { max-height: 40px; }
+        .btn.saved { background: #2F855A; border-color: #2F855A; color: #fff; }   /* 드라이브 저장 완료 */
+        .btn.edited { background: #DD6B20; border-color: #DD6B20; color: #fff; }   /* 저장 후 고침 → 수정 저장 */
+        .mf-replace-file { font-weight: 800; background: #F1F4E6; padding: 8px 12px; border-radius: 8px; word-break: break-all; }
         @media (max-width: 700px) {   /* .mf-snap(복사보고 이미지)은 PC 배치 그대로 */
             .mf-sheet:not(.mf-snap) { padding: 16px 12px 12px; border-radius: 10px; }
             .mf-sheet:not(.mf-snap) .mf-title b { font-size: 30px; letter-spacing: 3px; } .mf-sheet:not(.mf-snap) .mf-title span { font-size: 16px; }
@@ -521,7 +530,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-06.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-06.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2563,9 +2572,12 @@
                     h('div', { class: 'mf-applicant' }, h('div', { class: 'mf-applab' }, h('b', {}, '*신청인/가입자'), h('span', {}, '(대리인)')),
                         h('div', { class: 'mf-appname' }, k('성함'), inp('appName', '신청인/가입자 성함', { max: 20 })), K.sign('apply', '신청인/가입자')));
             };
-            K.agree = function () {
+            K.agree = function () {   // '동의합니다.'는 고객이 흐린 글씨를 보고 직접 따라 써요 (서명처럼)
+                var b = h('button', { type: 'button', class: 'mf-sign agree', 'data-sig': 'agree', 'aria-label': '동의합니다 따라 쓰기' });
+                M.box.agree = b; paintSig(M, 'agree');
+                b.addEventListener('click', function () { openSignPad(M, 'agree', '동의 문구', '동의합니다.'); });
                 return h('div', { class: 'mf-agree' }, h('span', {}, '본인은 가입신청서 및 약관의 주요 내용에 대해 충분히 설명을 들었고, 그 내용을 이해했습니다. 따라서 위와 같은 내용으로 계약하는 것에 대해'),
-                    h('span', { class: 'mf-agree-in' }, '(', K.inp('agree', '동의 문구', { ph: '동의합니다.', max: 20 }), ')'));
+                    h('span', { class: 'mf-agree-in' }, '(', b, ')'));
             };
             K.header = function (shop, sub, types) {
                 var inp = K.inp, k = K.k;
@@ -2581,7 +2593,7 @@
         }
 
         function buildMobileForm() {
-            var M = { kind: 'mobile', el: null, sheet: null, sig: { guard: '', apply: '' }, box: {} };
+            var M = { kind: 'mobile', el: null, sheet: null, sig: { guard: '', apply: '', agree: '' }, box: {}, saved: '', savedId: '', savedFolder: '', dirty: false };
             var K = mfKit(M), inp = K.inp, chk = K.chk, k = K.k, cell = K.cell, tcell = K.tcell, wcell = K.wcell, row = K.row, grp = K.grp, sec = K.sec, info = K.info, note = K.note, sign = K.sign;
             var MONEY = K.MONEY, BIRTH = K.BIRTH, TEL = K.TEL;
             var sheet = h('div', { class: 'mf-sheet', 'data-form': 'mobile' },
@@ -2654,7 +2666,7 @@
         }
 
         function buildWiredForm() {
-            var M = { kind: 'wired', el: null, sheet: null, sig: { guard: '', apply: '' }, box: {} };
+            var M = { kind: 'wired', el: null, sheet: null, sig: { guard: '', apply: '', agree: '' }, box: {}, saved: '', savedId: '', savedFolder: '', dirty: false };
             var K = mfKit(M), inp = K.inp, chk = K.chk, k = K.k, cell = K.cell, scell = K.scell, tcell = K.tcell, wcell = K.wcell, row = K.row, grp = K.grp, sec = K.sec, info = K.info, note = K.note;
             var MONEY = K.MONEY, BIRTH = K.BIRTH, TEL = K.TEL, GIFT = { mode: 'decimal', cls: 'gift', max: 6 };
             var etc = [1, 2, 3, 4, 5].map(function (n) { return row(wcell(k('*', true), inp('etc' + n, '기타 정보 ' + n + '번째 줄', { max: 150 }))); });
@@ -2662,8 +2674,8 @@
                 K.header('사거리인터넷', '_ 인터넷', [chk('tNew', '신규', 'type'), chk('tTrans', '동판', 'type'), chk('tRenew', '재약정', 'type')]),
 
                 sec('가입자 정보', 'green',
-                    row(cell(k('가입 통신사'), K.combo('carrier', '가입 통신사', [['U+', 'SK', 'KT']])),
-                        cell(k('(이전 통신사'), K.combo('prevCarrier', '이전 통신사', [['U+', 'SK', 'KT', '신규']]), k(')'))),
+                    row(cell(k('가입 통신사'), K.combo('carrier', '가입 통신사', [['U+', 'SK', 'KT', '스카이라이프', 'LG헬로비전']])),
+                        cell(k('(이전 통신사'), K.combo('prevCarrier', '이전 통신사', [['U+', 'SK', 'KT', '스카이라이프', 'LG헬로비전', '신규']]), k(')'))),
                     row(cell(k('가입자명'), inp('name', '가입자명', { max: 20 })), cell(k('생년월일'), inp('birth', '가입자 생년월일', BIRTH)), cell(k('휴대폰 번호'), inp('phone', '가입자 휴대폰 번호', TEL))),
                     row(wcell(k('주소'), inp('addr', '주소', { max: 150 })))),
                 info('[안내] 가입한 항목만 작성해 주세요.'),
@@ -2780,7 +2792,7 @@
                 var dd = t.closest('.mf-dd'), opt = t.closest('.mf-opt'), cb = t.closest('.mf-combo');
                 if (dd && cb) { if (cb.classList.contains('open')) ddClose(); else ddOpen(cb, false); return; }
                 if (opt && cb) {
-                    var el = cb.querySelector('.mf-in'); el.value = opt.getAttribute('data-v'); ddClose();
+                    var el = cb.querySelector('.mf-in'); if (el.value !== opt.getAttribute('data-v')) dirty(); el.value = opt.getAttribute('data-v'); ddClose();
                     try { el.focus({ preventScroll: true }); } catch (x) { el.focus(); }
                 }
             });
@@ -2802,7 +2814,11 @@
                     else if (kp.value === kp.getAttribute('data-auto')) { kp.value = ''; kp.removeAttribute('data-auto'); }   // 체크를 풀면 자동으로 넣은 값만 지움
                 }
             });
+            var dirty = function () { if (M.saved && !M.dirty) { M.dirty = true; mfSaveBtn(M); } };   // 드라이브에 저장한 뒤 고치면 '수정 저장'
+            M.markDirty = dirty;
+            sheet.addEventListener('change', dirty);
             sheet.addEventListener('input', function (e) {
+                dirty();
                 var t = e.target, n = t.getAttribute ? t.getAttribute('data-mf') : null;
                 if (t.classList && t.classList.contains('memo')) { t.style.height = ''; if (t.scrollHeight > t.clientHeight) t.style.height = (t.scrollHeight + 4) + 'px'; }   // 메모가 길어지면 칸도 함께
                 if (n) linkFollow(n);
@@ -2834,11 +2850,11 @@
                     } }, '새로 작성'),
                     h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'mf-drive', onclick: function () { mfDriveSave(M, sheet, this); } }, '드라이브 저장'),
                     h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'mf-copy', onclick: function () {
-                        if (!M.sig.apply && !confirm('신청인/가입자 서명이 아직 없어요. 그래도 복사할까요?')) return;
+                        if (!mfReady(M, '복사')) return;
                         mfCopyReport(sheet, opt.file);
                     } }, '복사보고'),
                     h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-print', onclick: function () {
-                        if (!M.sig.apply && !confirm('신청인/가입자 서명이 아직 없어요. 그래도 인쇄할까요?')) return;
+                        if (!mfReady(M, '인쇄')) return;
                         window.print();
                     } }, '인쇄 / PDF 저장')));
             M.sheet = sheet;
@@ -2857,23 +2873,62 @@
             if (!(y >= 2000 && y <= 2099 && m >= 1 && m <= 12 && d >= 1 && dt.getMonth() === m - 1 && dt.getDate() === d)) {
                 toast('가입 확인서 아래쪽의 날짜(년·월·일)를 확인해 주세요. 폴더와 파일 이름에 들어가요.'); var ye = q('y'); if (ye) { ye.focus(); ye.scrollIntoView({ block: 'center' }); } return;
             }
-            if (!M.sig.apply && !confirm('신청인/가입자 서명이 아직 없어요. 그래도 저장할까요?')) return;
-            if (M.saved && !confirm('이 가입 확인서는 이미 "' + M.saved + '"(으)로 저장했어요.\n한 번 더 저장하면 뒤에 번호가 붙어 따로 저장돼요. 계속할까요?')) return;
+            if (!mfReady(M, '저장')) return;
+            if (M.saved) { mfAskReplace(M, sheet, btn); return; }   // 이미 저장한 확인서: 수정 저장 안내
+            mfUpload(M, sheet, btn, y, m, d, name, '');
+        }
+        function mfAskReplace(M, sheet, btn) {   // 수정 저장: [업로드 취소] 또는 [수정 업로드](이전 파일은 지우고 수정본만 저장)
+            var dlg = document.getElementById('dlg');
+            dlg.textContent = '';
+            dlg.appendChild(h('div', { 'data-dlg': 'mf-replace' },
+                h('div', { class: 'dlg-head' }, '수정 저장'),
+                h('div', { class: 'dlg-body' },
+                    h('p', {}, '이 가입 확인서는 이미 드라이브에 저장되어 있어요.'),
+                    h('p', { class: 'mf-replace-file' }, (M.savedFolder ? M.savedFolder + ' / ' : '') + M.saved),
+                    h('p', {}, M.dirty ? '[수정 업로드]를 누르면 이전에 저장한 파일은 지우고(드라이브 휴지통으로 이동) 지금 수정한 가입 확인서만 저장해요.' : '아직 고친 내용이 없어요. [수정 업로드]를 누르면 이전 파일을 지우고 지금 화면으로 다시 저장해요.')),
+                h('div', { class: 'dlg-foot' },
+                    h('button', { type: 'button', class: 'btn', 'data-act': 'mf-replace-cancel', onclick: function () { closeDlg(); toast('업로드를 취소했어요.'); } }, '업로드 취소'),
+                    h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-replace-ok', onclick: function () {
+                        closeDlg();
+                        var v = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return el ? el.value.trim() : ''; };
+                        var y = parseInt(v('y'), 10); if (y >= 0 && y < 100) y += 2000;
+                        mfUpload(M, sheet, btn, y, parseInt(v('m'), 10), parseInt(v('d'), 10), v('name') || v('appName'), M.savedId);
+                    } }, '수정 업로드'))));
+            showDlg(dlg);
+            var ok = dlg.querySelector('[data-act="mf-replace-ok"]'); if (ok) ok.focus();
+        }
+        function mfUpload(M, sheet, btn, y, m, d, name, replaceId) {
             var b64;
             try { b64 = mfSnapshot(sheet).toDataURL('image/png').split(',')[1]; } catch (e) { toast('가입 확인서 그림을 만들지 못했어요.'); return; }
-            var label = btn.textContent; btn.disabled = true; btn.textContent = '저장 중...';
+            btn.disabled = true; btn.textContent = '저장 중...';
             var folder = String(y % 100).padStart(2, '0') + '년' + m + '월';
             ensureTeam().then(function (t) {
-                return driveCall(db.drive.url, 'formSave', { token: t.token, kind: M.kind, y: y, m: m, d: d, name: name.slice(0, 20), png: b64 }, 120000);
+                return driveCall(db.drive.url, 'formSave', { token: t.token, kind: M.kind, y: y, m: m, d: d, name: name.slice(0, 20), png: b64, replace: replaceId || '' }, 120000);
             }).then(function (res) {
-                btn.disabled = false; btn.textContent = label;
-                M.saved = String(res.name || '');
-                toast('구글 드라이브 "' + (res.folder || folder) + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.');
+                btn.disabled = false;
+                M.saved = String(res.name || ''); M.savedId = String(res.id || ''); M.savedFolder = String(res.folder || folder); M.dirty = false;
+                mfSaveBtn(M);
+                if (replaceId) toast(res.replaced ? '이전 파일은 지우고 수정본을 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' : '이전 파일을 찾지 못해서(이미 지웠거나 옮긴 경우) 수정본만 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.');
+                else toast('구글 드라이브 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.');
             }, function (e) {
-                btn.disabled = false; btn.textContent = label;
+                btn.disabled = false; mfSaveBtn(M);
                 if (e && e.name === 'AbortError') toast('드라이브 응답이 늦어요. 이미 저장됐을 수 있으니 드라이브의 "' + folder + '" 폴더를 확인한 뒤 다시 시도해 주세요.');
                 else toast('드라이브에 저장하지 못했어요. ' + driveErrText(e));
             });
+        }
+        function mfReady(M, what) {   // 고객이 쓸 칸이 비었으면 한 번 더 확인
+            var miss = [];
+            if (!M.sig.agree) miss.push('"동의합니다." 따라 쓰기');
+            if (!M.sig.apply) miss.push('신청인/가입자 서명');
+            return !miss.length || confirm(miss.join(', ') + '이(가) 아직 없어요. 그래도 ' + what + '할까요?');
+        }
+        function mfSaveBtn(M) {   // [드라이브 저장] → 저장하면 [✓ 저장 완료] → 그 뒤에 고치면 [수정 저장]
+            var b = M.el ? M.el.querySelector('[data-act="mf-drive"]') : null; if (!b || b.disabled) return;
+            b.classList.remove('saved', 'edited');
+            if (!M.saved) b.textContent = '드라이브 저장';
+            else if (M.dirty) { b.textContent = '수정 저장'; b.classList.add('edited'); }
+            else { b.textContent = '✓ 저장 완료'; b.classList.add('saved'); }
+            b.title = M.saved ? '저장된 파일: ' + (M.savedFolder ? M.savedFolder + ' / ' : '') + M.saved : '';
         }
         function mfSellerAuto() {   // 로그인한 계정의 이름·핸드폰 번호 (없으면 직원 이름 / 매장 번호)
             var a = db && db.account, nm = a && a.name ? a.name : (me && staffById(me) ? staffName(me) : ''), ph = a && a.phone ? mfPhone(a.phone) : '010-2422-2444';
@@ -3001,6 +3056,7 @@
             var b = M.box[key]; if (!b) return;
             b.textContent = '';
             if (M.sig[key]) { b.classList.add('signed'); b.appendChild(h('img', { src: M.sig[key], alt: '서명' })); }
+            else if (key === 'agree') { b.classList.remove('signed'); b.appendChild(h('span', {}, '동의합니다.')); b.appendChild(h('small', {}, '눌러서 따라 쓰기')); }
             else { b.classList.remove('signed'); b.appendChild(h('span', {}, '서명 / 인')); b.appendChild(h('small', {}, '눌러서 서명')); }
         }
         function trimSig(cv) {   // 서명한 부분만 잘라서 이미지로
@@ -3012,7 +3068,7 @@
             out.getContext('2d').drawImage(cv, x0, y0, cw, ch, pad, pad, cw, ch);
             return out.toDataURL('image/png');
         }
-        function openSignPad(M, key, label) {   // 고객이 손가락·펜으로 직접 서명하는 팝업
+        function openSignPad(M, key, label, guide) {   // 고객이 손가락·펜으로 직접 서명하는 팝업 (guide: 흐린 글씨를 보고 따라 쓰기)
             var dlg = document.getElementById('dlg'), dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
             var cv = h('canvas', { class: 'sig-cv', 'aria-label': label + ' 서명 칸' }), err = h('div', { class: 'err', role: 'alert' });
             var ctx = null, ink = false, cur = null;
@@ -3042,23 +3098,25 @@
             cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
             cv.addEventListener('touchstart', function (e) { e.preventDefault(); }, { passive: false });   // 서명 중 화면이 밀리지 않게
             var foot = h('div', { class: 'dlg-foot' },
-                M.sig[key] ? h('button', { type: 'button', class: 'btn btn-danger left', onclick: function () { M.sig[key] = ''; paintSig(M, key); closeDlg(); toast('서명을 지웠어요.'); } }, '서명 삭제') : null,
+                M.sig[key] ? h('button', { type: 'button', class: 'btn btn-danger left', onclick: function () { M.sig[key] = ''; paintSig(M, key); closeDlg(); if (M.markDirty) M.markDirty(); toast(guide ? '따라 쓴 글씨를 지웠어요.' : '서명을 지웠어요.'); } }, guide ? '지우기' : '서명 삭제') : null,
                 h('button', { type: 'button', class: 'btn', 'data-act': 'sig-clear', onclick: function () { if (ctx) ctx.clearRect(0, 0, cv.width, cv.height); ink = false; err.textContent = ''; } }, '다시 쓰기'),
                 h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '취소'),
                 h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'sig-ok', onclick: function () {
                     if (mforms[M.kind] !== M) { closeDlg(); return; }
                     var img = ink ? trimSig(cv) : '';
-                    if (!img) { err.textContent = '네모 칸 안에 서명해 주세요.'; return; }
-                    M.sig[key] = img; paintSig(M, key); closeDlg();
+                    if (!img) { err.textContent = guide ? '흐린 글씨 "' + guide + '"를 따라 써 주세요.' : '네모 칸 안에 서명해 주세요.'; return; }
+                    M.sig[key] = img; paintSig(M, key); closeDlg(); if (M.markDirty) M.markDirty();
                     try { M.box[key].focus({ preventScroll: true }); } catch (x) { /* 무시 */ }
-                    toast(label + ' 서명을 넣었어요.');
-                } }, '서명 완료'));
+                    toast(guide ? '"' + guide + '"를 넣었어요.' : label + ' 서명을 넣었어요.');
+                } }, guide ? '쓰기 완료' : '서명 완료'));
             dlg.textContent = ''; dlg.className = 'dlg-sign';
             dlg.appendChild(h('div', {},
-                h('div', { class: 'dlg-head' }, label + ' 서명'),
+                h('div', { class: 'dlg-head' }, guide ? '"' + guide + '" 따라 쓰기' : label + ' 서명'),
                 h('div', { class: 'sig-body' },
-                    h('p', { class: 'sig-hint' }, M.sig[key] ? '다시 서명하면 앞의 서명이 바뀌어요. 네모 칸 안에 손가락이나 펜으로 서명해 주세요.' : '네모 칸 안에 손가락이나 펜으로 서명해 주세요.'),
-                    h('div', { class: 'sig-pad' }, cv, h('span', { class: 'sig-x', 'aria-hidden': 'true' }, '서명'))),
+                    h('p', { class: 'sig-hint' }, guide ? '네모 칸 안의 흐린 글씨 "' + guide + '"를 손가락이나 펜으로 그대로 따라 써 주세요.' + (M.sig[key] ? ' 다시 쓰면 앞의 글씨가 바뀌어요.' : '')
+                        : (M.sig[key] ? '다시 서명하면 앞의 서명이 바뀌어요. 네모 칸 안에 손가락이나 펜으로 서명해 주세요.' : '네모 칸 안에 손가락이나 펜으로 서명해 주세요.')),
+                    guide ? h('div', { class: 'sig-pad guide' }, h('span', { class: 'sig-guide', 'aria-hidden': 'true' }, guide), cv)
+                        : h('div', { class: 'sig-pad' }, cv, h('span', { class: 'sig-x', 'aria-hidden': 'true' }, '서명'))),
                 err, foot));
             showDlg(dlg); setup();
         }
