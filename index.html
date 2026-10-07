@@ -149,7 +149,7 @@
         .story-flow-on .story-card { flex: 0 0 var(--story-card-w, 300px); min-width: 0; }
         .story-flow-on .story-arrow { display: none !important; }
         .story-viewport:hover .story-slider-container, .story-viewport.is-paused .story-slider-container { animation-play-state: paused; }
-        @keyframes storyFlowRight { from { transform: translateX(calc(-1 * var(--story-set-w, 0px))); } to { transform: translateX(0); } }
+        @keyframes storyFlowRight { from { transform: translate3d(calc(-1 * var(--story-set-w, 0px)), 0, 0); } to { transform: translate3d(0, 0, 0); } }
 
         /* 10대 베스트 요금 라인업 대개편 */
         #best-plan-section { max-width: 1200px; margin: 0 auto; padding-top: 20px; }
@@ -577,7 +577,7 @@
         #blog-stories-section { padding-top: 110px; }
 
         /* 설치 사업장 소개: 금빛 바탕 위 흰 유리 카드 */
-        .story-card { background: rgba(255,255,255,0.62); border: 1px solid rgba(255,255,255,0.9); border-radius: 22px; box-shadow: 0 18px 40px rgba(122,88,24,0.16); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+        .story-card { background: rgba(255,255,255,0.86); border: 1px solid rgba(255,255,255,0.95); border-radius: 22px; box-shadow: 0 14px 30px rgba(122,88,24,0.14); }   /* 흐르는 카드: 흐림 효과 없이(끊김 방지) */
         .story-card:hover { border-color: #D9B66A; box-shadow: 0 22px 46px rgba(122,88,24,0.24); }
         .story-img-box { background: rgba(255,255,255,0.5); }
         .story-label { background: var(--sg-teal); color: var(--sg-gold-2); border: 0; }
@@ -757,7 +757,6 @@
             <a href="#prov-section-스카이" onclick="scrollToProv(event, '스카이')">KT스카이라이프</a>
             <a href="#prov-section-헬로" onclick="scrollToProv(event, '헬로')">LG헬로비전</a>
             <span class="nav-divider">|</span>
-            <a href="#" onclick="openSelfCalcPopup(event)">셀프요금설계</a>
             <a href="boss.html" target="_blank" class="boss-highlight-btn">사장님전용</a>
             <a href="#" onclick="openGiftPopup(event)">사은품 라인업</a>
         </div>
@@ -771,7 +770,6 @@
             <a href="#prov-section-스카이" onclick="scrollToProv(event, '스카이'); closeMobileMenu();">스카이라이프 요금표</a>
             <a href="#prov-section-헬로" onclick="scrollToProv(event, '헬로'); closeMobileMenu();">LG헬로비전 요금표</a>
             <hr style="border-color:#E2E8F0; margin:5px 0;">
-            <a href="#" onclick="openSelfCalcPopup(event); closeMobileMenu();">셀프요금설계</a>
             <a href="boss.html" target="_blank" class="boss-highlight-btn" onclick="closeMobileMenu();">사장님전용</a>
             <a href="#" onclick="openGiftPopup(event); closeMobileMenu();">사은품 라인업</a>
         </div>
@@ -804,9 +802,7 @@
                 <div class="sg-eyebrow sg-a-fade"><span class="sg-rule"></span><span class="sg-eyebrow-en">Sageori Internet</span><span class="sg-eyebrow-sub">PREMIUM CONSULTING</span></div>
                 <h1 class="sg-title">
                     <span class="sg-mask"><span class="sg-l1">전국 인터넷 가입은</span></span>
-                    <span class="sg-mask sg-mask-2"><span class="sg-l2"><span><em class="sg-gold">사거리 인터넷</em>에서</span>
-                        <span class="sg-mascot"><span class="sg-mascot-float"><span class="sg-mascot-ring"><img src="털보아저씨국방색.png" alt="사거리인터넷 털보아저씨"></span></span></span>
-                    </span></span>
+                    <span class="sg-mask sg-mask-2"><span class="sg-l2"><span><em class="sg-gold">사거리 인터넷</em>에서</span></span></span>
                 </h1>
                 <p class="sg-sub sg-a2">합리적 요금 컨설팅과 가장 많은 혜택을 동시에</p>
                 <p class="sg-desc sg-a3">정확한 요금 설계부터 보이지 않던 혜택까지,<br class="sg-br-m"> 사거리인터넷이 처음부터 끝까지 책임집니다.</p>
@@ -2344,7 +2340,7 @@
         function scrollStory(direction) { const slider = document.getElementById('storySlider'); if (slider) { slider.scrollBy({ left: 320 * direction, behavior: 'smooth' }); } }
 
         /* 🚀 [추가] 설치후기 슬라이더: 천천히 자동으로 흐르기 */
-        const STORY_FLOW_SPEED = 40;          // 흐르는 속도 (px/초) - 숫자가 작을수록 더 천천히 흐릅니다
+        const STORY_FLOW_SPEED = 70;          // 흐르는 속도 (px/초) - 숫자가 작을수록 더 천천히 흐릅니다 (2026-10: 40 → 70)
         const STORY_FLOW_DIRECTION = 'right'; // 'right' = 왼쪽→오른쪽 / 'left' = 오른쪽→왼쪽
 
         function initStoryFlow() {
