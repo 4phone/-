@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-SoyTw2OLxr2j+2sWq+2MWU585Pq8cIyDmsdGmWGoi4E='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lXtHmi0Q8EpVx/6wp+ehmrHxmkbw4STHLj5Nw9aBVY4='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -555,7 +555,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-07.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-07.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1224,6 +1224,22 @@
         }
 
         /* ---------- 화면: 업무 ---------- */
+        function conflictItems() {
+            var out = [];
+            [['events', db.events], ['notices', db.notices], ['tasks', db.tasks]].forEach(function (p) { p[1].forEach(function (it) { if (typeof it.title === 'string' && it.title.indexOf('[충돌본] ') === 0) out.push(it); }); });
+            return out;
+        }
+        function cleanConflicts() {   // [충돌본] 항목만 지움 (원래 항목은 그대로) — 삭제 기록이 동기화되어 다른 기기에서도 사라짐
+            var list = conflictItems();
+            if (!list.length) return;
+            if (!confirm('[충돌본] ' + list.length + '건을 지울까요?\n원래 항목은 그대로 남아요. (일정·공지·업무 모두)')) return;
+            var ids = Object.create(null), now = Date.now();
+            list.forEach(function (it) { ids[it.id] = 1; db.del[it.id] = Math.max(now, (it.u || 0) + 1); });
+            db.events = db.events.filter(function (it) { return !ids[it.id]; });
+            db.notices = db.notices.filter(function (it) { return !ids[it.id]; });
+            db.tasks = db.tasks.filter(function (it) { return !ids[it.id]; });
+            commit('[충돌본] ' + list.length + '건을 지웠어요.');
+        }
         function renderTasks() {
             var today = ymd(new Date());
             var list = db.tasks.filter(function (t) {
@@ -1265,6 +1281,7 @@
             });
             return h('div', {},
                 h('div', { class: 'page-head' }, h('h1', {}, '업무'), h('div', { class: 'actions' },
+                    conflictItems().length ? h('button', { type: 'button', class: 'btn', 'data-fk': 'clean-conflicts', title: '동시에 고쳐서 생긴 [충돌본] 항목만 지워요', onclick: cleanConflicts }, '[충돌본] ' + conflictItems().length + '건 정리') : null,
                     h('label', { class: 'date-filter' }, '날짜별 보기', dateIn),
                     h('button', { type: 'button', class: 'btn' + (isYday ? ' on-yday' : ''), 'aria-pressed': isYday ? 'true' : 'false', 'data-fk': 'flt-yesterday', onclick: function () { state.date = ydS; render(); } }, '어제'),
                     h('button', { type: 'button', class: 'btn' + (isToday ? ' on-today' : ''), 'aria-pressed': isToday ? 'true' : 'false', 'data-fk': 'flt-today', onclick: function () { state.date = todayS; render(); } }, '오늘'),
@@ -1652,10 +1669,23 @@
 
         /* --- 동기화: 드라이브의 최신 내용을 받아 합치고, 내 변경분이 있으면 올림 --- */
         function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
-        function markSynced(snap) {   // 드라이브와 같아진 항목은 '동기화된 기준 시각(b)'을 현재 수정 시각으로 맞춤 (snap이 있으면 그 시점 그대로인 항목만)
+        function markSynced(snap) {   // 드라이브에 올라간(또는 드라이브와 같아진) 버전을 '기준 시각(b)'으로 기록
             var changed = false;
-            [db.events, db.notices, db.tasks].forEach(function (l) { l.forEach(function (it) { if ((!snap || snap[it.id] === it.u) && it.b !== it.u) { it.b = it.u; changed = true; } }); });
+            [db.events, db.notices, db.tasks].forEach(function (l) { l.forEach(function (it) {
+                var nb = !snap ? it.u : snap[it.id];            // snap: 드라이브에 올라간 시점의 수정 시각
+                if (nb === undefined) return;                     // 올릴 때 없던 항목(그 뒤에 새로 만든 것)은 다음 저장 때
+                if (nb > it.u) nb = it.u;
+                if ((it.b || 0) < nb) { it.b = nb; changed = true; }   // 저장 중에 또 고친 항목도 '올라간 버전 기준'으로 (충돌 아님)
+            }); });
             return changed;
+        }
+        function markSeen(remote) {   // 받아 온 드라이브 버전과 같은 항목은 '본 적 있음'으로 기록 (다른 기기 기준 시각이 섞이지 않게)
+            var ru = Object.create(null);
+            [remote.events, remote.notices, remote.tasks].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
+            [db.events, db.notices, db.tasks].forEach(function (l) { l.forEach(function (it) {
+                var r = ru[it.id];
+                if (r !== undefined && r === it.u && it.b !== it.u) it.b = it.u;   // 드라이브 버전과 같음
+            }); });
         }
         function remoteReusable(rev) { return !!(lastRemote && db && db.drive && lastRemote.url === db.drive.url && lastRemote.k === db.drive.k && lastRemote.rev === rev); }
         function mergeRemote(j, team) {
@@ -1673,6 +1703,7 @@
                 var before = canon(localData()), merged = mergeData(localData(), remote), after = canon(merged);
                 var res = { rev: j.rev, needPush: after !== canon(remote), changedLocal: after !== before, revChanged: db.drive.rev !== j.rev, conflicts: 0, marked: false };
                 if (res.changedLocal) { applyMerged(merged); res.conflicts = merged.conflicts; }
+                markSeen(remote);                                         // 드라이브 버전 그대로인 항목은 기준 시각을 맞춤
                 db.drive.rev = j.rev;
                 if (!res.needPush) res.marked = markSynced(null);       // 드라이브와 완전히 같아졌으니 지금 내용이 기준
                 return res;
