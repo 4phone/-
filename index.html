@@ -647,6 +647,9 @@
         .p-apply-btn { height: 48px; padding: 0; border: 0; border-radius: 12px; background: #134047; color: var(--sg-gold-2); font-size: 15.5px; font-weight: 700; letter-spacing: -0.2px; box-shadow: none; transition: background .2s, color .2s; }
         .p-apply-btn:hover { background: #0E343B; color: #FFFFFF; transform: none; box-shadow: 0 10px 20px rgba(14,52,59,0.22); }
         .p-empty-row { color: #7D9294; font-weight: 600; }
+        .plan-load-fail { display: grid; justify-items: center; gap: 10px; padding: 48px 20px; text-align: center; background: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.9); border-radius: 24px; color: #0E2A30; }
+        .plan-load-fail span { color: #5C7376; font-size: 14px; }
+        .plan-load-fail button { margin-top: 6px; height: 46px; padding: 0 22px; border: 0; border-radius: 12px; background: #134047; color: var(--sg-gold-2); font: inherit; font-weight: 700; cursor: pointer; }
 
         /* SNS · 바닥글: 깊은 청록으로 마무리 */
         .sns-banner-section { max-width: none; margin: 0; padding: 70px 20px 50px; border-top: 0; background: linear-gradient(180deg, #134047 0%, #0E343B 100%); box-shadow: inset 0 2px 0 rgba(233,207,143,0.35); }
@@ -880,8 +883,8 @@
                 <p class="sg-desc sg-a3">정확한 요금 설계부터 보이지 않던 혜택까지,<br class="sg-br-m"> 사거리인터넷이 처음부터 끝까지 책임집니다.</p>
 
                 <div class="sg-tiles sg-a4">
-                    <div class="sg-tile"><span class="sg-tile-k">가정집</span><b class="sg-tile-v">인터넷·TV</b></div>
-                    <div class="sg-tile"><span class="sg-tile-k">사업장</span><b class="sg-tile-v">인터넷·TV·<wbr>CCTV</b></div>
+                    <div class="sg-tile"><span class="sg-tile-k">가정용</span><b class="sg-tile-v">인터넷·TV·<wbr>전화</b></div>
+                    <div class="sg-tile"><span class="sg-tile-k">사업장</span><b class="sg-tile-v">인터넷·TV·<wbr>CCTV·<wbr>전화·<wbr>키오스크</b></div>
                     <div class="sg-tile"><span class="sg-tile-k">가전·가구</span><b class="sg-tile-v">렌탈</b></div>
                     <div class="sg-tile sg-tile-gold"><span class="sg-tile-k">결합 신청 시 최대</span><span class="sg-tile-num"><b id="sg-count" data-to="132">132</b><small>만원</small></span><span class="sg-tile-note">설치 당일 지급</span><span class="sg-sweep" aria-hidden="true"></span></div>
                 </div>
@@ -1679,8 +1682,23 @@
             return rows;
         }
 
+        async function sgFetchCsv(url, tries) {   // 구글 시트 CSV 받기 (실패하면 잠시 뒤 다시 시도)
+            for (let i = 0; i < tries; i++) {
+                try {
+                    const r = await fetch(url.replace(/([?&]_=)\d+/, '$1' + Date.now()), { cache: 'no-store' });
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    const t = await r.text();
+                    if (!t || /^\s*</.test(t) || t.indexOf(',') < 0) throw new Error('not csv');   // 시트 공유가 바뀌면 CSV 대신 로그인 화면이 옴
+                    return t;
+                } catch (e) {
+                    if (i === tries - 1) throw e;
+                    await new Promise(res => setTimeout(res, 900 * (i + 1)));
+                }
+            }
+        }
+
         async function loadData() {
-            try { const response = await fetch(csvUrl); const text = await response.text(); allData = parseCsvText(text).slice(1).filter(r => r[0] && r[0].trim() !== ""); } catch(e) { console.error("요금표 로드 실패", e); }
+            try { const text = await sgFetchCsv(csvUrl, 3); allData = parseCsvText(text).slice(1).filter(r => r[0] && r[0].trim() !== ""); window.sgPlanLoadFailed = false; } catch(e) { window.sgPlanLoadFailed = true; console.error("요금표 로드 실패", e); }
             try {
                 const rResponse = await fetch(regionCsvUrl); const rText = await rResponse.text(); const rRows = parseCsvText(rText);
                 hellovisionRegions = rRows.slice(1).filter(row => row[0] && row[0].trim().includes('헬로') && row[1] && row[2]).map(row => ({ city: row[1].trim(), districts: row[2].replace(/"/g, '').trim() }));
@@ -1700,7 +1718,12 @@
             } catch(e) { console.error("사은품 데이터 로드 실패", e); }
         }
 
-        window.onload = function() { loadData(); loadGiftData(); };
+        (function () {   // 요금표·사은품: 페이지 글자가 준비되면 바로 불러오기 (사진·글꼴을 다 받을 때까지 기다리지 않음)
+            var started = false;
+            function start() { if (started) return; started = true; loadData(); loadGiftData(); }
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else setTimeout(start, 0);
+            window.addEventListener('load', start);
+        })();
         window.addEventListener('resize', checkPcNavbarDisplay);
 
         function checkPcNavbarDisplay() {
@@ -1833,6 +1856,10 @@
 
         function renderBestPlans() {
             const container = document.getElementById('best-plan-container'); container.innerHTML = '';
+            if (window.sgPlanLoadFailed && !allData.length) {   // 요금표를 끝내 못 받았을 때: 빈 표 대신 안내
+                container.innerHTML = '<div class="plan-load-fail"><b>요금표를 불러오지 못했어요.</b><span>인터넷 연결을 확인한 뒤 다시 시도해 주세요.</span><button type="button" onclick="location.reload()">다시 불러오기</button></div>';
+                return;
+            }
 
             const discountProvs = ['SK', '스카이'];
             let discountHtml = `<div class="prov-section" id="prov-section-알뜰">
