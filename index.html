@@ -448,6 +448,28 @@
         .pc-only-menu a:hover { color: #FFFFFF; background: rgba(255,255,255,0.07); }
         .pc-only-menu .nav-divider { color: rgba(255,255,255,0.22); }
         .pc-only-menu a.boss-highlight-btn { color: var(--sg-gold) !important; border: 1px solid rgba(233,207,143,0.55); background: transparent; border-radius: 999px; padding: 6px 14px; font-weight: 700; }
+        /* 상단 메뉴 '렌탈' (정수기 · 가전가구 — 준비중) */
+        .nav-rental { position: relative; display: inline-flex; align-items: center; }
+        .nav-rental-btn { display: inline-flex; align-items: center; gap: 4px; background: transparent; border: 0; color: rgba(244,250,248,0.78); font: inherit; font-size: 15px; font-weight: 500; padding: 6px 10px; border-radius: 8px; cursor: pointer; }
+        .nav-rental-btn:hover, .nav-rental.open .nav-rental-btn, .nav-rental:hover .nav-rental-btn { color: #FFFFFF; background: rgba(255,255,255,0.07); }
+        .nav-rental-btn svg { transition: transform .2s; opacity: .8; }
+        .nav-rental.open .nav-rental-btn svg, .nav-rental:hover .nav-rental-btn svg { transform: rotate(180deg); }
+        .nav-rental-menu { position: absolute; top: calc(100% + 14px); left: 50%; transform: translate(-50%, 6px); min-width: 196px; padding: 8px; background: rgba(10,43,50,0.97); border: 1px solid rgba(233,207,143,0.28); border-radius: 14px; box-shadow: 0 18px 40px rgba(3,20,24,0.45); opacity: 0; visibility: hidden; transition: opacity .2s, transform .2s, visibility .2s; z-index: 1100; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+        .nav-rental-menu::before { content: ''; position: absolute; left: 0; right: 0; top: -16px; height: 16px; }   /* 마우스로 내려갈 때 끊기지 않게 */
+        .nav-rental:hover .nav-rental-menu, .nav-rental.open .nav-rental-menu, .nav-rental:focus-within .nav-rental-menu { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+        .nav-rental-cap { display: block; padding: 4px 12px 6px; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px; letter-spacing: 3px; color: var(--sg-gold); }
+        .pc-only-menu .nav-rental-menu a { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px; border-radius: 10px; color: rgba(244,250,248,0.9); font-size: 14.5px; white-space: nowrap; background: transparent; }
+        .pc-only-menu .nav-rental-menu a:hover { background: rgba(255,255,255,0.07); color: #FFFFFF; }
+        .nav-rental-menu em, .m-rental em { font-style: normal; font-size: 11px; font-weight: 700; letter-spacing: 0; color: var(--sg-gold-2); border: 1px solid rgba(233,207,143,0.45); background: rgba(233,207,143,0.08); padding: 2px 8px; border-radius: 999px; }   /* 준비중: 살짝만 강조 */
+        #mobile-nav-menu { min-width: 236px; max-height: calc(100vh - 90px); overflow-y: auto; }
+        #mobile-nav-menu a { white-space: nowrap; }
+        .m-rental em { flex: none; white-space: nowrap; }
+        .m-rental { padding: 2px 0 4px; }
+        .m-rental-cap { display: block; padding: 10px 16px 2px; font-size: 12px; font-weight: 800; letter-spacing: 1px; color: #8A6418; }
+        #mobile-nav-menu .m-rental a { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-left: 28px; }
+        .m-rental em { color: #8A6418; border-color: rgba(138,100,24,0.35); background: rgba(233,207,143,0.18); }
+        #sg-soon-toast { position: fixed; left: 50%; bottom: 110px; transform: translate(-50%, 12px); z-index: 3000; max-width: calc(100% - 40px); padding: 12px 18px; border-radius: 12px; background: rgba(10,43,50,0.96); color: #F4FAF8; font-size: 14px; font-weight: 500; box-shadow: 0 14px 30px rgba(3,20,24,0.35); border: 1px solid rgba(233,207,143,0.35); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; word-break: keep-all; text-align: center; }
+        #sg-soon-toast.show { opacity: 1; transform: translate(-50%, 0); }
         .nav-phone-btn { background: linear-gradient(135deg, var(--sg-gold-2) 0%, var(--sg-gold-3) 100%); color: #0E343B; font-weight: 700; box-shadow: 0 8px 20px rgba(233,207,143,0.22); }
         .nav-phone-btn:hover { background: linear-gradient(135deg, #F7E8BF 0%, var(--sg-gold-2) 100%); }
         .mobile-menu-btn { color: #FFFFFF; }
@@ -677,13 +699,16 @@
             .pc-only-menu a.boss-highlight-btn { padding: 5px 10px; }
             .nav-logo-text { height: 20px; }
             .nav-phone-btn { padding: 9px 13px; font-size: 13.5px; }
+            .nav-rental-btn { font-size: 13.5px; padding: 6px 6px; }
         }
+        @media (min-width: 951px) and (max-width: 1180px) { .nav-logo-text { display: none; } }   /* 메뉴가 늘어나 좁은 PC에서는 로고 그림만 */
         @media (min-width: 951px) and (max-width: 1100px) {
             .nav-logo-text { display: none; }
             .pc-only-menu .nav-divider { display: none; }
             .pc-only-menu { gap: 2px; margin-left: 6px; }
             .pc-only-menu a { font-size: 12.5px; padding: 5px 4px; letter-spacing: -0.3px; }
             .nav-phone-btn { padding: 8px 10px; font-size: 12.5px; gap: 4px; }
+            .nav-rental-btn { font-size: 12.5px; padding: 5px 4px; letter-spacing: -0.3px; }
         }
 
         /* 모바일 */
@@ -791,6 +816,14 @@
             <a href="#prov-section-헬로" onclick="scrollToProv(event, '헬로')">LG헬로비전</a>
             <span class="nav-divider">|</span>
             <a href="boss.html" target="_blank" class="boss-highlight-btn">사장님전용</a>
+            <div class="nav-rental" id="navRental">
+                <button type="button" class="nav-rental-btn" aria-haspopup="true" aria-expanded="false" aria-controls="navRentalMenu" onclick="sgRentalToggle(event)">렌탈<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+                <div class="nav-rental-menu" id="navRentalMenu">
+                    <span class="nav-rental-cap">Rental</span>
+                    <a href="#" onclick="sgSoon(event, '정수기 렌탈')"><span>정수기</span><em>준비중</em></a>
+                    <a href="#" onclick="sgSoon(event, '가전가구 렌탈')"><span>가전가구</span><em>준비중</em></a>
+                </div>
+            </div>
             <a href="#" onclick="openGiftPopup(event)">사은품 라인업</a>
         </div>
         <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
@@ -804,6 +837,11 @@
             <a href="#prov-section-헬로" onclick="scrollToProv(event, '헬로'); closeMobileMenu();">LG헬로비전 요금표</a>
             <hr style="border-color:#E2E8F0; margin:5px 0;">
             <a href="boss.html" target="_blank" class="boss-highlight-btn" onclick="closeMobileMenu();">사장님전용</a>
+            <div class="m-rental">
+                <span class="m-rental-cap">렌탈</span>
+                <a href="#" onclick="sgSoon(event, '정수기 렌탈'); closeMobileMenu();"><span>정수기</span><em>준비중</em></a>
+                <a href="#" onclick="sgSoon(event, '가전가구 렌탈'); closeMobileMenu();"><span>가전가구</span><em>준비중</em></a>
+            </div>
             <a href="#" onclick="openGiftPopup(event); closeMobileMenu();">사은품 라인업</a>
         </div>
 
@@ -852,7 +890,7 @@
                     <a href="tel:18332440" class="sg-ghost sg-ghost-call" onclick="if(window.innerWidth > 950) { event.preventDefault(); openPcPhonePopup(event); }">전화 상담 1833-2440</a>
                 </div>
 
-                <div class="sg-carriers sg-a6"><span>SK브로드밴드</span><i></i><span>LG U+</span><i></i><span>KT</span><i></i><span>KT스카이라이프</span><i></i><span>LG헬로비전</span><em>전 통신사 비교 상담</em></div>
+                <div class="sg-carriers sg-a6"><span>SK브로드밴드</span><i></i><span>LG U+</span><i></i><span>KT</span><i></i><span>KT스카이라이프</span><i></i><span>LG헬로비전</span><i></i><span>정수기·가구·가전 렌탈</span><em>전 통신사 비교 상담</em></div>
 
                 <!-- 모바일 전용 퀵 버튼 -->
                 <div class="mobile-quick-btn-zone sg-a6">
@@ -2744,6 +2782,29 @@
                 }, 32);
             }, 1050);
         }
+        // 상단 메뉴 '렌탈': 누르면 펼치기(마우스를 올려도 펼쳐짐) · 바깥을 누르거나 Esc로 닫기
+        window.sgRentalToggle = function (e) {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            var box = document.getElementById('navRental'); if (!box) return;
+            var open = !box.classList.contains('open');
+            box.classList.toggle('open', open);
+            var btn = box.querySelector('.nav-rental-btn'); if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+        function sgRentalClose() { var box = document.getElementById('navRental'); if (box && box.classList.contains('open')) { box.classList.remove('open'); var btn = box.querySelector('.nav-rental-btn'); if (btn) btn.setAttribute('aria-expanded', 'false'); } }
+        document.addEventListener('click', function (e) { var box = document.getElementById('navRental'); if (box && !box.contains(e.target)) sgRentalClose(); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') sgRentalClose(); });
+        // '준비중' 항목: 짧은 안내만 (가볍게)
+        window.sgSoon = function (e, name) {
+            if (e) e.preventDefault();
+            sgRentalClose();
+            var t = document.getElementById('sg-soon-toast');
+            if (!t) { t = document.createElement('div'); t.id = 'sg-soon-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+            t.textContent = name + '은 준비 중이에요. 곧 만나보실 수 있어요.';
+            try { if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); } catch (x) { /* 무시 */ }
+            t.classList.add('show');
+            clearTimeout(window.sgSoonTimer);
+            window.sgSoonTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+        };
         // [최대 지원금 확인하기] → 빠른상담 창으로 이동 후 이름 칸에 커서
         window.sgGoConsult = function (e) {
             if (e) e.preventDefault();
