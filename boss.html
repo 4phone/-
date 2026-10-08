@@ -569,7 +569,7 @@
                 <ul class="lg-points">
                     <li><span>01</span>국세청 조회로 영업 중인 실제 사업자만 입장</li>
                     <li><span>02</span>사장님 전용 프라이빗 단가와 우대 혜택</li>
-                    <li><span>03</span>입력하신 정보는 확인에만 쓰고 저장하지 않아요</li>
+                    <li><span>03</span>입력하신 정보는 확인과 상담 자동 입력에만 쓰고 서버에 저장하지 않아요</li>
                 </ul>
             </div>
             <form class="lg-card" id="lg-form" novalidate>
@@ -624,8 +624,9 @@
             });
         }
         function failCount() { try { var f = JSON.parse(ss(FAIL_KEY) || '{}'); if (!f.t || Date.now() - f.t > 600000) return { n: 0, t: Date.now() }; return f; } catch (e) { return { n: 0, t: Date.now() }; } }
-        function enter() {
+        function enter(nm, no) {
             ss(OK_KEY, '1'); ss(FAIL_KEY, null);
+            try { ss('sg_lounge_biz', JSON.stringify({ bnm: nm, bno: no.slice(0, 3) + '-' + no.slice(3, 5) + '-' + no.slice(5) })); } catch (e) { /* 무시 */ }   // 상담 신청 칸 자동 입력용 (이 창에만, 서버 저장 없음)
             msg.className = 'lg-msg ok'; msg.textContent = '확인되었어요. 사장님, 환영합니다.';
             gate.classList.add('lg-leave');
             setTimeout(function () { body.classList.remove('lg-locked'); gate.classList.remove('lg-leave'); }, 700);
@@ -642,7 +643,7 @@
                 return fetch(url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'bizCheck', bNm: vNm, bNo: vNo }) });
             }).then(function (r) { return r.json(); }).then(function (res) {
                 btn.disabled = false; btn.firstChild.textContent = '입장하기';
-                if (res && res.ok && res.pass) return enter();
+                if (res && res.ok && res.pass) return enter(vNm, vNo);
                 if (res && res.ok === false) {
                     if (res.error === 'not_configured') return show('사업자 확인 서비스를 준비 중이에요. VIP 센터 1833-2440으로 연락 주시면 바로 안내해 드릴게요.');
                     if (res.error === 'busy') return show('확인 요청이 많아요. 잠시 뒤 다시 시도해 주세요.');
@@ -709,7 +710,7 @@
                         <span class="lh-en lh-serif-en">02 · Store</span>
                         <span class="lh-ko">자영업</span>
                         <span class="lh-sub">가게 운영 · 매장 · 음식점</span>
-                        <span class="lh-desc">포스기 · 매장 TV · CCTV까지 한 번에 갖춰 드립니다.</span>
+                        <span class="lh-desc">포스 · 키오스크 · 매장 TV · CCTV까지 한 번에 갖춰 드립니다.</span>
                     </span>
                 </button>
                 <button type="button" class="lh-card" data-biz="다회선" aria-pressed="false">
@@ -740,7 +741,7 @@
             </section>
         </main>
     </div>
-    <!-- 👑 [새 기능] 자영업 맞춤 상담: 인터넷 · 포스기 · TV · CCTV 선택 → 상담 신청 -->
+    <!-- 👑 [새 기능] 자영업 맞춤 상담: 인터넷 · 키오스크 · TV · CCTV 선택 → 상담 신청 -->
     <div id="lh-store" class="lh-modal" role="dialog" aria-modal="true" aria-labelledby="lh-store-title" aria-hidden="true">
         <div class="lh-modal-card">
             <button type="button" class="lh-modal-close" data-close aria-label="닫기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
@@ -755,10 +756,10 @@
                     <span class="lh-opt-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a15 15 0 0 1 20 0"></path><path d="M5 12a10.5 10.5 0 0 1 14 0"></path><path d="M8.5 15.5a5.5 5.5 0 0 1 7 0"></path><circle cx="12" cy="19" r="1"></circle></svg></span>
                     <span class="lh-opt-name">인터넷</span><span class="lh-opt-sub">매장 전용 인터넷</span>
                 </button>
-                <button type="button" class="lh-opt" data-opt="포스기(카드단말기·영수증 출력기)" aria-pressed="false">
+                <button type="button" class="lh-opt" data-opt="키오스크(카드단말기·영수증 출력기)" aria-pressed="false">
                     <span class="lh-opt-box" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></span>
                     <span class="lh-opt-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2"></rect><rect x="8.5" y="5" width="7" height="6" rx="1"></rect><path d="M9 14.5h6M9 17.5h3"></path></svg></span>
-                    <span class="lh-opt-name">포스기</span><span class="lh-opt-sub">카드단말기 · 영수증 출력기</span>
+                    <span class="lh-opt-name">키오스크</span><span class="lh-opt-sub">카드단말기 · 영수증 출력기</span>
                     <span class="lh-opt-flag">무료 혜택</span>
                 </button>
                 <button type="button" class="lh-opt" data-opt="TV" aria-pressed="false">
@@ -774,24 +775,20 @@
             </div>
 
             <div class="lh-kiosk" id="lh-kiosk" aria-live="polite" hidden>
-                <div class="lh-kiosk-head"><span class="lh-serif-en">Kiosk Benefit</span><b>포스기 무료 혜택 안내</b></div>
+                <div class="lh-kiosk-head"><span class="lh-serif-en">Kiosk Benefit</span><b>키오스크 무료 혜택 안내</b></div>
                 <ul>
-                    <li><span class="lh-dot" aria-hidden="true"></span><span><b>단말기 무료</b> — 포스기 · 카드단말기 · 영수증 출력기</span></li>
+                    <li><span class="lh-dot" aria-hidden="true"></span><span><b>단말기 무료</b> — 키오스크 · 카드단말기 · 영수증 출력기</span></li>
                     <li><span class="lh-dot" aria-hidden="true"></span><span><b>이용료 무료</b> — 매달 내는 기기 이용료 부담 없이</span></li>
                 </ul>
                 <p>※ 무료 혜택의 세부 조건(약정 기간 · 결합 상품 등)은 상담 시 정확히 안내해 드립니다.</p>
             </div>
 
             <form class="lh-form" id="lh-store-form" novalidate>
-                <div class="lh-status" role="group" aria-label="매장 상태">
-                    <button type="button" class="lh-status-btn" data-status="신규 매장 준비 중" aria-pressed="true">신규 매장 준비 중</button>
-                    <button type="button" class="lh-status-btn" data-status="매장 운영 중" aria-pressed="false">매장 운영 중</button>
-                </div>
                 <div class="lh-row2">
-                    <label class="lh-field"><span>사장님 성함</span><input id="lh-s-name" type="text" autocomplete="name" maxlength="20" placeholder="성함을 입력해 주세요"></label>
+                    <label class="lh-field"><span>사업자명 (상호)</span><input id="lh-s-name" type="text" autocomplete="organization" maxlength="40" placeholder="상호를 입력해 주세요"></label>
                     <label class="lh-field"><span>휴대폰 번호</span><input id="lh-s-phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="010-0000-0000"></label>
                 </div>
-                <label class="lh-field"><span>사업자등록번호 <em>(선택)</em></span><input id="lh-s-biz" type="text" inputmode="numeric" maxlength="12" placeholder="000-00-00000"></label>
+                <label class="lh-field"><span>사업자등록번호</span><input id="lh-s-biz" type="text" inputmode="numeric" maxlength="12" placeholder="000-00-00000"></label>
                 <label class="lh-agree"><input type="checkbox" id="lh-s-agree"><span><b>[필수]</b> 개인정보 수집 및 이용에 동의합니다. <a href="#" onclick="if (typeof openPrivacyModal === 'function') { event.preventDefault(); openPrivacyModal(); }">내용 보기</a></span></label>
                 <p class="lh-form-msg" id="lh-s-msg" role="alert"></p>
                 <button type="submit" class="lh-submit" id="lh-s-submit" disabled>상담 신청하기</button>
@@ -1906,6 +1903,7 @@
             if (cta.disabled) return;
             if (window.sgBizType === '자영업' && window.sgOpenStore) return window.sgOpenStore();   // 자영업: 전용 상담 창
             if (typeof openQuickModal === 'function') openQuickModal();
+            try { var g = JSON.parse(sessionStorage.getItem('sg_lounge_biz') || 'null') || {}, pb = document.getElementById('popBizNum'); if (g.bno && pb && !pb.value) pb.value = g.bno; } catch (e) { /* 무시 */ }
         });
         // 상품을 고르면 '[사무실] 인터넷 + 전화 팩'처럼 사업장 종류가 함께 기록되게
         if (typeof window.goToQuickStep2 === 'function' && !window.goToQuickStep2.sgWrapped) {
@@ -1918,22 +1916,22 @@
         }
     })();
 
-    /* 👑 자영업 맞춤 상담: 인터넷 · 포스기 · TV · CCTV 여러 개 선택 → 상담 신청 (포스기 고르면 무료 혜택 안내) */
+    /* 👑 자영업 맞춤 상담: 인터넷 · 키오스크 · TV · CCTV 여러 개 선택 → 상담 신청 (키오스크 고르면 무료 혜택 안내) */
     (function () {
         var modal = document.getElementById('lh-store'); if (!modal) return;
         var opts = modal.querySelectorAll('.lh-opt'), kiosk = document.getElementById('lh-kiosk');
         var form = document.getElementById('lh-store-form'), btn = document.getElementById('lh-s-submit'), msg = document.getElementById('lh-s-msg');
         var nameIn = document.getElementById('lh-s-name'), phoneIn = document.getElementById('lh-s-phone'), bizIn = document.getElementById('lh-s-biz'), agree = document.getElementById('lh-s-agree');
-        var statusBtns = modal.querySelectorAll('.lh-status-btn'), lastFocus = null, sending = false;
+        var lastFocus = null, sending = false;
+        function gateBiz() { try { return JSON.parse(sessionStorage.getItem('sg_lounge_biz') || 'null') || {}; } catch (e) { return {}; } }   // 입장할 때 확인한 상호·번호
         function picked() { return [].filter.call(opts, function (o) { return o.getAttribute('aria-pressed') === 'true'; }).map(function (o) { return o.getAttribute('data-opt'); }); }
         function refresh() {
             var p = picked();
-            kiosk.hidden = !p.some(function (x) { return x.indexOf('포스기') === 0; });
+            kiosk.hidden = !p.some(function (x) { return x.indexOf('키오스크') === 0; });
             btn.disabled = !p.length || sending;
             btn.textContent = sending ? '안전하게 접수 중입니다...' : (p.length ? '상담 신청하기 (' + p.length + '개 선택)' : '항목을 선택해 주세요');
         }
         opts.forEach(function (o) { o.addEventListener('click', function () { o.setAttribute('aria-pressed', o.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); msg.textContent = ''; refresh(); }); });
-        statusBtns.forEach(function (b) { b.addEventListener('click', function () { statusBtns.forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); }); });
         [nameIn, phoneIn, bizIn].forEach(function (x) { x.addEventListener('input', function () { x.removeAttribute('aria-invalid'); msg.textContent = ''; }); });
         agree.addEventListener('change', function () { msg.textContent = ''; });   // 고치면 안내 문구 바로 지움
         phoneIn.addEventListener('input', function () { var d = this.value.replace(/\D/g, '').slice(0, 11); this.value = d.length > 7 ? d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7) : d.length > 3 ? d.slice(0, 3) + '-' + d.slice(3) : d; });
@@ -1941,6 +1939,9 @@
         function open() {
             lastFocus = document.activeElement;
             modal.classList.add('open'); modal.setAttribute('aria-hidden', 'false'); document.body.classList.add('lh-modal-open');
+            var g = gateBiz();   // 입장할 때 입력한 상호·사업자번호 자동 입력 (비어 있을 때만, 고칠 수 있음)
+            if (g.bnm && !nameIn.value) nameIn.value = g.bnm;
+            if (g.bno && !bizIn.value) bizIn.value = g.bno;
             refresh();
             setTimeout(function () { try { opts[0].focus(); } catch (e) { /* 무시 */ } }, 60);
         }
@@ -1965,21 +1966,20 @@
             if (sending) return;
             var p = picked(), name = nameIn.value.trim(), phone = phoneIn.value.trim(), biz = bizIn.value.trim();
             if (!p.length) return bad('필요하신 항목을 하나 이상 선택해 주세요.');
-            if (!name) return bad('사장님 성함을 입력해 주세요.', nameIn);
+            if (!name) return bad('사업자명(상호)을 입력해 주세요.', nameIn);
             if (!/^010-\d{4}-\d{4}$/.test(phone)) return bad('휴대폰 번호 11자리를 끝까지 입력해 주세요.', phoneIn);
-            if (biz && !/^\d{3}-\d{2}-\d{5}$/.test(biz)) return bad('사업자등록번호는 10자리를 정확히 입력해 주세요. (선택 항목)', bizIn);
+            if (!/^\d{3}-\d{2}-\d{5}$/.test(biz)) return bad('사업자등록번호 10자리를 입력해 주세요.', bizIn);
             if (!agree.checked) return bad('개인정보 수집 및 이용에 동의해 주세요.');
-            var status = ([].filter.call(statusBtns, function (b) { return b.getAttribute('aria-pressed') === 'true'; })[0] || statusBtns[0]).getAttribute('data-status');
-            var hasKiosk = p.some(function (x) { return x.indexOf('포스기') === 0; });
+            var hasKiosk = p.some(function (x) { return x.indexOf('키오스크') === 0; });
             var data = { type: '사장님 전용 · 자영업 맞춤 상담', name: name, phone: phone,
-                summary: '사업장: 자영업 (가게 운영)\n선택 항목: ' + p.join(', ') + (hasKiosk ? '\n포스기 무료 혜택 안내: 희망' : '') + '\n매장상태: ' + status + '\n사업자번호: ' + (biz || '미입력') };
+                summary: '사업장: 자영업 (가게 운영)\n상호: ' + name + '\n선택 항목: ' + p.join(', ') + (hasKiosk ? '\n키오스크 무료 혜택 안내: 희망' : '') + '\n사업자번호: ' + biz };
             sending = true; refresh(); msg.textContent = '';
             fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(function () {
                 sending = false;
                 trackForm(name, phone);
                 close();
                 opts.forEach(function (o) { o.setAttribute('aria-pressed', 'false'); }); nameIn.value = ''; phoneIn.value = ''; bizIn.value = ''; agree.checked = false; refresh();
-                if (typeof showCustomAlert === 'function') showCustomAlert('VIP 맞춤 상담 접수 완료', '선택 항목: ' + p.join(', ') + '\n성함: ' + name + '\n연락처: ' + phone + '\n\n전담 디렉터가 사장님 매장 환경에 맞춘 구성을 준비해 가장 빠르게 연락드리겠습니다.' + (hasKiosk ? '\n포스기 무료 혜택도 함께 안내해 드릴게요.' : ''));
+                if (typeof showCustomAlert === 'function') showCustomAlert('VIP 맞춤 상담 접수 완료', '선택 항목: ' + p.join(', ') + '\n상호: ' + name + '\n연락처: ' + phone + '\n\n전담 디렉터가 사장님 매장 환경에 맞춘 구성을 준비해 가장 빠르게 연락드리겠습니다.' + (hasKiosk ? '\n키오스크 무료 혜택도 함께 안내해 드릴게요.' : ''));
             }).catch(function () {
                 sending = false; refresh();
                 bad('접수가 완료되지 않았어요. 잠시 뒤 다시 시도하시거나 VIP 센터 1833-2440으로 연락해 주세요.');
