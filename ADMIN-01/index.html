@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8ZCTkAtlDiMHWS2WaT8/McdiQVoMJnGhH2Qc/mAz26A='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rQvpsPDmcSwB51HBYcvSzXk/7s1mt/oAKUmRt7DMQI8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -579,7 +579,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-08.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-08.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -639,6 +639,16 @@
         /* ---------- 저장소: 비밀번호로 암호화해서 이 브라우저에 저장 ---------- */
         function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
         function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+        function devId() {   // 이 기기를 구분하는 무작위 번호 (로그인 기기 수 세기용, 개인정보 아님)
+            var k = 'sageori_admin_device', v = lsGet(k);
+            if (!v || !/^[A-Za-z0-9]{24}$/.test(v)) {
+                var a = new Uint8Array(18); crypto.getRandomValues(a);
+                v = Array.prototype.map.call(a, function (x) { return 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'.charAt(x % 62); }).join('').slice(0, 24);
+                while (v.length < 24) v += 'x';
+                lsSet(k, v);
+            }
+            return v;
+        }
         function lsDel(k) { try { localStorage.removeItem(k); } catch (e) { /* 무시 */ } }
 
         function seedDb() {
@@ -1587,6 +1597,7 @@
             if (!DRIVE_URL_RE.test(url)) return Promise.reject(new Error('url'));
             var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, waitMs || DRIVE_TIMEOUT_MS);
             var base = { action: action };
+            if (action === 'login' || action === 'signup' || action === 'adminInit') base.dev = devId();   // 계정당 기기 3대: 이 기기를 구분하는 번호
             if (db && db.account && db.account.session) base.session = db.account.session;   // 계정 로그인 확인표(서버가 승인된 계정인지 확인)
             var body = JSON.stringify(Object.assign(base, payload || {}));
             return fetch(url, {
@@ -2465,12 +2476,15 @@
             var a = res.account;
             if (a.status !== 'approved') { cryptoKey = null; db = null; uni.pending = { email: email, pw: pw, session: res.session, status: a.status }; lsSet(LAST_EMAIL_KEY, email); render(); return Promise.resolve(); }
             if (!res.keys || !res.keys.wk || !res.keys.encPriv) { uniFail(ui, '이 계정은 보관함이 아직 없어요. 아래 "예전 방식으로 열기"로 한 번 들어가 "계정 보관함 만들기"를 해 주세요.'); return Promise.resolve(); }
-            if (hadLocal && !confirm('이 기기에 저장된 예전 내용은 다른 비밀번호(또는 다른 계정)로 잠겨 있어요.\n지우고 서버에서 새로 받을게요. (내용은 모두 서버에 저장되어 있어요)\n계속할까요?')) { uniFail(ui, '취소했어요.'); return Promise.resolve(); }
+            if (hadLocal) {   // 이 기기의 예전 내용이 다른 비밀번호(또는 다른 계정)용: 묻지 않고 서버 내용으로 새로 받음 (예전 내용은 따로 보관만)
+                try { var od = lsGet(DB_KEY), oa = lsGet(AUTH_KEY); if (od && oa) { lsSet(DB_KEY + '_old', od); lsSet(AUTH_KEY + '_old', oa); } } catch (e) { /* 공간이 모자라면 보관 생략 */ }
+            }
             lsSet(LAST_EMAIL_KEY, email);
             return uniBootstrap(email, pw, res).catch(function () { uniFail(ui, '계정 보관함의 키를 풀지 못했어요. 비밀번호가 맞는지 확인하거나 관리자에게 문의해 주세요.'); });
         }
         function uniDecide(email, pw, S, L, ui) {
             var res = S.res, er = S.er;
+            if (res && res.bumped > 0) setTimeout(function () { toast('한 계정은 기기 3대까지 쓸 수 있어요. 가장 오래 쓰지 않은 기기 ' + res.bumped + '대는 로그아웃됐어요.'); }, 1800);
             if (L.key) {   // 이 기기의 저장 내용이 이 비밀번호로 열림
                 cryptoKey = L.key;
                 return openDb().then(function () {
