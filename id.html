@@ -58,6 +58,8 @@ window.__sgServer.catch(function () {});
     .guide.ok, .guide.ok i { border-color: #F3DFA8; }
     .scan { position: absolute; left: 6%; right: 6%; height: 2px; top: 10%; background: linear-gradient(90deg, rgba(243,223,168,0), #F3DFA8, rgba(243,223,168,0)); animation: scan 2.2s ease-in-out infinite; }
     @keyframes scan { 0%, 100% { top: 10%; } 50% { top: 88%; } }
+    .shoot { position: absolute; left: 50%; bottom: 62px; transform: translateX(-50%); width: 64px; height: 64px; border-radius: 50%; border: 4px solid #FFFFFF; background: rgba(255,255,255,0.25); padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .shoot span { width: 48px; height: 48px; border-radius: 50%; background: #FFFFFF; display: block; }
     .cam-status { position: absolute; left: 12px; right: 12px; bottom: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(5,18,21,0.75); color: #FFFFFF; font-size: 14px; font-weight: 700; text-align: center; }
     .cam-status.ok { background: rgba(201,162,74,0.92); color: #10292E; }
     .cam-start { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 24px; text-align: center; background: rgba(5,18,21,0.72); }
@@ -98,7 +100,7 @@ window.__sgServer.catch(function () {});
     <section class="card info" id="info">
         <div class="hello">사거리인터넷 공식 접수</div>
         <h1><span id="cust-name" class="sk">고객</span>님,<br>신분증 사진을 올려 주세요</h1>
-        <p class="lead">신분증을 흰 틀에 맞추면 <b>자동으로 촬영</b>돼요. 사진은 접수 담당자에게만 전달되며 홈페이지에 저장되지 않아요.</p>
+        <p class="lead">신분증을 흰 틀에 대략 맞추면 <b>자동으로 촬영</b>돼요. 사진은 접수 담당자에게만 전달되며 홈페이지에 저장되지 않아요.</p>
         <div class="trust">
             <div><b>업체</b><span>사거리인터넷<br><small>사업자등록번호 603-54-00909</small></span></div>
             <div><b>담당자</b><span id="staff-name" class="sk">확인 중</span></div>
@@ -116,13 +118,14 @@ window.__sgServer.catch(function () {});
             <video id="video" playsinline muted autoplay></video>
             <div class="cam-shade" id="shade"></div>
             <div class="guide" id="guide"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i><span class="scan" id="scan"></span></div>
+            <button type="button" class="shoot" id="btn-shoot" hidden aria-label="지금 찍기"><span></span></button>
             <div class="cam-status" id="status" aria-live="polite">카메라를 켜는 중이에요...</div>
             <div class="cam-start" id="cam-start" hidden>
                 <button type="button" class="btn btn-main" id="btn-start">신분증 자동 촬영 시작</button>
                 <p>카메라 사용을 허용해 주세요. 신분증을 틀에 맞추면 자동으로 찍혀요.</p>
             </div>
         </div>
-        <ul class="tips"><li>신분증 <b>네 모서리가 흰 틀에 꼭 맞게</b> 맞춰 주세요 (너무 가깝거나 멀면 찍히지 않아요)</li><li>밝은 곳에서 빛 반사 없이, 얼굴 사진과 글자가 또렷하게 보이게 해 주세요</li><li><b>어두운 책상 위</b>에 올려놓고 찍으면 더 빨리 찍혀요</li></ul>
+        <ul class="tips"><li>신분증을 <b>흰 틀에 대략 맞추면</b> 자동으로 찍혀요. 5초가 지나면 <b>흰 동그라미 버튼</b>으로 바로 찍을 수도 있어요</li><li>밝은 곳에서 빛 반사 없이, 얼굴 사진과 글자가 또렷하게 보이게 해 주세요</li><li><b>어두운 책상 위</b>에 올려놓고 찍으면 더 빨리 찍혀요</li></ul>
         <div class="fallback" id="fallback" hidden>
             <p>자동 촬영이 잘 안 되나요?</p>
             <button type="button" class="btn" id="btn-native">기본 카메라로 직접 찍기</button>
@@ -207,75 +210,103 @@ window.__sgServer.catch(function () {});
         x = Math.max(0, x); y = Math.max(0, y); w = Math.min(vw - x, w); h = Math.min(vh - y, h);
         return { x: x, y: y, w: w, h: h };
     }
-    function analyse() {   // 틀 둘레에 신분증 테두리가 딱 맞는지 · 흔들림 · 밝기 · 빛 반사 · 글자(내용) 확인
-        var g = guideRect(), PAD = 0.12, r = toVideo(g, PAD);
-        var W = 300, H = Math.max(40, Math.round(W * r.h / r.w));
+    var lastBox = null;   // 마지막으로 찾은 신분증 테두리 (카메라 영상 좌표)
+    function analyse() {   // 신분증 테두리 찾기(유연하게) · 흔들림 · 밝기 · 빛 반사 · 글자(내용) 확인
+        var g = guideRect(), PAD = 0.25, r = toVideo(g, PAD);
+        var W = 320, H = Math.max(40, Math.round(W * r.h / r.w));
         work.width = W; work.height = H;
         wctx.drawImage(video, r.x, r.y, r.w, r.h, 0, 0, W, H);
         var px = wctx.getImageData(0, 0, W, H).data, n = W * H, gray = new Float32Array(n);
         for (var i = 0, j = 0; i < n; i++, j += 4) gray[i] = 0.299 * px[j] + 0.587 * px[j + 1] + 0.114 * px[j + 2];
-        // 틀의 위치 (작업 그림 안에서)
-        var fx0 = Math.round(W * PAD / (1 + 2 * PAD)), fx1 = W - fx0, fy0 = Math.round(H * PAD / (1 + 2 * PAD)), fy1 = H - fy0;
-        function gy(x, y) { return Math.abs(gray[(y + 1) * W + x] - gray[(y - 1) * W + x]); }
-        function gx(x, y) { return Math.abs(gray[y * W + x + 1] - gray[y * W + x - 1]); }
-        var T = 28;
-        // 테두리 찾기: 틀 바깥쪽 조금(3%)에서 안쪽(9%)으로 들어오며 처음 만나는 선 → 곧게 한 줄로 모여 있고, 선 양쪽 밝기가 달라야 진짜 테두리
-        var outX = Math.max(2, Math.round((fx1 - fx0) * 0.03)), inX = Math.max(3, Math.round((fx1 - fx0) * 0.09));
-        var outY = Math.max(2, Math.round((fy1 - fy0) * 0.04)), inY = Math.max(3, Math.round((fy1 - fy0) * 0.12));
-        function judgeSide(pos, con, tot) {
-            if (!tot || pos.length < tot * 0.5) return 0;
-            var s = pos.slice().sort(function (a, b) { return a - b; }), med = s[s.length >> 1], ok = 0, csum = 0;
-            for (var i = 0; i < pos.length; i++) if (Math.abs(pos[i] - med) <= 2) { ok++; csum += con[i]; }
-            if (!ok || csum / ok < 12) return 0;   // 선 양쪽 밝기 차이가 작으면 글자 줄 등으로 보고 제외
-            return ok / tot;
+        // 작업 그림 안에서 틀의 위치 (영상이 화면 끝까지 꽉 차지 않으면 실제 비율로)
+        var sx = W / r.w, sy = H / r.h, vs = Math.max(g.bw / video.videoWidth, g.bh / video.videoHeight);
+        var fx0 = (g.x / vs - ((g.bw - video.videoWidth * vs) / 2) / vs - r.x) * sx, fx1 = fx0 + (g.w / vs) * sx;
+        var fy0 = (g.y / vs - ((g.bh - video.videoHeight * vs) / 2) / vs - r.y) * sy, fy1 = fy0 + (g.h / vs) * sy;
+        var fw = fx1 - fx0, fh = fy1 - fy0, T = 16;
+        function gyAt(x, y) { return Math.abs(gray[(y + 1) * W + x] - gray[(y - 1) * W + x]); }
+        function gxAt(x, y) { return Math.abs(gray[y * W + x + 1] - gray[y * W + x - 1]); }
+        function lineFit(idx, pos, tot) {   // 기울어져도 되는 곧은 선인지: 앞·뒤 1/3 중앙값으로 선을 긋고 ±3px 안에 든 비율
+            if (pos.length < tot * 0.3) return null;
+            var m = pos.length, a = [], b = [];
+            for (var i = 0; i < m; i++) { if (i < m / 3) a.push(i); else if (i >= 2 * m / 3) b.push(i); }
+            function med(ix, arr) { var v = ix.map(function (k) { return arr[k]; }).sort(function (p, q) { return p - q; }); return v[v.length >> 1]; }
+            var ia = med(a, idx), pa = med(a, pos), ib = med(b, idx), pb = med(b, pos);
+            if (ib === ia) return null;
+            var slope = (pb - pa) / (ib - ia);
+            if (Math.abs(slope) > 0.16) return null;   // 9도보다 많이 기울면 아님
+            var ok = 0, sum = 0, lo2 = 1e9, hi2 = -1e9;
+            for (var k = 0; k < m; k++) { var e = pos[k] - (pa + slope * (idx[k] - ia)); if (Math.abs(e) <= 3) { ok++; sum += pos[k]; if (pos[k] < lo2) lo2 = pos[k]; if (pos[k] > hi2) hi2 = pos[k]; } }
+            var span = Math.abs(slope) * (idx[m - 1] - idx[0]) * 0.25;   // 기울어진 만큼 모서리가 더 나가 있음
+            return { score: ok / tot, at: ok ? sum / ok : 0, lo: lo2 - span, hi: hi2 + span };
         }
-        function sideH(yc, dir) {   // dir: 위 변 +1 (위에서 아래로), 아래 변 -1 (아래에서 위로)
-            var tot = 0, pos = [], con = [], ys = yc - dir * outY, ye = yc + dir * inY;
-            for (var x = fx0 + Math.round((fx1 - fx0) * 0.12); x < fx1 - Math.round((fx1 - fx0) * 0.12); x += 2) {
+        function side(horiz, from, to, a0, a1) {   // from→to 방향으로 들어오며 경계 찾기 (처음 만나는 선 / 가장 강한 선 중 더 곧은 것)
+            var dir = to > from ? 1 : -1, idx = [], firstP = [], strongP = [], tot = 0;
+            var lo = horiz ? 2 : 2, hiLim = horiz ? H - 3 : W - 3;
+            for (var t = Math.round(a0); t < a1; t += 2) {
+                if (t < 2 || t > (horiz ? W - 3 : H - 3)) continue;
                 tot++;
-                for (var y = ys; dir > 0 ? y <= ye : y >= ye; y += dir) {
-                    if (y < 4 || y > H - 5) continue;
-                    if (gy(x, y) > T) { pos.push(y); con.push(Math.abs(gray[(y - 3 * dir) * W + x] - gray[(y + 3 * dir) * W + x])); break; }
+                var first = -1, best = -1, bv = 0;
+                for (var s = Math.round(from); dir > 0 ? s <= to : s >= to; s += dir) {
+                    if (s < lo || s > hiLim) continue;
+                    var v = horiz ? gyAt(t, s) : gxAt(s, t);
+                    if (v > T && first < 0) first = s;
+                    if (v > bv) { bv = v; best = s; }
                 }
+                idx.push(t); firstP.push(first); strongP.push(bv > T ? best : -1);
             }
-            return judgeSide(pos, con, tot);
+            function pick(arr) { var I = [], P = []; for (var i = 0; i < arr.length; i++) if (arr[i] >= 0) { I.push(idx[i]); P.push(arr[i]); } return lineFit(I, P, tot); }
+            var f1 = pick(firstP), f2 = pick(strongP), best2 = f1 && (!f2 || f1.score >= f2.score) ? f1 : f2;
+            return best2 && best2.score >= 0.35 ? best2 : null;
         }
-        function sideV(xc, dir) {   // dir: 왼쪽 +1, 오른쪽 -1
-            var tot = 0, pos = [], con = [], xs = xc - dir * outX, xe = xc + dir * inX;
-            for (var y = fy0 + Math.round((fy1 - fy0) * 0.15); y < fy1 - Math.round((fy1 - fy0) * 0.15); y += 2) {
-                tot++;
-                for (var x = xs; dir > 0 ? x <= xe : x >= xe; x += dir) {
-                    if (x < 4 || x > W - 5) continue;
-                    if (gx(x, y) > T) { pos.push(x); con.push(Math.abs(gray[y * W + x - 3 * dir] - gray[y * W + x + 3 * dir])); break; }
-                }
-            }
-            return judgeSide(pos, con, tot);
-        }
-        var sides = [sideH(fy0, 1), sideH(fy1, -1), sideV(fx0, 1), sideV(fx1, -1)];
-        // 틀 안쪽: 밝기 · 빛 반사 · 선명도(라플라시안) · 글자·사진이 있는지(윤곽 밀도)
-        var ix0 = fx0 + Math.round((fx1 - fx0) * 0.1), ix1 = fx1 - Math.round((fx1 - fx0) * 0.1), iy0 = fy0 + Math.round((fy1 - fy0) * 0.12), iy1 = fy1 - Math.round((fy1 - fy0) * 0.12);
+        var oy = fh * 0.22, iy = fh * 0.3, ox = fw * 0.2, ix = fw * 0.25;
+        var top = side(true, fy0 - oy, fy0 + iy, fx0 + fw * 0.15, fx1 - fw * 0.15);
+        var bot = side(true, fy1 + oy, fy1 - iy, fx0 + fw * 0.15, fx1 - fw * 0.15);
+        var lef = side(false, fx0 - ox, fx0 + ix, fy0 + fh * 0.2, fy1 - fh * 0.2);
+        var rig = side(false, fx1 + ox, fx1 - ix, fy0 + fh * 0.2, fy1 - fh * 0.2);
+        var found = [top, bot, lef, rig].filter(Boolean).length;
+        // 테두리로 신분증 영역 (못 찾은 변은 틀 위치로) → 크기·비율 확인
+        var bx0 = lef ? lef.at : fx0, bx1 = rig ? rig.at : fx1, by0 = top ? top.at : fy0, by1 = bot ? bot.at : fy1;
+        var cw = bx1 - bx0, chh = by1 - by0;
+        // 저장 범위: 찾은 변은 기울기까지 포함한 바깥쪽, 못 찾은 변은 틀보다 조금 더 넓게 (테두리가 잘리지 않게)
+        var cx0 = lef ? lef.lo : fx0 - fw * 0.05, cx1 = rig ? rig.hi : fx1 + fw * 0.05, cy0 = top ? top.lo : fy0 - fh * 0.07, cy1 = bot ? bot.hi : fy1 + fh * 0.07;
+        var small = cw < fw * 0.62 || chh < fh * 0.55, big = cw > fw * 1.28 || chh > fh * 1.32, sizeOk = !small && !big;
+        var hv = (top || bot) && (lef || rig);   // 2변만 찾았으면 가로변 하나 + 세로변 하나(모서리)여야 함
+        var ratioOk = true;
+        if (found === 4) { var ar = cw / chh, want = DOCS[doc].ratio; ratioOk = ar > want * 0.75 && ar < want * 1.3; }
+        // 신분증 안쪽: 밝기 · 빛 반사 · 선명도 · 글자·사진이 있는지
+        var ix0 = Math.max(2, Math.round(bx0 + cw * 0.1)), ix1 = Math.min(W - 2, Math.round(bx1 - cw * 0.1)), iy0 = Math.max(2, Math.round(by0 + chh * 0.12)), iy1 = Math.min(H - 2, Math.round(by1 - chh * 0.12));
         var sum = 0, glare = 0, cnt = 0, lap = 0, lap2 = 0, edges = 0;
         for (var yy = iy0; yy < iy1; yy++) for (var xx = ix0; xx < ix1; xx++) {
-            var p = gray[yy * W + xx]; sum += p; if (p > 248) glare++; cnt++;
+            var p = gray[yy * W + xx]; sum += p; if (p > 250) glare++; cnt++;
             var L = 4 * p - gray[yy * W + xx - 1] - gray[yy * W + xx + 1] - gray[(yy - 1) * W + xx] - gray[(yy + 1) * W + xx];
-            lap += L; lap2 += L * L; if (Math.abs(L) > 40) edges++;
+            lap += L; lap2 += L * L; if (Math.abs(L) > 30) edges++;
         }
+        cnt = Math.max(1, cnt);
         var mean = sum / cnt, sharp = lap2 / cnt - (lap / cnt) * (lap / cnt), dens = edges / cnt;
-        // 흔들림: 직전 화면과 비교 (작게 줄여서)
-        var sig = [], step = Math.max(1, Math.floor((ix1 - ix0) / 24)), stepY = Math.max(1, Math.floor((iy1 - iy0) / 14)), diff = 0;
-        for (var sy = iy0; sy < iy1; sy += stepY) for (var sx = ix0; sx < ix1; sx += step) sig.push(gray[sy * W + sx]);
+        var sig = [], diff = 0;   // 흔들림: 틀 안쪽을 16×10 칸으로 나눠 칸마다 평균 밝기를 직전 화면과 비교 (작은 손떨림·글자 무늬에는 둔하게)
+        var gxN = 16, gyN = 10, cwid = fw * 0.8 / gxN, chei = fh * 0.76 / gyN;
+        for (var gy2 = 0; gy2 < gyN; gy2++) for (var gx2 = 0; gx2 < gxN; gx2++) {
+            var X0 = Math.max(0, Math.round(fx0 + fw * 0.1 + gx2 * cwid)), Y0 = Math.max(0, Math.round(fy0 + fh * 0.12 + gy2 * chei)), ss = 0, nn = 0;
+            for (var yb = Y0; yb < Math.min(H, Y0 + chei); yb += 2) for (var xb = X0; xb < Math.min(W, X0 + cwid); xb += 2) { ss += gray[yb * W + xb]; nn++; }
+            sig.push(nn ? ss / nn : 0);
+        }
         if (prev && prev.length === sig.length) { for (var k = 0; k < sig.length; k++) diff += Math.abs(sig[k] - prev[k]); diff /= sig.length; } else diff = 99;
         prev = sig;
-        return { sides: sides, mean: mean, glare: glare / cnt, sharp: sharp, dens: dens, move: diff };
+        // 저장할 영역: 찾은 테두리 + 여백 7% (테두리가 잘리지 않고, 너무 확대되지 않게)
+        var mx = cw * 0.06, my = chh * 0.07;
+        lastBox = { x: r.x + Math.max(0, cx0 - mx) / sx, y: r.y + Math.max(0, cy0 - my) / sy, x1: r.x + Math.min(W, cx1 + mx) / sx, y1: r.y + Math.min(H, cy1 + my) / sy };
+        return { sides: [top ? top.score : 0, bot ? bot.score : 0, lef ? lef.score : 0, rig ? rig.score : 0], found: found, hv: !!hv, small: small, sizeOk: sizeOk, ratioOk: ratioOk, size: cw / fw, mean: mean, glare: glare / cnt, sharp: sharp, dens: dens, move: diff };
     }
     function judge(a) {
-        var aligned = a.sides.every(function (s) { return s >= 0.55; }), near = a.sides.filter(function (s) { return s >= 0.55; }).length;
-        if (a.mean < 55) return '조금 더 밝은 곳에서 비춰 주세요';
-        if (a.glare > 0.035) return '빛 반사가 있어요. 각도를 살짝 바꿔 주세요';
-        if (!aligned) return near >= 2 ? '신분증 네 모서리를 흰 틀에 꼭 맞춰 주세요' : DOCS[doc].label + '을 흰 틀 안에 맞춰 주세요';
-        if (a.sharp < 150) return '초점을 맞추는 중이에요. 그대로 잠시만요';
-        if (a.dens < 0.02) return '앞면(얼굴 사진과 글자가 있는 면)이 보이게 해 주세요';
-        if (a.move > 7) return '흔들리지 않게 그대로 잠시만요';
+        if (a.mean < 40) return '조금 더 밝은 곳에서 비춰 주세요';
+        if (a.found < 2 || (a.found === 2 && !a.hv)) return DOCS[doc].label + '을 흰 틀 안에 맞춰 주세요';
+        if (!a.sizeOk) return a.small ? '조금 더 가까이 대 주세요' : '조금 더 멀리 떨어뜨려 주세요';
+        if (!a.ratioOk) return DOCS[doc].label + '을 흰 틀 모양에 맞춰 주세요';
+        if (a.found < 3 && Date.now() - startedAt < 3500) return '신분증 테두리가 틀에 보이게 맞춰 주세요';
+        if (a.glare > 0.12) return '빛 반사가 심해요. 각도를 살짝 바꿔 주세요';
+        if (a.sharp < 45) return '초점을 맞추는 중이에요. 그대로 잠시만요';
+        if (a.dens < 0.01) return '앞면(얼굴 사진과 글자가 있는 면)이 보이게 해 주세요';
+        if (a.move > 9) return '흔들리지 않게 그대로 잠시만요';
         return '';
     }
     function tick() {
@@ -284,22 +315,16 @@ window.__sgServer.catch(function () {});
         window.__sgLast = a;   // 시험·점검용
         if (why) { good = 0; setStatus(why); $('guide').classList.remove('ok'); }
         else { good++; setStatus('좋아요! 그대로 유지해 주세요', true); $('guide').classList.add('ok'); }
-        if (good >= 4) faceThenCapture();
-    }
-    var faceBusy = false, faceDet = null;
-    try { if ('FaceDetector' in window) faceDet = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 2 }); } catch (e) { faceDet = null; }
-    function faceThenCapture() {   // 얼굴 인식을 지원하는 기기에서는 얼굴 사진까지 보여야 촬영
-        if (!faceDet) return capture();
-        if (faceBusy) return;
-        faceBusy = true;
-        faceDet.detect(video).then(function (f) {
-            faceBusy = false;
-            if (f && f.length) capture(); else { good = 0; setStatus('얼굴 사진이 잘 보이게 해 주세요'); }
-        }, function () { faceBusy = false; capture(); });
-    }
-    function capture() {   // 틀 + 약간의 여백만 원본 해상도로 저장 (너무 확대되지 않게, 테두리까지 보이게)
+        if (good >= 3) capture();
         if (!stream) return;
-        var g = guideRect(), r = toVideo(g, 0.08), max = 1800, k = Math.min(1, max / r.w);
+        if (Date.now() - startedAt > 5000) $('btn-shoot').hidden = false;   // 5초 지나면 [지금 찍기] 버튼도 보여 줌
+    }
+    function capture(manual) {
+        var auto = !manual;   // 틀 + 약간의 여백만 원본 해상도로 저장 (너무 확대되지 않게, 테두리까지 보이게)
+        if (!stream) return;
+        var g = guideRect(), r = toVideo(g, 0.08);
+        if (lastBox && auto) r = { x: lastBox.x, y: lastBox.y, w: lastBox.x1 - lastBox.x, h: lastBox.y1 - lastBox.y };   // 자동 촬영: 찾은 신분증 + 여백
+        var max = 1800, k = Math.min(1, max / r.w);
         var c = document.createElement('canvas'); c.width = Math.round(r.w * k); c.height = Math.round(r.h * k);
         c.getContext('2d').drawImage(video, r.x, r.y, r.w, r.h, 0, 0, c.width, c.height);
         var data = c.toDataURL('image/jpeg', 0.9);
@@ -317,13 +342,14 @@ window.__sgServer.catch(function () {});
     function startCam() {
         $('cam-start').hidden = true; setStatus('카메라를 켜는 중이에요...');
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { noCam('이 화면에서는 자동 촬영을 쓸 수 없어요. 아래 [기본 카메라로 직접 찍기]를 눌러 주세요.'); return; }
-        navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 2560 }, height: { ideal: 1440 } } }).then(function (s) {
+        navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } }).then(function (s) {
             stream = s; video.srcObject = s;
+            try { var tr = s.getVideoTracks()[0], cap = tr.getCapabilities ? tr.getCapabilities() : {}; if (cap.focusMode && cap.focusMode.indexOf('continuous') >= 0) tr.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(function () {}); } catch (e) { /* 무시 */ }
             var p = video.play(); if (p && p.catch) p.catch(function () { /* 자동 재생 안 되면 아래 버튼 */ });
             startedAt = Date.now(); good = 0; prev = null; placeGuide();
             setStatus(DOCS[doc].label + '을 흰 틀 안에 맞춰 주세요');
-            timer = setInterval(tick, 130);
-            setTimeout(function () { if (stream) $('fallback').hidden = false; }, 15000);   // 15초 안에 안 찍히면 직접 찍기 안내
+            timer = setInterval(tick, 110); $('btn-shoot').hidden = true;
+            setTimeout(function () { if (stream) $('fallback').hidden = false; }, 10000);   // 10초 안에 안 찍히면 직접 찍기 안내
         }, function () { noCam('카메라 사용이 허용되지 않았어요. 허용 후 다시 시도하시거나 아래 [기본 카메라로 직접 찍기]를 눌러 주세요.'); $('cam-start').hidden = false; });
     }
     function noCam(t) { setStatus(t); $('fallback').hidden = false; }
@@ -338,6 +364,7 @@ window.__sgServer.catch(function () {});
     });
     window.addEventListener('resize', function () { if (stream) placeGuide(); });
     $('btn-start').addEventListener('click', startCam);
+    $('btn-shoot').addEventListener('click', function () { if (stream && video.videoWidth) capture(true); });
     $('btn-retake').addEventListener('click', function () { shot = null; $('shot-card').hidden = true; $('send-card').hidden = true; $('cam-card').hidden = false; $('fallback').hidden = true; startCam(); $('cam-card').scrollIntoView({ block: 'start' }); });
     // 기본 카메라(직접 찍기): 자동 촬영이 안 되는 기기용
     function shrink(file) {
