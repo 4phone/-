@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lXtHmi0Q8EpVx/6wp+ehmrHxmkbw4STHLj5Nw9aBVY4='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-PnRqp0rXvQPBXoW0jN7AjkA/GdjQk4RayRtvVZU7maU='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -225,6 +225,24 @@
         .ib-time { font-size: 13px; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
         .ib-kind { font-weight: 800; font-size: 14px; }
         .ib-kind.k-call { color: #2B6CB0; } .ib-kind.k-kakao { color: #8A6D00; } .ib-kind.k-sms { color: #2F855A; } .ib-kind.k-mail { color: #6B46C1; } .ib-kind.k-form { color: #C05621; }
+        /* 신분증 요청 */
+        .idr-form { padding: 18px 18px 16px; margin-bottom: 14px; }
+        .idr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .idr-wide { grid-column: 1 / -1; }
+        .idr-field span { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+        .idr-field input { width: 100%; box-sizing: border-box; }
+        .idr-form-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+        .idr-form-foot p { margin: 0; font-size: 13px; color: var(--muted); }
+        .idr-result { padding: 4px 18px 16px; margin-bottom: 14px; border: 2px solid var(--olive-700); }
+        .idr-msg { width: 100%; box-sizing: border-box; font: inherit; font-size: 14px; line-height: 1.6; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: #FBFCF8; resize: vertical; }
+        .idr-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .idr-row { display: grid; grid-template-columns: 128px minmax(0, 1fr) minmax(0, 1.2fr) 150px; gap: 10px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 14px; }
+        .idr-memo { color: var(--muted); }
+        .idr-st { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+        .idr-st-ready { background: #FFF4D6; color: #8A6400; }
+        .idr-st-done { background: #E3F2E7; color: #1F6B3A; }
+        .idr-st-exp { background: #EEE; color: #666; }
+        @media (max-width: 900px) { .idr-grid { grid-template-columns: minmax(0, 1fr); } .idr-row { grid-template-columns: minmax(0, 1fr) auto; } .idr-row .idr-memo { grid-column: 1 / -1; } }
         /* 엑셀 버튼 · 홈페이지 인입 */
         .xl-group { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
         .xl-label { font-size: 13px; font-weight: 800; color: #1D6F42; margin-right: 2px; }
@@ -544,7 +562,7 @@
         var PALETTE = ['#5C6B1E', '#B58900', '#E64A19', '#00796B', '#3949AB', '#8E3B6B', '#6D4C41', '#455A64'];
         var STATUS = [{ v: 'todo', t: '할 일' }, { v: 'doing', t: '진행 중' }, { v: 'done', t: '완료' }];
         var PRIORITY = [{ v: 'high', t: '높음' }, { v: 'normal', t: '보통' }, { v: 'low', t: '낮음' }];
-        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'calls', t: '콜 인입' }, { v: 'visits', t: '홈페이지 인입' }, { v: 'settings', t: '설정' }];
+        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'calls', t: '콜 인입' }, { v: 'visits', t: '홈페이지 인입' }, { v: 'idreq', t: '신분증 요청' }, { v: 'settings', t: '설정' }];
 
         // 공유 저장소 주소는 반드시 구글 Apps Script 웹 앱 주소여야 합니다 (그 밖의 주소로는 어떤 요청도 보내지 않음)
         var DRIVE_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,200}\/exec$/;
@@ -555,7 +573,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-07.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-08.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -3230,7 +3248,7 @@
         var IB_POLL_MS = 20000;
         function ibFresh() { return { items: [], rev: -1, at: 0, err: '', known: null, busy: false, timer: null, tick: 0, open: Object.create(null), draft: Object.create(null), kind: 'all', todo: false, pend: false, saving: Object.create(null) }; }
         var ib = ibFresh();
-        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); vs = vsFresh(); }   // 잠그면 콜 인입·홈페이지 인입 기록도 지움
+        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); vs = vsFresh(); idrFresh(); }   // 잠그면 콜 인입·홈페이지 인입 기록도 지움
         function ibStart() {   // 로그인하면 시작 (공유 저장소를 쓰는 기기만)
             if (ib.timer || !driveOn()) return;
             ib.timer = setInterval(function () {
@@ -3569,6 +3587,84 @@
                 h('p', { class: 'ib-help' }, '※ 경로는 고객 브라우저가 알려주는 "이전 사이트"와 광고 주소의 utm 표시로 판단해요. 앱 안에서 열거나 주소를 직접 입력하면 "직접 방문"으로 보일 수 있어요. 이름·번호 같은 개인정보는 남기지 않아요.'));
         }
 
+        /* ---------- 신분증 요청: 고객 전용 접수 링크 만들기 → 문자로 보내기 ---------- */
+        var SITE_URL = 'https://www.사거리인터넷.com';   // 고객에게 보내는 공식 홈페이지 주소 (id.html이 있는 곳)
+        var idr = { items: null, busy: false, err: '', last: null };
+        function idrFresh() { idr = { items: null, busy: false, err: '', last: null }; }
+        function idrLoad() {
+            if (!authed || !db || !driveOn() || idr.busy) return;
+            idr.busy = true; var mine = idr;
+            ibCall('idList', {}).then(function (res) {
+                if (mine !== idr) return; idr.busy = false; idr.err = '';
+                idr.items = (Array.isArray(res.items) ? res.items : []).filter(function (x) { return x && typeof x.code === 'string' && typeof x.name === 'string'; });
+                if (state.view === 'idreq') render();
+            }, function (e) { if (mine !== idr) return; idr.busy = false; idr.err = driveErrText(e); if (state.view === 'idreq') render(); });
+        }
+        function idrLink(code) { return SITE_URL + '/id.html?c=' + code; }
+        function idrMessage(name, staff, code, exp) {
+            var d = new Date(exp), until = (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+            return '[사거리인터넷] ' + name + ' 고객님, 안녕하세요.\n방금 상담해 드린 사거리인터넷 담당자 ' + staff + '입니다.\n\n'
+                + '가입 접수를 위해 신분증 사진이 필요합니다.\n아래 사거리인터넷 공식 홈페이지 주소에서 촬영해 올려 주세요.\n\n'
+                + '▶ ' + idrLink(code) + '\n\n'
+                + '· 고객님 전용 주소이며 ' + until + '까지 한 번만 사용할 수 있어요.\n'
+                + '· 의심되시면 대표번호 1833-2440으로 확인 전화 주세요.';
+        }
+        function idrSms(phone, text) { return 'sms:' + phone + '?&body=' + encodeURIComponent(text); }   // 아이폰·갤럭시 모두 문자 앱에 내용이 채워져 열려요
+        function renderIdreq() {
+            var head = h('div', { class: 'page-head' }, h('h1', {}, '신분증 요청'),
+                h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'idr-refresh', onclick: function () { idr.busy = false; idrLoad(); toast('새로 확인하고 있어요.'); } }, '새로고침')));
+            if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '신분증 요청은 구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요.')));
+            if (idr.items === null && !idr.busy && !idr.err) setTimeout(idrLoad, 0);
+            var nameIn = h('input', { type: 'text', id: 'idr-name', maxlength: '20', placeholder: '예) 홍길동', autocomplete: 'off' });
+            var phoneIn = h('input', { type: 'tel', id: 'idr-phone', maxlength: '13', placeholder: '010-0000-0000', inputmode: 'numeric', autocomplete: 'off' });
+            phoneIn.addEventListener('input', function () { var d = this.value.replace(/\D/g, '').slice(0, 11); this.value = d.length > 7 ? d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7) : d.length > 3 ? d.slice(0, 3) + '-' + d.slice(3) : d; });
+            var memoIn = h('input', { type: 'text', id: 'idr-memo', maxlength: '40', placeholder: '예) SK 500M + TV (선택)', autocomplete: 'off' });
+            var makeBtn = h('button', { type: 'submit', class: 'btn btn-primary', 'data-fk': 'idr-make' }, '전용 링크 만들기');
+            var form = h('form', { class: 'panel idr-form', onsubmit: function (e) {
+                e.preventDefault();
+                var nm = nameIn.value.trim(), ph = phoneIn.value.replace(/\D/g, '');
+                if (!nm) { toast('고객 성함을 입력해 주세요.'); nameIn.focus(); return; }
+                if (!/^01\d{8,9}$/.test(ph)) { toast('고객 휴대폰 번호를 확인해 주세요.'); phoneIn.focus(); return; }
+                makeBtn.disabled = true; makeBtn.textContent = '만드는 중...';
+                ibCall('idCreate', { name: nm, phone: ph, memo: memoIn.value.trim() }).then(function (res) {
+                    idr.last = { name: nm, phone: ph, code: res.code, exp: res.exp, text: idrMessage(nm, res.staff || '담당자', res.code, res.exp) };
+                    idr.items = null; idr.busy = false; render(); idrLoad();
+                    toast('고객 전용 링크를 만들었어요. 아래에서 문자로 보내 주세요.');
+                }, function (e) { makeBtn.disabled = false; makeBtn.textContent = '전용 링크 만들기'; toast('링크를 만들지 못했어요. ' + driveErrText(e)); });
+            } },
+                h('div', { class: 'idr-grid' },
+                    h('label', { class: 'idr-field' }, h('span', {}, '고객 성함'), nameIn),
+                    h('label', { class: 'idr-field' }, h('span', {}, '고객 휴대폰'), phoneIn),
+                    h('label', { class: 'idr-field idr-wide' }, h('span', {}, '메모 (선택, 고객에게는 안 보여요)'), memoIn)),
+                h('div', { class: 'idr-form-foot' }, h('p', {}, '고객 전용 주소는 72시간 동안 한 번만 쓸 수 있어요. 사진은 서버에 남기지 않고 관리자 메일로만 보내져요.'), makeBtn));
+            var result = null;
+            if (idr.last) {
+                var L = idr.last, area = h('textarea', { class: 'idr-msg', readonly: true, rows: '9', 'aria-label': '고객에게 보낼 문자 내용' }); area.value = L.text;
+                result = h('div', { class: 'panel idr-result' },
+                    h('div', { class: 'vs-h' }, L.name + ' 고객님께 보낼 문자'),
+                    area,
+                    h('div', { class: 'idr-btns' },
+                        h('a', { class: 'btn btn-primary', 'data-fk': 'idr-sms', href: idrSms(L.phone, L.text) }, '문자로 보내기'),
+                        h('button', { type: 'button', class: 'btn', 'data-fk': 'idr-copy', onclick: function () { copyText(L.text, area).then(function (ok) { toast(ok ? '문자 내용을 복사했어요. 카카오톡 등에 붙여넣어 보내도 돼요.' : '길게 눌러 직접 복사해 주세요.'); }); } }, '내용 복사'),
+                        h('button', { type: 'button', class: 'btn', 'data-fk': 'idr-copy-link', onclick: function () { copyText(idrLink(L.code)).then(function (ok) { toast(ok ? '링크만 복사했어요.' : '복사하지 못했어요.'); }); } }, '링크만 복사')),
+                    h('p', { class: 'ib-help' }, '※ [문자로 보내기]는 휴대폰에서 누르면 문자 앱이 이 내용으로 열려요. 컴퓨터에서는 [내용 복사] 후 보내 주세요.'));
+            }
+            var items = idr.items || [];
+            var ST = { ready: ['대기', 'idr-st-ready'], done: ['접수 완료', 'idr-st-done'], expired: ['만료', 'idr-st-exp'] };
+            var rows = items.map(function (x) {
+                var s = ST[x.state] || ST.ready;
+                return h('div', { class: 'idr-row' }, h('div', { class: 'ib-time' }, ibTime(x.t)),
+                    h('div', { class: 'idr-who' }, h('b', {}, x.name), ' ', mfPhone(x.phone)),
+                    h('div', { class: 'idr-memo' }, (x.memo ? x.memo + ' · ' : '') + '담당 ' + x.staff),
+                    h('div', {}, h('span', { class: 'idr-st ' + s[1] }, s[0] + (x.state === 'done' && x.done ? ' ' + ibTime(x.done) : ''))));
+            });
+            return h('div', {}, head,
+                h('p', { class: 'forms-sub' }, '상담한 고객에게 사거리인터넷 공식 홈페이지의 고객 전용 접수 주소를 보내요. 고객이 신분증을 촬영해 접수하면 관리자 메일로 바로 도착해요.'),
+                form, result,
+                h('div', { class: 'panel vs-panel' }, h('div', { class: 'vs-h' }, '최근 요청 ' + (idr.err ? '(연결 오류: ' + idr.err + ')' : '')),
+                    rows.length ? rows : h('div', { class: 'empty' }, idr.items === null ? '불러오는 중이에요...' : '아직 보낸 요청이 없어요.')));
+        }
+
         /* ---------- 화면: 설정 ---------- */
         function downloadFile(name, text) {
             var url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
@@ -3723,6 +3819,7 @@
             else if (view === 'forms') content = renderForms();
             else if (view === 'calls') { content = renderCalls(); if (!ib.timer && driveOn()) setTimeout(ibStart, 0); }
             else if (view === 'visits') { content = renderVisits(); if (!ib.timer && driveOn()) setTimeout(ibStart, 0); }
+            else if (view === 'idreq') { content = renderIdreq(); }
             else if (view === 'settings') content = renderSettings();
             else content = renderToday();
 
