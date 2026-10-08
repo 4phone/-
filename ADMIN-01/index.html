@@ -2,9 +2,9 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rQvpsPDmcSwB51HBYcvSzXk/7s1mt/oAKUmRt7DMQI8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Wbr3nzbd9lEUorLlYr3MMDAvZQTgjPRDBaT8CAOtuu0='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -504,6 +504,48 @@
             .page-head h1 { font-size: 23px; }
             .main .btn-sm, .main .btn { min-height: 38px; }
         }
+
+        /* ---------- 어느 기기에서든 화면 폭에 딱 맞게 (2026-10-08) ---------- */
+        html, body { max-width: 100%; overflow-x: hidden; }            /* 옆으로 밀리거나 흔들리지 않게 */
+        @supports (overflow: clip) { html, body { overflow-x: clip; } }  /* 고정 메뉴(sticky)는 그대로 동작 */
+        .shell { min-height: 100vh; min-height: 100dvh; max-width: 100%; }
+        .shell > *, .main, .main > * { min-width: 0; }                   /* 긴 글자 때문에 칸이 화면 밖으로 늘어나지 않게 */
+        .main { overflow-wrap: anywhere; }
+        .main img, .main canvas, .main svg, .main video { max-width: 100%; }
+        .rail { height: 100vh; height: 100dvh; }
+        dialog { max-height: calc(100dvh - 24px); overflow: auto; }
+        .dlg-body { max-height: calc(100dvh - 190px); }
+        @media (pointer: coarse) {   /* 손가락으로 쓰는 기기(휴대폰·태블릿): 입력칸을 눌러도 화면이 확대되지 않게 16px 이상 */
+            .shell input:not([type="checkbox"]):not([type="radio"]), .shell select, .shell textarea, dialog input:not([type="checkbox"]):not([type="radio"]), dialog select, dialog textarea, .login input { font-size: max(16px, 1em); }
+        }
+        @media (max-width: 900px), (max-height: 520px) and (orientation: landscape) {
+            /* 휴대폰(세로·가로) 공통 */
+            .shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+            .rail { position: sticky; top: 0; height: auto; z-index: 30; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+                    padding: calc(10px + env(safe-area-inset-top, 0px)) calc(12px + env(safe-area-inset-right, 0px)) 8px calc(12px + env(safe-area-inset-left, 0px)); }
+            .brand { padding: 0; font-size: 17px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .brand small { display: none; }
+            .nav { order: 3; flex: 1 0 100%; flex-direction: row; overflow-x: auto; gap: 4px; padding-bottom: 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
+            .nav::-webkit-scrollbar { display: none; }
+            .nav button { white-space: nowrap; padding: 8px 14px; font-size: 14.5px; flex: none; }
+            .rail-foot { margin: 0 0 0 auto; padding: 0; border: none; display: flex; align-items: center; gap: 8px; min-width: 0; }
+            .rail-foot label { display: none; }
+            .rail-foot select { width: auto; max-width: 118px; padding: 6px 8px; }
+            .rail-foot .btn { padding: 6px 10px; font-size: 13px; }
+            .main { padding: 18px calc(14px + env(safe-area-inset-right, 0px)) calc(28px + env(safe-area-inset-bottom, 0px)) calc(14px + env(safe-area-inset-left, 0px)); max-width: none; }
+            .today-date { font-size: clamp(30px, 9vw, 38px); }
+            .today-date small { font-size: clamp(15px, 4.4vw, 19px); }
+            .board { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+            .page-head h1 { font-size: clamp(20px, 6vw, 23px); }
+            .page-head { align-items: flex-start; }
+            .page-head .actions { flex-wrap: wrap; max-width: 100%; }
+            .main .btn-sm, .main .btn { min-height: 38px; }
+            .main .btn { white-space: normal; text-align: center; }          /* 좁으면 버튼 글자가 잘리지 않고 줄바꿈 */
+            /* 입력칸 글자를 16px로: 아이폰이 입력할 때 화면을 확대해서 옆으로 밀리고 잘리던 문제 방지 */
+            input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: 16px; }
+            .rail-foot select { font-size: 16px; padding: 5px 8px; }
+            .toast { left: 12px; right: 12px; transform: none; max-width: none; text-align: center; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
+        }
         @media (max-width: 1100px) {   /* 표가 좁아지면 한 줄씩 카드 모양으로 */
             .t-head { display: none; }
             .t-num { display: none; }
@@ -579,7 +621,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-08.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-08.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -3903,7 +3945,11 @@
                 if (keepSel && keepSel[0] != null) { try { keepEl.setSelectionRange(keepSel[0], keepSel[1]); } catch (e) { /* 체크 칸 등 */ } }
             }
             if (isMf && window.scrollY !== keepY) window.scrollTo(0, keepY);
-            if (fk) { var again = document.querySelector('[data-fk="' + fk + '"]'); if (again) again.focus(); }
+            if (fk) { var again = document.querySelector('[data-fk="' + fk + '"]'); if (again) again.focus({ preventScroll: true }); }
+            try {   // 휴대폰: 위쪽 메뉴에서 지금 보고 있는 메뉴가 화면 밖으로 잘려 있으면 보이게 옆으로 맞춤
+                var nv = document.querySelector('.rail .nav'), cur = nv && nv.querySelector('[aria-current="page"]');
+                if (nv && cur && nv.scrollWidth > nv.clientWidth) { var l = cur.offsetLeft - nv.offsetLeft, r = l + cur.offsetWidth; if (l < nv.scrollLeft + 8 || r > nv.scrollLeft + nv.clientWidth - 8) nv.scrollLeft = Math.max(0, l - (nv.clientWidth - cur.offsetWidth) / 2); }
+            } catch (e) { /* 무시 */ }
         }
 
         /* ---------- 시작 ---------- */
