@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8/uMvaMWowH9CYMT0HH670duq4zO41hY+g/YB3dE70Q='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-uCRtCXBpQKwYypWzuoCNhX1UMLSW2D5/Y9o4nn4a8Kw='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -562,6 +562,14 @@
             .mf-tools .actions, .mf-tools .actions .btn { width: 100%; }
         }
         #mf-print { display: none; }
+        #idle-dlg { width: min(420px, 92vw); text-align: center; }
+        #idle-dlg .idle-in { padding: 24px 22px 20px; display: grid; gap: 10px; }
+        #idle-dlg h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.5px; }
+        #idle-dlg p { color: var(--muted); font-size: 14.5px; }
+        #idle-dlg b.idle-n { color: var(--orange); font-size: 17px; }
+        #idle-dlg .actions { display: flex; gap: 8px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
+        #idle-dlg .btn { min-width: 120px; min-height: 46px; }
+        .ver-note { border-left-color: var(--blue) !important; background: #EEF3FF !important; color: #1E3A8A !important; }
         @media print {   /* [인쇄] 버튼: 저장 그림(A4)과 똑같은 그림을 그대로 인쇄 — 태블릿·휴대폰에서도 화면 배치와 상관없이 A4 한 장 */
             html.mf-pi body > *:not(#mf-print) { display: none !important; }
             html.mf-pi #mf-print { display: block !important; margin: 0; padding: 0; }
@@ -670,6 +678,7 @@
     <div id="boot-msg" class="boot-msg">관리자 화면을 불러오는 중입니다. 이 문구가 계속 보이면 자바스크립트가 꺼져 있거나, admin.html 파일 내용이 중간에 바뀐 것일 수 있어요. 브라우저를 최신으로 바꾸고 파일을 처음 받은 그대로 다시 올려 주세요.</div>
     <div id="app"></div>
     <dialog id="dlg"></dialog>
+    <dialog id="idle-dlg" aria-labelledby="idle-title"></dialog>
     <div id="mf-print" aria-hidden="true"></div>
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
@@ -700,7 +709,8 @@
         var ME_KEY = 'sageori_admin_me_v1';          // "내 이름" 선택 (직원 번호만 저장, 내용 없음)
         var LEGACY_DB_KEY = 'sageori_admin_db_v1';   // 이전 버전(암호화 전) 저장 위치: 있으면 암호화해서 옮김
         var LEGACY_AUTH_KEY = 'sageori_admin_auth_v1';
-        var IDLE_MS = 15 * 60 * 1000;                // 15분 동안 아무 조작이 없으면 자동 잠금
+        var IDLE_MS = 30 * 60 * 1000;                // 30분 동안 아무 조작이 없으면 [유지하기] 안내
+        var IDLE_GRACE_MS = 60 * 1000;               // 안내 뒤 1분 안에 [유지하기]를 안 누르면 잠금
         var KDF_ITER = 600000;                       // 비밀번호 → 암호키 변환 반복 횟수 (클수록 무차별 대입에 강함)
         var MIN_PW = 10;                             // 비밀번호 최소 길이
         var LOCK_STEPS = [30, 60, 300, 900];         // 5번 틀릴 때마다 잠금 시간(초): 30초, 1분, 5분, 15분
@@ -728,7 +738,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-09.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-09.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1021,9 +1031,35 @@
             state.view = 'today'; state.who = 'all'; state.status = 'all'; state.date = ''; state.open = Object.create(null);
             var d = document.getElementById('dlg'); if (d.open) closeDlg(); else d.textContent = '';
             var t = document.getElementById('toast'); t.hidden = true; t.textContent = '';
-            clearTimeout(idleTimer); render();
+            clearTimeout(idleTimer); idleHide(); render();
         }
-        function resetIdle() { clearTimeout(idleTimer); if (authed) idleTimer = setTimeout(lock, IDLE_MS); }
+        var lastAct = Date.now();
+        function idleHide() { var d = document.getElementById('idle-dlg'); if (d && d.open) { try { d.close(); } catch (e) { d.removeAttribute('open'); } } if (d) d.textContent = ''; }
+        function idleShow(left) {   // 30분 동안 조작이 없으면: [유지하기] 안내 (1분 안에 안 누르면 잠금)
+            var d = document.getElementById('idle-dlg'), n = Math.max(0, Math.ceil(left / 1000));
+            var num = d.querySelector('.idle-n');
+            if (d.open && num) { num.textContent = n + '초'; return; }
+            d.textContent = '';
+            d.appendChild(h('div', { class: 'idle-in' },
+                h('h2', { id: 'idle-title' }, Math.round(IDLE_MS / 60000) + '분 동안 사용하지 않았어요'),
+                h('p', {}, h('b', { class: 'idle-n' }, n + '초'), ' 뒤에 자동으로 잠겨요. 계속 쓰려면 [유지하기]를 눌러 주세요.'),
+                h('div', { class: 'actions' },
+                    h('button', { type: 'button', class: 'btn', 'data-act': 'idle-lock', onclick: function () { idleHide(); lock(); } }, '지금 잠그기'),
+                    h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'idle-keep', onclick: function () { resetIdle(); toast('계속 사용할 수 있어요. (' + Math.round(IDLE_MS / 60000) + '분 연장)'); } }, '유지하기'))));
+            try { if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', ''); } catch (e) { d.setAttribute('open', ''); }
+            var keep = d.querySelector('[data-act="idle-keep"]'); if (keep) keep.focus();
+        }
+        function idleCheck() {
+            clearTimeout(idleTimer);
+            if (!authed) { idleHide(); return; }
+            var gone = Date.now() - lastAct;
+            if (gone >= IDLE_MS + IDLE_GRACE_MS) { idleHide(); lock(); return; }   // 기기가 잠들어 있던 경우 등: 안내 시간까지 지났으면 바로 잠금
+            if (gone >= IDLE_MS) { idleShow(IDLE_MS + IDLE_GRACE_MS - gone); idleTimer = setTimeout(idleCheck, 1000); return; }
+            idleTimer = setTimeout(idleCheck, Math.min(IDLE_MS - gone, 60000));
+        }
+        function resetIdle() { lastAct = Date.now(); idleHide(); clearTimeout(idleTimer); if (authed) idleTimer = setTimeout(idleCheck, 60000); }
+        document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible' && authed) idleCheck(); });
+        document.getElementById('idle-dlg').addEventListener('cancel', function (e) { e.preventDefault(); resetIdle(); });   // Esc = 유지하기
         ['click', 'keydown', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, resetIdle, { passive: true }); });
 
         function renderLogin() {
@@ -2226,6 +2262,30 @@
 
         /* --- 화면: 상단 안내 / 설정의 공유 저장소 --- */
         function fmtClock(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+        /* ---------- 새 화면(버전) 알림: 하루 종일 켜 둔 기기도 새로 올린 화면으로 바꾸게 ---------- */
+        var newVer = '';
+        function verNum(v) { var m = /^(\d{4})-(\d{2})-(\d{2})\.(\d+)$/.exec(v || ''); return m ? (+m[1]) * 1e8 + (+m[2]) * 1e6 + (+m[3]) * 1e4 + (+m[4]) : 0; }
+        function checkVersion() {
+            if (location.protocol === 'file:' || !window.fetch) return;
+            fetch(location.pathname + '?vc=' + Date.now(), { cache: 'no-store', credentials: 'same-origin' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
+                var m = /var APP_VERSION = '([^']+)'/.exec(t || ''), v = m ? m[1] : '';
+                if (!v || verNum(v) <= verNum(APP_VERSION) || v === newVer) return;
+                if (!authed) { location.reload(); return; }   // 로그인 전이면 바로 새 화면으로
+                newVer = v; render();
+            }).catch(function () { /* 다음에 다시 확인 */ });
+        }
+        function verNote() {
+            if (!newVer) return null;
+            return h('div', { class: 'mode-note ver-note', 'data-note': 'newver' }, h('span', {}, h('b', {}, '새 화면이 올라왔어요 '), '새로고침하면 새 기능이 보여요. (다시 로그인해야 해요)'),
+                h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'reload', onclick: function () {
+                    var writing = Object.keys(mforms).some(function (k) { return mforms[k]; });
+                    if (writing && !confirm('작성 중인 가입 확인서는 지워져요. 지금 새로고침할까요?')) return;
+                    location.reload();
+                } }, '지금 새로고침'));
+        }
+        setTimeout(checkVersion, 4000);
+        setInterval(checkVersion, 5 * 60 * 1000);
+        document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') checkVersion(); });
         function driveBanner() {
             var st = driveState;
             if (!driveOn()) {
@@ -4408,7 +4468,7 @@
                         ? h('div', { class: 'rail-foot' }, h('label', {}, '로그인 중'), h('div', { class: 'me-fixed', 'data-fixed-me': 'yes' }, staffName(me)), h('div', { class: 'acct-email' }, db.account.email),
                             h('button', { type: 'button', class: 'btn btn-sm', onclick: acctLogout }, '로그아웃'), h('button', { type: 'button', class: 'btn btn-sm', onclick: lock }, '잠그기'))
                         : h('div', { class: 'rail-foot' }, h('label', { for: 'me-sel' }, '내 이름'), meSel, h('button', { type: 'button', class: 'btn btn-sm', onclick: lock }, '잠그기'))),
-                h('main', { class: 'main' }, appWarn, pendingNote(), note, content, driveFooter())));
+                h('main', { class: 'main' }, appWarn, verNote(), pendingNote(), note, content, driveFooter())));
             mfMoving = false;
             if (keepEl && keepEl.isConnected) {
                 try { keepEl.focus({ preventScroll: true }); } catch (e) { keepEl.focus(); }
