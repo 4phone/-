@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-AHVc4TC5sfRsgvYihAS3l4aImVgttOuhi98nchBt9ug='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0wYfBLFHzJhPXNmRWTwhWRmtsmro7gViTkZm6BfdsPU='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -509,6 +509,43 @@
         .btn.saved { background: #2F855A; border-color: #2F855A; color: #fff; }   /* 드라이브 저장 완료 */
         .btn.edited { background: #DD6B20; border-color: #DD6B20; color: #fff; }   /* 저장 후 고침 → 수정 저장 */
         .mf-replace-file { font-weight: 800; background: #F1F4E6; padding: 8px 12px; border-radius: 8px; word-break: break-all; }
+        .mf-dealer { display: flex; justify-content: flex-end; }   /* 접수처: 고객등록번호 아래 */
+        .mf-dealer .mf-ddlist { left: auto; right: 0; }
+        /* ---------- A4 한 장: 화면(PC) · 드라이브 저장 그림 · 인쇄 모두 같은 모양 (가로:세로 = 210:297) ---------- */
+        @media (min-width: 701px), print {
+            .mf-sheet { padding: 18px 24px 12px; font-size: 13px; aspect-ratio: 210 / 297; display: flex; flex-direction: column; }
+            .mf-sheet .mf-copy { margin-top: auto; padding-top: 6px; }
+            .mf-sheet .mf-in { font-size: 14px; padding: 1px 3px; line-height: 1.25; }
+            .mf-sheet .mf-area, .mf-sheet .mf-area.memo { min-height: 30px; padding: 2px 4px; resize: none; }
+            .mf-sheet .mf-cell { padding: 2px 8px; gap: 3px 6px; }
+            .mf-sheet .mf-ck { padding: 0; } .mf-sheet .mf-ck input { width: 16px; height: 16px; }
+            .mf-sheet .mf-sec { margin-top: 4px; } .mf-sheet .mf-info { margin-top: 1px; font-size: 11.5px; }
+            .mf-sheet .mf-type { margin: 6px 0 3px; } .mf-sheet .mf-title { margin-top: 2px; } .mf-sheet .mf-title b { font-size: 30px; } .mf-sheet .mf-title span { font-size: 17px; }
+            .mf-sheet .mf-terms { margin-top: 6px; padding: 5px 10px 5px 28px; font-size: 11.5px; line-height: 1.38; } .mf-sheet .mf-terms li.big { font-size: 13px; }
+            .mf-sheet .mf-fine { padding: 4px 8px; font-size: 10.5px; line-height: 1.3; }
+            .mf-sheet .mf-agree { padding: 6px 10px; }
+            .mf-sheet .mf-sign { height: 46px; } .mf-sheet .mf-sign img { max-height: 40px; } .mf-sheet .mf-sign.agree { height: 40px; }
+            .mf-sheet .mf-foot > div { min-height: 56px; }
+            .mf-sheet .mf-lab, .mf-sheet .mf-sub { padding: 4px; }
+            .mf-sheet .mf-gline { padding: 3px 10px; }
+        }
+        /* 휴대폰에서 만든 저장 그림도 같은 A4 모양 */
+        .mf-sheet.mf-snap .mf-in { font-size: 14px !important; }
+        .mf-sheet.mf-snap { padding: 18px 24px 12px; font-size: 13px; aspect-ratio: 210 / 297; display: flex; flex-direction: column; }
+        .mf-sheet.mf-snap .mf-copy { margin-top: auto; padding-top: 6px; }
+        .mf-sheet.mf-snap .mf-in { font-size: 14px; padding: 1px 3px; line-height: 1.25; }
+        .mf-sheet.mf-snap .mf-area, .mf-sheet.mf-snap .mf-area.memo { min-height: 30px; padding: 2px 4px; resize: none; }
+        .mf-sheet.mf-snap .mf-cell { padding: 2px 8px; gap: 3px 6px; }
+        .mf-sheet.mf-snap .mf-ck { padding: 0; } .mf-sheet.mf-snap .mf-ck input { width: 16px; height: 16px; }
+        .mf-sheet.mf-snap .mf-sec { margin-top: 4px; } .mf-sheet.mf-snap .mf-info { margin-top: 1px; font-size: 11.5px; }
+        .mf-sheet.mf-snap .mf-type { margin: 6px 0 3px; } .mf-sheet.mf-snap .mf-title { margin-top: 2px; } .mf-sheet.mf-snap .mf-title b { font-size: 30px; } .mf-sheet.mf-snap .mf-title span { font-size: 17px; }
+        .mf-sheet.mf-snap .mf-terms { margin-top: 6px; padding: 5px 10px 5px 28px; font-size: 11.5px; line-height: 1.38; } .mf-sheet.mf-snap .mf-terms li.big { font-size: 13px; }
+        .mf-sheet.mf-snap .mf-fine { padding: 4px 8px; font-size: 10.5px; line-height: 1.3; }
+        .mf-sheet.mf-snap .mf-agree { padding: 6px 10px; }
+        .mf-sheet.mf-snap .mf-sign { height: 46px; } .mf-sheet.mf-snap .mf-sign img { max-height: 40px; } .mf-sheet.mf-snap .mf-sign.agree { height: 40px; }
+        .mf-sheet.mf-snap .mf-foot > div { min-height: 56px; }
+        .mf-sheet.mf-snap .mf-lab, .mf-sheet.mf-snap .mf-sub { padding: 4px; }
+        .mf-sheet.mf-snap .mf-gline { padding: 3px 10px; }
         @media (max-width: 700px) {   /* .mf-snap(복사보고 이미지)은 PC 배치 그대로 */
             .mf-sheet:not(.mf-snap) { padding: 16px 12px 12px; border-radius: 10px; }
             .mf-sheet:not(.mf-snap) .mf-title b { font-size: 30px; letter-spacing: 3px; } .mf-sheet:not(.mf-snap) .mf-title span { font-size: 16px; }
@@ -530,21 +567,11 @@
             .sh-form .rail, .sh-form .main > :not(.mf-page), .sh-form .mf-page > .page-head, .mf-tools, .toast, dialog, .mf-sign small, .mf-chips, .mf-dd, .mf-ddlist { display: none !important; }
             body:has(.sh-form) { background: #fff; }
             .sh-form .main { padding: 0; max-width: none; display: block; }
-            .mf-sheet { border: none; border-radius: 0; padding: 0; width: 1000px; max-width: none; margin: 0; zoom: .73; font-size: 13px; }   /* PC 화면 배치 그대로 A4 한 장에 */
+            .mf-sheet { border: none; border-radius: 0; width: 960px; max-width: none; margin: 0; zoom: var(--mfz, .76); }   /* 화면과 같은 A4 모양 그대로 한 장에 (960px → 194mm) */
             .mf-sheet, .mf-sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            .mf-sheet .mf-in { font-size: 14px; padding: 1px 3px; border-bottom-color: #AAA; }
+            .mf-sheet .mf-in { border-bottom-color: #AAA; font-size: 14px !important; }
             .mf-sheet .mf-in::placeholder { color: transparent; }
-            .mf-sheet .mf-area, .mf-sheet .mf-area.memo { min-height: 30px; padding: 2px 4px; resize: none; }
-            .mf-cell { padding: 3px 8px; gap: 3px 6px; }
-            .mf-ck { padding: 0; } .mf-ck input { width: 16px; height: 16px; }
-            .mf-sec { margin-top: 5px; } .mf-info { margin-top: 2px; font-size: 11.5px; }
-            .mf-type { margin: 8px 0 4px; } .mf-title { margin-top: 4px; } .mf-title b { font-size: 34px; }
-            .mf-terms { margin-top: 6px; padding: 5px 10px 5px 28px; font-size: 12px; line-height: 1.45; }
-            .mf-fine { padding: 4px 8px; font-size: 10.5px; line-height: 1.35; }
-            .mf-agree { padding: 6px 10px; }
-            .mf-sign { height: 52px; border: 1px solid #CCC; background: #fff; } .mf-sign img { max-height: 46px; }
-            .mf-foot > div { min-height: 64px; }
-            .mf-copy { margin-top: 6px; }
+            .mf-sign { border: 1px solid #CCC; background: #fff; }
             .mf-sec, .mf-terms, .mf-foot, .mf-agree { break-inside: avoid; }
         }
 
@@ -678,7 +705,7 @@
         var REG_LONG = { plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120 };
         var REG_MANUAL = { price: 1, memo: 1 };   // 장부에서만 적는 칸 (확인서를 다시 저장해도 지우지 않음)
         var REG_COLS = [   // 장부 엑셀 순서 그대로 (한 줄 복사)
-            ['순번', null], ['모바일&유선', function (r) { return r.kind === 'mobile' ? '모바일' : '유선'; }], ['담당자', 'seller'], ['거래처', 'dealer'], ['통신사', 'carrier'],
+            ['모바일&유선', function (r) { return r.kind === 'mobile' ? '모바일' : '유선'; }], ['담당자', 'seller'], ['거래처', 'dealer'], ['통신사', 'carrier'],
             ['가입날짜', function (r) { return parseInt(r.date.slice(8), 10) + '일'; }], ['모델', 'model'], ['일련번호', 'serial'], ['번호', 'phone'], ['고객명', 'name'], ['생년월일', 'birth'],
             ['공시&선약(프약)', 'disc'], ['공시금액', 'subsidy'], ['할부원금', 'price'], ['할부개월', 'months'], ['요금제', 'plan'], ['부가서비스', 'extra'], ['보험가입여부(종류)', 'ins'],
             ['결합종류', 'combKind'], ['결합여부', 'comb'], ['요금제유지개월', 'keep'], ['변경요금제', 'plan2'], ['가입후요금', 'bill1'], ['3개월후 요금', 'bill2'], ['이전사업자', 'prev'], ['가입유형', 'type']];
@@ -693,7 +720,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-09.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-09.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2928,9 +2955,9 @@
                 return [
                     h('div', { class: 'mf-top' },
                         h('div', {},
-                            h('div', { class: 'mf-use' }, h('span', { class: 'mf-pill' }, '인터넷'), '(', K.combo('netUse', '접수처', [DEALERS], { cls: 'short', max: 20, click: true }), ')이용중'),
                             h('div', { class: 'mf-title' }, h('b', {}, '가입 확인서'), h('span', {}, sub))),
-                        h('div', { class: 'mf-top-r' }, h('div', { class: 'mf-shop' }, shop), h('div', { class: 'mf-cust' }, k('고객등록번호 :'), inp('custNo', '고객등록번호 앞자리 (뒤 70001401은 고정)', { max: 12 }), h('span', { class: 'mf-fixno', 'data-fixno': '70001401' }, '70001401')))),
+                        h('div', { class: 'mf-top-r' }, h('div', { class: 'mf-shop' }, shop), h('div', { class: 'mf-cust' }, k('고객등록번호 :'), inp('custNo', '고객등록번호 앞자리 (뒤 70001401은 고정)', { max: 12 }), h('span', { class: 'mf-fixno', 'data-fixno': '70001401' }, '70001401')),
+                            h('div', { class: 'mf-dealer' }, K.combo('netUse', '접수처', [DEALERS], { cls: 'short', max: 20, click: true, ph: '접수처' })))),
                     h('div', { class: 'mf-type' }, h('b', {}, '유형 선택'), types)];
             };
             return K;
@@ -3291,6 +3318,24 @@
         }
 
         /* ---------- 복사보고: 작성한 가입 확인서를 그림으로 복사 (카카오톡·텔레그램에 붙여넣기) ---------- */
+        var A4R = 297 / 210;
+        function mfA4(cv, W, H, S) {   // 내용이 길어 A4보다 길어지면, A4 한 장 크기 안에 줄여서 가운데에 (그림 모양은 항상 A4)
+            var PH = Math.round(W * A4R);
+            if (H <= PH + 2) return cv;
+            var f = PH / H, out = document.createElement('canvas'); out.width = W * S; out.height = PH * S;
+            var g = out.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, out.width, out.height);
+            var dw = W * S * f; g.drawImage(cv, (out.width - dw) / 2, 0, dw, out.height);
+            return out;
+        }
+        function mfPrintFit(on) {   // 인쇄: 내용이 길어도 A4 한 장에 들어가게 비율만 줄임
+            [].forEach.call(document.querySelectorAll('.mf-sheet'), function (sh) {
+                if (!on || window.innerWidth <= 700 || !sh.offsetWidth) { sh.style.removeProperty('--mfz'); return; }
+                var ratio = sh.scrollHeight / (sh.offsetWidth * A4R);
+                if (ratio > 1.002) sh.style.setProperty('--mfz', String(Math.floor(76 / ratio) / 100)); else sh.style.removeProperty('--mfz');
+            });
+        }
+        window.addEventListener('beforeprint', function () { mfPrintFit(true); });
+        window.addEventListener('afterprint', function () { mfPrintFit(false); });
         function mfSnapshot(sheet) {   // 화면에 보이는 양식을 그대로 그림으로 (휴대폰에서도 PC 배치로)
             var ae = document.activeElement, sy = window.scrollY; if (ae && sheet.contains(ae) && ae.blur) ae.blur();
             sheet.classList.add('mf-snap');
@@ -3382,7 +3427,7 @@
                     }
                     [].forEach.call(el.childNodes, function (n) { if (n.nodeType === 3) paintText(n, cs); else if (n.nodeType === 1) walk(n); });
                 })(sheet);
-                return cv;
+                return mfA4(cv, W, H, S);
             } finally { sheet.classList.remove('mf-snap'); if (window.scrollY !== sy) window.scrollTo(0, sy); }
         }
         function mfCopyReport(sheet, prefix) {
