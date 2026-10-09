@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ugUH7rZauamUzuXE1BkXRKIzyA/QNU/qoQM0057f+wY='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-AHVc4TC5sfRsgvYihAS3l4aImVgttOuhi98nchBt9ug='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -123,7 +123,40 @@
         .acct-badge { display: inline-block; margin-left: 8px; font-size: 12px; font-weight: 800; border-radius: 4px; padding: 1px 7px; vertical-align: middle; }
         .acct-badge.ok { background: #DDF0DD; color: #1F6B2A; } .acct-badge.wait { background: #FFF3BF; color: #7A5B00; } .acct-badge.off { background: #E4E6DD; color: #5F6A4F; }
         .forms-sub { color: var(--muted); margin: 0 0 18px; }
-        .forms-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+        .forms-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+        .forms-col { display: grid; gap: 14px; min-width: 0; }
+        /* 가입 장부 · 거래처별 개통 확인 */
+        .reg-box { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 14px 10px; min-width: 0; }
+        .reg-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .reg-head h2 { font-size: 17px; font-weight: 800; letter-spacing: -0.5px; margin-right: auto; }
+        .reg-head small { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+        .reg-months { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: thin; }
+        .reg-months .btn { flex: none; }
+        .reg-months .btn[aria-pressed="true"] { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .reg-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 9px 2px; border-top: 1px solid var(--line); }
+        .reg-n { font-weight: 800; color: var(--olive-700); text-align: center; font-size: 14px; }
+        .reg-main { min-width: 0; }
+        .reg-main b { font-size: 14.5px; }
+        .reg-kind { display: inline-block; font-size: 11.5px; font-weight: 800; border-radius: 4px; padding: 0 6px; margin-right: 6px; vertical-align: 1px; }
+        .reg-kind.mobile { background: #E6EEFF; color: #2F55B8; } .reg-kind.wired { background: #E5F3E6; color: #1F6B2A; }
+        .reg-sub { display: block; font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+        .reg-act { display: flex; gap: 6px; }
+        .reg-empty { padding: 18px 4px; color: var(--muted); font-size: 13.5px; border-top: 1px solid var(--line); }
+        .dl-grp { border-top: 2px solid var(--olive-100); padding-top: 8px; margin-top: 6px; }
+        .dl-grp:first-of-type { border-top: none; margin-top: 0; }
+        .dl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+        .dl-head h3 { font-size: 16px; font-weight: 800; margin-right: auto; }
+        .dl-head h3 small { font-size: 12.5px; color: var(--muted); font-weight: 600; margin-left: 6px; }
+        .dl-row { display: grid; grid-template-columns: 50px minmax(0, 1fr) auto 140px; gap: 6px 8px; align-items: center; padding: 8px 2px; border-top: 1px solid var(--line); }
+        .dl-row.inst { background: #F6FAF3; }
+        .dl-row.inst .dl-name { color: var(--muted); }
+        .dl-date { font-size: 13px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+        .dl-name { background: none; border: none; padding: 0; font: inherit; font-weight: 700; font-size: 14.5px; text-align: left; color: var(--ink); cursor: pointer; overflow-wrap: anywhere; }
+        .dl-name:hover { text-decoration: underline; }
+        .dl-chk { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .dl-row input[type="date"] { padding: 5px 6px; font-size: 13px; }
+        .dl-memo { grid-column: 2 / -1; padding: 6px 9px; font-size: 13px; }
+        @media (max-width: 520px) { .dl-row { grid-template-columns: 44px minmax(0, 1fr) auto; } .dl-row input[type="date"] { grid-column: 2 / -1; } }
         .form-card { display: grid; gap: 6px; text-align: left; padding: 28px 24px; min-height: 130px; background: #fff; border: 2px solid var(--line); border-radius: 12px; cursor: pointer; font: inherit; color: var(--ink); }
         .form-card b { font-size: 21px; font-weight: 800; letter-spacing: -0.6px; } .form-card span { font-size: 14px; color: var(--muted); }
         .form-card:hover { border-color: var(--olive-700); background: #FBFCF4; }
@@ -334,6 +367,24 @@
         .field { display: grid; gap: 6px; font-weight: 700; font-size: 14px; }
         .field.check { grid-template-columns: 18px 1fr; align-items: center; gap: 10px; }
         .field .hint { font-weight: 400; color: var(--muted); font-size: 12.5px; }
+        /* 넓은 입력창(업무·가입 장부): 두 칸씩 나란히 → 스크롤 없이 한 화면에 */
+        dialog.wide { width: min(780px, 96vw); }
+        dialog.wide .dlg-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 18px; padding-top: 14px; }
+        dialog.wide .dlg-body > * { grid-column: 1 / -1; }
+        dialog.wide .dlg-body > .half { grid-column: auto; }
+        dialog.wide .field, dialog.wide .field-wrap { align-content: start; }
+        dialog.wide .dlg-head { padding: 14px 22px; }
+        dialog.wide .dlg-foot { padding: 10px 22px 14px; }
+        dialog.wide textarea { min-height: 70px; }
+        dialog.wide .field input, dialog.wide .field select { padding-top: 8px; padding-bottom: 8px; }
+        dialog.wide3 { width: min(1000px, 96vw); }
+        @media (min-width: 900px) { dialog.wide3 .dlg-body { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media (max-width: 700px) {
+            dialog.wide .dlg-body { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+            dialog.wide .field .hint { display: none; }
+            dialog.wide textarea { min-height: 56px; }
+        }
+        @media (max-height: 760px) { dialog.wide .dlg-body { gap: 9px 18px; } dialog.wide .field { gap: 4px; } dialog.wide textarea { min-height: 56px; } }
         .err { color: var(--danger); font-size: 13.5px; min-height: 20px; font-weight: 600; padding: 0 22px; }
         .dlg-foot { padding: 12px 22px 18px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
         .dlg-foot .left { margin-right: auto; }
@@ -622,6 +673,15 @@
         var PALETTE = ['#5C6B1E', '#B58900', '#E64A19', '#00796B', '#3949AB', '#8E3B6B', '#6D4C41', '#455A64'];
         var STATUS = [{ v: 'todo', t: '할 일' }, { v: 'doing', t: '진행 중' }, { v: 'done', t: '완료' }];
         var PRIORITY = [{ v: 'high', t: '높음' }, { v: 'normal', t: '보통' }, { v: 'low', t: '낮음' }];
+        var DEALERS = ['스카이', '이티', '안모', '성연', '수석', '신창', '에이탑', '반추'];
+        var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo'];
+        var REG_LONG = { plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120 };
+        var REG_MANUAL = { price: 1, memo: 1 };   // 장부에서만 적는 칸 (확인서를 다시 저장해도 지우지 않음)
+        var REG_COLS = [   // 장부 엑셀 순서 그대로 (한 줄 복사)
+            ['순번', null], ['모바일&유선', function (r) { return r.kind === 'mobile' ? '모바일' : '유선'; }], ['담당자', 'seller'], ['거래처', 'dealer'], ['통신사', 'carrier'],
+            ['가입날짜', function (r) { return parseInt(r.date.slice(8), 10) + '일'; }], ['모델', 'model'], ['일련번호', 'serial'], ['번호', 'phone'], ['고객명', 'name'], ['생년월일', 'birth'],
+            ['공시&선약(프약)', 'disc'], ['공시금액', 'subsidy'], ['할부원금', 'price'], ['할부개월', 'months'], ['요금제', 'plan'], ['부가서비스', 'extra'], ['보험가입여부(종류)', 'ins'],
+            ['결합종류', 'combKind'], ['결합여부', 'comb'], ['요금제유지개월', 'keep'], ['변경요금제', 'plan2'], ['가입후요금', 'bill1'], ['3개월후 요금', 'bill2'], ['이전사업자', 'prev'], ['가입유형', 'type']];
         var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'calls', t: '콜 인입' }, { v: 'visits', t: '홈페이지 인입' }, { v: 'idreq', t: '신분증 요청' }, { v: 'settings', t: '설정' }];
 
         // 공유 저장소 주소는 반드시 구글 Apps Script 웹 앱 주소여야 합니다 (그 밖의 주소로는 어떤 요청도 보내지 않음)
@@ -633,7 +693,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-09.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-09.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -646,7 +706,7 @@
         var meMemo = null;       // 속도: 로그인 직후 '내 계정 정보' 요청을 한 번으로 합침
         var db = null, me = '', authed = false, cryptoKey = null, idleTimer = null, toastTimer = null, pendingToast = '';
         var now0 = new Date();
-        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false, date: '', form: '' };
+        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false, date: '', form: '', regYm: ymd(now0).slice(0, 7) };
 
         /* ---------- 공통 도구 ---------- */
         function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -712,7 +772,7 @@
                     { id: 's2', name: '직원 1', role: '', u: 0, o: 2, adm: false },
                     { id: 's3', name: '직원 2', role: '', u: 0, o: 3, adm: false }
                 ],
-                events: [], notices: [], tasks: [],
+                events: [], notices: [], tasks: [], regs: [],
                 del: Object.create(null),                  // 지워진 항목 기록(다른 직원 화면에서도 지워지도록)
                 drive: { url: '', k: '', rev: 0, pk: '', acc: false },  // 공유 저장소 연결 정보 (암호화된 데이터 안에만 보관)
                 account: null    // 이 기기에서 로그인한 계정 (이 기기 안에만 보관하고 드라이브로는 보내지 않음)
@@ -736,7 +796,7 @@
         // 저장소·백업·드라이브에서 읽은 내용은 항상 이 함수로 걸러서(글자 수·개수 제한, 형식 검사) 사용합니다
         function normalizeDb(d) {
             if (!d || typeof d !== 'object') return null;
-            var out = { staff: [], events: [], notices: [], tasks: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
+            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
             function list(v, max) { return Array.isArray(v) ? v.slice(0, max) : []; }
             list(d.staff, 200).forEach(function (s, i) {
                 if (!s || !str(s.name, 30).trim()) return;
@@ -765,6 +825,14 @@
                 if (num(t.st) > 0) nt.st = Math.floor(num(t.st));
                 if (num(t.fin) > 0) nt.fin = Math.floor(num(t.fin));
                 if (str(t.est, 30).trim()) nt.est = str(t.est, 30).trim();
+            });
+            list(d.regs, 20000).forEach(function (r) {   // 가입 장부 (드라이브 저장한 가입 확인서) — 빈 칸은 저장하지 않음
+                if (!r || ['mobile', 'wired'].indexOf(r.kind) < 0 || !isYmd(r.date)) return;
+                var o = { id: str(r.id, 40) || uid(), kind: r.kind, date: r.date, u: num(r.u), b: num(r.b) };
+                REG_FIELDS.forEach(function (f) { var v = str(r[f], REG_LONG[f] || 60).trim(); if (v) o[f] = v; });
+                if (r.inst === true) o.inst = true;
+                if (isYmd(r.instDate)) o.instDate = r.instDate;
+                out.regs.push(o);
             });
             var dd = d.del && typeof d.del === 'object' ? d.del : {};
             Object.keys(dd).slice(0, 20000).forEach(function (id) { var t = num(dd[id]); if (id.length <= 40 && t > 0) out.del[id] = t; });
@@ -1013,7 +1081,7 @@
                 } else if (f.type === 'seg') {   // 버튼으로 하나 고르기 (예: 우선순위 높음 / 보통 / 낮음)
                     input = h('input', { type: 'hidden', id: 'f_' + f.key }); input.value = f.value || '';
                 } else if (f.type === 'textarea') {
-                    input = h('textarea', { id: 'f_' + f.key, maxlength: f.max || 2000 }); input.value = f.value || '';
+                    input = h('textarea', { id: 'f_' + f.key, maxlength: f.max || 2000, rows: f.rows || false }); input.value = f.value || '';
                 } else if (f.type === 'checkbox') {
                     input = h('input', { type: 'checkbox', id: 'f_' + f.key, checked: !!f.value });
                 } else {
@@ -1031,10 +1099,10 @@
                 }
                 else field = h('label', { class: 'field', for: 'f_' + f.key }, f.label + (f.required ? ' (필수)' : ''), input, f.hint ? h('span', { class: 'hint' }, f.hint) : null);
                 if (f.quick && f.quick.length) {
-                    body.appendChild(h('div', { class: 'field-wrap' }, field, h('div', { class: 'quick-row' }, f.quick.map(function (q) {
+                    body.appendChild(h('div', { class: 'field-wrap' + (f.half ? ' half' : '') }, field, h('div', { class: 'quick-row' }, f.quick.map(function (q) {
                         return h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { input.value = q.value; input.focus(); } }, q.label);
                     }))));
-                } else body.appendChild(field);
+                } else { if (f.half) field.classList.add('half'); body.appendChild(field); }
             });
             var cancel = h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기');
             var save = h('button', { type: 'submit', class: 'btn btn-primary' }, cfg.saveText || '저장');
@@ -1054,8 +1122,8 @@
                 if (msg) { err.textContent = msg; return; }
                 cfg.onSave(values); closeDlg();
             });
-            dlg.textContent = ''; dlg.appendChild(form); showDlg(dlg);
-            var first = body.querySelector('input,select,textarea'); if (first) first.focus();
+            dlg.textContent = ''; dlg.className = cfg.cls || ''; dlg.appendChild(form); showDlg(dlg);
+            var first = body.querySelector('input:not([type="hidden"]),select,textarea'); if (first) first.focus();
         }
         function staffOptions(withNone, noneText) {
             var o = db.staff.map(function (s) { return { v: s.id, t: s.name + (s.role ? ' ' + s.role : '') }; });
@@ -1112,18 +1180,16 @@
         function editTask(t) {
             var isNew = !t;
             openForm({
-                title: isNew ? '업무 추가' : '업무 수정', saveText: isNew ? '업무 저장' : '변경 저장',
+                title: isNew ? '업무 추가' : '업무 수정', saveText: isNew ? '업무 저장' : '변경 저장', cls: 'wide',
                 fields: [
                     { key: 'title', label: '업무 내용', required: true, value: t ? t.title : '' },
-                    { key: 'staffId', label: '담당자', type: 'select', options: staffOptions(true), value: t ? t.staffId : me },
-                    { key: 'due', label: '마감일', type: 'date', value: t ? t.due : ymd(new Date()), quick: dateQuick(),
-                      hint: t ? '비워 두면 마감일 없이 저장돼요.' : '오늘 날짜로 정해져 있어요. 달력이나 아래 버튼으로 다른 날을 고르면 미리 등록할 수 있어요. 지우면 마감일 없이 등록돼요.' },
-                    { key: 'priority', label: '우선순위', type: 'seg', options: PRIORITY.map(function (p) { return { v: p.v, t: p.t }; }), value: t ? t.priority : 'normal' },
-                    { key: 'status', label: '진행 상태', type: 'select', options: STATUS.map(function (s) { return { v: s.v, t: s.t }; }), value: t ? t.status : 'todo',
-                      hint: t && taskTimeText(t) ? taskTimeText(t) : '진행 중으로 바꾸면 시작 시간, 완료로 바꾸면 마무리 시간과 소요시간이 자동으로 기록돼요.' },
-                    { key: 'memo', label: '메모', type: 'textarea', value: t ? t.memo : '' },
-                    { key: 'est', label: '예상 소요시간', max: 30, value: t ? (t.est || '') : '', quick: [{ label: '30분', value: '30분' }, { label: '1시간', value: '1시간' }, { label: '2시간', value: '2시간' }, { label: '3시간', value: '3시간' }, { label: '반나절', value: '반나절' }, { label: '하루', value: '하루' }],
-                      hint: '예: 1시간 30분. 비워 두어도 돼요.' }
+                    { key: 'staffId', label: '담당자', type: 'select', options: staffOptions(true), value: t ? t.staffId : me, half: true },
+                    { key: 'due', label: '마감일', type: 'date', value: t ? t.due : ymd(new Date()), quick: dateQuick(), half: true },
+                    { key: 'priority', label: '우선순위', type: 'seg', options: PRIORITY.map(function (p) { return { v: p.v, t: p.t }; }), value: t ? t.priority : 'normal', half: true },
+                    { key: 'status', label: '진행 상태', type: 'select', options: STATUS.map(function (s) { return { v: s.v, t: s.t }; }), value: t ? t.status : 'todo', half: true,
+                      hint: t && taskTimeText(t) ? taskTimeText(t) : '진행 중·완료로 바꾸면 시간이 자동 기록돼요.' },
+                    { key: 'memo', label: '메모', type: 'textarea', rows: 3, value: t ? t.memo : '' },
+                    { key: 'est', label: '예상 소요시간', max: 30, value: t ? (t.est || '') : '', quick: [{ label: '30분', value: '30분' }, { label: '1시간', value: '1시간' }, { label: '2시간', value: '2시간' }, { label: '3시간', value: '3시간' }, { label: '반나절', value: '반나절' }, { label: '하루', value: '하루' }] }
                 ],
                 validate: function (v) { return v.due && !isYmd(v.due) ? '마감일을 올바르게 입력해 주세요.' : null; },
                 onSave: function (v) {
@@ -1782,8 +1848,8 @@
         }
 
         /* --- 내용 합치기: 항목마다 수정 시각(u)이 더 늦은 쪽을 남기고, 지운 항목은 삭제 기록으로 처리 --- */
-        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, del: db.del }; }
-        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, del: db.del })); }
+        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, del: db.del }; }
+        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, del: db.del })); }
         function canon(d) {   // 같은 내용이면 항상 같은 글자가 되도록 정렬한 비교용 문자열
             function byId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
             return JSON.stringify([
@@ -1791,7 +1857,8 @@
                 d.events.slice().sort(byId).map(function (x) { return [x.id, x.title, x.date, x.time, x.staffId, x.memo, x.u]; }),
                 d.notices.slice().sort(byId).map(function (x) { return [x.id, x.title, x.body, x.staffId, x.date, x.pinned ? 1 : 0, x.u]; }),
                 d.tasks.slice().sort(byId).map(function (x) { return [x.id, x.title, x.staffId, x.due, x.priority, x.status, x.memo, x.u, x.ord || 0, x.st || 0, x.fin || 0, x.est || '']; }),
-                Object.keys(d.del).sort().map(function (k) { return [k, d.del[k]]; })
+                Object.keys(d.del).sort().map(function (k) { return [k, d.del[k]]; }),
+                (d.regs || []).slice().sort(byId).map(function (x) { return Object.keys(x).filter(function (k) { return k !== 'b'; }).sort().map(function (k) { return [k, x[k]]; }); })
             ]);
         }
         function mergeData(a, b) {
@@ -1845,11 +1912,12 @@
                 events: mergeList(a.events, b.events, true).filter(alive).sort(byId),
                 notices: mergeList(a.notices, b.notices, true).filter(alive).sort(byId),
                 tasks: mergeList(a.tasks, b.tasks, true).filter(alive).sort(byId),
+                regs: mergeList(a.regs || [], b.regs || [], false).filter(alive).sort(byId),   // 가입 장부: 나중에 고친 쪽으로 (충돌본 만들지 않음)
                 del: del, conflicts: conflicts
             };
         }
                 function applyMerged(m) {
-            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.del = m.del;
+            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.del = m.del;
             var ok = Object.create(null); db.staff.forEach(function (x) { ok[x.id] = 1; });
             [db.events, db.notices, db.tasks].forEach(function (list) { list.forEach(function (it) { if (it.staffId && !ok[it.staffId]) it.staffId = ''; }); });
             if (!staffById(me)) { me = db.staff[0].id; lsSet(ME_KEY, me); }
@@ -1857,10 +1925,10 @@
         }
 
         /* --- 동기화: 드라이브의 최신 내용을 받아 합치고, 내 변경분이 있으면 올림 --- */
-        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
+        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
         function markSynced(snap) {   // 드라이브에 올라간(또는 드라이브와 같아진) 버전을 '기준 시각(b)'으로 기록
             var changed = false;
-            [db.events, db.notices, db.tasks].forEach(function (l) { l.forEach(function (it) {
+            [db.events, db.notices, db.tasks, db.regs].forEach(function (l) { l.forEach(function (it) {
                 var nb = !snap ? it.u : snap[it.id];            // snap: 드라이브에 올라간 시점의 수정 시각
                 if (nb === undefined) return;                     // 올릴 때 없던 항목(그 뒤에 새로 만든 것)은 다음 저장 때
                 if (nb > it.u) nb = it.u;
@@ -1870,8 +1938,8 @@
         }
         function markSeen(remote) {   // 받아 온 드라이브 버전과 같은 항목은 '본 적 있음'으로 기록 (다른 기기 기준 시각이 섞이지 않게)
             var ru = Object.create(null);
-            [remote.events, remote.notices, remote.tasks].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
-            [db.events, db.notices, db.tasks].forEach(function (l) { l.forEach(function (it) {
+            [remote.events, remote.notices, remote.tasks, remote.regs || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
+            [db.events, db.notices, db.tasks, db.regs].forEach(function (l) { l.forEach(function (it) {
                 var r = ru[it.id];
                 if (r !== undefined && r === it.u && it.b !== it.u) it.b = it.u;   // 드라이브 버전과 같음
             }); });
@@ -2821,7 +2889,7 @@
                         return h('button', { type: 'button', class: 'mf-opt', role: 'option', 'data-v': v, 'aria-selected': 'false' }, t);
                     }));
                 }));
-                return h('div', { class: 'mf-combo' + (o.cls === 'short' ? ' short' : ''), 'data-combo': name }, input,
+                return h('div', { class: 'mf-combo' + (o.cls === 'short' ? ' short' : ''), 'data-combo': name, 'data-click': o.click ? '1' : false }, input,
                     h('button', { type: 'button', class: 'mf-dd', 'aria-label': label + ' 목록 열기', 'aria-haspopup': 'listbox', 'aria-expanded': 'false', 'aria-controls': listId }, '▾'), list);
             };
             K.cardSec = function () {   // 제휴 카드 (모바일·유선 같음)
@@ -2860,7 +2928,7 @@
                 return [
                     h('div', { class: 'mf-top' },
                         h('div', {},
-                            h('div', { class: 'mf-use' }, h('span', { class: 'mf-pill' }, '인터넷'), '(', inp('netUse', '이용 중인 인터넷'), ')이용중'),
+                            h('div', { class: 'mf-use' }, h('span', { class: 'mf-pill' }, '인터넷'), '(', K.combo('netUse', '접수처', [DEALERS], { cls: 'short', max: 20, click: true }), ')이용중'),
                             h('div', { class: 'mf-title' }, h('b', {}, '가입 확인서'), h('span', {}, sub))),
                         h('div', { class: 'mf-top-r' }, h('div', { class: 'mf-shop' }, shop), h('div', { class: 'mf-cust' }, k('고객등록번호 :'), inp('custNo', '고객등록번호 앞자리 (뒤 70001401은 고정)', { max: 12 }), h('span', { class: 'mf-fixno', 'data-fixno': '70001401' }, '70001401')))),
                     h('div', { class: 'mf-type' }, h('b', {}, '유형 선택'), types)];
@@ -3067,6 +3135,7 @@
                 var t = e.target.closest ? e.target : null; if (!t) return;
                 var dd = t.closest('.mf-dd'), opt = t.closest('.mf-opt'), cb = t.closest('.mf-combo');
                 if (dd && cb) { if (cb.classList.contains('open')) ddClose(); else ddOpen(cb, false); return; }
+                if (cb && !opt && cb.getAttribute('data-click') && t.classList && t.classList.contains('mf-in')) { if (!cb.classList.contains('open')) ddOpen(cb, false); return; }   // 접수처: 칸을 누르면 바로 아래로 목록
                 if (opt && cb) {
                     var el = cb.querySelector('.mf-in'); if (el.value !== opt.getAttribute('data-v')) dirty(); el.value = opt.getAttribute('data-v'); ddClose();
                     try { el.focus({ preventScroll: true }); } catch (x) { el.focus(); }
@@ -3184,8 +3253,10 @@
                 btn.disabled = false;
                 M.saved = String(res.name || ''); M.savedId = String(res.id || ''); M.savedFolder = String(res.folder || folder); M.dirty = false;
                 mfSaveBtn(M);
-                if (replaceId) toast(res.replaced ? '이전 파일은 지우고 수정본을 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' : '이전 파일을 찾지 못해서(이미 지웠거나 옮긴 경우) 수정본만 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.');
-                else toast('구글 드라이브 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.');
+                var regMsg = '';
+                try { regMsg = regUpsert(M, y, m, d) ? ' 가입 장부에도 정리했어요.' : ''; } catch (re) { regMsg = ' (가입 장부 정리는 실패했어요)'; }
+                if (replaceId) toast((res.replaced ? '이전 파일은 지우고 수정본을 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' : '이전 파일을 찾지 못해서(이미 지웠거나 옮긴 경우) 수정본만 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.') + regMsg);
+                else toast('구글 드라이브 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' + regMsg);
             }, function (e) {
                 btn.disabled = false; mfSaveBtn(M);
                 if (e && e.name === 'AbortError') toast('드라이브 응답이 늦어요. 이미 저장됐을 수 있으니 드라이브의 "' + folder + '" 폴더를 확인한 뒤 다시 시도해 주세요.');
@@ -3398,6 +3469,176 @@
         }
 
         /* ---------- 화면: 가입 확인서 ---------- */
+        /* ---------- 가입 장부: 드라이브 저장한 가입 확인서를 자동으로 정리 ---------- */
+        // 모바일 확인서 아래: 모바일·유선 전체 장부 (한 줄 복사 → 장부 엑셀에 붙여넣기)
+        // 유선 확인서 아래: 거래처(접수처)별 개통 확인 목록 (설치 체크·설치일·진행상태 메모, 거래처별 텍스트 복사)
+        var regDraft = Object.create(null);   // 진행상태 메모를 쓰는 중인 글 (화면이 새로 그려져도 그대로)
+        function ymLabel(ym) { return ym.slice(2, 4) + '년' + parseInt(ym.slice(5, 7), 10) + '월'; }
+        function mdText(d) { return parseInt(d.slice(5, 7), 10) + '/' + parseInt(d.slice(8, 10), 10); }
+        function digitsOnly(v) { return String(v || '').replace(/[^\d]/g, ''); }
+        function regFromForm(sheet, kind, date) {   // 가입 확인서 칸 → 장부 한 줄
+            var v = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return el ? String(el.value || '').trim() : ''; };
+            var c = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return !!(el && el.checked); };
+            var ppl = function (t) { return t && /\d$/.test(t) ? t + '인' : t; };   // 결합 (4) 인 → 4인
+            var r = { kind: kind, date: date, dealer: v('netUse'), seller: v('seller'), carrier: v('carrier'), phone: mfPhone(v('phone')), name: v('name') || v('appName'), birth: v('birth'), prev: v('prevCarrier') };
+            r.comb = c('cOld') ? '기결합' : c('cNew') ? '결합' : c('cNone') ? '미결합' : '';
+            r.combKind = c('cOld') ? ppl(v('cOldN')) : c('cNew') ? ppl(v('cNewN')) : '';
+            if (kind === 'mobile') {
+                r.type = (c('tNew') ? '신규' : c('tPort') ? '번호이동' : c('tRe') ? '재가입' : '') + (c('noBuy') ? (c('tNew') || c('tPort') || c('tRe') ? ' ' : '') + '비구매' : '');
+                r.model = v('model'); r.serial = v('serial'); r.months = digitsOnly(v('months'));
+                r.disc = (c('dSel') ? '선약' : c('dSub') ? '공시' : '') + (c('premier') ? '(프약)' : '');
+                r.subsidy = digitsOnly(v('subsidy')) || (c('dSel') ? '0' : '');
+                r.plan = v('plan1'); r.keep = digitsOnly(v('keep1')); r.plan2 = v('plan2'); r.bill1 = digitsOnly(v('bill1')); r.bill2 = digitsOnly(v('bill2'));
+                r.extra = v('extra');
+                r.ins = c('insY') ? (v('insName') || '가입') : c('insN') ? '없음' : '';
+            } else {   // 유선: 모바일에만 있는 칸(모델·일련번호·공시/선약·할부·보험 등)은 비워 둠
+                r.type = c('tNew') ? '신규' : c('tTrans') ? '동판' : c('tRenew') ? '재약정' : '';
+                r.plan = [v('netPlan'), v('tvPlan')].filter(Boolean).join(' + ');
+                r.keep = digitsOnly(v('keepW')); r.bill1 = digitsOnly(v('billW'));
+                r.extra = c('addY') ? v('addPlan') : '';
+            }
+            Object.keys(r).forEach(function (k) { if (r[k] === '' || r[k] == null) delete r[k]; });
+            return r;
+        }
+        function regUpsert(M, y, m, d) {   // 드라이브 저장 성공 → 장부에 추가 (같은 확인서를 다시 저장하면 그 줄을 고침)
+            if (!db || !M.sheet) return false;
+            if (!db.regs) db.regs = [];
+            var rec = regFromForm(M.sheet, M.kind, ymd(new Date(y, m - 1, d)));
+            var ex = M.regId ? db.regs.filter(function (x) { return x.id === M.regId; })[0] : null;
+            if (ex) {
+                REG_FIELDS.forEach(function (f) { if (REG_MANUAL[f]) return; if (rec[f]) ex[f] = rec[f]; else delete ex[f]; });
+                ex.kind = rec.kind; ex.date = rec.date; stamp(ex);
+            } else {
+                rec.id = uid(); rec.u = 0; db.regs.push(stamp(rec)); M.regId = rec.id;
+            }
+            state.regYm = rec.date.slice(0, 7);
+            commit();
+            return true;
+        }
+        function regLine(r, n) {   // 장부 엑셀에 붙여넣을 한 줄 (칸 사이는 Tab)
+            return REG_COLS.map(function (c) {
+                var v = c[1] === null ? String(n) : typeof c[1] === 'function' ? c[1](r) : (r[c[1]] || '');
+                return String(v).replace(/[\t\r\n]+/g, ' ');
+            }).join('\t');
+        }
+        function clip(text, okMsg) {
+            function fallback() {
+                var ta = h('textarea', { style: 'position:fixed;left:-9999px;top:0;opacity:0' }); ta.value = text; document.body.appendChild(ta); ta.select();
+                var ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+                ta.remove(); return ok;
+            }
+            var p = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fallback(); }) : Promise.resolve(fallback());
+            p.then(function (ok) { toast(ok ? okMsg : '복사하지 못했어요. 다시 눌러 주세요.'); });
+        }
+        function regMonth(kind) {   // 고른 달의 장부 (가입날짜 순)
+            return (db.regs || []).filter(function (r) { return r.date.slice(0, 7) === state.regYm && (!kind || r.kind === kind); })
+                .sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.id < b.id ? -1 : a.id > b.id ? 1 : 0); });
+        }
+        function regMonthsBar() {   // 26년1월 26년2월 … (장부가 있는 달 + 이번 달)
+            var seen = Object.create(null), now = ymd(new Date()).slice(0, 7);
+            seen[now] = 1; seen[state.regYm] = 1;
+            (db.regs || []).forEach(function (r) { seen[r.date.slice(0, 7)] = 1; });
+            return h('div', { class: 'reg-months', role: 'group', 'aria-label': '월 선택' }, Object.keys(seen).sort().map(function (ym) {
+                var on = ym === state.regYm;
+                return h('button', { type: 'button', class: 'btn btn-sm', 'aria-pressed': on ? 'true' : 'false', 'data-ym': ym, onclick: function () { state.regYm = ym; render(); } }, ymLabel(ym));
+            }));
+        }
+        function regLedger() {   // 모바일 확인서 아래: 가입 장부 (모바일·유선)
+            var list = regMonth('');
+            var rows = list.map(function (r, i) {
+                var sub = [parseInt(r.date.slice(8), 10) + '일', r.dealer, r.carrier, r.kind === 'mobile' ? r.model : r.plan, r.seller ? '담당 ' + r.seller : ''].filter(Boolean).join(' · ');
+                return h('div', { class: 'reg-row', 'data-reg': r.id },
+                    h('span', { class: 'reg-n' }, String(i + 1)),
+                    h('div', { class: 'reg-main' }, h('span', { class: 'reg-kind ' + r.kind }, r.kind === 'mobile' ? '모바일' : '유선'), h('b', {}, r.name || '(이름 없음)'), h('span', { class: 'reg-sub' }, sub)),
+                    h('div', { class: 'reg-act' },
+                        h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-act': 'reg-copy', onclick: function () { clip(regLine(r, i + 1), (r.name || '') + ' 한 줄을 복사했어요. 장부 엑셀의 첫 칸을 누르고 붙여넣기(Ctrl+V) 하세요.'); } }, '한 줄 복사'),
+                        h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editReg(r); } }, '수정')));
+            });
+            return h('section', { class: 'reg-box', 'data-ledger': 'all' },
+                h('div', { class: 'reg-head' }, h('h2', {}, '가입 장부'), h('small', {}, ymLabel(state.regYm) + ' ' + list.length + '건'),
+                    list.length ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'reg-copy-all', onclick: function () {
+                        clip(list.map(function (r, i) { return regLine(r, i + 1); }).join('\n'), ymLabel(state.regYm) + ' ' + list.length + '줄을 한 번에 복사했어요. 장부 엑셀에 붙여넣기(Ctrl+V) 하세요.');
+                    } }, '이 달 전체 복사') : null),
+                regMonthsBar(),
+                rows.length ? rows : h('div', { class: 'reg-empty' }, ymLabel(state.regYm) + '에 드라이브 저장한 가입 확인서가 없어요.'));
+        }
+        function dealerText(name, list) {   // 카카오톡 개통 확인용 텍스트
+            var lines = list.map(function (r, i) {
+                var st = r.inst ? '설치완료' + (r.instDate ? ' ' + mdText(r.instDate) : '') : '미설치';
+                return (i + 1) + ') ' + mdText(r.date) + ' ' + (r.name || '(이름 없음)') + ' - ' + st + (r.memo ? ' / ' + r.memo.replace(/\s+/g, ' ') : '');
+            });
+            return '[' + name + '] ' + ymLabel(state.regYm) + ' 개통 확인 (총 ' + list.length + '건)\n' + lines.join('\n');
+        }
+        function regSet(r, fn) { fn(r); stamp(r); commit(); }
+        function dealerLedger() {   // 유선 확인서 아래: 거래처별 개통 확인
+            var list = regMonth('wired'), groups = Object.create(null), order = [];
+            list.forEach(function (r) { var k = r.dealer || ''; if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(r); });
+            order.sort(function (a, b) {
+                var ia = DEALERS.indexOf(a), ib = DEALERS.indexOf(b);
+                if (!a) return 1; if (!b) return -1;
+                if (ia < 0 && ib < 0) return a < b ? -1 : 1; if (ia < 0) return 1; if (ib < 0) return -1; return ia - ib;
+            });
+            var blocks = order.map(function (k) {
+                var g = groups[k].slice().sort(function (a, b) {   // 미설치 먼저(접수일 순), 설치한 건은 맨 아래(설치일 순)
+                    if (!!a.inst !== !!b.inst) return a.inst ? 1 : -1;
+                    var x = a.inst ? (a.instDate || a.date) : a.date, y = b.inst ? (b.instDate || b.date) : b.date;
+                    return x < y ? -1 : x > y ? 1 : (a.id < b.id ? -1 : 1);
+                });
+                var name = k || '접수처 미지정', open = g.filter(function (r) { return !r.inst; }).length;
+                return h('div', { class: 'dl-grp', 'data-dealer': name },
+                    h('div', { class: 'dl-head' }, h('h3', {}, name, h('small', {}, '총 ' + g.length + '건 · 미설치 ' + open + '건')),
+                        h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-act': 'dealer-copy', onclick: function () { clip(dealerText(name, g), name + ' 개통 확인 내용을 복사했어요. 카카오톡에 붙여넣기 하세요.'); } }, '텍스트 복사')),
+                    g.map(function (r) {
+                        var cb = h('input', { type: 'checkbox', 'data-fk': 'inst-' + r.id, checked: !!r.inst, 'aria-label': (r.name || '') + ' 설치 완료' });
+                        cb.addEventListener('change', function () { var on = this.checked; regSet(r, function (x) { if (on) { x.inst = true; if (!x.instDate) x.instDate = ymd(new Date()); } else { delete x.inst; delete x.instDate; } }); });
+                        var dt = h('input', { type: 'date', 'data-fk': 'instd-' + r.id, 'aria-label': (r.name || '') + ' 설치일', value: r.instDate || '' });
+                        dt.addEventListener('change', function () { var v = this.value; regSet(r, function (x) { if (isYmd(v)) { x.instDate = v; x.inst = true; } else delete x.instDate; }); });
+                        var mm = h('input', { type: 'text', class: 'dl-memo', 'data-fk': 'instm-' + r.id, maxlength: 300, placeholder: '진행상태 메모', 'aria-label': (r.name || '') + ' 진행상태 메모', value: regDraft[r.id] != null ? regDraft[r.id] : (r.memo || '') });
+                        mm.addEventListener('input', function () { regDraft[r.id] = this.value; });
+                        mm.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); this.blur(); } });
+                        mm.addEventListener('change', function () {
+                            if (mfMoving) return;
+                            var v = this.value.trim().slice(0, 300); delete regDraft[r.id];
+                            if ((r.memo || '') !== v) regSet(r, function (x) { if (v) x.memo = v; else delete x.memo; });
+                        });
+                        return h('div', { class: 'dl-row' + (r.inst ? ' inst' : ''), 'data-reg': r.id },
+                            h('span', { class: 'dl-date' }, mdText(r.date)),
+                            h('button', { type: 'button', class: 'dl-name', title: '눌러서 장부 내용 고치기', onclick: function () { editReg(r); } }, r.name || '(이름 없음)'),
+                            h('label', { class: 'dl-chk' }, cb, '설치'), dt, mm);
+                    }));
+            });
+            return h('section', { class: 'reg-box', 'data-ledger': 'dealer' },
+                h('div', { class: 'reg-head' }, h('h2', {}, '거래처별 개통 확인'), h('small', {}, ymLabel(state.regYm) + ' 유선 ' + list.length + '건')),
+                regMonthsBar(),
+                blocks.length ? blocks : h('div', { class: 'reg-empty' }, ymLabel(state.regYm) + '에 드라이브 저장한 유선 가입 확인서가 없어요.'));
+        }
+        function editReg(r) {   // 장부 한 줄 고치기 (할부원금처럼 확인서에 없는 칸도 여기서)
+            var t = function (key, label, o) { o = o || {}; return { key: key, label: label, value: r[key] || '', half: o.full ? false : true, max: o.max || REG_LONG[key] || 60, type: o.type }; };
+            var fields = [
+                { key: 'kind', label: '모바일 / 유선', type: 'seg', options: [{ v: 'mobile', t: '모바일' }, { v: 'wired', t: '유선' }], value: r.kind, half: true },
+                { key: 'date', label: '가입날짜', type: 'date', required: true, value: r.date, half: true },
+                t('name', '고객명'), t('dealer', '거래처(접수처)'), t('seller', '담당자'), t('carrier', '통신사'), t('phone', '번호'), t('birth', '생년월일'),
+                t('model', '모델'), t('serial', '일련번호'), t('disc', '공시&선약(프약)'), t('subsidy', '공시금액'), t('price', '할부원금'), t('months', '할부개월'),
+                t('plan', '요금제'), t('extra', '부가서비스'), t('ins', '보험가입여부(종류)'), t('combKind', '결합종류'), t('comb', '결합여부'), t('keep', '요금제유지개월'),
+                t('plan2', '변경요금제'), t('bill1', '가입후요금'), t('bill2', '3개월후 요금'), t('prev', '이전사업자'), t('type', '가입유형'),
+                { key: 'instDate', label: '설치일 (유선)', type: 'date', value: r.instDate || '', half: true },
+                { key: 'memo', label: '진행상태 메모', value: r.memo || '', max: 300, half: true }
+            ];
+            openForm({
+                title: '가입 장부 고치기', saveText: '변경 저장', cls: 'wide wide3', fields: fields,
+                validate: function (v) { return isYmd(v.date) ? (v.instDate && !isYmd(v.instDate) ? '설치일을 올바르게 입력해 주세요.' : null) : '가입날짜를 올바르게 입력해 주세요.'; },
+                onSave: function (v) {
+                    r.kind = v.kind === 'wired' ? 'wired' : 'mobile'; r.date = v.date;
+                    REG_FIELDS.forEach(function (f) { if (!v.hasOwnProperty(f)) return; var x = String(v[f] || '').trim().slice(0, REG_LONG[f] || 60); if (x) r[f] = x; else delete r[f]; });
+                    if (v.instDate) { r.instDate = v.instDate; r.inst = true; } else { delete r.instDate; }
+                    delete regDraft[r.id]; stamp(r);
+                    commit('가입 장부를 고쳤어요.');
+                },
+                onDelete: function () { db.regs = db.regs.filter(function (x) { return x.id !== r.id; }); tomb(r.id); delete regDraft[r.id]; commit('가입 장부에서 지웠어요.'); },
+                deleteConfirm: '이 가입 장부 줄을 지울까요? (드라이브에 저장된 확인서 파일은 그대로예요)' + delNote()
+            });
+        }
+
         function renderForms() {
             var f = state.form;
             if (f === 'mobile' || f === 'wired') {
@@ -3409,10 +3650,14 @@
             }
             return h('div', {},
                 h('div', { class: 'page-head' }, h('h1', {}, '가입 확인서')),
-                h('p', { class: 'forms-sub' }, '만들 가입 확인서의 종류를 선택해 주세요.'),
+                h('p', { class: 'forms-sub' }, '만들 가입 확인서의 종류를 선택해 주세요. 드라이브 저장한 확인서는 아래 장부에 자동으로 정리돼요.'),
                 h('div', { class: 'forms-grid' },
-                    h('button', { type: 'button', class: 'form-card', 'data-form': 'mobile', onclick: function () { state.form = 'mobile'; render(); window.scrollTo(0, 0); } }, h('b', {}, '모바일 가입 확인서'), h('span', {}, '휴대폰 가입 확인서')),
-                    h('button', { type: 'button', class: 'form-card', 'data-form': 'wired', onclick: function () { state.form = 'wired'; render(); window.scrollTo(0, 0); } }, h('b', {}, '유선 가입 확인서'), h('span', {}, '인터넷·TV 등 유선 가입 확인서'))));
+                    h('div', { class: 'forms-col' },
+                        h('button', { type: 'button', class: 'form-card', 'data-form': 'mobile', onclick: function () { state.form = 'mobile'; render(); window.scrollTo(0, 0); } }, h('b', {}, '모바일 가입 확인서'), h('span', {}, '휴대폰 가입 확인서')),
+                        regLedger()),
+                    h('div', { class: 'forms-col' },
+                        h('button', { type: 'button', class: 'form-card', 'data-form': 'wired', onclick: function () { state.form = 'wired'; render(); window.scrollTo(0, 0); } }, h('b', {}, '유선 가입 확인서'), h('span', {}, '인터넷·TV 등 유선 가입 확인서')),
+                        dealerLedger())));
         }
 
         /* ---------- 콜 인입: 고객 홈페이지의 전화·카톡·문자 버튼, 접수 완료를 실시간으로 ---------- */
@@ -4007,7 +4252,8 @@
         function render() {
             if (taskDrag && authed && db) return;   // 업무를 끄는 중: 놓으면 바로 다시 그림
             var app = document.getElementById('app');
-            var ae = document.activeElement, fk = ae && ae.getAttribute ? ae.getAttribute('data-fk') : null;
+            var ae = document.activeElement, fk = ae && ae.getAttribute ? ae.getAttribute('data-fk') : null, fkSel = null;
+            if (fk && (ae.tagName === 'TEXTAREA' || (ae.tagName === 'INPUT' && /^(text|search|tel)$/.test(ae.type)))) { try { fkSel = [ae.selectionStart, ae.selectionEnd]; } catch (e) { fkSel = null; } }
             if (!authed || !db) { renderLogin(); return; }
             var keepEl = null, keepSel = null, keepY = window.scrollY;
             mfAll(function (F) { if (ae && F.el.contains(ae)) keepEl = ae; });   // 가입 확인서 작성 중 화면이 새로 그려져도 쓰던 칸 그대로
@@ -4057,7 +4303,13 @@
                 if (keepSel && keepSel[0] != null) { try { keepEl.setSelectionRange(keepSel[0], keepSel[1]); } catch (e) { /* 체크 칸 등 */ } }
             }
             if (isMf && window.scrollY !== keepY) window.scrollTo(0, keepY);
-            if (fk) { var again = document.querySelector('[data-fk="' + fk + '"]'); if (again) again.focus({ preventScroll: true }); }
+            if (fk) {
+                var again = document.querySelector('[data-fk="' + fk + '"]');
+                if (again) { again.focus({ preventScroll: true }); if (fkSel && again.setSelectionRange) { try { again.setSelectionRange(fkSel[0], fkSel[1]); } catch (e) { /* 날짜 칸 등 */ } } }
+            }
+            [].forEach.call(document.querySelectorAll('.reg-months'), function (bar) {   // 고른 달이 보이게
+                var on = bar.querySelector('[aria-pressed="true"]'); if (on && bar.scrollWidth > bar.clientWidth) bar.scrollLeft = Math.max(0, on.offsetLeft - bar.offsetLeft - 40);
+            });
             var mta = memoEdit && document.querySelector('.t-memo-in');
             if (mta) {   // 메모 쓰는 중: 칸 높이 맞추고, 처음 열었거나 다시 그려져도 커서 위치 그대로
                 memoGrow(mta);
