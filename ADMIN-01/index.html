@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Wbr3nzbd9lEUorLlYr3MMDAvZQTgjPRDBaT8CAOtuu0='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ugUH7rZauamUzuXE1BkXRKIzyA/QNU/qoQM0057f+wY='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -200,14 +200,26 @@
         .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
         .filters label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
         .filters select { width: auto; min-width: 120px; padding: 8px 10px; }
-        .t-head, .t-row { display: grid; grid-template-columns: 46px minmax(0, 2.4fr) minmax(0, 1fr) 158px 74px 112px 108px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
+        .t-head, .t-row { display: grid; grid-template-columns: 46px minmax(0, 2.4fr) minmax(0, 1fr) 150px 70px 140px 108px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
         .t-head { background: #F7F9F0; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 700; color: var(--muted); }
         .t-row { border-bottom: 1px solid var(--line); }
         .t-row:last-child { border-bottom: none; }
         .t-row.hi { border-left-color: var(--orange); }
         .t-row.done .t-title { color: var(--hint); text-decoration: line-through; }
         .t-title { font-weight: 700; overflow-wrap: anywhere; }
-        .t-memo { font-size: 13px; color: var(--muted); font-weight: 400; overflow-wrap: anywhere; }
+        .t-memo { font-size: 13px; color: var(--muted); font-weight: 400; overflow-wrap: anywhere; white-space: pre-wrap; line-height: 1.55; margin-top: 3px; }
+        button.t-memo { display: block; width: 100%; text-align: left; background: #FAFBF5; border: 1px solid transparent; border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 13px; color: var(--muted); cursor: text; }
+        button.t-memo:hover { border-color: var(--line); background: #F4F7EA; }
+        .t-memo-add { margin-top: 2px; font-size: 12.5px; padding: 2px 0; }
+        .t-memo-box { margin-top: 5px; display: grid; gap: 6px; }
+        .t-memo-in { width: 100%; min-height: 64px; resize: vertical; font-size: 14px; line-height: 1.55; padding: 8px 10px; overflow: hidden; }
+        .t-memo-act { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--hint); font-weight: 400; }
+        .t-time { margin-top: 4px; font-size: 12px; line-height: 1.45; color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; }
+        .t-time b { color: var(--olive-700); font-weight: 800; }
+        .seg-row .btn[aria-pressed="true"] { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .seg-row .btn.seg-high[aria-pressed="true"] { background: var(--orange); border-color: var(--orange); }
+        .seg-row .btn { min-width: 64px; }
+        @media (pointer: coarse) { .t-memo-tip { display: none; } }
         .t-cell::before { content: attr(data-label); display: none; }
         .t-row select { padding: 6px 8px; font-size: 13.5px; font-weight: 700; }
         .st-todo { background: #F1F4E6; } .st-doing { background: #FFF3BF; } .st-done { background: #DDF0DD; }
@@ -542,7 +554,7 @@
             .main .btn-sm, .main .btn { min-height: 38px; }
             .main .btn { white-space: normal; text-align: center; }          /* 좁으면 버튼 글자가 잘리지 않고 줄바꿈 */
             /* 입력칸 글자를 16px로: 아이폰이 입력할 때 화면을 확대해서 옆으로 밀리고 잘리던 문제 방지 */
-            input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size: 16px; }
+            input:not([type="checkbox"]):not([type="radio"]), select, textarea, .t-memo-in { font-size: 16px; }
             .rail-foot select { font-size: 16px; padding: 5px 8px; }
             .toast { left: 12px; right: 12px; transform: none; max-width: none; text-align: center; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
         }
@@ -621,7 +633,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-08.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-09.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -749,6 +761,10 @@
                     priority: ['high', 'normal', 'low'].indexOf(t.priority) >= 0 ? t.priority : 'normal',
                     status: ['todo', 'doing', 'done'].indexOf(t.status) >= 0 ? t.status : 'todo', memo: str(t.memo, 2000), u: num(t.u), b: num(t.b), ord: Math.floor(num(t.ord))
                 });
+                var nt = out.tasks[out.tasks.length - 1];   // 시작·완료 시각, 예상 소요시간은 값이 있을 때만 붙임
+                if (num(t.st) > 0) nt.st = Math.floor(num(t.st));
+                if (num(t.fin) > 0) nt.fin = Math.floor(num(t.fin));
+                if (str(t.est, 30).trim()) nt.est = str(t.est, 30).trim();
             });
             var dd = d.del && typeof d.del === 'object' ? d.del : {};
             Object.keys(dd).slice(0, 20000).forEach(function (id) { var t = num(dd[id]); if (id.length <= 40 && t > 0) out.del[id] = t; });
@@ -994,6 +1010,8 @@
                 if (f.type === 'select') {
                     input = h('select', { id: 'f_' + f.key }, f.options.map(function (o) { return h('option', { value: o.v }, o.t); }));
                     input.value = f.value;
+                } else if (f.type === 'seg') {   // 버튼으로 하나 고르기 (예: 우선순위 높음 / 보통 / 낮음)
+                    input = h('input', { type: 'hidden', id: 'f_' + f.key }); input.value = f.value || '';
                 } else if (f.type === 'textarea') {
                     input = h('textarea', { id: 'f_' + f.key, maxlength: f.max || 2000 }); input.value = f.value || '';
                 } else if (f.type === 'checkbox') {
@@ -1003,6 +1021,14 @@
                 }
                 inputs[f.key] = input;
                 if (f.type === 'checkbox') field = h('label', { class: 'field check', for: 'f_' + f.key }, input, h('span', {}, f.label));
+                else if (f.type === 'seg') {
+                    var segBtns = f.options.map(function (o) {
+                        return h('button', { type: 'button', class: 'btn btn-sm seg-' + o.v, 'data-v': o.v, 'aria-pressed': o.v === input.value ? 'true' : 'false', onclick: function () {
+                            input.value = o.v; segBtns.forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-v') === o.v ? 'true' : 'false'); });
+                        } }, o.t);
+                    });
+                    field = h('div', { class: 'field', role: 'group', 'aria-label': f.label }, f.label, input, h('div', { class: 'quick-row seg-row' }, segBtns), f.hint ? h('span', { class: 'hint' }, f.hint) : null);
+                }
                 else field = h('label', { class: 'field', for: 'f_' + f.key }, f.label + (f.required ? ' (필수)' : ''), input, f.hint ? h('span', { class: 'hint' }, f.hint) : null);
                 if (f.quick && f.quick.length) {
                     body.appendChild(h('div', { class: 'field-wrap' }, field, h('div', { class: 'quick-row' }, f.quick.map(function (q) {
@@ -1092,14 +1118,18 @@
                     { key: 'staffId', label: '담당자', type: 'select', options: staffOptions(true), value: t ? t.staffId : me },
                     { key: 'due', label: '마감일', type: 'date', value: t ? t.due : ymd(new Date()), quick: dateQuick(),
                       hint: t ? '비워 두면 마감일 없이 저장돼요.' : '오늘 날짜로 정해져 있어요. 달력이나 아래 버튼으로 다른 날을 고르면 미리 등록할 수 있어요. 지우면 마감일 없이 등록돼요.' },
-                    { key: 'priority', label: '우선순위', type: 'select', options: PRIORITY.map(function (p) { return { v: p.v, t: p.t }; }), value: t ? t.priority : 'normal' },
-                    { key: 'status', label: '진행 상태', type: 'select', options: STATUS.map(function (s) { return { v: s.v, t: s.t }; }), value: t ? t.status : 'todo' },
-                    { key: 'memo', label: '메모', type: 'textarea', value: t ? t.memo : '' }
+                    { key: 'priority', label: '우선순위', type: 'seg', options: PRIORITY.map(function (p) { return { v: p.v, t: p.t }; }), value: t ? t.priority : 'normal' },
+                    { key: 'status', label: '진행 상태', type: 'select', options: STATUS.map(function (s) { return { v: s.v, t: s.t }; }), value: t ? t.status : 'todo',
+                      hint: t && taskTimeText(t) ? taskTimeText(t) : '진행 중으로 바꾸면 시작 시간, 완료로 바꾸면 마무리 시간과 소요시간이 자동으로 기록돼요.' },
+                    { key: 'memo', label: '메모', type: 'textarea', value: t ? t.memo : '' },
+                    { key: 'est', label: '예상 소요시간', max: 30, value: t ? (t.est || '') : '', quick: [{ label: '30분', value: '30분' }, { label: '1시간', value: '1시간' }, { label: '2시간', value: '2시간' }, { label: '3시간', value: '3시간' }, { label: '반나절', value: '반나절' }, { label: '하루', value: '하루' }],
+                      hint: '예: 1시간 30분. 비워 두어도 돼요.' }
                 ],
                 validate: function (v) { return v.due && !isYmd(v.due) ? '마감일을 올바르게 입력해 주세요.' : null; },
                 onSave: function (v) {
-                    if (isNew) db.tasks.push(stamp({ id: uid(), title: v.title, staffId: v.staffId, due: v.due, priority: v.priority, status: v.status, memo: v.memo, u: 0 }));
-                    else { t.title = v.title; t.staffId = v.staffId; t.due = v.due; t.priority = v.priority; t.status = v.status; t.memo = v.memo; stamp(t); }
+                    var pri = ['high', 'normal', 'low'].indexOf(v.priority) >= 0 ? v.priority : 'normal';
+                    if (isNew) { var nt = { id: uid(), title: v.title, staffId: v.staffId, due: v.due, priority: pri, status: 'todo', memo: v.memo, u: 0 }; setTaskStatus(nt, v.status); setEst(nt, v.est); db.tasks.push(stamp(nt)); }
+                    else { t.title = v.title; t.staffId = v.staffId; t.due = v.due; t.priority = pri; setTaskStatus(t, v.status); t.memo = v.memo; setEst(t, v.est); stamp(t); }
                     commit(isNew ? '업무를 저장했어요.' : '업무를 수정했어요.');
                 },
                 onDelete: isNew ? null : function () { db.tasks = db.tasks.filter(function (x) { return x.id !== t.id; }); tomb(t.id); commit('업무를 삭제했어요.'); },
@@ -1150,6 +1180,41 @@
             if (me === s.id) { me = db.staff[0].id; lsSet(ME_KEY, me); }
             commit('직원을 삭제했어요.');
         }
+
+        /* ---------- 업무 시작·완료 시각 / 소요시간 ---------- */
+        // 진행 중으로 바꾸면 시작 시각(st), 완료로 바꾸면 마무리 시각(fin)을 기록. 할 일로 되돌리면 둘 다 지움.
+        function setTaskStatus(t, s, now) {
+            if (['todo', 'doing', 'done'].indexOf(s) < 0 || t.status === s) return false;
+            now = now || Date.now();
+            if (s === 'todo') { delete t.st; delete t.fin; }
+            else if (s === 'doing') { if (!t.st) t.st = now; delete t.fin; }      // 완료 → 다시 진행 중: 처음 시작 시각은 그대로
+            else { t.fin = now; }                                                // 할 일 → 바로 완료: 시작 시각 없이 마무리 시각만
+            t.status = s;
+            return true;
+        }
+        function setEst(t, v) { v = String(v || '').trim().slice(0, 30); if (v) t.est = v; else delete t.est; }
+        function clockText(ms) {   // 오늘이면 14:05, 다른 날이면 10/8 14:05
+            var d = new Date(ms), now = new Date(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+            return ymd(d) === ymd(now) ? hm : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hm;
+        }
+        function durText(ms) {
+            var m = Math.round(Math.max(0, ms) / 60000);
+            if (m < 1) return '1분 미만';
+            var dd = Math.floor(m / 1440), hh = Math.floor((m % 1440) / 60), mm = m % 60, out = [];
+            if (dd) out.push(dd + '일'); if (hh) out.push(hh + '시간'); if (mm) out.push(mm + '분');
+            return out.join(' ');
+        }
+        function taskTimeLines(t, withElapsed) {   // 상태 아래에 보여 줄 짧은 줄들
+            var L = [];
+            if (t.status === 'doing' && t.st) { L.push('시작 ' + clockText(t.st)); if (withElapsed) L.push('경과 ' + durText(Date.now() - t.st)); }
+            else if (t.status === 'done' && t.fin) {
+                if (t.st && t.fin >= t.st) { L.push(clockText(t.st) + ' → ' + clockText(t.fin)); L.push('소요 ' + durText(t.fin - t.st)); }
+                else L.push('완료 ' + clockText(t.fin));
+            }
+            if (t.est) L.push('예상 ' + t.est);
+            return L;
+        }
+        function taskTimeText(t) { return taskTimeLines(t).join(' · '); }
 
         /* ---------- 정렬 ---------- */
         function byTime(a, b) { return (a.time || '') < (b.time || '') ? -1 : (a.time || '') > (b.time || '') ? 1 : 0; }
@@ -1214,7 +1279,7 @@
                             h('button', { type: 'button', class: 'link-btn', onclick: function () { state.view = 'tasks'; state.who = g.s ? g.s.id : 'none'; state.status = 'all'; state.date = ''; render(); window.scrollTo(0, 0); } }, '업무 전체 보기'))),
                     g.tasks.length ? h('div', { class: 'panel' }, g.tasks.map(function (t) {
                         return h('button', { type: 'button', class: 'row task-row' + (t.status === 'done' ? ' done' : ''), onclick: function () { editTask(t); } },
-                            h('span', {}, h('div', { class: 'title' }, t.title), h('div', { class: 'sub' }, STATUS.filter(function (x) { return x.v === t.status; })[0].t + (t.priority === 'high' ? ', 우선순위 높음' : ''))),
+                            h('span', {}, h('div', { class: 'title' }, t.title), h('div', { class: 'sub' }, STATUS.filter(function (x) { return x.v === t.status; })[0].t + (t.priority === 'high' ? ', 우선순위 높음' : '') + (taskTimeText(t) ? ' · ' + taskTimeText(t) : ''))),
                             dueTag(t));
                     })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, state.showDone ? '등록된 업무가 없어요.' : '진행 중인 업무가 없어요.')));
             }
@@ -1342,14 +1407,15 @@
                 var num = t.status === 'done' ? '' : String(++seq);
                 var sel = h('select', { class: 'st-' + t.status, 'data-fk': 'st-' + t.id, 'aria-label': t.title + ' 진행 상태' }, STATUS.map(function (s) { return h('option', { value: s.v }, s.t); }));
                 sel.value = t.status;
-                sel.addEventListener('change', function () { t.status = this.value; stamp(t); commit(); });
+                sel.addEventListener('change', function () { if (setTaskStatus(t, this.value)) { stamp(t); commit(); } });
+                var tl = taskTimeLines(t);
                 var row = h('div', { class: 't-row' + (t.priority === 'high' ? ' hi' : '') + (t.status === 'done' ? ' done' : ''), 'data-id': t.id, 'data-grp': t.status === 'done' ? 'done' : 'open' },
                     h('div', { class: 't-num' }, num),
-                    h('div', { class: 't-main' }, h('div', { class: 't-title', 'data-n': num || null }, t.title), t.memo ? h('div', { class: 't-memo' }, t.memo.split('\n')[0]) : null),
+                    h('div', { class: 't-main' }, h('div', { class: 't-title', 'data-n': num || null }, t.title), memoArea(t)),
                     h('div', { class: 't-cell', 'data-label': '담당' }, whoTag(t.staffId)),
                     h('div', { class: 't-cell', 'data-label': '마감' }, dueTag(t)),
                     h('div', { class: 't-cell', 'data-label': '우선순위' }, h('span', { class: 'pri ' + t.priority }, PRIORITY.filter(function (p) { return p.v === t.priority; })[0].t)),
-                    h('div', { class: 't-cell', 'data-label': '상태' }, sel),
+                    h('div', { class: 't-cell', 'data-label': '상태' }, sel, tl.length ? h('div', { class: 't-time' }, tl.map(function (x, i) { return h('div', {}, i === 0 && t.status !== 'todo' ? h('b', {}, x) : x); })) : null),
                     h('div', { class: 't-actions' }, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editTask(t); } }, '수정'),
                         h('button', { type: 'button', class: 'btn btn-sm t-drag', 'data-fk': 'drag-' + t.id, title: '누른 채 위아래로 끌어서 순서 바꾸기', 'aria-label': t.title + ' 순서 바꾸기 (누른 채 끌기, 키보드는 위·아래 화살표)',
                             onpointerdown: function (e) { taskDragStart(e, row); }, onkeydown: function (e) { taskKeyMove(e, row); } }, '↕')));
@@ -1366,10 +1432,51 @@
                 state.date ? h('div', { class: 'date-chip' + (isToday ? ' today' : isYday ? ' yday' : ''), role: 'status' }, h('span', {}, (isToday ? '오늘 (' + koDate(state.date) + ')' : isYday ? '어제 (' + koDate(state.date) + ')' : koDate(state.date)) + ' 마감인 업무만 보고 있어요.'),
                     h('button', { type: 'button', class: 'link-btn', onclick: function () { state.date = ''; render(); } }, '전체 보기')) : null,
                 h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '진행 ' + openN + '건, 완료 ' + (list.length - openN) + '건'),
-                    h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-fk': 'report', onclick: function () { captureReport(list); } }, '마감보고')),
+                    h('div', { class: 'actions' },
+                        h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-fk': 'report-doing', onclick: function () { captureReport(list.filter(function (t) { return t.status === 'doing'; }), 'doing'); } }, '진행중보고'),
+                        h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-fk': 'report', onclick: function () { captureReport(list); } }, '마감보고'))),
                 h('div', { class: 'panel' },
                     rows.length ? [h('div', { class: 't-head' }, h('div', {}, '번호'), h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows]
                         : h('div', { class: 'empty' }, state.date ? '이 날(' + koDate(state.date) + ') 마감인 업무가 없어요. 담당·상태 필터를 걸어 두었다면 함께 확인해 보세요.' : (db.tasks.length ? '조건에 맞는 업무가 없어요. 필터를 바꿔 보세요.' : '아직 등록된 업무가 없어요. 오른쪽 위 [업무 추가]로 시작해 보세요.'))));
+        }
+
+        /* ---------- 업무 목록에서 메모 바로 쓰기 ---------- */
+        // 메모(또는 [+ 메모])를 누르면 그 자리에서 고쳐 쓰고, 다른 곳을 누르거나 [저장]을 누르면 저장돼요. 메모는 길어도 전부 보여요.
+        var memoEdit = null, memoSel = null;   // { id, text } : 쓰는 중인 메모 (공유 저장소 동기화로 화면이 새로 그려져도 그대로 유지)
+        function memoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight + 2, 600) + 'px'; el.style.overflowY = el.scrollHeight > 600 ? 'auto' : 'hidden'; }
+        function memoOpen(t) {
+            if (memoEdit && memoEdit.id !== t.id) memoSave();
+            memoEdit = { id: t.id, text: t.memo || '' }; memoSel = [memoEdit.text.length, memoEdit.text.length];
+            render();
+        }
+        function memoSave() {
+            var m = memoEdit; if (!m) return;
+            memoEdit = null; memoSel = null;
+            var t = db && db.tasks.filter(function (x) { return x.id === m.id; })[0], v = m.text.replace(/\s+$/, '').slice(0, 2000);
+            if (t && (t.memo || '') !== v) { t.memo = v; stamp(t); commit('메모를 저장했어요.'); } else render();
+        }
+        function memoCancel() { memoEdit = null; memoSel = null; render(); }
+        function memoArea(t) {
+            if (memoEdit && memoEdit.id === t.id) {
+                var ta = h('textarea', { class: 't-memo-in', 'data-fk': 'memo-' + t.id, maxlength: 2000, rows: 3, 'aria-label': t.title + ' 메모', placeholder: '메모를 적어 주세요' });
+                ta.value = memoEdit.text;
+                ta.addEventListener('input', function () { if (memoEdit) memoEdit.text = this.value; memoGrow(this); });
+                ta.addEventListener('keydown', function (e) {
+                    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); memoCancel(); }
+                    else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); memoSave(); }
+                });
+                ta.addEventListener('select', function () { memoSel = [this.selectionStart, this.selectionEnd]; });
+                ta.addEventListener('keyup', function () { memoSel = [this.selectionStart, this.selectionEnd]; });
+                ta.addEventListener('blur', function () { if (mfMoving || !memoEdit || memoEdit.id !== t.id) return; memoSel = [this.selectionStart, this.selectionEnd]; setTimeout(function () { if (memoEdit && memoEdit.id === t.id && !(document.activeElement && document.activeElement.getAttribute && document.activeElement.getAttribute('data-fk') === 'memo-' + t.id)) memoSave(); }, 0); });
+                var keep = function (e) { e.preventDefault(); };   // 버튼을 눌러도 입력칸 포커스가 먼저 빠지지 않게
+                return h('div', { class: 't-memo-box' }, ta,
+                    h('div', { class: 't-memo-act' },
+                        h('button', { type: 'button', class: 'btn btn-sm btn-primary', onmousedown: keep, onclick: memoSave }, '저장'),
+                        h('button', { type: 'button', class: 'btn btn-sm', onmousedown: keep, onclick: memoCancel }, '취소'),
+                        h('span', { class: 't-memo-tip' }, '다른 곳을 누르면 자동 저장 · Ctrl+Enter 저장 · Esc 취소')));
+            }
+            if (t.memo) return h('button', { type: 'button', class: 't-memo', title: '눌러서 메모 고치기', 'aria-label': t.title + ' 메모 고치기: ' + t.memo, onclick: function () { memoOpen(t); } }, t.memo);
+            return h('button', { type: 'button', class: 'link-btn t-memo-add', onclick: function () { memoOpen(t); } }, '+ 메모');
         }
 
         /* ---------- 업무 순서 바꾸기: [수정] 옆 손잡이(↕)를 누른 채 위아래로 끌기 ---------- */
@@ -1468,17 +1575,18 @@
             if (state.status !== 'all') f.push('상태 ' + STATUS.filter(function (x) { return x.v === state.status; })[0].t);
             return { sub: sub, filters: f.join(', '), when: when };
         }
-        function buildReportCanvas(list, meta) {
-            var F = REPORT_FONT, W = 1000, PAD = 36, MAXROWS = 120, today = ymd(new Date());
+        function buildReportCanvas(list, meta, kind) {
+            var F = REPORT_FONT, W = 1000, PAD = 36, MAXROWS = 120, today = ymd(new Date()), isDoing = kind === 'doing';
             var shown = list.slice(0, MAXROWS), extra = list.length - shown.length;
             var cols = [{ w: 58 }, { w: 358 }, { w: 124 }, { w: 148 }, { w: 92 }, { w: 148 }], xs = [], cx = PAD;   // 칸 너비 합계 928
             cols.forEach(function (c) { xs.push(cx); cx += c.w; });
             var probe = document.createElement('canvas').getContext('2d'), seq = 0;
             var rows = shown.map(function (t) {
                 probe.font = '700 21px ' + F;
-                var lines = wrapLines(probe, t.title, cols[1].w - 22, 3), memo = '';
-                if (t.memo) { probe.font = '500 16px ' + F; memo = wrapLines(probe, t.memo.split('\n')[0], cols[1].w - 22, 1)[0] || ''; }
-                return { t: t, n: t.status === 'done' ? '' : String(++seq), lines: lines, memo: memo, h: Math.max(58, 20 + lines.length * 28 + (memo ? 24 : 0)) };
+                var lines = wrapLines(probe, t.title, cols[1].w - 22, 3), memo = [];
+                if (t.memo) { probe.font = '500 16px ' + F; memo = wrapLines(probe, t.memo.replace(/\s+$/, ''), cols[1].w - 22, 12); }
+                var tl = taskTimeLines(t, true).slice(0, 3);
+                return { t: t, n: t.status === 'done' ? '' : String(++seq), lines: lines, memo: memo, tl: tl, h: Math.max(58, 20 + lines.length * 28 + memo.length * 22 + (memo.length ? 4 : 0), tl.length ? 56 + tl.length * 21 : 0) };
             });
             var headH = meta.filters ? 140 : 124, sumH = 70, thH = 46, rowsH = rows.reduce(function (a, r) { return a + r.h; }, 0), footH = extra ? 100 : 66, H = headH + sumH + thH + rowsH + footH;
             var scale = 2; while (W * scale * H * scale > 14000000 && scale > 1) scale -= 0.25;
@@ -1488,7 +1596,7 @@
 
             // 머리말
             g.fillStyle = '#2D3214'; g.fillRect(0, 0, W, headH);
-            g.textAlign = 'left'; g.fillStyle = '#FFD700'; g.font = '800 36px ' + F; g.fillText('업무 마감보고', PAD, 60);
+            g.textAlign = 'left'; g.fillStyle = '#FFD700'; g.font = '800 36px ' + F; g.fillText(isDoing ? '업무 진행중보고' : '업무 마감보고', PAD, 60);
             g.fillStyle = '#E6EBD3'; g.font = '600 22px ' + F; g.fillText(meta.sub, PAD, 98);
             if (meta.filters) { g.fillStyle = '#B9C29F'; g.font = '500 17px ' + F; g.fillText(meta.filters, PAD, 124); }
             g.textAlign = 'right'; g.fillStyle = '#FFD700'; g.font = '800 21px ' + F; g.fillText('사거리인터넷', W - PAD, 60); g.textAlign = 'left';
@@ -1497,7 +1605,9 @@
             var doneN = list.filter(function (t) { return t.status === 'done'; }).length, openN = list.length - doneN;
             var lateN = list.filter(function (t) { return t.status !== 'done' && t.due && t.due < today; }).length, px = PAD;
             function pill(text, bg, fg) { g.font = '700 19px ' + F; var w = g.measureText(text).width + 30; rrect(g, px, headH + 18, w, 38, 19, bg); g.fillStyle = fg; g.fillText(text, px + 15, headH + 44); px += w + 10; }
-            pill('진행 ' + openN + '건', '#FFF3BF', '#7A5B00'); pill('완료 ' + doneN + '건', '#DDF0DD', '#1F6B2A'); if (lateN) pill('마감 지남 ' + lateN + '건', '#FDECEA', '#A33226');
+            if (isDoing) pill('진행 중 ' + list.length + '건', '#FFF3BF', '#7A5B00');
+            else { pill('진행 ' + openN + '건', '#FFF3BF', '#7A5B00'); pill('완료 ' + doneN + '건', '#DDF0DD', '#1F6B2A'); }
+            if (lateN) pill('마감 지남 ' + lateN + '건', '#FDECEA', '#A33226');
 
             // 표 머리
             var top = headH + sumH, y = top;
@@ -1519,7 +1629,7 @@
                     var by = y + 34 + i * 28; g.fillText(r.lines[i], xs[1] + 12, by);
                     if (done) g.fillRect(xs[1] + 12, by - 7, g.measureText(r.lines[i]).width, 2);
                 }
-                if (r.memo) { g.font = '500 16px ' + F; g.fillStyle = '#7B8568'; g.fillText(r.memo, xs[1] + 12, y + 34 + (r.lines.length - 1) * 28 + 24); }
+                if (r.memo.length) { g.font = '500 16px ' + F; g.fillStyle = '#7B8568'; for (i = 0; i < r.memo.length; i++) g.fillText(r.memo[i], xs[1] + 12, y + 34 + (r.lines.length - 1) * 28 + 26 + i * 22); }
                 g.beginPath(); g.arc(xs[2] + 10, y + 30, 6, 0, Math.PI * 2); g.closePath(); g.fillStyle = staffColor(t.staffId); g.fill();
                 g.font = '600 17px ' + F; g.fillStyle = '#4A5240'; g.fillText(fitText(g, staffName(t.staffId), cols[2].w - 30), xs[2] + 24, y + 36);
                 g.font = '700 17px ' + F; g.fillStyle = due.color; g.fillText(fitText(g, due.text, cols[3].w - 8), xs[3] + 4, y + 36);
@@ -1527,6 +1637,7 @@
                 g.fillStyle = pri[1]; g.fillText(pri[0], xs[4] + 4, y + 36);
                 var st = t.status === 'done' ? ['완료', '#DDF0DD', '#1F6B2A'] : t.status === 'doing' ? ['진행 중', '#FFF3BF', '#7A5B00'] : ['할 일', '#F1F4E6', '#4A5240'];
                 g.font = '700 17px ' + F; var sw = g.measureText(st[0]).width + 26; rrect(g, xs[5], y + 14, sw, 30, 15, st[1]); g.fillStyle = st[2]; g.fillText(st[0], xs[5] + 13, y + 36);
+                for (i = 0; i < r.tl.length; i++) { g.font = (i === 0 && t.status !== 'todo' ? '700 15px ' : '500 15px ') + F; g.fillStyle = i === 0 && t.status !== 'todo' ? '#3E441E' : '#66705A'; g.fillText(fitText(g, r.tl[i], cols[5].w - 4), xs[5] + 2, y + 66 + i * 21); }
                 y += r.h;
             });
             g.strokeStyle = '#D5DBC3'; g.lineWidth = 1; g.strokeRect(PAD + 0.5, top + 0.5, 927, y - top - 1);
@@ -1559,10 +1670,11 @@
             form.addEventListener('submit', function (e) { e.preventDefault(); });
             dlg.appendChild(form); showDlg(dlg);
         }
-        function captureReport(list) {
-            if (!list.length) { toast('보고할 업무가 없어요. 날짜나 담당자 조건을 확인해 주세요.'); return; }
+        function captureReport(list, kind) {
+            var name = kind === 'doing' ? '진행중보고' : '마감보고';
+            if (!list.length) { toast(kind === 'doing' ? '진행 중인 업무가 없어요. 업무 상태를 "진행 중"으로 바꾸면 진행중보고에 나와요.' : '보고할 업무가 없어요. 날짜나 담당자 조건을 확인해 주세요.'); return; }
             var canvas;
-            try { canvas = buildReportCanvas(list, reportMeta()); } catch (e) { toast('마감보고 이미지를 만들지 못했어요.'); return; }
+            try { canvas = buildReportCanvas(list, reportMeta(), kind); } catch (e) { toast(name + ' 이미지를 만들지 못했어요.'); return; }
             var blobP = new Promise(function (res, rej) { canvas.toBlob(function (b) { if (b) res(b); else rej(new Error('blob')); }, 'image/png'); });
             function write(value) {
                 try { return navigator.clipboard.write([new ClipboardItem({ 'image/png': value })]); } catch (e) { return Promise.reject(e); }
@@ -1574,8 +1686,8 @@
                 throw e;
             });
             done.then(function () {
-                toast('마감보고 이미지를 복사했어요. 카카오톡·텔레그램 대화창에서 붙여넣기(Ctrl+V, 휴대폰은 입력창 길게 누르기)하면 바로 보고돼요.');
-            }, function () { showReportPreview(canvas); });
+                toast(name + ' 이미지를 복사했어요. 카카오톡·텔레그램 대화창에서 붙여넣기(Ctrl+V, 휴대폰은 입력창 길게 누르기)하면 바로 보고돼요.');
+            }, function () { showReportPreview(canvas, { title: name + ' 이미지', file: '사거리인터넷-업무' + name + '-' + ymd(new Date()) + '.png' }); });
         }
 
         /* ---------- 공유 저장소 (구글 드라이브) ---------- */
@@ -1678,7 +1790,7 @@
                 d.staff.slice().sort(function (a, b) { return (a.o - b.o) || byId(a, b); }).map(function (x) { return [x.id, x.name, x.role, x.u, x.o, x.adm ? 1 : 0]; }),
                 d.events.slice().sort(byId).map(function (x) { return [x.id, x.title, x.date, x.time, x.staffId, x.memo, x.u]; }),
                 d.notices.slice().sort(byId).map(function (x) { return [x.id, x.title, x.body, x.staffId, x.date, x.pinned ? 1 : 0, x.u]; }),
-                d.tasks.slice().sort(byId).map(function (x) { return [x.id, x.title, x.staffId, x.due, x.priority, x.status, x.memo, x.u, x.ord || 0]; }),
+                d.tasks.slice().sort(byId).map(function (x) { return [x.id, x.title, x.staffId, x.due, x.priority, x.status, x.memo, x.u, x.ord || 0, x.st || 0, x.fin || 0, x.est || '']; }),
                 Object.keys(d.del).sort().map(function (k) { return [k, d.del[k]]; })
             ]);
         }
@@ -1687,7 +1799,7 @@
             [a.del, b.del].forEach(function (m) { Object.keys(m).forEach(function (id) { if (m[id] > (del[id] || 0)) del[id] = m[id]; }); });
             function alive(it) { var t = del[it.id]; return !(t !== undefined && t >= it.u); }
             function byId(p, q) { return p.id < q.id ? -1 : p.id > q.id ? 1 : 0; }
-            function body(x) { return JSON.stringify(Object.keys(x).filter(function (k) { return k !== 'u' && k !== 'b' && k !== 'ord'; }).sort().map(function (k) { return [k, x[k]]; })); }
+            function body(x) { return JSON.stringify(Object.keys(x).filter(function (k) { return k !== 'u' && k !== 'b' && k !== 'ord' && k !== 'st' && k !== 'fin' && k !== 'est'; }).sort().map(function (k) { return [k, x[k]]; })); }
             function conflictCopy(it) {   // 먼저 고친 쪽의 내용을 '[충돌본]' 항목으로 남김 (같은 충돌은 어느 기기에서 만들어도 같은 번호가 되어 한 번만 생김)
                 var c = JSON.parse(JSON.stringify(it));
                 c.id = String(it.id).split('~c')[0] + '~c' + it.u; c.b = 0;
@@ -3946,6 +4058,12 @@
             }
             if (isMf && window.scrollY !== keepY) window.scrollTo(0, keepY);
             if (fk) { var again = document.querySelector('[data-fk="' + fk + '"]'); if (again) again.focus({ preventScroll: true }); }
+            var mta = memoEdit && document.querySelector('.t-memo-in');
+            if (mta) {   // 메모 쓰는 중: 칸 높이 맞추고, 처음 열었거나 다시 그려져도 커서 위치 그대로
+                memoGrow(mta);
+                if (document.activeElement !== mta) { try { mta.focus({ preventScroll: true }); } catch (e) { mta.focus(); } }
+                if (memoSel) { try { mta.setSelectionRange(memoSel[0], memoSel[1]); } catch (e) { /* 무시 */ } }
+            } else if (memoEdit && !db.tasks.some(function (x) { return x.id === memoEdit.id; })) { memoEdit = null; memoSel = null; }   // 그 업무가 지워졌을 때만 정리 (다른 메뉴에 다녀와도 쓰던 메모는 그대로)
             try {   // 휴대폰: 위쪽 메뉴에서 지금 보고 있는 메뉴가 화면 밖으로 잘려 있으면 보이게 옆으로 맞춤
                 var nv = document.querySelector('.rail .nav'), cur = nv && nv.querySelector('[aria-current="page"]');
                 if (nv && cur && nv.scrollWidth > nv.clientWidth) { var l = cur.offsetLeft - nv.offsetLeft, r = l + cur.offsetWidth; if (l < nv.scrollLeft + 8 || r > nv.scrollLeft + nv.clientWidth - 8) nv.scrollLeft = Math.max(0, l - (nv.clientWidth - cur.offsetWidth) / 2); }
