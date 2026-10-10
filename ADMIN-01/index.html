@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-A6/3SfP+h12pgZp/LhnN6xuXrfPHq3vzay+Mf3xhoJA='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RDHagsRS4YA9PMvqbqHEwXbI6njII/ne2zWO7OSwgK8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -294,6 +294,15 @@
         .idr-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
         .idr-row { display: grid; grid-template-columns: 128px minmax(0, 1fr) minmax(0, 1.2fr) 150px; gap: 10px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 14px; }
         .idr-memo { color: var(--muted); }
+        .idr-intake { width: 100%; box-sizing: border-box; font: inherit; font-size: 14px; line-height: 1.55; padding: 10px 12px; border-radius: 10px; border: 1px solid #BFC7AA; background: #fff; resize: vertical; min-height: 260px; white-space: pre-wrap; }
+        .idr-intake-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+        .idr-intake-top span { font-size: 13px; font-weight: 700; }
+        .idr-intake-top small { font-weight: 400; color: var(--muted); }
+        .idr-note-row { grid-column: 1 / -1; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .idr-note-row .btn { min-height: 32px; }
+        .idr-note-box { grid-column: 1 / -1; display: grid; gap: 8px; background: #FAFBF5; border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+        .idr-note-box .idr-intake { min-height: 200px; }
+        .idr-note-tag { font-size: 12.5px; font-weight: 700; color: #2F55B8; background: #EEF3FF; border-radius: 4px; padding: 2px 8px; }
         .idr-st { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
         .idr-st-ready { background: #FFF4D6; color: #8A6400; }
         .idr-st-done { background: #E3F2E7; color: #1F6B3A; }
@@ -723,6 +732,8 @@
         var PALETTE = ['#5C6B1E', '#B58900', '#E64A19', '#00796B', '#3949AB', '#8E3B6B', '#6D4C41', '#455A64'];
         var STATUS = [{ v: 'todo', t: '할 일' }, { v: 'doing', t: '진행 중' }, { v: 'done', t: '완료' }];
         var PRIORITY = [{ v: 'high', t: '높음' }, { v: 'normal', t: '보통' }, { v: 'low', t: '낮음' }];
+        var INTAKE_TPL = "이름 : \n주민번호(전체) : \n휴대폰번호 : \n휴대폰통신사 : \n설치주소 : \n이메일주소(필수) : \n인증가능시간(필수) : \n\n■ 납부정보 ■ \n은행 /카드사 : \n계좌/카드번호 : \n카드유효기간 : \n예금주 성함/주민번호 : \n본인이면 \"본인\" \n\n● 접수정보 ● \n인터넷통신사 : \n인터넷상품: \nWIFI 유,무: \nTV상품+셋탑1 : \n전화상품 : X \n월요금 : \n설치비 : \n\n◆ 고객사은품 ◆ \n상품권 : 원 \n현금 : 원 \n상품권종류 : \n은행+계좌 : \n예금주: \n(본인,납부자외 불가)";   // 신분증 요청: 고객 접수 메모 양식 (복사해서 그대로 사용)
+        var INTAKE_KEEP_DAYS = 30;   // 접수 메모(주민번호·계좌 등)는 30일 지나면 자동으로 지움
         var DEALERS = ['스카이', '이티', '안모', '성연', '수석', '신창', '에이탑', '반추'];
         var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo'];
         var REG_LONG = { plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120 };
@@ -743,7 +754,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-09.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-10.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -822,7 +833,7 @@
                     { id: 's2', name: '직원 1', role: '', u: 0, o: 2, adm: false },
                     { id: 's3', name: '직원 2', role: '', u: 0, o: 3, adm: false }
                 ],
-                events: [], notices: [], tasks: [], regs: [],
+                events: [], notices: [], tasks: [], regs: [], intakes: [],
                 del: Object.create(null),                  // 지워진 항목 기록(다른 직원 화면에서도 지워지도록)
                 drive: { url: '', k: '', rev: 0, pk: '', acc: false },  // 공유 저장소 연결 정보 (암호화된 데이터 안에만 보관)
                 account: null    // 이 기기에서 로그인한 계정 (이 기기 안에만 보관하고 드라이브로는 보내지 않음)
@@ -846,7 +857,7 @@
         // 저장소·백업·드라이브에서 읽은 내용은 항상 이 함수로 걸러서(글자 수·개수 제한, 형식 검사) 사용합니다
         function normalizeDb(d) {
             if (!d || typeof d !== 'object') return null;
-            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
+            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
             function list(v, max) { return Array.isArray(v) ? v.slice(0, max) : []; }
             list(d.staff, 200).forEach(function (s, i) {
                 if (!s || !str(s.name, 30).trim()) return;
@@ -885,6 +896,10 @@
                 if (r.inst === true) o.inst = true;
                 if (isYmd(r.instDate)) o.instDate = r.instDate;
                 out.regs.push(o);
+            });
+            list(d.intakes, 5000).forEach(function (x) {   // 신분증 요청 접수 메모 (팀 키로 암호화된 공유 저장소에만 보관)
+                if (!x || !str(x.code, 80) || !str(x.text, 4000)) return;
+                out.intakes.push({ id: str(x.id, 40) || uid(), code: str(x.code, 80), name: str(x.name, 20), text: str(x.text, 4000), t: num(x.t), u: num(x.u), b: num(x.b) });
             });
             var dd = d.del && typeof d.del === 'object' ? d.del : {};
             Object.keys(dd).slice(0, 20000).forEach(function (id) { var t = num(dd[id]); if (id.length <= 40 && t > 0) out.del[id] = t; });
@@ -1952,8 +1967,8 @@
         }
 
         /* --- 내용 합치기: 항목마다 수정 시각(u)이 더 늦은 쪽을 남기고, 지운 항목은 삭제 기록으로 처리 --- */
-        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, del: db.del }; }
-        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, del: db.del })); }
+        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, del: db.del }; }
+        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, del: db.del })); }
         function canon(d) {   // 같은 내용이면 항상 같은 글자가 되도록 정렬한 비교용 문자열
             function byId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
             return JSON.stringify([
@@ -1962,7 +1977,8 @@
                 d.notices.slice().sort(byId).map(function (x) { return [x.id, x.title, x.body, x.staffId, x.date, x.pinned ? 1 : 0, x.u]; }),
                 d.tasks.slice().sort(byId).map(function (x) { return [x.id, x.title, x.staffId, x.due, x.priority, x.status, x.memo, x.u, x.ord || 0, x.st || 0, x.fin || 0, x.est || '', x.ext || '', x.extId || '', x.from || '', x.fromDate || '']; }),
                 Object.keys(d.del).sort().map(function (k) { return [k, d.del[k]]; }),
-                (d.regs || []).slice().sort(byId).map(function (x) { return Object.keys(x).filter(function (k) { return k !== 'b'; }).sort().map(function (k) { return [k, x[k]]; }); })
+                (d.regs || []).slice().sort(byId).map(function (x) { return Object.keys(x).filter(function (k) { return k !== 'b'; }).sort().map(function (k) { return [k, x[k]]; }); }),
+                (d.intakes || []).slice().sort(byId).map(function (x) { return [x.id, x.code, x.name, x.text, x.t, x.u]; })
             ]);
         }
         function mergeData(a, b) {
@@ -2016,12 +2032,13 @@
                 events: mergeList(a.events, b.events, true).filter(alive).sort(byId),
                 notices: mergeList(a.notices, b.notices, true).filter(alive).sort(byId),
                 tasks: mergeList(a.tasks, b.tasks, true).filter(alive).sort(byId),
-                regs: mergeList(a.regs || [], b.regs || [], false).filter(alive).sort(byId),   // 가입 장부: 나중에 고친 쪽으로 (충돌본 만들지 않음)
+                regs: mergeList(a.regs || [], b.regs || [], false).filter(alive).sort(byId),
+                intakes: mergeList(a.intakes || [], b.intakes || [], false).filter(alive).sort(byId),   // 가입 장부: 나중에 고친 쪽으로 (충돌본 만들지 않음)
                 del: del, conflicts: conflicts
             };
         }
                 function applyMerged(m) {
-            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.del = m.del;
+            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.del = m.del;
             var ok = Object.create(null); db.staff.forEach(function (x) { ok[x.id] = 1; });
             [db.events, db.notices, db.tasks].forEach(function (list) { list.forEach(function (it) { if (it.staffId && !ok[it.staffId]) it.staffId = ''; }); });
             if (!staffById(me)) { me = db.staff[0].id; lsSet(ME_KEY, me); }
@@ -2029,10 +2046,10 @@
         }
 
         /* --- 동기화: 드라이브의 최신 내용을 받아 합치고, 내 변경분이 있으면 올림 --- */
-        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
+        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
         function markSynced(snap) {   // 드라이브에 올라간(또는 드라이브와 같아진) 버전을 '기준 시각(b)'으로 기록
             var changed = false;
-            [db.events, db.notices, db.tasks, db.regs].forEach(function (l) { l.forEach(function (it) {
+            [db.events, db.notices, db.tasks, db.regs, db.intakes].forEach(function (l) { l.forEach(function (it) {
                 var nb = !snap ? it.u : snap[it.id];            // snap: 드라이브에 올라간 시점의 수정 시각
                 if (nb === undefined) return;                     // 올릴 때 없던 항목(그 뒤에 새로 만든 것)은 다음 저장 때
                 if (nb > it.u) nb = it.u;
@@ -2042,8 +2059,8 @@
         }
         function markSeen(remote) {   // 받아 온 드라이브 버전과 같은 항목은 '본 적 있음'으로 기록 (다른 기기 기준 시각이 섞이지 않게)
             var ru = Object.create(null);
-            [remote.events, remote.notices, remote.tasks, remote.regs || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
-            [db.events, db.notices, db.tasks, db.regs].forEach(function (l) { l.forEach(function (it) {
+            [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
+            [db.events, db.notices, db.tasks, db.regs, db.intakes].forEach(function (l) { l.forEach(function (it) {
                 var r = ru[it.id];
                 if (r !== undefined && r === it.u && it.b !== it.u) it.b = it.u;   // 드라이브 버전과 같음
             }); });
@@ -4214,7 +4231,7 @@
         /* ---------- 신분증 요청: 고객 전용 접수 링크 만들기 → 문자로 보내기 ---------- */
         var SITE_URL = 'https://www.사거리인터넷.com';   // 고객에게 보내는 공식 홈페이지 주소 (id.html이 있는 곳)
         var idr = { items: null, busy: false, err: '', last: null, ui: null };
-        function idrFresh() { idr = { items: null, busy: false, err: '', last: null, ui: null }; }   // 잠그면 적던 내용·만든 링크도 지움
+        function idrFresh() { idr = { items: null, busy: false, err: '', last: null, ui: null }; idrOpen = Object.create(null); idrDraft = Object.create(null); }   // 잠그면 적던 내용·만든 링크도 지움
         function idrLoad() {
             if (!authed || !db || !driveOn() || idr.busy) return;
             idr.busy = true; var mine = idr;
@@ -4223,6 +4240,65 @@
                 idr.items = (Array.isArray(res.items) ? res.items : []).filter(function (x) { return x && typeof x.code === 'string' && typeof x.name === 'string'; });
                 if (state.view === 'idreq') render();
             }, function (e) { if (mine !== idr) return; idr.busy = false; idr.err = driveErrText(e); if (state.view === 'idreq') render(); });
+        }
+        function intakeHas(text) {   // 양식에 무엇이든 적었는지 (빈 양식이면 저장하지 않음)
+            return String(text || '').split('\n').some(function (l) { var m = /^[^:]+:(.*)$/.exec(l); return m && m[1].replace(/원|X/g, '').trim(); });
+        }
+        function intakeFill(text, name, phone) {   // 이름·휴대폰번호 칸이 비어 있으면 위에 적은 값으로 채움
+            var p = mfPhone(phone);
+            return String(text || '').replace(/\r/g, '').split('\n').map(function (l) {
+                if (/^이름\s*:\s*$/.test(l)) return '이름 : ' + name;
+                if (/^휴대폰번호\s*:\s*$/.test(l)) return '휴대폰번호 : ' + p;
+                return l;
+            }).join('\n');
+        }
+        function intakeVal(text, key) { var m = new RegExp('^' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*:(.*)$', 'm').exec(text || ''); return m ? m[1].trim() : ''; }
+        function intakeShort(text) {   // 목록·서버용 짧은 요약: 상품 정보만 (개인정보 없음)
+            return [intakeVal(text, '인터넷통신사'), intakeVal(text, '인터넷상품'), intakeVal(text, 'TV상품+셋탑1')].filter(function (v) { return v && v !== 'X'; }).join(' ').slice(0, 40);
+        }
+        function intakeOf(code) { return (db && db.intakes || []).filter(function (x) { return x.code === code; })[0] || null; }
+        function intakeSave(code, name, text) {
+            if (!db.intakes) db.intakes = [];
+            var ex = intakeOf(code);
+            if (ex) { ex.text = text.slice(0, 4000); ex.name = name; stamp(ex); }
+            else db.intakes.push(stamp({ id: uid(), code: code, name: name, text: text.slice(0, 4000), t: Date.now(), u: 0 }));
+            commit();
+        }
+        function intakeCleanup() {   // 30일 지난 접수 메모는 자동으로 지움 (주민번호·계좌번호를 오래 두지 않게)
+            if (!db || !db.intakes || !db.intakes.length) return;
+            var cut = Date.now() - INTAKE_KEEP_DAYS * 86400000, old = db.intakes.filter(function (x) { return x.t && x.t < cut; });
+            if (!old.length) return;
+            old.forEach(function (x) { tomb(x.id); });
+            db.intakes = db.intakes.filter(function (x) { return !(x.t && x.t < cut); });
+            commit();
+        }
+        var idrOpen = Object.create(null), idrDraft = Object.create(null);   // 펼친 접수 메모 / 고치는 중인 글
+        function idrNote(x) {   // 최근 요청 한 줄 아래: 접수 메모 보기·복사·고치기
+            var it = intakeOf(x.code);
+            if (!it) return null;
+            var open = !!idrOpen[x.code];
+            var copyBtn = h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-act': 'intake-copy', onclick: function () {
+                var t = idrDraft[x.code] != null ? idrDraft[x.code] : it.text;
+                clip(t, (it.name || x.name) + ' 고객 접수 메모를 복사했어요. 붙여넣기 하세요.');
+            } }, '메모 복사');
+            var row = h('div', { class: 'idr-note-row' }, h('span', { class: 'idr-note-tag' }, '접수 메모'),
+                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'intake-toggle', 'aria-expanded': open ? 'true' : 'false', onclick: function () { idrOpen[x.code] = !open; render(); } }, open ? '접기' : '메모 보기'), copyBtn);
+            if (!open) return row;
+            var ta = h('textarea', { class: 'idr-intake', 'data-fk': 'intake-' + x.code, maxlength: '4000', rows: '14', spellcheck: 'false', 'aria-label': x.name + ' 고객 접수 메모' });
+            ta.value = idrDraft[x.code] != null ? idrDraft[x.code] : it.text;
+            ta.addEventListener('input', function () { idrDraft[x.code] = this.value; });
+            var box = h('div', { class: 'idr-note-box' }, ta, h('div', { class: 'idr-note-row' },
+                h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'intake-save', onclick: function () {
+                    var v = (idrDraft[x.code] != null ? idrDraft[x.code] : it.text).slice(0, 4000); delete idrDraft[x.code];
+                    if (v !== it.text) { it.text = v; stamp(it); commit('접수 메모를 저장했어요.'); } else render();
+                } }, '저장'),
+                h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { delete idrDraft[x.code]; render(); } }, '고친 것 취소'),
+                h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'data-act': 'intake-del', onclick: function () {
+                    if (!confirm('이 고객의 접수 메모를 지울까요? (다른 직원 화면에서도 지워져요)')) return;
+                    db.intakes = db.intakes.filter(function (y) { return y.id !== it.id; }); tomb(it.id); delete idrDraft[x.code]; delete idrOpen[x.code];
+                    commit('접수 메모를 지웠어요.');
+                } }, '메모 지우기')));
+            return h('div', { style: 'display:contents' }, row, box);
         }
         function idrLink(code) { return SITE_URL + '/id.html?c=' + code; }
         function idrMessage(name, staff, code, exp) {
@@ -4239,7 +4315,12 @@
             var U = {};
             U.name = h('input', { type: 'text', id: 'idr-name', maxlength: '20', placeholder: '예) 홍길동', autocomplete: 'off' });
             U.phone = h('input', { type: 'tel', id: 'idr-phone', maxlength: '13', placeholder: '010-0000-0000', inputmode: 'numeric', autocomplete: 'off' });
-            U.memo = h('input', { type: 'text', id: 'idr-memo', maxlength: '40', placeholder: '예) SK 500M + TV (선택)', autocomplete: 'off' });
+            U.memo = h('textarea', { id: 'idr-memo', class: 'idr-intake', maxlength: '4000', rows: '16', spellcheck: 'false', autocomplete: 'off', 'aria-label': '고객 접수 메모' });
+            U.memo.value = INTAKE_TPL;
+            U.tpl = h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'idr-tpl', onclick: function () {
+                if (U.memo.value.trim() && U.memo.value !== INTAKE_TPL && !confirm('적은 내용을 지우고 빈 양식으로 다시 시작할까요?')) return;
+                U.memo.value = INTAKE_TPL; U.memo.focus();
+            } }, '양식 다시 넣기');
             U.phone.addEventListener('input', function () { var d = this.value.replace(/\D/g, '').slice(0, 11); this.value = d.length > 7 ? d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7) : d.length > 3 ? d.slice(0, 3) + '-' + d.slice(3) : d; });
             [U.name, U.phone].forEach(function (x) { x.addEventListener('input', function () { idrPaint(); }); });
             U.make = h('button', { type: 'submit', class: 'btn btn-primary', 'data-fk': 'idr-make' }, '전용 링크 만들기');
@@ -4250,8 +4331,10 @@
                 if (!nm) { toast('고객 성함을 입력해 주세요.'); U.name.focus(); return; }
                 if (!/^01\d{8,9}$/.test(ph)) { toast('고객 휴대폰 번호를 확인해 주세요.'); U.phone.focus(); return; }
                 U.make.disabled = true; U.make.textContent = '만드는 중...';
-                ibCall('idCreate', { name: nm, phone: ph, memo: U.memo.value.trim() }).then(function (res) {
+                var note = intakeFill(U.memo.value, nm, ph);
+                ibCall('idCreate', { name: nm, phone: ph, memo: intakeShort(note) }).then(function (res) {   // 서버에는 상품 요약만 (주민번호·계좌 등은 보내지 않음)
                     U.make.disabled = false; U.make.textContent = '전용 링크 만들기';
+                    if (intakeHas(U.memo.value) && res && res.code) intakeSave(String(res.code), nm, note);   // 빈 양식(이름·번호만)은 저장하지 않음
                     idr.last = { name: nm, phone: ph, code: res.code, exp: res.exp, text: idrMessage(nm, res.staff || '담당자', res.code, res.exp) };
                     idrPaint(); idr.items = null; idr.busy = false; idrLoad();
                     toast('고객 전용 링크를 만들었어요. 아래에서 문자로 보내 주세요.');
@@ -4261,8 +4344,8 @@
                 h('div', { class: 'idr-grid' },
                     h('label', { class: 'idr-field' }, h('span', {}, '고객 성함'), U.name),
                     h('label', { class: 'idr-field' }, h('span', {}, '고객 휴대폰'), U.phone),
-                    h('label', { class: 'idr-field idr-wide' }, h('span', {}, '메모 (선택, 고객에게는 안 보여요)'), U.memo)),
-                h('div', { class: 'idr-form-foot' }, h('p', {}, '고객 전용 주소는 72시간 동안 한 번만 쓸 수 있어요. 사진은 서버에 남기지 않고 관리자 메일로만 보내져요.'), U.make));
+                    h('div', { class: 'idr-field idr-wide' }, h('div', { class: 'idr-intake-top' }, h('span', {}, '고객 접수 메모 ', h('small', {}, '(고객에게는 안 보여요 · 아래 최근 요청 목록에서 복사)')), U.tpl), U.memo)),
+                h('div', { class: 'idr-form-foot' }, h('p', {}, '고객 전용 주소는 72시간 동안 한 번만 쓸 수 있어요. 사진은 서버에 남기지 않고 관리자 메일로만 보내져요. 접수 메모는 팀 암호로 잠가서 보관하고 ' + INTAKE_KEEP_DAYS + '일 뒤 자동으로 지워요.'), U.make));
             U.title = h('div', { class: 'vs-h' }, '고객에게 보낼 문자');
             U.area = h('textarea', { class: 'idr-msg', readonly: true, rows: '9', 'aria-label': '고객에게 보낼 문자 내용' });
             U.sms = h('button', { type: 'button', class: 'btn btn-primary', 'data-fk': 'idr-sms', onclick: function () { if (idrReady()) window.location.href = idrSms(idr.last.phone, idr.last.text); } }, '문자로 보내기');
@@ -4292,7 +4375,7 @@
         }
         function idrReset() {   // 다른 고객: 적던 내용과 만든 링크를 지우고 처음부터
             var U = idrUI();
-            U.name.value = ''; U.phone.value = ''; U.memo.value = '';
+            U.name.value = ''; U.phone.value = ''; U.memo.value = INTAKE_TPL;
             idr.last = null; idrPaint();
             try { U.name.focus(); } catch (e) { /* 무시 */ }
             toast('새 고객 정보를 입력해 주세요.');
@@ -4302,15 +4385,17 @@
                 h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'idr-refresh', onclick: function () { idr.busy = false; idrLoad(); toast('새로 확인하고 있어요.'); } }, '새로고침')));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '신분증 요청은 구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요.')));
             if (idr.items === null && !idr.busy && !idr.err) setTimeout(idrLoad, 0);
+            if (db.intakes && db.intakes.some(function (x) { return x.t && x.t < Date.now() - INTAKE_KEEP_DAYS * 86400000; })) setTimeout(intakeCleanup, 0);
             var U = idrUI();
             var items = idr.items || [];
             var ST = { ready: ['대기', 'idr-st-ready'], done: ['접수 완료', 'idr-st-done'], expired: ['만료', 'idr-st-exp'] };
             var rows = items.map(function (x) {
                 var s = ST[x.state] || ST.ready;
-                return h('div', { class: 'idr-row' }, h('div', { class: 'ib-time' }, ibTime(x.t)),
+                return h('div', { class: 'idr-row', 'data-code': x.code }, h('div', { class: 'ib-time' }, ibTime(x.t)),
                     h('div', { class: 'idr-who' }, h('b', {}, x.name), ' ', mfPhone(x.phone)),
                     h('div', { class: 'idr-memo' }, (x.memo ? x.memo + ' · ' : '') + '담당 ' + x.staff),
-                    h('div', {}, h('span', { class: 'idr-st ' + s[1] }, s[0] + (x.state === 'done' && x.done ? ' ' + ibTime(x.done) : ''))));
+                    h('div', {}, h('span', { class: 'idr-st ' + s[1] }, s[0] + (x.state === 'done' && x.done ? ' ' + ibTime(x.done) : ''))),
+                    idrNote(x));
             });
             return h('div', {}, head,
                 h('p', { class: 'forms-sub' }, '상담한 고객에게 사거리인터넷 공식 홈페이지의 고객 전용 접수 주소를 보내요. 고객이 신분증을 촬영해 접수하면 관리자 메일로 바로 도착해요.'),
