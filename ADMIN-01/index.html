@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WTqwiZCO6jlSBRyl5s2k/F52LBPwIQmqQbfLTzcVqb8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-df+PBsebQyczH5sGImd9IL7A7IFSUuUhHAPvgXBPAj8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -606,6 +606,19 @@
         .pol-meta .pol-date { font-size: 15px; font-weight: 800; color: var(--olive-700); background: #F1F4E6; border-radius: 8px; padding: 4px 10px; }
         .pol-meta small { color: var(--muted); font-size: 12.5px; }
         .pol-old { border-left: 5px solid var(--orange); background: #FFF6EE; }
+        .pol-meta .pol-date2 { font-weight: 700; color: var(--muted); background: transparent; border: 1px solid var(--line); }
+        .ph-viewbar { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 12px; border-radius: 12px; background: #EAF1FB; border: 1px solid #B9CDEB; border-left: 5px solid #2F6CC0; font-size: 14.5px; }
+        .ph-viewbar b { color: #1D4F94; }
+        .ph-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        .ph-tip { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+        .ph-list { display: grid; gap: 8px; }
+        .ph-row { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+        .ph-row.cur { border-color: var(--olive-700); box-shadow: inset 4px 0 0 var(--olive-700); }
+        .ph-main { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; min-width: 0; flex: 1 1 260px; }
+        .ph-main b { font-size: 16px; } .ph-main small { flex-basis: 100%; color: var(--muted); font-size: 12.5px; }
+        .ph-chip { font-size: 12px; font-weight: 800; border-radius: 999px; padding: 2px 9px; }
+        .ph-chip.cur { background: var(--olive-700); color: #fff; } .ph-chip.view { background: #2F6CC0; color: #fff; }
+        @media (max-width: 600px) { .ph-btns { width: 100%; } .ph-btns .btn { flex: 1 1 auto; min-height: 42px; } }
         .pol-tools { position: sticky; top: 0; z-index: 5; background: var(--bg, #F4F5EC); padding: 6px 0 10px; display: grid; gap: 8px; }
         .pol-cars, .pol-sps { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 2px; }
         .pol-cars .btn, .pol-sps .btn { flex: none; font-weight: 800; }
@@ -882,7 +895,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-10.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-10.9';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -895,7 +908,7 @@
         var meMemo = null;       // 속도: 로그인 직후 '내 계정 정보' 요청을 한 번으로 합침
         var db = null, me = '', authed = false, cryptoKey = null, idleTimer = null, toastTimer = null, pendingToast = '';
         var now0 = new Date();
-        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false, date: '', form: '', regYm: ymd(now0).slice(0, 7), pol: { car: 'all', q: '', sp: 'all' } };
+        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false, date: '', form: '', regYm: ymd(now0).slice(0, 7), pol: { car: 'all', q: '', sp: 'all', view: '' } };
 
         /* ---------- 공통 도구 ---------- */
         function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -1027,10 +1040,12 @@
                 if (isYmd(r.instDate)) o.instDate = r.instDate;
                 out.regs.push(o);
             });
-            list(d.policies, 10).forEach(function (x) {   // 인터넷상담 단가표 (최근 몇 개만)
+            list(d.policies, 12).forEach(function (x) {   // 인터넷상담 단가표 (최근 10개 보관)
                 if (!x || !str(x.id, 40)) return;
                 var data = polClean(x.data); if (!data) return;
-                out.policies.push({ id: str(x.id, 40), at: num(x.at), by: str(x.by, 20), data: data, u: num(x.u), b: num(x.b) });
+                var pp = { id: str(x.id, 40), at: num(x.at), by: str(x.by, 20), data: data, u: num(x.u), b: num(x.b) };
+                if (num(x.act) > 0) { pp.act = num(x.act); pp.actBy = str(x.actBy, 20); }   // 이전 단가표로 바꾼 시각·사람
+                out.policies.push(pp);
             });
             list(d.intakes, 5000).forEach(function (x) {   // 신분증 요청 접수 메모 (팀 키로 암호화된 공유 저장소에만 보관)
                 if (!x || !str(x.code, 80) || !str(x.text, 4000)) return;
@@ -1187,7 +1202,7 @@
             authed = false; cryptoKey = null; db = null; me = ''; mforms = {}; if (taskDrag) { document.body.classList.remove('t-dragging'); window.removeEventListener('pointermove', taskDragMove, { passive: false }); window.removeEventListener('pointerup', taskDragEnd); window.removeEventListener('pointercancel', taskDragEnd); taskDrag = null; }   // 작성 중인 가입 확인서(고객 개인정보)도 지움
             uni = { mode: 'login', pending: null }; keysOffered = false; lastRemote = null; meMemo = null;
             ibStop(); stopPoll(); stopGatePoll(); clearTimeout(pushTimer); teamCache = null; syncQueued = false; driveState = { status: 'idle', at: null, msg: '' }; acctUi = { list: null, err: '', loading: false, at: 0, enforced: null }; gateMode = 'login';
-            state.view = 'today'; state.who = 'all'; state.status = 'all'; state.date = ''; state.open = Object.create(null);
+            state.view = 'today'; state.who = 'all'; state.status = 'all'; state.date = ''; state.open = Object.create(null); state.pol.view = '';
             var d = document.getElementById('dlg'); if (d.open) closeDlg(); else d.textContent = '';
             var t = document.getElementById('toast'); t.hidden = true; t.textContent = '';
             clearTimeout(idleTimer); idleHide(); render();
@@ -2141,7 +2156,7 @@
                 Object.keys(d.del).sort().map(function (k) { return [k, d.del[k]]; }),
                 (d.regs || []).slice().sort(byId).map(function (x) { return Object.keys(x).filter(function (k) { return k !== 'b'; }).sort().map(function (k) { return [k, x[k]]; }); }),
                 (d.intakes || []).slice().sort(byId).map(function (x) { return [x.id, x.code, x.name, x.text, x.t, x.u]; }),
-                (d.policies || []).slice().sort(byId).map(function (x) { return [x.id, x.at, x.by, x.u]; })
+                (d.policies || []).slice().sort(byId).map(function (x) { return [x.id, x.at, x.by, x.u, x.act || 0, x.actBy || '']; })
             ]);
         }
         function mergeData(a, b) {
@@ -4471,9 +4486,64 @@
             });
             return out.carriers.length ? out : null;
         }
-        function polCur() {   // 지금 쓰는 단가표 (가장 최근에 불러온 것)
+        function polCurAt(x) { return Math.max(x.at || 0, x.act || 0); }
+        function polCur() {   // 지금 쓰는 단가표 (가장 최근에 불러왔거나 '이 단가표로 바꾸기'를 한 것)
             var l = (db && db.policies) || [];
-            return l.length ? l.slice().sort(function (a, b) { return b.at - a.at; })[0] : null;
+            return l.length ? l.slice().sort(function (a, b) { return polCurAt(b) - polCurAt(a) || b.at - a.at; })[0] : null;
+        }
+        function polShown() {   // 화면에 보이는 단가표: [이전 단가표]에서 고른 것이 있으면 그것 (이 기기에서만, 다른 직원에게 영향 없음)
+            var v = state.pol.view, l = (db && db.policies) || [];
+            if (v) { var x = l.filter(function (p) { return p.id === v; })[0]; if (x) return x; state.pol.view = ''; }
+            return polCur();
+        }
+        function polWhen(P) {   // 단가표 날짜·시각: 단가표에 적힌 날짜(예: 2026-10-08 12:30), 없으면 불러온 시각
+            var m = /^(\d{4})-(\d{1,2})-(\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/.exec((P.data && P.data.date) || '');
+            if (m) return { day: m[1] + '-' + pad(+m[2]) + '-' + pad(+m[3]), m: +m[2], d: +m[3], hm: m[4] !== undefined ? pad(+m[4]) + ':' + m[5] : '', t: new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0)).getTime() };
+            var a = new Date(P.at);
+            return { day: ymd(a), m: a.getMonth() + 1, d: a.getDate(), hm: pad(a.getHours()) + ':' + pad(a.getMinutes()), t: P.at };
+        }
+        function polLabel(P) {   // '10월 8일 단가표' / 같은 날 두 번째부터 '10월 8일 15:00 이후 변경건'
+            var w = polWhen(P), same = ((db && db.policies) || []).filter(function (x) { return polWhen(x).day === w.day; })
+                .sort(function (a, b) { return polWhen(a).t - polWhen(b).t || a.at - b.at; });
+            var i = same.indexOf(P), base = w.m + '월 ' + w.d + '일';
+            if (i <= 0) return base + ' 단가표';
+            var hm = w.hm;
+            if (!hm || polWhen(same[i - 1]).t === w.t) { var a = new Date(P.at); hm = pad(a.getHours()) + ':' + pad(a.getMinutes()); }   // 같은 시각 표기면 불러온 시각으로
+            return base + ' ' + hm + ' 이후 변경건';
+        }
+        function polSetCur(P) {   // 대표만: 고른 단가표를 지금 단가표로 (모든 직원 화면 + 홈페이지 자동 반영)
+            if (!isBoss() || !P) return;
+            if (polCur() === P) { toast('이미 지금 쓰는 단가표예요.'); return; }
+            if (!confirm('"' + polLabel(P) + '"을(를) 지금 단가표로 바꿀까요?\n모든 직원 화면에 바로 반영되고, 홈페이지 요금도 이 단가표로 바뀌어요.')) return;
+            P.act = Date.now(); P.actBy = staffName(me); stamp(P);
+            state.pol.view = ''; closeDlg();
+            commit('"' + polLabel(P) + '"을(를) 지금 단가표로 바꿨어요.');
+            setTimeout(hpAuto, 400);
+        }
+        function polHistory() {   // [이전 단가표]: 날짜별 목록 → 보기(이 기기만) / 대표는 지금 단가표로 바꾸기
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide';
+            var cur = polCur(), shown = polShown(), boss = isBoss();
+            var list = ((db && db.policies) || []).slice().sort(function (a, b) { return polWhen(b).t - polWhen(a).t || b.at - a.at; });
+            var rows = list.map(function (P) {
+                var at = new Date(P.at), isCur = P === cur, isShown = P === shown;
+                return h('div', { class: 'ph-row' + (isCur ? ' cur' : ''), 'data-ph': P.id },
+                    h('div', { class: 'ph-main' },
+                        h('b', {}, polLabel(P)),
+                        isCur ? h('span', { class: 'ph-chip cur' }, '지금 단가표') : null,
+                        isShown && !isCur ? h('span', { class: 'ph-chip view' }, '보는 중') : null,
+                        h('small', {}, ((P.data && P.data.date) ? P.data.date + ' 기준 · ' : '') + '불러온 시각 ' + (at.getMonth() + 1) + '/' + at.getDate() + ' ' + pad(at.getHours()) + ':' + pad(at.getMinutes()) + (P.by ? ' · ' + P.by : '') +
+                            (P.act ? ' · ' + (function (t) { return (t.getMonth() + 1) + '/' + t.getDate() + ' ' + pad(t.getHours()) + ':' + pad(t.getMinutes()); })(new Date(P.act)) + ' 지금 단가표로 바꿈' + (P.actBy ? '(' + P.actBy + ')' : '') : ''))),
+                    h('div', { class: 'ph-btns' },
+                        h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ph-view', onclick: function () { state.pol.view = isCur ? '' : P.id; polPick = null; polLast = null; polOn = Object.create(null); closeDlg(); render(); try { window.scrollTo(0, 0); } catch (e) { /* 무시 */ } } }, isCur ? '지금 단가표 보기' : '보기'),
+                        boss && !isCur ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'ph-set', onclick: function () { polSetCur(P); } }, '이 단가표로 바꾸기') : null));
+            });
+            var form = h('form', { novalidate: true }, h('div', { class: 'dlg-head' }, '단가표 날짜별 보기'),
+                h('div', { class: 'dlg-body' },
+                    h('p', { class: 'ph-tip' }, '날짜를 눌러 그날 단가표를 볼 수 있어요. 하루에 두 번 이상 바뀌면 "15:00 이후 변경건"처럼 시간이 붙어요. [보기]는 이 기기에서만 보이고 다른 직원 화면은 그대로예요.' + (boss ? ' [이 단가표로 바꾸기]는 모든 직원 화면과 홈페이지에 반영돼요.' : '')),
+                    h('div', { class: 'ph-list' }, rows)),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기')));
+            form.addEventListener('submit', function (e) { e.preventDefault(); });
+            dlg.appendChild(form); showDlg(dlg);
         }
         function polComb(r) { return r.p + (r.ad || 0) - r.dc; }   // 휴대폰 결합 시 월요금 = 표 요금 + (되돌린 인터넷+TV 결합할인) - 휴대폰 결합할인
         function won(n) { return Math.round(n).toLocaleString('ko-KR') + '원'; }
@@ -4636,28 +4706,20 @@
                 if (!db.policies) db.policies = [];
                 var it = stamp({ id: uid(), at: Date.now(), by: staffName(me), data: parsed, u: 0 });
                 db.policies.push(it);
-                var keep = db.policies.slice().sort(function (a, b) { return b.at - a.at; }).slice(0, 3), ok = Object.create(null);
+                var keep = db.policies.slice().sort(function (a, b) { return b.at - a.at; }).slice(0, 10), ok = Object.create(null);   // 최근 10개 보관 (날짜별 보기)
                 keep.forEach(function (x) { ok[x.id] = 1; });
                 db.policies.forEach(function (x) { if (!ok[x.id]) tomb(x.id); });
                 db.policies = db.policies.filter(function (x) { return ok[x.id]; });
-                closeDlg(); commit('단가표를 바꿨어요. (' + (parsed.date || '') + ' 기준) 모든 직원 화면에 바로 반영돼요.');
+                state.pol.view = ''; closeDlg(); commit('단가표를 바꿨어요. (' + (parsed.date || '') + ' 기준) 모든 직원 화면에 바로 반영돼요.');
                 setTimeout(hpAuto, 400);   // 홈페이지 요금도 자동으로 (반영을 꺼 둔 경우는 그대로)
             } }, '이 단가표로 바꾸기');
             var form = h('form', { novalidate: true, class: 'pol-imp' }, h('div', { class: 'dlg-head' }, '단가표 불러오기'),
                 h('div', { class: 'dlg-body' },
-                    h('p', {}, 'Claude가 보낸 단가표 파일(.json)을 선택하거나, 내용을 붙여넣은 뒤 [이 단가표로 바꾸기]를 누르세요. 바꾸면 모든 직원 화면에 바로 반영되고, 이전 단가표 2개까지는 되돌릴 수 있어요.'),
+                    h('p', {}, 'Claude가 보낸 단가표 파일(.json)을 선택하거나, 내용을 붙여넣은 뒤 [이 단가표로 바꾸기]를 누르세요. 바꾸면 모든 직원 화면에 바로 반영되고, 최근 10개까지는 [이전 단가표]에서 날짜별로 보거나 되돌릴 수 있어요.'),
                     h('label', { class: 'field' }, '파일 선택', file), h('label', { class: 'field' }, '붙여넣기', area), msg),
                 h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), save));
             form.addEventListener('submit', function (e) { e.preventDefault(); });
             dlg.appendChild(form); showDlg(dlg);
-        }
-        function polRevert() {
-            var l = (db.policies || []).slice().sort(function (a, b) { return b.at - a.at; });
-            if (l.length < 2) { toast('되돌릴 이전 단가표가 없어요.'); return; }
-            if (!confirm('지금 단가표(' + (l[0].data.date || '') + ')를 지우고 이전 단가표(' + (l[1].data.date || '') + ')로 되돌릴까요?')) return;
-            db.policies = db.policies.filter(function (x) { return x.id !== l[0].id; }); tomb(l[0].id);
-            commit('이전 단가표로 되돌렸어요.');
-            setTimeout(hpAuto, 400);   // 홈페이지 요금도 되돌린 단가표로 (반영을 꺼 둔 경우는 그대로)
         }
         /* ---------- 홈페이지 요금 자동 반영: 단가표 → 홈페이지 '베스트 추천 요금' ----------
            보내는 값: 통신사·구성·속도·TV 이름·월요금·결합 할인·사은품 가이드(최대) — 홈페이지에 원래 보이는 공개 정보뿐 (수수료·1/2/3차 금액은 보내지 않음) */
@@ -4758,16 +4820,16 @@
                     h('p', { class: 'hp-note' }, '※ 홈페이지에 이미 있는 상품(같은 통신사·속도·TV)만 월요금·결합요금·사은품 금액이 바뀌고, 화면 모양·상품 이름·한줄평은 그대로예요. SK는 SKB 정책, 사은품은 가이드 최대 금액이에요. 요금할인형(알뜰형)과 가이드 금액이 없는 상품의 사은품은 지금 홈페이지 그대로 둬요. 새 단가표를 불러오면 자동으로 반영돼요.')));
         }
         function renderPolicy() {
-            var P = polCur(), S = state.pol, boss = isBoss();
+            var P = polShown(), CUR = polCur(), S = state.pol, boss = isBoss(), viewing = !!(P && CUR && P !== CUR);
             var head = h('div', { class: 'page-head' }, h('h1', {}, '인터넷상담'),
                 h('div', { class: 'actions' },
-                    boss && (db.policies || []).length > 1 ? h('button', { type: 'button', class: 'btn', 'data-act': 'pol-revert', onclick: polRevert }, '이전 단가표로') : null,
+                    (db.policies || []).length > 1 ? h('button', { type: 'button', class: 'btn', 'data-act': 'pol-history', onclick: polHistory }, '이전 단가표') : null,
                     boss ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'pol-import', onclick: polImport }, '단가표 불러오기') : null));
             if (!P) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, boss ? '아직 단가표가 없어요. 오른쪽 위 [단가표 불러오기]로 Claude가 보낸 단가표 파일을 넣어 주세요.' : '아직 단가표가 없어요. 대표님이 단가표를 넣으면 여기에 보여요.')));
             var D = P.data, at = new Date(P.at), ageDays = Math.floor((Date.now() - P.at) / 86400000);
-            var meta = h('div', { class: 'pol-meta' + (ageDays >= 1 ? ' pol-old' : '') },
-                h('b', {}, D.title || '단가표'), h('span', { class: 'pol-date' }, (D.date || '') + ' 기준'),
-                h('small', {}, '불러온 시각 ' + (at.getMonth() + 1) + '/' + at.getDate() + ' ' + pad(at.getHours()) + ':' + pad(at.getMinutes()) + (P.by ? ' · ' + P.by : '') + (ageDays >= 1 ? ' · ⚠ ' + ageDays + '일 전에 넣은 단가표예요. 최신인지 확인해 주세요.' : '')),
+            var meta = h('div', { class: 'pol-meta' + (ageDays >= 1 && !viewing ? ' pol-old' : '') },
+                h('b', {}, D.title || '단가표'), h('span', { class: 'pol-date', 'data-fk': 'pol-label' }, polLabel(P)), D.date ? h('span', { class: 'pol-date pol-date2' }, D.date + ' 기준') : null,
+                h('small', {}, '불러온 시각 ' + (at.getMonth() + 1) + '/' + at.getDate() + ' ' + pad(at.getHours()) + ':' + pad(at.getMinutes()) + (P.by ? ' · ' + P.by : '') + (ageDays >= 1 && !viewing ? ' · ⚠ ' + ageDays + '일 전에 넣은 단가표예요. 최신인지 확인해 주세요.' : '')),
                 h('small', {}, '1차 = 수수료에서 22.5만 남기고 · 2차 = 17.5만 남기고 · 3차 = 12.5만 남기고 · 줄을 누르면 노란색, 1·2·3차 금액을 누르면 그 금액을 짚어 둬요'));
             var cars = h('div', { class: 'pol-cars', role: 'group', 'aria-label': '통신사' },
                 [['all', '전체', '#3E441E']].concat(D.carriers.map(function (c) { return [c.id, c.name, c.color]; })).map(function (x) {
@@ -4784,7 +4846,12 @@
             var acts = h('div', { class: 'pol-acts' },
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'calc', 'aria-pressed': calcOpen() ? 'true' : 'false', onclick: function () { calcToggle(); this.setAttribute('aria-pressed', calcOpen() ? 'true' : 'false'); } }, '계산기'),
                 h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'pol-to-idr', title: picked ? picked.c.name + ' ' + picked.r.n + ' 로 신분증 요청 진행' : '상담할 상품 줄을 먼저 눌러 주세요', onclick: polToIdr }, '신분증요청 바로진행'));
-            return h('div', {}, head, meta, hpBar(D),
+            var viewBar = viewing ? h('div', { class: 'ph-viewbar', role: 'status' },
+                h('span', {}, '📅 이전 단가표를 보는 중: ', h('b', {}, polLabel(P)), ' — 지금 단가표는 ', h('b', {}, polLabel(CUR)), '이에요. (이 기기에서만 보여요)'),
+                h('div', { class: 'ph-btns' },
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ph-back', onclick: function () { state.pol.view = ''; polPick = null; polLast = null; polOn = Object.create(null); render(); } }, '지금 단가표로 돌아가기'),
+                    boss ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', onclick: function () { polSetCur(P); } }, '이 단가표로 바꾸기') : null)) : null;
+            return h('div', {}, head, viewBar, meta, viewing ? null : hpBar(D),
                 h('div', { class: 'pol-tools' }, h('div', { class: 'pol-row1' }, cars, acts), h('div', { class: 'pol-search' }, q, h('div', { class: 'pol-sps' }, sps)),
                     picked ? h('div', { class: 'pol-picknote' }, '선택: ', h('b', {}, picked.c.name + ' · ' + picked.r.n), polPick ? ' · ' + polPick.stage + '차 상담 ' + (polPick.v > 0 ? won(polPick.v) : '지원 없음') : '', h('button', { type: 'button', class: 'link-btn', onclick: function () { polPick = null; polLast = null; polOn = Object.create(null); render(); } }, '선택 지우기')) : null),
                 cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '조건에 맞는 요금제가 없어요. 통신사·속도·검색어를 바꿔 보세요.')),
