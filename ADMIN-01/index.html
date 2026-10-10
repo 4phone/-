@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RS/nojGfh764ttKF12oh72ILkYGo2Tg8iy5qn49NwEg='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-GLZK84+sDlTr6g8yAJk8Yzuj8q6Cvtk0Or3vTaGWg/Q='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -583,6 +583,73 @@
             .mf-tools .actions, .mf-tools .actions .btn { width: 100%; }
         }
         #mf-print { display: none; }
+        /* ---------- 인터넷상담 (단가표) ---------- */
+        .pol-meta { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; }
+        .pol-meta b { font-size: 18px; letter-spacing: -0.4px; }
+        .pol-meta .pol-date { font-size: 15px; font-weight: 800; color: var(--olive-700); background: #F1F4E6; border-radius: 8px; padding: 4px 10px; }
+        .pol-meta small { color: var(--muted); font-size: 12.5px; }
+        .pol-old { border-left: 5px solid var(--orange); background: #FFF6EE; }
+        .pol-tools { position: sticky; top: 0; z-index: 5; background: var(--bg, #F4F5EC); padding: 6px 0 10px; display: grid; gap: 8px; }
+        .pol-cars, .pol-sps { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+        .pol-cars .btn, .pol-sps .btn { flex: none; font-weight: 800; }
+        .pol-cars .btn[aria-pressed="true"] { color: #fff; border-color: var(--c, var(--olive-700)); background: var(--c, var(--olive-700)); }
+        .pol-sps .btn[aria-pressed="true"] { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .pol-search { display: flex; gap: 8px; align-items: center; }
+        .pol-search input { max-width: 340px; }
+        .pol-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; margin-bottom: 18px; overflow: hidden; }
+        .pol-head { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; padding: 12px 16px; background: var(--c); color: #fff; }
+        .pol-head h2 { font-size: 21px; font-weight: 900; letter-spacing: -0.5px; }
+        .pol-head span { font-size: 13px; opacity: .92; font-weight: 600; }
+        .pol-info { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; padding: 10px 16px; background: #FBFCF7; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+        .pol-comb { color: #1F4FA8; font-weight: 700; }
+        .pol-guide { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+        .pol-guide span { white-space: nowrap; } .pol-guide b { color: #C0392B; }
+        .pol-pen { color: #A33226; font-weight: 700; }
+        .pol-tbl { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+        .pol-tbl th { position: sticky; top: 0; background: #F7F9F0; font-size: 12.5px; color: var(--muted); font-weight: 800; padding: 8px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+        .pol-tbl th:first-child { text-align: left; }
+        .pol-tbl td { padding: 9px 8px; border-bottom: 1px solid #ECEFE3; text-align: right; font-size: 16px; font-weight: 800; white-space: nowrap; }
+        .pol-tbl td:first-child { text-align: left; white-space: normal; font-size: 14.5px; font-weight: 700; min-width: 180px; }
+        .pol-tbl tr.pol-grp td { background: #F2F4EA; font-size: 12.5px; font-weight: 800; color: var(--olive-700); padding: 6px 8px; text-align: left; }
+        .pol-tbl tbody tr.pol-row { cursor: pointer; }
+        .pol-tbl tbody tr.pol-row:hover td { background: #FFFBE6; }
+        .pol-tbl tbody tr.pol-row.on td { background: #FFF3BF; }
+        .pol-tbl .p-price { color: #C0392B; }
+        .pol-tbl .p-comb { color: #1F4FA8; }
+        .pol-tbl .p-guide { color: #6B2FA0; }
+        .pol-tbl .p-fee { color: #333; background: #F7F7F2; }
+        .pol-tbl .p-1 { color: #1F6B2A; } .pol-tbl .p-2 { color: #8A6400; } .pol-tbl .p-3 { color: #A33226; }
+        .pol-tbl small { display: block; font-size: 11.5px; font-weight: 600; color: var(--hint); }
+        .pol-tbl .p-none { color: #B0B4A6; font-weight: 700; font-size: 13px; }
+        .pol-warn { display: block; margin-top: 3px; font-size: 12px; font-weight: 700; color: #C0392B; white-space: normal; }
+        .pol-nt { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 600; color: var(--muted); white-space: normal; }
+        .pol-more { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); }
+        .pol-more details { padding: 10px 16px; border-right: 1px solid var(--line); font-size: 13.5px; }
+        .pol-more details:last-child { border-right: none; }
+        .pol-more summary { font-weight: 800; cursor: pointer; color: var(--olive-700); }
+        .pol-more ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 3px; }
+        .pol-region { padding: 10px 16px; border-top: 1px solid var(--line); font-size: 13px; }
+        .pol-region table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+        .pol-region td { padding: 4px 6px; border-bottom: 1px solid #ECEFE3; vertical-align: top; }
+        .pol-region td:first-child { font-weight: 800; white-space: nowrap; width: 110px; }
+        .pol-closed .pol-tbl td { color: #9AA08C !important; }
+        .pol-scroll { overflow-x: auto; }
+        .pol-empty { padding: 30px 20px; text-align: center; color: var(--muted); }
+        .pol-imp textarea { min-height: 160px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+        @media (max-width: 900px) {
+            .pol-info, .pol-more { grid-template-columns: minmax(0, 1fr); }
+            .pol-more details { border-right: none; border-bottom: 1px solid var(--line); }
+            .pol-tbl thead { display: none; }
+            .pol-tbl, .pol-tbl tbody, .pol-tbl tr, .pol-tbl td { display: block; width: 100%; }
+            .pol-tools { position: static; }
+            .pol-tbl tr.pol-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px 6px; padding: 10px 12px; border-bottom: 1px solid #ECEFE3; }
+            .pol-tbl tr.pol-row td { border: none; padding: 2px 0; text-align: left; font-size: 14px; background: none !important; overflow-wrap: anywhere; white-space: normal; min-width: 0; }
+            .pol-tbl tr.pol-row td small { white-space: normal; }
+            .pol-tbl tr.pol-row td:first-child { grid-column: 1 / -1; font-size: 15px; min-width: 0; }
+            .pol-tbl tr.pol-row td[data-l]::before { content: attr(data-l); display: block; font-size: 11px; font-weight: 700; color: var(--hint); }
+            .pol-tbl tr.pol-row.on { background: #FFF3BF; }
+            .pol-search input { max-width: none; }
+        }
         #idle-dlg { width: min(420px, 92vw); text-align: center; }
         #idle-dlg .idle-in { padding: 24px 22px 20px; display: grid; gap: 10px; }
         #idle-dlg h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.5px; }
@@ -750,7 +817,7 @@
             ['가입날짜', function (r) { return parseInt(r.date.slice(8), 10) + '일'; }], ['모델', 'model'], ['일련번호', 'serial'], ['번호', 'phone'], ['고객명', 'name'], ['생년월일', 'birth'],
             ['공시&선약(프약)', 'disc'], ['공시금액', 'subsidy'], ['할부원금', 'price'], ['할부개월', 'months'], ['요금제', 'plan'], ['부가서비스', 'extra'], ['보험가입여부(종류)', 'ins'],
             ['결합종류', 'combKind'], ['결합여부', 'comb'], ['요금제유지개월', 'keep'], ['변경요금제', 'plan2'], ['가입후요금', 'bill1'], ['3개월후 요금', 'bill2'], ['이전사업자', 'prev'], ['가입유형', 'type']];
-        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'calls', t: '콜 인입' }, { v: 'visits', t: '홈페이지 인입' }, { v: 'idreq', t: '신분증 요청' }, { v: 'settings', t: '설정' }];
+        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'calls', t: '콜 인입' }, { v: 'visits', t: '홈페이지 인입' }, { v: 'policy', t: '인터넷상담' }, { v: 'idreq', t: '신분증 요청' }, { v: 'settings', t: '설정' }];
 
         // 공유 저장소 주소는 반드시 구글 Apps Script 웹 앱 주소여야 합니다 (그 밖의 주소로는 어떤 요청도 보내지 않음)
         var DRIVE_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,200}\/exec$/;
@@ -761,7 +828,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-10.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-10.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -774,7 +841,7 @@
         var meMemo = null;       // 속도: 로그인 직후 '내 계정 정보' 요청을 한 번으로 합침
         var db = null, me = '', authed = false, cryptoKey = null, idleTimer = null, toastTimer = null, pendingToast = '';
         var now0 = new Date();
-        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false, date: '', form: '', regYm: ymd(now0).slice(0, 7) };
+        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false, date: '', form: '', regYm: ymd(now0).slice(0, 7), pol: { car: 'all', q: '', sp: 'all' } };
 
         /* ---------- 공통 도구 ---------- */
         function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -840,7 +907,7 @@
                     { id: 's2', name: '직원 1', role: '', u: 0, o: 2, adm: false },
                     { id: 's3', name: '직원 2', role: '', u: 0, o: 3, adm: false }
                 ],
-                events: [], notices: [], tasks: [], regs: [], intakes: [],
+                events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [],
                 del: Object.create(null),                  // 지워진 항목 기록(다른 직원 화면에서도 지워지도록)
                 drive: { url: '', k: '', rev: 0, pk: '', acc: false },  // 공유 저장소 연결 정보 (암호화된 데이터 안에만 보관)
                 account: null    // 이 기기에서 로그인한 계정 (이 기기 안에만 보관하고 드라이브로는 보내지 않음)
@@ -864,7 +931,7 @@
         // 저장소·백업·드라이브에서 읽은 내용은 항상 이 함수로 걸러서(글자 수·개수 제한, 형식 검사) 사용합니다
         function normalizeDb(d) {
             if (!d || typeof d !== 'object') return null;
-            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
+            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
             function list(v, max) { return Array.isArray(v) ? v.slice(0, max) : []; }
             list(d.staff, 200).forEach(function (s, i) {
                 if (!s || !str(s.name, 30).trim()) return;
@@ -905,6 +972,11 @@
                 if (r.inst === true) o.inst = true;
                 if (isYmd(r.instDate)) o.instDate = r.instDate;
                 out.regs.push(o);
+            });
+            list(d.policies, 10).forEach(function (x) {   // 인터넷상담 단가표 (최근 몇 개만)
+                if (!x || !str(x.id, 40)) return;
+                var data = polClean(x.data); if (!data) return;
+                out.policies.push({ id: str(x.id, 40), at: num(x.at), by: str(x.by, 20), data: data, u: num(x.u), b: num(x.b) });
             });
             list(d.intakes, 5000).forEach(function (x) {   // 신분증 요청 접수 메모 (팀 키로 암호화된 공유 저장소에만 보관)
                 if (!x || !str(x.code, 80) || !str(x.text, 4000)) return;
@@ -2001,8 +2073,8 @@
         }
 
         /* --- 내용 합치기: 항목마다 수정 시각(u)이 더 늦은 쪽을 남기고, 지운 항목은 삭제 기록으로 처리 --- */
-        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, del: db.del }; }
-        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, del: db.del })); }
+        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, del: db.del }; }
+        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, del: db.del })); }
         function canon(d) {   // 같은 내용이면 항상 같은 글자가 되도록 정렬한 비교용 문자열
             function byId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
             return JSON.stringify([
@@ -2012,7 +2084,8 @@
                 d.tasks.slice().sort(byId).map(function (x) { return [x.id, x.title, x.staffId, x.due, x.priority, x.status, x.memo, x.u, x.ord || 0, x.st || 0, x.fin || 0, x.est || '', x.ext || '', x.extId || '', x.from || '', x.fromDate || '', x.pa || 0, x.ps || 0]; }),
                 Object.keys(d.del).sort().map(function (k) { return [k, d.del[k]]; }),
                 (d.regs || []).slice().sort(byId).map(function (x) { return Object.keys(x).filter(function (k) { return k !== 'b'; }).sort().map(function (k) { return [k, x[k]]; }); }),
-                (d.intakes || []).slice().sort(byId).map(function (x) { return [x.id, x.code, x.name, x.text, x.t, x.u]; })
+                (d.intakes || []).slice().sort(byId).map(function (x) { return [x.id, x.code, x.name, x.text, x.t, x.u]; }),
+                (d.policies || []).slice().sort(byId).map(function (x) { return [x.id, x.at, x.by, x.u]; })
             ]);
         }
         function mergeData(a, b) {
@@ -2067,12 +2140,13 @@
                 notices: mergeList(a.notices, b.notices, true).filter(alive).sort(byId),
                 tasks: mergeList(a.tasks, b.tasks, true).filter(alive).sort(byId),
                 regs: mergeList(a.regs || [], b.regs || [], false).filter(alive).sort(byId),
-                intakes: mergeList(a.intakes || [], b.intakes || [], false).filter(alive).sort(byId),   // 가입 장부: 나중에 고친 쪽으로 (충돌본 만들지 않음)
+                intakes: mergeList(a.intakes || [], b.intakes || [], false).filter(alive).sort(byId),
+                policies: mergeList(a.policies || [], b.policies || [], false).filter(alive).sort(byId),   // 가입 장부: 나중에 고친 쪽으로 (충돌본 만들지 않음)
                 del: del, conflicts: conflicts
             };
         }
                 function applyMerged(m) {
-            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.del = m.del;
+            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.policies = m.policies || []; db.del = m.del;
             var ok = Object.create(null); db.staff.forEach(function (x) { ok[x.id] = 1; });
             [db.events, db.notices, db.tasks].forEach(function (list) { list.forEach(function (it) { if (it.staffId && !ok[it.staffId]) it.staffId = ''; }); });
             if (!staffById(me)) { me = db.staff[0].id; lsSet(ME_KEY, me); }
@@ -2080,10 +2154,10 @@
         }
 
         /* --- 동기화: 드라이브의 최신 내용을 받아 합치고, 내 변경분이 있으면 올림 --- */
-        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
+        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || []].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
         function markSynced(snap) {   // 드라이브에 올라간(또는 드라이브와 같아진) 버전을 '기준 시각(b)'으로 기록
             var changed = false;
-            [db.events, db.notices, db.tasks, db.regs, db.intakes].forEach(function (l) { l.forEach(function (it) {
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || []].forEach(function (l) { l.forEach(function (it) {
                 var nb = !snap ? it.u : snap[it.id];            // snap: 드라이브에 올라간 시점의 수정 시각
                 if (nb === undefined) return;                     // 올릴 때 없던 항목(그 뒤에 새로 만든 것)은 다음 저장 때
                 if (nb > it.u) nb = it.u;
@@ -2093,8 +2167,8 @@
         }
         function markSeen(remote) {   // 받아 온 드라이브 버전과 같은 항목은 '본 적 있음'으로 기록 (다른 기기 기준 시각이 섞이지 않게)
             var ru = Object.create(null);
-            [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
-            [db.events, db.notices, db.tasks, db.regs, db.intakes].forEach(function (l) { l.forEach(function (it) {
+            [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || [], remote.policies || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || []].forEach(function (l) { l.forEach(function (it) {
                 var r = ru[it.id];
                 if (r !== undefined && r === it.u && it.b !== it.u) it.b = it.u;   // 드라이브 버전과 같음
             }); });
@@ -4275,6 +4349,166 @@
                 if (state.view === 'idreq') render();
             }, function (e) { if (mine !== idr) return; idr.busy = false; idr.err = driveErrText(e); if (state.view === 'idreq') render(); });
         }
+        /* ---------- 인터넷상담: 통신사 단가표 (요금 · 결합요금 · 사은품 가이드 · 수수료 · 1/2/3차 상담 지원금) ---------- */
+        // 단가표는 팀 암호로 잠근 공유 저장소에만 보관해요 (홈페이지 소스에는 넣지 않음 — 수수료가 밖으로 보이지 않게).
+        var POL_STAGE = [225000, 50000, 100000];   // 1차 = 수수료 - 22.5만 / 2차 = 1차 - 5만 / 3차 = 2차 - 10만
+        function polNum(v, lo, hi) { return typeof v === 'number' && isFinite(v) && v >= lo && v <= hi ? v : null; }
+        function polStrs(a, n, len) { return Array.isArray(a) ? a.slice(0, n).map(function (x) { return str(x, len); }).filter(Boolean) : []; }
+        function polClean(d) {   // 불러온 단가표를 꼼꼼히 걸러서 (형식이 틀리면 null)
+            if (!d || typeof d !== 'object' || !Array.isArray(d.carriers) || !d.carriers.length) return null;
+            var out = { v: 1, date: str(d.date, 40), title: str(d.title, 40), src: str(d.src, 200), carriers: [] };
+            d.carriers.slice(0, 30).forEach(function (c) {
+                if (!c || !str(c.id, 20) || !str(c.name, 30) || !Array.isArray(c.groups)) return;
+                var cc = { id: str(c.id, 20), name: str(c.name, 30), sub: str(c.sub, 160), color: /^#[0-9a-fA-F]{6}$/.test(c.color || '') ? c.color : '#3E441E', closed: !!c.closed,
+                    guide: {}, penalty: str(c.penalty, 80), comb: str(c.comb, 400), groups: [], extra: polStrs(c.extra, 60, 300), refund: polStrs(c.refund, 40, 300), notes: polStrs(c.notes, 40, 400),
+                    region: Array.isArray(c.region) ? c.region.slice(0, 40).filter(function (r) { return Array.isArray(r) && str(r[0], 30) && str(r[1], 600); }).map(function (r) { return [str(r[0], 30), str(r[1], 600)]; }) : [], regionNote: str(c.regionNote, 200) };
+                var gd = c.guide && typeof c.guide === 'object' ? c.guide : {};
+                Object.keys(gd).slice(0, 20).forEach(function (k) { var g = gd[k]; if (k.length <= 10 && Array.isArray(g) && str(g[0], 40) && polNum(g[1], 0, 1e7) !== null && polNum(g[2], 0, 1e7) !== null) cc.guide[k] = [str(g[0], 40), g[1], g[2]]; });
+                c.groups.slice(0, 12).forEach(function (g) {
+                    if (!g || !Array.isArray(g.rows)) return;
+                    var gg = { name: str(g.name, 80), rows: [] };
+                    g.rows.slice(0, 80).forEach(function (r) {
+                        if (!r || !str(r.n, 100)) return;
+                        var p = polNum(r.p, 0, 1e6), a = polNum(r.g, 0, 1000), b = polNum(r.c, 0, 1000), t = polNum(r.t, 0, 1000);
+                        if (p === null || a === null || b === null || t === null) return;
+                        var rr = { n: str(r.n, 100), p: p, g: a, c: b, t: t };
+                        if (typeof r.gd === 'string' && cc.guide[r.gd]) rr.gd = r.gd;
+                        if (polNum(r.dc, 0, 1e5) !== null) rr.dc = r.dc;
+                        if (r.tv) rr.tv = 1;
+                        if (str(r.nt, 200)) rr.nt = str(r.nt, 200);
+                        gg.rows.push(rr);
+                    });
+                    if (gg.rows.length) cc.groups.push(gg);
+                });
+                if (cc.groups.length) out.carriers.push(cc);
+            });
+            return out.carriers.length ? out : null;
+        }
+        function polCur() {   // 지금 쓰는 단가표 (가장 최근에 불러온 것)
+            var l = (db && db.policies) || [];
+            return l.length ? l.slice().sort(function (a, b) { return b.at - a.at; })[0] : null;
+        }
+        function won(n) { return Math.round(n).toLocaleString('ko-KR') + '원'; }
+        function polFee(r) { var sum = Math.round((r.g + r.c) * 10) / 10; return { fee: Math.min(sum, r.t) * 10000, warn: Math.abs(sum - r.t) > 0.05 ? '원본 표의 상품권+현금(' + sum + ')과 합계(' + r.t + ')가 달라요. 낮은 금액 기준으로 계산했어요 — 확인 필요' : '' }; }
+        function polSpeed(n) { return /1G|1기가/i.test(n) ? '1G' : /500M/i.test(n) ? '500M' : /200M|160M/i.test(n) ? '200M' : /100M/i.test(n) ? '100M' : ''; }
+        function polMatch(r, sp, q) {
+            if (sp === 'tv' && !r.tv) return false;
+            if (sp === 'solo' && r.tv) return false;
+            if (sp !== 'all' && sp !== 'tv' && sp !== 'solo' && polSpeed(r.n) !== sp) return false;
+            if (q) { var t = r.n.replace(/\s+/g, '').toLowerCase(); if (q.split(/\s+/).filter(Boolean).some(function (w) { return t.indexOf(w.toLowerCase()) < 0; })) return false; }
+            return true;
+        }
+        var polOn = Object.create(null);   // 통화 중에 짚어 둔 줄 (누르면 노란색)
+        function polCell(v, cls, label) {
+            if (v === null) return h('td', { class: cls, 'data-l': label }, h('span', { class: 'p-none' }, '-'));
+            if (v <= 0) return h('td', { class: cls, 'data-l': label, title: '계산 결과 ' + won(v) }, h('span', { class: 'p-none' }, '지원 없음'));
+            return h('td', { class: cls, 'data-l': label }, won(v));
+        }
+        function polCard(c, sp, q) {
+            var rows = [], shown = 0;
+            c.groups.forEach(function (g) {
+                var list = g.rows.filter(function (r) { return polMatch(r, sp, q); });
+                if (!list.length) return;
+                rows.push(h('tr', { class: 'pol-grp' }, h('td', { colspan: '8' }, g.name)));
+                list.forEach(function (r) {
+                    shown++;
+                    var f = polFee(r), s1 = f.fee - POL_STAGE[0], s2 = s1 - POL_STAGE[1], s3 = s2 - POL_STAGE[2], key = c.id + '|' + g.name + '|' + r.n;
+                    var gmax = r.gd && c.guide[r.gd] ? c.guide[r.gd][2] : null;
+                    rows.push(h('tr', { class: 'pol-row' + (polOn[key] ? ' on' : ''), onclick: function () { polOn[key] = !polOn[key]; this.classList.toggle('on', !!polOn[key]); } },
+                        h('td', {}, r.n, f.warn ? h('span', { class: 'pol-warn' }, '⚠ ' + f.warn) : null, r.nt ? h('span', { class: 'pol-nt' }, r.nt) : null),
+                        h('td', { class: 'p-price', 'data-l': '월요금(미결합)' }, won(r.p)),
+                        r.dc != null ? h('td', { class: 'p-comb', 'data-l': '결합요금' }, won(r.p - r.dc), h('small', {}, '-' + r.dc.toLocaleString('ko-KR'))) : h('td', { class: 'p-comb', 'data-l': '결합요금' }, h('span', { class: 'p-none' }, '-')),
+                        h('td', { class: 'p-guide', 'data-l': '가이드(최대)' }, gmax !== null ? won(gmax) : h('span', { class: 'p-none' }, '-'), gmax !== null ? h('small', {}, c.guide[r.gd][0]) : null),
+                        h('td', { class: 'p-fee', 'data-l': '수수료' }, won(f.fee), h('small', {}, (f.fee / 10000) + '만')),
+                        polCell(s1, 'p-1', '1차 상담'), polCell(s2, 'p-2', '2차 상담'), polCell(s3, 'p-3', '3차 상담')));
+                });
+            });
+            if (!shown) return null;
+            var guideList = Object.keys(c.guide).map(function (k) { var g = c.guide[k]; return h('span', {}, g[0] + ' ', h('b', {}, g[1] === g[2] ? won(g[2]) : g[1].toLocaleString('ko-KR') + '~' + won(g[2]))); });
+            function box(title, items, open) { return items.length ? h('details', { open: open ? true : false }, h('summary', {}, title + ' (' + items.length + ')'), h('ul', {}, items.map(function (t) { return h('li', {}, t); }))) : h('details', {}, h('summary', {}, title + ' (없음)')); }
+            return h('section', { class: 'pol-card' + (c.closed ? ' pol-closed' : ''), style: '--c:' + c.color, 'data-car': c.id },
+                h('div', { class: 'pol-head' }, h('h2', {}, c.name), h('span', {}, c.sub)),
+                h('div', { class: 'pol-info' },
+                    h('div', {}, c.comb ? h('div', { class: 'pol-comb' }, '결합: ' + c.comb) : null, c.penalty ? h('div', { class: 'pol-pen' }, c.penalty) : null),
+                    guideList.length ? h('div', {}, h('b', {}, '사은품 가이드 (상품권 포함) '), h('div', { class: 'pol-guide' }, guideList)) : h('div', { class: 'p-none' }, '사은품 가이드 금액 표기 없음')),
+                h('div', { class: 'pol-scroll' }, h('table', { class: 'pol-tbl' },
+                    h('thead', {}, h('tr', {}, h('th', {}, '상품'), h('th', {}, '월요금(미결합)'), h('th', {}, '결합요금'), h('th', {}, '가이드(최대)'), h('th', {}, '수수료'), h('th', {}, '1차 상담'), h('th', {}, '2차 상담'), h('th', {}, '3차 상담'))),
+                    h('tbody', {}, rows))),
+                h('div', { class: 'pol-more' }, box('추가 · 차감 정책', c.extra, true), box('회선 유지 · 환수 기준', c.refund, false), box('주의사항', c.notes, c.notes.length > 0)),
+                c.region.length ? h('details', { class: 'pol-region' }, h('summary', { style: 'font-weight:800;cursor:pointer;color:var(--olive-700)' }, '가능 지역 (' + c.region.length + '개 권역)'),
+                    c.regionNote ? h('div', { class: 'p-none', style: 'margin-top:4px' }, c.regionNote) : null,
+                    h('table', {}, c.region.map(function (r) { return h('tr', {}, h('td', {}, r[0]), h('td', {}, r[1])); }))) : null);
+        }
+        function polImport() {   // 대표만: 단가표 파일(또는 붙여넣기)로 바꾸기 → 모든 직원 화면에 바로 반영
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide';
+            var file = h('input', { type: 'file', accept: '.json,.txt,application/json,text/plain', 'aria-label': '단가표 파일 선택' });
+            var area = h('textarea', { 'aria-label': '단가표 붙여넣기', placeholder: '또는 받은 단가표 내용을 여기에 붙여넣기 하세요.', spellcheck: 'false' });
+            var msg = h('div', { class: 'err', style: 'padding:0' });
+            var parsed = null;
+            function check(text) {
+                parsed = null; msg.style.color = '';
+                var t = String(text || '').trim(); if (!t) { msg.textContent = ''; return; }
+                try { parsed = polClean(JSON.parse(t)); } catch (e) { parsed = null; }
+                if (!parsed) { msg.textContent = '단가표 형식이 아니에요. Claude가 보낸 단가표 파일을 그대로 선택하거나 붙여넣어 주세요.'; return; }
+                var n = 0; parsed.carriers.forEach(function (c) { c.groups.forEach(function (g) { n += g.rows.length; }); });
+                msg.style.color = '#1F6B2A'; msg.textContent = '확인됐어요: ' + (parsed.date || '날짜 없음') + ' 기준 · 통신사 ' + parsed.carriers.length + '곳 · 요금제 ' + n + '개';
+            }
+            file.addEventListener('change', function () { var f = this.files && this.files[0]; if (!f) return; if (f.size > 500000) { msg.textContent = '파일이 너무 커요.'; return; } f.text().then(function (t) { area.value = t; check(t); }); });
+            area.addEventListener('input', function () { check(area.value); });
+            var save = h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'pol-apply', onclick: function () {
+                if (!parsed) { check(area.value); if (!parsed) return; }
+                if (!db.policies) db.policies = [];
+                var it = stamp({ id: uid(), at: Date.now(), by: staffName(me), data: parsed, u: 0 });
+                db.policies.push(it);
+                var keep = db.policies.slice().sort(function (a, b) { return b.at - a.at; }).slice(0, 3), ok = Object.create(null);
+                keep.forEach(function (x) { ok[x.id] = 1; });
+                db.policies.forEach(function (x) { if (!ok[x.id]) tomb(x.id); });
+                db.policies = db.policies.filter(function (x) { return ok[x.id]; });
+                closeDlg(); commit('단가표를 바꿨어요. (' + (parsed.date || '') + ' 기준) 모든 직원 화면에 바로 반영돼요.');
+            } }, '이 단가표로 바꾸기');
+            var form = h('form', { novalidate: true, class: 'pol-imp' }, h('div', { class: 'dlg-head' }, '단가표 불러오기'),
+                h('div', { class: 'dlg-body' },
+                    h('p', {}, 'Claude가 보낸 단가표 파일(.json)을 선택하거나, 내용을 붙여넣은 뒤 [이 단가표로 바꾸기]를 누르세요. 바꾸면 모든 직원 화면에 바로 반영되고, 이전 단가표 2개까지는 되돌릴 수 있어요.'),
+                    h('label', { class: 'field' }, '파일 선택', file), h('label', { class: 'field' }, '붙여넣기', area), msg),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), save));
+            form.addEventListener('submit', function (e) { e.preventDefault(); });
+            dlg.appendChild(form); showDlg(dlg);
+        }
+        function polRevert() {
+            var l = (db.policies || []).slice().sort(function (a, b) { return b.at - a.at; });
+            if (l.length < 2) { toast('되돌릴 이전 단가표가 없어요.'); return; }
+            if (!confirm('지금 단가표(' + (l[0].data.date || '') + ')를 지우고 이전 단가표(' + (l[1].data.date || '') + ')로 되돌릴까요?')) return;
+            db.policies = db.policies.filter(function (x) { return x.id !== l[0].id; }); tomb(l[0].id);
+            commit('이전 단가표로 되돌렸어요.');
+        }
+        function renderPolicy() {
+            var P = polCur(), S = state.pol, boss = isBoss();
+            var head = h('div', { class: 'page-head' }, h('h1', {}, '인터넷상담'),
+                h('div', { class: 'actions' },
+                    boss && (db.policies || []).length > 1 ? h('button', { type: 'button', class: 'btn', 'data-act': 'pol-revert', onclick: polRevert }, '이전 단가표로') : null,
+                    boss ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'pol-import', onclick: polImport }, '단가표 불러오기') : null));
+            if (!P) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, boss ? '아직 단가표가 없어요. 오른쪽 위 [단가표 불러오기]로 Claude가 보낸 단가표 파일을 넣어 주세요.' : '아직 단가표가 없어요. 대표님이 단가표를 넣으면 여기에 보여요.')));
+            var D = P.data, at = new Date(P.at), ageDays = Math.floor((Date.now() - P.at) / 86400000);
+            var meta = h('div', { class: 'pol-meta' + (ageDays >= 1 ? ' pol-old' : '') },
+                h('b', {}, D.title || '단가표'), h('span', { class: 'pol-date' }, (D.date || '') + ' 기준'),
+                h('small', {}, '불러온 시각 ' + (at.getMonth() + 1) + '/' + at.getDate() + ' ' + pad(at.getHours()) + ':' + pad(at.getMinutes()) + (P.by ? ' · ' + P.by : '') + (ageDays >= 1 ? ' · ⚠ ' + ageDays + '일 전에 넣은 단가표예요. 최신인지 확인해 주세요.' : '')),
+                h('small', {}, '1차 = 수수료 - 22.5만 · 2차 = 1차 - 5만 · 3차 = 2차 - 10만 · 줄을 누르면 노란색으로 짚어 둘 수 있어요'));
+            var cars = h('div', { class: 'pol-cars', role: 'group', 'aria-label': '통신사' },
+                [['all', '전체', '#3E441E']].concat(D.carriers.map(function (c) { return [c.id, c.name, c.color]; })).map(function (x) {
+                    return h('button', { type: 'button', class: 'btn btn-sm', style: '--c:' + x[2], 'data-car': x[0], 'aria-pressed': S.car === x[0] ? 'true' : 'false', onclick: function () { state.pol.car = x[0]; render(); } }, x[1]);
+                }));
+            var sps = h('div', { class: 'pol-sps', role: 'group', 'aria-label': '속도·구성' },
+                [['all', '전체'], ['100M', '100M'], ['200M', '160·200M'], ['500M', '500M'], ['1G', '1G'], ['solo', '인터넷 단독'], ['tv', 'TV 포함']].map(function (x) {
+                    return h('button', { type: 'button', class: 'btn btn-sm', 'aria-pressed': S.sp === x[0] ? 'true' : 'false', onclick: function () { state.pol.sp = x[0]; render(); } }, x[1]);
+                }));
+            var q = h('input', { type: 'search', 'data-fk': 'pol-q', placeholder: '상품 찾기 (예: 500 스탠다드)', 'aria-label': '상품 찾기', value: S.q });
+            q.addEventListener('input', function () { state.pol.q = this.value; clearTimeout(renderPolicy.t); renderPolicy.t = setTimeout(render, 150); });
+            var cards = D.carriers.filter(function (c) { return S.car === 'all' || S.car === c.id; }).map(function (c) { return polCard(c, S.sp, S.q.trim()); }).filter(Boolean);
+            return h('div', {}, head, meta,
+                h('div', { class: 'pol-tools' }, cars, h('div', { class: 'pol-search' }, q, h('div', { class: 'pol-sps' }, sps))),
+                cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '조건에 맞는 요금제가 없어요. 통신사·속도·검색어를 바꿔 보세요.')),
+                D.src ? h('p', { class: 'ib-help' }, '출처: ' + D.src + ' · 결합요금은 각 통신사 공식 홈페이지의 가족결합 인터넷 할인 기준(3년 약정)이에요.') : null);
+        }
         function intakeHas(text) {   // 양식에 무엇이든 적었는지 (빈 양식이면 저장하지 않음)
             return String(text || '').split('\n').some(function (l) { var m = /^[^:]+:(.*)$/.exec(l); return m && m[1].replace(/원|X/g, '').trim(); });
         }
@@ -4595,6 +4829,7 @@
             else if (view === 'calls') { content = renderCalls(); if (!ib.timer && driveOn()) setTimeout(ibStart, 0); }
             else if (view === 'visits') { content = renderVisits(); if (!ib.timer && driveOn()) setTimeout(ibStart, 0); }
             else if (view === 'idreq') { content = renderIdreq(); }
+            else if (view === 'policy') { content = renderPolicy(); }
             else if (view === 'settings') content = renderSettings();
             else content = renderToday();
 
