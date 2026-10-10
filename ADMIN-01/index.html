@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HzG0uD04BwY8EoYDSEw5ZinKuDndZI7xBbYiWqvTHwA='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RS/nojGfh764ttKF12oh72ILkYGo2Tg8iy5qn49NwEg='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -233,7 +233,7 @@
         .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
         .filters label { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
         .filters select { width: auto; min-width: 120px; padding: 8px 10px; }
-        .t-head, .t-row { display: grid; grid-template-columns: 46px minmax(0, 1fr) 92px 112px 58px 222px 172px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
+        .t-head, .t-row { display: grid; grid-template-columns: 46px minmax(0, 1fr) 88px 108px 54px 200px 206px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
         .t-head { background: #F7F9F0; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 700; color: var(--muted); }
         .t-row { border-bottom: 1px solid var(--line); }
         .t-row:last-child { border-bottom: none; }
@@ -269,7 +269,8 @@
         .st-todo { background: #F1F4E6; } .st-doing { background: #FFF3BF; } .st-done { background: #DDF0DD; }
         .pri { font-size: 13px; font-weight: 700; }
         .pri.high { color: var(--orange); } .pri.low { color: var(--hint); }
-        .t-actions { display: flex; gap: 6px; justify-content: flex-end; }
+        .t-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: nowrap; min-width: 0; }
+        .t-actions .btn { flex: none; white-space: nowrap; }
         .t-drag { min-width: 36px; padding-left: 8px; padding-right: 8px; font-size: 16px; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }   /* 끌어서 순서 바꾸기 */
         .t-row.dragging { background: #FFFBE6; box-shadow: 0 8px 22px rgba(0,0,0,.18); position: relative; z-index: 3; }
         .t-row.dragging .t-drag { cursor: grabbing; }
@@ -671,7 +672,7 @@
             .rail-foot select { font-size: 16px; padding: 5px 8px; }
             .toast { left: 12px; right: 12px; transform: none; max-width: none; text-align: center; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); }
         }
-        @media (max-width: 1100px) {   /* 표가 좁아지면 한 줄씩 카드 모양으로 */
+        @media (max-width: 1279px) {   /* 표가 좁아지면 한 줄씩 카드 모양으로 (업무 제목이 좁아지지 않게) */
             .t-head { display: none; }
             .t-num { display: none; }
             .t-title[data-n]::before { content: attr(data-n) '. '; font-weight: 800; color: var(--olive-700); }
@@ -760,7 +761,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-10.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-10.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1632,12 +1633,12 @@
                     h('div', { class: 't-cell', 'data-label': '우선순위' }, h('span', { class: 'pri ' + t.priority }, PRIORITY.filter(function (p) { return p.v === t.priority; })[0].t)),
                     h('div', { class: 't-cell', 'data-label': '상태' }, t.ext ? h('span', { class: 't-ext', title: koDate(t.ext) + ' 업무로 옮겼어요' }, '→ 내일업무로 연장') : h('div', { class: 't-st' }, pauseBtn, sel),
                         t.ext ? h('div', { class: 't-time' }, h('b', {}, koDate(t.ext) + '로 이동')) : (tl.length ? h('div', { class: 't-time' }, tl.map(function (x, i) { return h('div', { class: t.ps && i === 0 ? 't-paused' : false }, i === 0 && t.status !== 'todo' ? h('b', {}, x) : x); })) : null)),
-                    h('div', { class: 't-actions' },
-                        canMoveNext(t) ? h('button', { type: 'button', class: 'btn btn-sm t-next', 'data-act': 'next-day', title: '오늘 못한 업무를 내일 업무로 옮기기', onclick: function () { moveToTomorrow(t); } }, '내일로 이동') : null,
-                        t.ext ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'next-undo', onclick: function () { undoMoveNext(t); } }, '연장 취소') : null,
+                    h('div', { class: 't-actions' },   // 수정 · 순서 바꾸기 · (맨 뒤) 내일로 이동 / 연장 취소
                         h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editTask(t); } }, '수정'),
                         h('button', { type: 'button', class: 'btn btn-sm t-drag', 'data-fk': 'drag-' + t.id, title: '누른 채 위아래로 끌어서 순서 바꾸기', 'aria-label': t.title + ' 순서 바꾸기 (누른 채 끌기, 키보드는 위·아래 화살표)',
-                            onpointerdown: function (e) { taskDragStart(e, row); }, onkeydown: function (e) { taskKeyMove(e, row); } }, '↕')));
+                            onpointerdown: function (e) { taskDragStart(e, row); }, onkeydown: function (e) { taskKeyMove(e, row); } }, '↕'),
+                        canMoveNext(t) ? h('button', { type: 'button', class: 'btn btn-sm t-next', 'data-act': 'next-day', title: '오늘 못한 업무를 내일 업무로 옮기기', onclick: function () { moveToTomorrow(t); } }, '내일로 이동') : null,
+                        t.ext ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'next-undo', onclick: function () { undoMoveNext(t); } }, '연장 취소') : null));
                 return row;
             });
             return h('div', {},
