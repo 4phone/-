@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-GLZK84+sDlTr6g8yAJk8Yzuj8q6Cvtk0Or3vTaGWg/Q='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WED6IzNu0939ZhCBhnyAEIKBcsx11DbO45ysuUR7R/0='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -635,6 +635,29 @@
         .pol-closed .pol-tbl td { color: #9AA08C !important; }
         .pol-scroll { overflow-x: auto; }
         .pol-empty { padding: 30px 20px; text-align: center; color: var(--muted); }
+        .pol-row1 { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .pol-row1 .pol-cars { flex: 1 1 auto; min-width: 0; }
+        .pol-acts { display: flex; gap: 6px; flex: none; }
+        .pol-acts .btn[aria-pressed="true"] { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .pol-picknote { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; background: #FFF8DB; border: 1px solid #F0DC8A; border-radius: 8px; padding: 7px 12px; font-size: 13.5px; }
+        .pol-tbl td.p-stage { cursor: pointer; }
+        .pol-tbl td.p-stage:hover { outline: 2px dashed #C9B458; outline-offset: -3px; }
+        .pol-tbl td.p-stage.pick { background: #1F6B2A !important; color: #fff !important; border-radius: 6px; }
+        .pol-tbl td.p-stage.pick .p-none, .pol-tbl td.p-stage.pick small { color: #fff !important; }
+        .calc { position: fixed; right: 18px; top: 84px; z-index: 900; width: 300px; background: #fff; border: 1px solid #C9CCBF; border-radius: 14px; box-shadow: 0 18px 50px rgba(0,0,0,.25); padding: 10px 12px 12px; display: grid; gap: 8px; }
+        .calc[hidden] { display: none; }
+        .calc-head { display: flex; align-items: center; justify-content: space-between; }
+        .calc-x { border: none; background: none; font-size: 18px; cursor: pointer; padding: 2px 6px; }
+        .calc-in { font-size: 18px !important; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+        .calc-out { text-align: right; font-size: 22px; font-weight: 900; color: var(--olive-800); font-variant-numeric: tabular-nums; min-height: 30px; overflow-wrap: anywhere; }
+        .calc-pad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .calc-k { min-height: 44px; border: 1px solid #D8DCCB; background: #FAFBF5; border-radius: 10px; font-size: 17px; font-weight: 800; cursor: pointer; }
+        .calc-k:hover { background: #F1F4E6; }
+        .calc-k.op { background: #EEF2E0; color: var(--olive-800); }
+        .calc-k.eq { background: var(--gold); border-color: var(--gold-edge); grid-column: span 2; }
+        .calc-k.wide { grid-column: span 2; font-size: 14px; }
+        @media (max-width: 700px) { .calc { left: 10px; right: 10px; width: auto; top: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); } .pol-row1 { flex-wrap: wrap; } .pol-acts { width: 100%; } .pol-acts .btn { flex: 1 1 0; } }
+        @media print { .calc { display: none !important; } }
         .pol-imp textarea { min-height: 160px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
         @media (max-width: 900px) {
             .pol-info, .pol-more { grid-template-columns: minmax(0, 1fr); }
@@ -828,7 +851,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-10.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-10.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1128,6 +1151,8 @@
             else after();
         }
         function lock() {   // 잠그면 암호키와 데이터를 메모리에서도 지우고 화면을 비웁니다
+            if (calcEl) { calcEl.hidden = true; calcEl.inp.value = ''; }
+            polOn = Object.create(null); polPick = null; polLast = null;
             authed = false; cryptoKey = null; db = null; me = ''; mforms = {}; if (taskDrag) { document.body.classList.remove('t-dragging'); window.removeEventListener('pointermove', taskDragMove, { passive: false }); window.removeEventListener('pointerup', taskDragEnd); window.removeEventListener('pointercancel', taskDragEnd); taskDrag = null; }   // 작성 중인 가입 확인서(고객 개인정보)도 지움
             uni = { mode: 'login', pending: null }; keysOffered = false; lastRemote = null; meMemo = null;
             ibStop(); stopPoll(); stopGatePoll(); clearTimeout(pushTimer); teamCache = null; syncQueued = false; driveState = { status: 'idle', at: null, msg: '' }; acctUi = { list: null, err: '', loading: false, at: 0, enforced: null }; gateMode = 'login';
@@ -4351,7 +4376,7 @@
         }
         /* ---------- 인터넷상담: 통신사 단가표 (요금 · 결합요금 · 사은품 가이드 · 수수료 · 1/2/3차 상담 지원금) ---------- */
         // 단가표는 팀 암호로 잠근 공유 저장소에만 보관해요 (홈페이지 소스에는 넣지 않음 — 수수료가 밖으로 보이지 않게).
-        var POL_STAGE = [225000, 50000, 100000];   // 1차 = 수수료 - 22.5만 / 2차 = 1차 - 5만 / 3차 = 2차 - 10만
+        var POL_KEEP = [225000, 175000, 125000];   // 1차 = 수수료에서 22.5만 남기고 / 2차 = 17.5만 남기고 / 3차 = 12.5만 남기고
         function polNum(v, lo, hi) { return typeof v === 'number' && isFinite(v) && v >= lo && v <= hi ? v : null; }
         function polStrs(a, n, len) { return Array.isArray(a) ? a.slice(0, n).map(function (x) { return str(x, len); }).filter(Boolean) : []; }
         function polClean(d) {   // 불러온 단가표를 꼼꼼히 걸러서 (형식이 틀리면 null)
@@ -4398,11 +4423,16 @@
             if (q) { var t = r.n.replace(/\s+/g, '').toLowerCase(); if (q.split(/\s+/).filter(Boolean).some(function (w) { return t.indexOf(w.toLowerCase()) < 0; })) return false; }
             return true;
         }
-        var polOn = Object.create(null);   // 통화 중에 짚어 둔 줄 (누르면 노란색)
-        function polCell(v, cls, label) {
-            if (v === null) return h('td', { class: cls, 'data-l': label }, h('span', { class: 'p-none' }, '-'));
-            if (v <= 0) return h('td', { class: cls, 'data-l': label, title: '계산 결과 ' + won(v) }, h('span', { class: 'p-none' }, '지원 없음'));
-            return h('td', { class: cls, 'data-l': label }, won(v));
+        var polOn = Object.create(null), polPick = null, polLast = null;   // 짚어 둔 줄(노란색) / 짚어 둔 상담 금액 / 마지막으로 누른 줄
+        function polCell(v, cls, label, key, stage, c, r) {
+            var on = !!(polPick && polPick.key === key && polPick.stage === stage);
+            var td = h('td', { class: cls + ' p-stage' + (on ? ' pick' : ''), 'data-l': label, title: label + ' 금액 짚어 두기', onclick: function (e) {
+                e.stopPropagation();
+                polPick = on ? null : { key: key, stage: stage, c: c, r: r, v: v }; polLast = { key: key, c: c, r: r };
+                if (!on) { polOn[key] = true; }
+                render();
+            } }, v <= 0 ? h('span', { class: 'p-none' }, '지원 없음') : won(v), on ? h('small', { class: 'p-picked' }, '✔ 짚어 둠') : null);
+            return td;
         }
         function polCard(c, sp, q) {
             var rows = [], shown = 0;
@@ -4412,15 +4442,15 @@
                 rows.push(h('tr', { class: 'pol-grp' }, h('td', { colspan: '8' }, g.name)));
                 list.forEach(function (r) {
                     shown++;
-                    var f = polFee(r), s1 = f.fee - POL_STAGE[0], s2 = s1 - POL_STAGE[1], s3 = s2 - POL_STAGE[2], key = c.id + '|' + g.name + '|' + r.n;
+                    var f = polFee(r), s1 = f.fee - POL_KEEP[0], s2 = f.fee - POL_KEEP[1], s3 = f.fee - POL_KEEP[2], key = c.id + '|' + g.name + '|' + r.n;
                     var gmax = r.gd && c.guide[r.gd] ? c.guide[r.gd][2] : null;
-                    rows.push(h('tr', { class: 'pol-row' + (polOn[key] ? ' on' : ''), onclick: function () { polOn[key] = !polOn[key]; this.classList.toggle('on', !!polOn[key]); } },
+                    rows.push(h('tr', { class: 'pol-row' + (polOn[key] ? ' on' : ''), 'data-key': key, onclick: function () { polOn[key] = !polOn[key]; this.classList.toggle('on', !!polOn[key]); polLast = polOn[key] ? { key: key, c: c, r: r } : (polLast && polLast.key === key ? null : polLast); if (!polOn[key] && polPick && polPick.key === key) { polPick = null; render(); } } },
                         h('td', {}, r.n, f.warn ? h('span', { class: 'pol-warn' }, '⚠ ' + f.warn) : null, r.nt ? h('span', { class: 'pol-nt' }, r.nt) : null),
                         h('td', { class: 'p-price', 'data-l': '월요금(미결합)' }, won(r.p)),
                         r.dc != null ? h('td', { class: 'p-comb', 'data-l': '결합요금' }, won(r.p - r.dc), h('small', {}, '-' + r.dc.toLocaleString('ko-KR'))) : h('td', { class: 'p-comb', 'data-l': '결합요금' }, h('span', { class: 'p-none' }, '-')),
                         h('td', { class: 'p-guide', 'data-l': '가이드(최대)' }, gmax !== null ? won(gmax) : h('span', { class: 'p-none' }, '-'), gmax !== null ? h('small', {}, c.guide[r.gd][0]) : null),
                         h('td', { class: 'p-fee', 'data-l': '수수료' }, won(f.fee), h('small', {}, (f.fee / 10000) + '만')),
-                        polCell(s1, 'p-1', '1차 상담'), polCell(s2, 'p-2', '2차 상담'), polCell(s3, 'p-3', '3차 상담')));
+                        polCell(s1, 'p-1', '1차 상담', key, 1, c, r), polCell(s2, 'p-2', '2차 상담', key, 2, c, r), polCell(s3, 'p-3', '3차 상담', key, 3, c, r)));
                 });
             });
             if (!shown) return null;
@@ -4438,6 +4468,89 @@
                 c.region.length ? h('details', { class: 'pol-region' }, h('summary', { style: 'font-weight:800;cursor:pointer;color:var(--olive-700)' }, '가능 지역 (' + c.region.length + '개 권역)'),
                     c.regionNote ? h('div', { class: 'p-none', style: 'margin-top:4px' }, c.regionNote) : null,
                     h('table', {}, c.region.map(function (r) { return h('tr', {}, h('td', {}, r[0]), h('td', {}, r[1])); }))) : null);
+        }
+        var POL_TELCO = { skt: 'SK브로드밴드 (SKT 정책)', skb: 'SK브로드밴드 (SKB 정책)', lgu: 'LG U+', hello: 'LG헬로비전', kt: 'KT', sky: 'KT 스카이라이프', pop: 'SK브로드밴드 POP', lgsoho: 'LG U+ 소호(사업자)', skbsoho: 'SK브로드밴드 소호(사업자)' };
+        function polParts(n) { return String(n).replace(/\s+\([^)]*\)\s*$/, '').split(/\s*\+\s*/).map(function (x) { return x.trim(); }).filter(Boolean); }
+        function polInstall(c, r) {   // 각 통신사 공식 홈페이지 설치비(출동비, 부가세 포함, 평일 주간 기준)
+            var parts = polParts(r.n), tv = !!r.tv || parts.slice(1).some(function (p) { return !/와이파이|WIFI|전화|CCTV/i.test(p); }), phone = parts.some(function (p) { return /전화/.test(p); });
+            var id = c.id, tail = ' · 주말/야간 25% 할증';
+            if (['skt', 'skb', 'pop', 'skbsoho'].indexOf(id) >= 0) return (tv ? '56,100원 (인터넷 34,100 + TV 22,000, 평일)' : phone ? '30,800원 (인터넷+전화 함께, 평일)' : '36,300원 (평일)') + tail;
+            if (['lgu', 'lgsoho'].indexOf(id) >= 0) return (tv ? '인터넷 34,100원 (TV와 동시) + TV 설치비 별도, 평일' : '36,300원 (평일)') + tail;
+            if (id === 'kt') return (tv ? '56,200원 (인터넷 32,000 + TV 24,200, 평일)' : '36,000원 (평일)') + tail;
+            if (id === 'sky') return (tv ? '인터넷 36,000원 + TV 설치비 별도 (평일)' : '36,000원 (평일)') + ' · 주말/공휴일 45,000원';
+            if (id === 'hello') return '상담 시 안내 (헬로비전 설치기사 출동비 별도 — 1855-1082 확인)';
+            return '상담 시 확인';
+        }
+        function polIntake(c, r) {   // 신분증 요청 접수 메모의 ● 접수정보 ● 칸
+            var parts = polParts(r.n), first = parts[0] || r.n;
+            var tvs = parts.slice(1).filter(function (p) { return !/와이파이|WIFI|전화|CCTV/i.test(p); });
+            var ph = parts.filter(function (p) { return /전화/.test(p); });
+            var wifi = /와이파이|WIFI/i.test(r.n) ? '유' : '';
+            var fee = won(r.p) + (r.dc != null ? ' (결합 시 ' + won(r.p - r.dc) + ')' : '');
+            return [['인터넷통신사', POL_TELCO[c.id] || c.name], ['인터넷상품', first.replace(/와이파이(기본)?\s*/, '').trim() || first], ['WIFI 유,무', wifi], ['TV상품+셋탑1', tvs.length ? tvs.join(' + ') + ' (셋탑 1대)' : 'X'], ['전화상품', ph.length ? ph.join(' + ') : 'X'], ['월요금', fee], ['설치비', polInstall(c, r)]];
+        }
+        function polToIdr() {
+            var p = polPick || polLast;
+            if (!p) { toast('상담할 상품 줄(또는 1·2·3차 금액)을 먼저 눌러 주세요.'); return; }
+            var U = idrUI(), lines = U.memo.value.replace(/\r/g, '').split('\n'), vals = polIntake(p.c, p.r), miss = false;
+            vals.forEach(function (kv) {
+                var esc = kv[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), re = new RegExp('^(\\s*' + esc + '\\s*:).*$'), hit = false;
+                lines = lines.map(function (l) { if (!hit && re.test(l)) { hit = true; return l.replace(re, '$1') + ' ' + kv[1]; } return l; });
+                if (!hit) miss = true;
+            });
+            if (miss) {   // 양식이 지워졌으면 빈 양식에 다시 넣음 (고객 정보 칸은 그대로 두려면 양식을 유지해 주세요)
+                lines = INTAKE_TPL.split('\n');
+                vals.forEach(function (kv) { var esc = kv[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), re = new RegExp('^(\\s*' + esc + '\\s*:).*$'); lines = lines.map(function (l) { return re.test(l) ? l.replace(re, '$1') + ' ' + kv[1] : l; }); });
+            }
+            U.memo.value = lines.join('\n');
+            state.view = 'idreq'; render();
+            setTimeout(function () {
+                try { var el = U.memo; el.scrollIntoView({ block: 'center' }); (U.name.value ? el : U.name).focus({ preventScroll: true }); } catch (e) { /* 무시 */ }
+            }, 30);
+            toast(p.c.name + ' ' + p.r.n + ' 접수정보를 채웠어요. 고객 정보를 마저 적고 링크를 만들어 주세요.');
+        }
+        /* ---------- 계산기 (화면이 새로 그려져도 그대로, 숫자 칸은 직접 입력도 가능) ---------- */
+        var calcEl = null;
+        function calcOpen() { return !!(calcEl && !calcEl.hidden); }
+        function calcEval(expr) {   // + - × ÷ 와 괄호만 계산 (eval 사용 안 함)
+            var t = String(expr).replace(/,/g, '').replace(/×|x|X/g, '*').replace(/÷/g, '/').replace(/[−–]/g, '-').replace(/\s+/g, ''), i = 0;
+            if (!/^[0-9.+\-*/()]*$/.test(t) || !t) return null;
+            function num() { var m = /^\d*\.?\d+|^\d+\.?/.exec(t.slice(i)); if (!m) throw 0; i += m[0].length; return parseFloat(m[0]); }
+            function fac() { if (t[i] === '-') { i++; return -fac(); } if (t[i] === '+') { i++; return fac(); } if (t[i] === '(') { i++; var v = add(); if (t[i] !== ')') throw 0; i++; return v; } return num(); }
+            function mul() { var v = fac(); while (t[i] === '*' || t[i] === '/') { var o = t[i++], b = fac(); if (o === '*') v *= b; else { if (b === 0) throw 0; v /= b; } } return v; }
+            function add() { var v = mul(); while (t[i] === '+' || t[i] === '-') { var o = t[i++], b = mul(); v = o === '+' ? v + b : v - b; } return v; }
+            try { var v = add(); if (i !== t.length || !isFinite(v)) return null; return Math.round(v * 100) / 100; } catch (e) { return null; }
+        }
+        function calcBuild() {
+            var inp = h('input', { type: 'text', class: 'calc-in', inputmode: 'decimal', autocomplete: 'off', 'aria-label': '계산식', placeholder: '예) 515000-225000' });
+            var out = h('div', { class: 'calc-out', 'aria-live': 'polite' }, '0');
+            function show() { var v = calcEval(inp.value); out.textContent = v === null ? (inp.value ? '식을 확인해 주세요' : '0') : v.toLocaleString('ko-KR') + ' (' + (Math.round(v / 100) / 100).toLocaleString('ko-KR') + '만)'; return v; }
+            function put(k) {
+                if (k === 'C') inp.value = '';
+                else if (k === '⌫') inp.value = inp.value.slice(0, -1);
+                else if (k === '=') { var v = calcEval(inp.value); if (v !== null) inp.value = String(v); }
+                else inp.value += k;
+                show();
+            }
+            inp.addEventListener('input', show);
+            inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); put('='); } else if (e.key === 'Escape') { calcToggle(false); } });
+            var keys = ['C', '⌫', '(', ')', '7', '8', '9', '÷', '4', '5', '6', '×', '1', '2', '3', '−', '0', '00', '.', '+', '0000', '='];
+            var pad = h('div', { class: 'calc-pad' }, keys.map(function (k) {
+                return h('button', { type: 'button', class: 'calc-k' + (/[÷×−+=]/.test(k) ? ' op' : '') + (k === '=' ? ' eq' : '') + (k === '0000' ? ' wide' : ''), onmousedown: function (e) { e.preventDefault(); }, onclick: function () { put(k === '0000' ? '0000' : k === '−' ? '-' : k); } }, k === '0000' ? '만(0000)' : k);
+            }));
+            var el = h('div', { class: 'calc', role: 'dialog', 'aria-label': '계산기', hidden: true },
+                h('div', { class: 'calc-head' }, h('b', {}, '계산기'), h('button', { type: 'button', class: 'calc-x', 'aria-label': '계산기 닫기', onclick: function () { calcToggle(false); } }, '✕')),
+                inp, out, pad);
+            el.inp = inp;
+            document.body.appendChild(el);
+            return el;
+        }
+        function calcToggle(on) {
+            if (!calcEl) calcEl = calcBuild();
+            var want = on === undefined ? calcEl.hidden : !!on;
+            calcEl.hidden = !want;
+            if (want) { try { calcEl.inp.focus(); } catch (e) { /* 무시 */ } }
+            var b = document.querySelector('[data-act="calc"]'); if (b) b.setAttribute('aria-pressed', want ? 'true' : 'false');
         }
         function polImport() {   // 대표만: 단가표 파일(또는 붙여넣기)로 바꾸기 → 모든 직원 화면에 바로 반영
             var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide';
@@ -4492,7 +4605,7 @@
             var meta = h('div', { class: 'pol-meta' + (ageDays >= 1 ? ' pol-old' : '') },
                 h('b', {}, D.title || '단가표'), h('span', { class: 'pol-date' }, (D.date || '') + ' 기준'),
                 h('small', {}, '불러온 시각 ' + (at.getMonth() + 1) + '/' + at.getDate() + ' ' + pad(at.getHours()) + ':' + pad(at.getMinutes()) + (P.by ? ' · ' + P.by : '') + (ageDays >= 1 ? ' · ⚠ ' + ageDays + '일 전에 넣은 단가표예요. 최신인지 확인해 주세요.' : '')),
-                h('small', {}, '1차 = 수수료 - 22.5만 · 2차 = 1차 - 5만 · 3차 = 2차 - 10만 · 줄을 누르면 노란색으로 짚어 둘 수 있어요'));
+                h('small', {}, '1차 = 수수료에서 22.5만 남기고 · 2차 = 17.5만 남기고 · 3차 = 12.5만 남기고 · 줄을 누르면 노란색, 1·2·3차 금액을 누르면 그 금액을 짚어 둬요'));
             var cars = h('div', { class: 'pol-cars', role: 'group', 'aria-label': '통신사' },
                 [['all', '전체', '#3E441E']].concat(D.carriers.map(function (c) { return [c.id, c.name, c.color]; })).map(function (x) {
                     return h('button', { type: 'button', class: 'btn btn-sm', style: '--c:' + x[2], 'data-car': x[0], 'aria-pressed': S.car === x[0] ? 'true' : 'false', onclick: function () { state.pol.car = x[0]; render(); } }, x[1]);
@@ -4504,8 +4617,13 @@
             var q = h('input', { type: 'search', 'data-fk': 'pol-q', placeholder: '상품 찾기 (예: 500 스탠다드)', 'aria-label': '상품 찾기', value: S.q });
             q.addEventListener('input', function () { state.pol.q = this.value; clearTimeout(renderPolicy.t); renderPolicy.t = setTimeout(render, 150); });
             var cards = D.carriers.filter(function (c) { return S.car === 'all' || S.car === c.id; }).map(function (c) { return polCard(c, S.sp, S.q.trim()); }).filter(Boolean);
+            var picked = polPick || polLast;
+            var acts = h('div', { class: 'pol-acts' },
+                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'calc', 'aria-pressed': calcOpen() ? 'true' : 'false', onclick: function () { calcToggle(); this.setAttribute('aria-pressed', calcOpen() ? 'true' : 'false'); } }, '계산기'),
+                h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'pol-to-idr', title: picked ? picked.c.name + ' ' + picked.r.n + ' 로 신분증 요청 진행' : '상담할 상품 줄을 먼저 눌러 주세요', onclick: polToIdr }, '신분증요청 바로진행'));
             return h('div', {}, head, meta,
-                h('div', { class: 'pol-tools' }, cars, h('div', { class: 'pol-search' }, q, h('div', { class: 'pol-sps' }, sps))),
+                h('div', { class: 'pol-tools' }, h('div', { class: 'pol-row1' }, cars, acts), h('div', { class: 'pol-search' }, q, h('div', { class: 'pol-sps' }, sps)),
+                    picked ? h('div', { class: 'pol-picknote' }, '선택: ', h('b', {}, picked.c.name + ' · ' + picked.r.n), polPick ? ' · ' + polPick.stage + '차 상담 ' + (polPick.v > 0 ? won(polPick.v) : '지원 없음') : '', h('button', { type: 'button', class: 'link-btn', onclick: function () { polPick = null; polLast = null; polOn = Object.create(null); render(); } }, '선택 지우기')) : null),
                 cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '조건에 맞는 요금제가 없어요. 통신사·속도·검색어를 바꿔 보세요.')),
                 D.src ? h('p', { class: 'ib-help' }, '출처: ' + D.src + ' · 결합요금은 각 통신사 공식 홈페이지의 가족결합 인터넷 할인 기준(3년 약정)이에요.') : null);
         }
