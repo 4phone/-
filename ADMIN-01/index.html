@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dUaHdfUAUaVB/c/zlnwLYqM4oFiLkikDOfOqoOk8yzo='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HzpYEKw7QjIlZKTPBP4B2uAG8gYkJtxQSTp7hHRfWxk='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -323,7 +323,20 @@
         .xl-btn { min-width: 46px; }
         .vs-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
         .vs-tabs .btn.on { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
-        .vs-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+        .vs-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+        .vs-card.vs-google { border-color: #4285F4; box-shadow: inset 4px 0 0 #4285F4; }
+        .vs-grps { margin: -4px 0 14px; } .vs-grps .btn { min-height: 36px; } .vs-grps .btn b { margin-left: 4px; font-variant-numeric: tabular-nums; }
+        .vs-grps .btn.g-google { border-color: #4285F4; } .vs-grps .btn.g-google.on { background: #4285F4; border-color: #4285F4; color: #fff; }
+        .hp-bar { background: #fff; border: 1px solid var(--line); border-left: 5px solid #E8650A; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; display: grid; gap: 8px; }
+        .hp-top { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+        .hp-top > b { font-size: 15.5px; } .hp-st { font-weight: 700; } .hp-st.ok { color: #1F6B2A; } .hp-st.warn { color: #B23B1E; } .hp-st.off { color: var(--muted); }
+        .hp-when { color: var(--muted); font-size: 13px; }
+        .hp-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+        .hp-bar details summary { cursor: pointer; font-weight: 700; color: var(--olive-700); font-size: 14px; }
+        .hp-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 4px 16px; margin-top: 8px; font-size: 13.5px; }
+        .hp-list div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed var(--line); padding: 3px 0; }
+        .hp-list span { word-break: keep-all; } .hp-list b { white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .hp-note { color: var(--muted); font-size: 12.5px; }
         .vs-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; }
         .vs-card small { color: var(--muted); font-size: 13px; } .vs-card b { font-size: 22px; letter-spacing: -0.5px; word-break: keep-all; }
         .vs-panel { margin-bottom: 14px; padding-bottom: 6px; }
@@ -336,7 +349,9 @@
         .vs-row { display: grid; grid-template-columns: 128px 170px minmax(0, 1fr) 70px; gap: 10px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 14px; }
         .vs-src { font-weight: 700; } .vs-det { color: var(--muted); word-break: break-all; }
         @media (max-width: 900px) {
-            .vs-cards { grid-template-columns: minmax(0, 1fr); }
+            .vs-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            .vs-card { padding: 12px; } .vs-card b { font-size: 19px; }
+            .hp-btns { margin-left: 0; width: 100%; } .hp-btns .btn { flex: 1 1 auto; min-height: 42px; }
             .vs-bar { grid-template-columns: 110px minmax(0, 1fr) 92px; padding: 7px 12px; }
             .vs-row { grid-template-columns: minmax(0, 1fr) auto; padding: 10px 12px; }
             .vs-row .vs-det { grid-column: 1 / -1; }
@@ -866,7 +881,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-10.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-10.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -4037,7 +4052,7 @@
         var IB_POLL_MS = 20000;
         function ibFresh() { return { items: [], rev: -1, at: 0, err: '', known: null, busy: false, timer: null, tick: 0, open: Object.create(null), draft: Object.create(null), kind: 'all', todo: false, pend: false, saving: Object.create(null) }; }
         var ib = ibFresh();
-        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); vs = vsFresh(); idrFresh(); }   // 잠그면 콜 인입·홈페이지 인입 기록도 지움
+        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); vs = vsFresh(); idrFresh(); hp = hpFresh(); }   // 잠그면 콜 인입·홈페이지 인입 기록도 지움
         function ibStart() {   // 로그인하면 시작 (공유 저장소를 쓰는 기기만)
             if (ib.timer || !driveOn()) return;
             ib.timer = setInterval(function () {
@@ -4293,7 +4308,7 @@
         }
 
         /* ---------- 홈페이지 인입: 고객이 어떤 경로로 홈페이지에 들어왔는지 ---------- */
-        function vsFresh() { return { pv: 'day', items: null, at: 0, err: '', busy: false }; }
+        function vsFresh() { return { pv: 'day', items: null, at: 0, err: '', busy: false, grp: 'all' }; }
         var vs = vsFresh();
         function vsOk(x) { return x && typeof x.t === 'number' && typeof x.src === 'string'; }
         function vsNorm(x) { return { t: x.t, src: String(x.src).slice(0, 30), ref: String(x.ref || '').slice(0, 80), us: String(x.us || '').slice(0, 40), um: String(x.um || '').slice(0, 40), uc: String(x.uc || '').slice(0, 40), dev: x.dev === 'm' ? 'm' : 'pc', page: String(x.page || '').slice(0, 80) }; }
@@ -4314,13 +4329,30 @@
             var m = {}; items.forEach(function (x) { var k = keyFn(x); m[k] = (m[k] || 0) + 1; });
             return Object.keys(m).map(function (k) { return [k, m[k]]; }).sort(function (a, b) { return b[1] - a[1] || (a[0] < b[0] ? -1 : 1); });
         }
+        var VS_GROUPS = ['구글', '네이버', '카카오', '인스타그램', '다음', '유튜브', '페이스북', '당근', '밴드', '블로그', '빙·줌', '직접 방문', '기타'];
+        function vsGroup(src) {   // 자세한 경로 → 큰 묶음 (구글 검색·구글 앱·구글 광고 → 구글)
+            var s = String(src || '');
+            if (/구글|google|gmail/i.test(s)) return '구글';
+            if (/네이버|naver/i.test(s)) return '네이버';
+            if (/카카오/.test(s)) return '카카오';
+            if (/인스타/.test(s)) return '인스타그램';
+            if (/다음/.test(s)) return '다음';
+            if (/유튜브/.test(s)) return '유튜브';
+            if (/페이스북/.test(s)) return '페이스북';
+            if (/당근/.test(s)) return '당근';
+            if (/밴드/.test(s)) return '밴드';
+            if (/블로그|티스토리/.test(s)) return '블로그';
+            if (/빙|줌/.test(s)) return '빙·줌';
+            if (s === '직접 방문') return '직접 방문';
+            return '기타';
+        }
         function vsDetail(x) { return [x.ref, x.us ? 'utm: ' + x.us + (x.um ? '/' + x.um : '') + (x.uc ? '/' + x.uc : '') : ''].filter(Boolean).join(' · '); }
         function vsExcel(pv, btn) {
             if (!driveOn()) { toast('공유 저장소를 연결한 기기에서 내려받을 수 있어요.'); return; }
             var label = btn.textContent; btn.disabled = true; btn.textContent = '만드는 중...';
             vsFetch(pv).then(function (o) {
                 btn.disabled = false; btn.textContent = label;
-                var r = o.r, items = o.items, days = daysIn(r), byDay = {}, srcs = vsCount(items, function (x) { return x.src; });
+                var r = o.r, items = o.items, days = daysIn(r), byDay = {}, srcs = vsCount(items, function (x) { return x.src; }), grps = vsCount(items, function (x) { return vsGroup(x.src); });
                 days.forEach(function (d) { byDay[d] = { all: 0, m: 0, pc: 0 }; });
                 items.forEach(function (x) { var d = ymd(new Date(x.t)); if (byDay[d]) { byDay[d].all++; byDay[d][x.dev]++; } });
                 var mob = items.filter(function (x) { return x.dev === 'm'; }).length;
@@ -4328,15 +4360,18 @@
                 var head = [0, sum.length];
                 sum.push(['유입 경로', '건수', '비율(%)']);
                 srcs.forEach(function (s) { sum.push([s[0], s[1], items.length ? Math.round(s[1] * 1000 / items.length) / 10 : 0]); });
+                sum.push([]); head.push(sum.length); sum.push(['경로 묶음 (구글 = 구글 검색·앱·광고)', '건수', '비율(%)']);
+                if (!grps.some(function (g) { return g[0] === '구글'; })) grps.push(['구글', 0]);
+                grps.forEach(function (g) { sum.push([g[0], g[1], items.length ? Math.round(g[1] * 1000 / items.length) / 10 : 0]); });
                 sum.push([]); head.push(sum.length); sum.push(['기기', '건수']);
                 sum.push(['모바일', mob], ['PC', items.length - mob], []);
                 head.push(sum.length); sum.push(['날짜', '방문', '모바일', 'PC']);
                 days.forEach(function (d) { sum.push([d, byDay[d].all, byDay[d].m, byDay[d].pc]); });
-                var det = [['일시', '유입 경로', '참조 사이트', 'utm_source', 'utm_medium', 'utm_campaign', '기기', '첫 화면']];
-                items.forEach(function (x) { det.push([fmtDT(x.t), x.src, x.ref, x.us, x.um, x.uc, x.dev === 'm' ? '모바일' : 'PC', x.page]); });
+                var det = [['일시', '경로 묶음', '유입 경로', '참조 사이트', 'utm_source', 'utm_medium', 'utm_campaign', '기기', '첫 화면']];
+                items.forEach(function (x) { det.push([fmtDT(x.t), vsGroup(x.src), x.src, x.ref, x.us, x.um, x.uc, x.dev === 'm' ? '모바일' : 'PC', x.page]); });
                 saveBlob('홈페이지인입_' + r.label + '.xlsx', xlsxBlob([
-                    { name: '요약', widths: [24, 10, 10, 10], rows: sum, head: head },
-                    { name: '상세', widths: [20, 22, 26, 16, 14, 18, 8, 24], rows: det, head: [0], freeze: 1 }]));
+                    { name: '요약', widths: [34, 10, 10, 10], rows: sum, head: head },
+                    { name: '상세', widths: [20, 12, 22, 26, 16, 14, 18, 8, 24], rows: det, head: [0], freeze: 1 }]));
                 toast('홈페이지 인입 ' + r.label + ' 엑셀을 내려받았어요. (' + items.length + '건)');
             }, function (e) { btn.disabled = false; btn.textContent = label; toast('엑셀을 만들지 못했어요. ' + driveErrText(e)); });
         }
@@ -4349,31 +4384,41 @@
                 return h('button', { type: 'button', class: 'btn btn-sm' + (vs.pv === p.v ? ' on' : ''), 'aria-pressed': vs.pv === p.v ? 'true' : 'false', 'data-fk': 'vs-pv-' + p.v,
                     onclick: function () { if (vs.pv === p.v) return; vs.pv = p.v; vs.items = null; vs.err = ''; vs.busy = false; render(); vsLoad(); } }, p.s);
             }));
-            var items = vs.items || [], r = periodRange(vs.pv);
+            var all = vs.items || [], r = periodRange(vs.pv);
+            var gcount = Object.create(null); all.forEach(function (x) { var g = vsGroup(x.src); gcount[g] = (gcount[g] || 0) + 1; });
+            if (vs.grp !== 'all' && !gcount[vs.grp] && vs.grp !== '구글') vs.grp = 'all';
+            var items = vs.grp === 'all' ? all : all.filter(function (x) { return vsGroup(x.src) === vs.grp; });
             var srcs = vsCount(items, function (x) { return x.src; }), top = srcs.length ? srcs[0][1] : 0;
-            var mob = items.filter(function (x) { return x.dev === 'm'; }).length;
+            var mob = items.filter(function (x) { return x.dev === 'm'; }).length, gN = gcount['구글'] || 0;
+            var grpBtns = h('div', { class: 'vs-tabs vs-grps', role: 'group', 'aria-label': '경로 묶음' },
+                [['all', '전체', all.length]].concat(VS_GROUPS.filter(function (g) { return g === '구글' || gcount[g]; }).map(function (g) { return [g, g, gcount[g] || 0]; })).map(function (g) {
+                    return h('button', { type: 'button', class: 'btn btn-sm' + (vs.grp === g[0] ? ' on' : '') + (g[0] === '구글' ? ' g-google' : ''), 'aria-pressed': vs.grp === g[0] ? 'true' : 'false', 'data-fk': 'vs-grp-' + g[0],
+                        onclick: function () { vs.grp = g[0]; render(); } }, g[1], h('b', {}, String(g[2])));
+                }));
             var status = vs.err ? '연결 오류: ' + vs.err : vs.items === null ? '불러오는 중...' : (vs.at ? pad2(new Date(vs.at).getHours()) + ':' + pad2(new Date(vs.at).getMinutes()) + '에 확인' : '');
             var rows = items.slice(0, 300).map(function (x) {
                 return h('div', { class: 'vs-row' }, h('div', { class: 'ib-time' }, ibTime(x.t)), h('div', { class: 'vs-src' }, x.src),
                     h('div', { class: 'vs-det' }, vsDetail(x) || '-'), h('div', {}, h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC')));
             });
             return h('div', {}, head,
-                h('p', { class: 'forms-sub' }, '고객이 어떤 경로(네이버 검색, 인스타그램, 카카오톡, 직접 방문 등)로 홈페이지에 들어왔는지 보여줘요. 한 사람이 새로고침해도 한 번만 세요. 오른쪽 위 [엑셀]로 기간별 자료를 내려받을 수 있어요.'),
+                h('p', { class: 'forms-sub' }, '고객이 어떤 경로(네이버 검색, 구글 검색, 인스타그램, 카카오톡, 직접 방문 등)로 홈페이지에 들어왔는지 보여줘요. 한 사람이 새로고침해도 한 번만 세요. 아래 [구글]을 누르면 구글로 들어온 방문만 따로 볼 수 있어요. 오른쪽 위 [엑셀]로 기간별 자료를 내려받을 수 있어요.'),
                 h('div', { class: 'filters' }, tabs, h('span', { class: 'ib-status', role: 'status' }, status)),
+                grpBtns,
                 h('div', { class: 'vs-cards' },
-                    h('div', { class: 'vs-card' }, h('small', {}, '방문 (' + r.label + ')'), h('b', {}, items.length + '건')),
+                    h('div', { class: 'vs-card' }, h('small', {}, (vs.grp === 'all' ? '방문' : vs.grp + ' 방문') + ' (' + r.label + ')'), h('b', {}, items.length + '건')),
                     h('div', { class: 'vs-card' }, h('small', {}, '모바일 / PC'), h('b', {}, mob + ' / ' + (items.length - mob))),
-                    h('div', { class: 'vs-card' }, h('small', {}, '가장 많은 경로'), h('b', {}, srcs.length ? srcs[0][0] : '-'))),
-                h('div', { class: 'panel vs-panel' }, h('div', { class: 'vs-h' }, '유입 경로별'),
+                    h('div', { class: 'vs-card' }, h('small', {}, '가장 많은 경로'), h('b', {}, srcs.length ? srcs[0][0] : '-')),
+                    h('div', { class: 'vs-card vs-google' }, h('small', {}, '구글 유입 (검색·앱·광고)'), h('b', {}, gN + '건' + (all.length ? ' · ' + Math.round(gN * 1000 / all.length) / 10 + '%' : '')))),
+                h('div', { class: 'panel vs-panel' }, h('div', { class: 'vs-h' }, '유입 경로별' + (vs.grp === 'all' ? '' : ' (' + vs.grp + ')')),
                     srcs.length ? srcs.map(function (s) {
                         var pct = items.length ? Math.round(s[1] * 1000 / items.length) / 10 : 0;
                         return h('div', { class: 'vs-bar' }, h('span', { class: 'vs-bar-name' }, s[0]),
                             h('span', { class: 'vs-bar-track' }, h('span', { class: 'vs-bar-fill', style: 'width:' + Math.max(2, Math.round(s[1] * 100 / (top || 1))) + '%' })),
                             h('span', { class: 'vs-bar-num' }, s[1] + '건 · ' + pct + '%'));
-                    }) : h('div', { class: 'empty' }, vs.items === null ? '불러오는 중이에요...' : '이 기간에 들어온 기록이 없어요.')),
+                    }) : h('div', { class: 'empty' }, vs.items === null ? '불러오는 중이에요...' : vs.grp === 'all' ? '이 기간에 들어온 기록이 없어요.' : '이 기간에 ' + vs.grp + '(으)로 들어온 기록이 없어요.')),
                 h('div', { class: 'panel vs-panel' }, h('div', { class: 'vs-h' }, '최근 방문' + (items.length > 300 ? ' (최근 300건만 표시, 전체는 엑셀)' : '')),
                     rows.length ? rows : h('div', { class: 'empty' }, vs.items === null ? '불러오는 중이에요...' : '기록이 없어요.')),
-                h('p', { class: 'ib-help' }, '※ 경로는 고객 브라우저가 알려주는 "이전 사이트"와 광고 주소의 utm 표시로 판단해요. 앱 안에서 열거나 주소를 직접 입력하면 "직접 방문"으로 보일 수 있어요. 이름·번호 같은 개인정보는 남기지 않아요.'));
+                h('p', { class: 'ib-help' }, '※ 경로는 고객 브라우저가 알려주는 "이전 사이트"와 광고 주소의 utm·구글 광고 표시로 판단해요. 구글은 검색(google.com 등)·구글 앱·구글 광고를 모두 "구글"로 묶어요. 앱 안에서 열거나 주소를 직접 입력하면 "직접 방문"으로 보일 수 있어요. 이름·번호 같은 개인정보는 남기지 않아요.'));
         }
 
         /* ---------- 신분증 요청: 고객 전용 접수 링크 만들기 → 문자로 보내기 ---------- */
@@ -4593,6 +4638,7 @@
                 db.policies.forEach(function (x) { if (!ok[x.id]) tomb(x.id); });
                 db.policies = db.policies.filter(function (x) { return ok[x.id]; });
                 closeDlg(); commit('단가표를 바꿨어요. (' + (parsed.date || '') + ' 기준) 모든 직원 화면에 바로 반영돼요.');
+                setTimeout(hpAuto, 400);   // 홈페이지 요금도 자동으로 (반영을 꺼 둔 경우는 그대로)
             } }, '이 단가표로 바꾸기');
             var form = h('form', { novalidate: true, class: 'pol-imp' }, h('div', { class: 'dlg-head' }, '단가표 불러오기'),
                 h('div', { class: 'dlg-body' },
@@ -4608,6 +4654,104 @@
             if (!confirm('지금 단가표(' + (l[0].data.date || '') + ')를 지우고 이전 단가표(' + (l[1].data.date || '') + ')로 되돌릴까요?')) return;
             db.policies = db.policies.filter(function (x) { return x.id !== l[0].id; }); tomb(l[0].id);
             commit('이전 단가표로 되돌렸어요.');
+            setTimeout(hpAuto, 400);   // 홈페이지 요금도 되돌린 단가표로 (반영을 꺼 둔 경우는 그대로)
+        }
+        /* ---------- 홈페이지 요금 자동 반영: 단가표 → 홈페이지 '베스트 추천 요금' ----------
+           보내는 값: 통신사·구성·속도·TV 이름·월요금·결합 할인·사은품 가이드(최대) — 홈페이지에 원래 보이는 공개 정보뿐 (수수료·1/2/3차 금액은 보내지 않음) */
+        var HP_MAP = [['SK', 'skb'], ['LG', 'lgu'], ['KT', 'kt'], ['스카이', 'sky'], ['헬로', 'hello']];   // 홈페이지 통신사 ← 단가표 (SK는 SKB 정책 기준)
+        var HP_NAME = { SK: 'SK브로드밴드', LG: 'LG U+', KT: 'KT', '스카이': '스카이라이프', '헬로': '헬로비전' };
+        function hpFresh() { return { loaded: false, busy: false, err: '', at: 0, by: '', date: '', off: true, items: [] }; }
+        var hp = hpFresh();
+        function hpFeed(D) {   // 단가표 → 홈페이지에 보낼 상품 목록 [통신사, 단독/결합, 속도, TV 이름, 월요금, 결합 할인, 사은품 가이드]
+            var out = [], seen = Object.create(null);
+            HP_MAP.forEach(function (m) {
+                var c = (D && D.carriers || []).filter(function (x) { return x.id === m[1] && !x.closed; })[0];
+                if (!c) return;
+                c.groups.forEach(function (g) {
+                    if (/할인/.test(g.name)) return;   // 스카이 '30% 요금할인' 묶음은 제외 (홈페이지 알뜰형·요금할인형은 그대로 유지)
+                    g.rows.forEach(function (r) {
+                        var sm = /(\d+)\s*([MG])(?![A-Za-z])/i.exec(r.n); if (!sm) return;
+                        var sp = sm[1] + sm[2].toUpperCase(), ty = r.tv ? '결합' : '단독', i = r.n.indexOf('+');
+                        var tv = ty === '결합' && i >= 0 ? r.n.slice(i + 1).replace(/\s+/g, ' ').trim().slice(0, 30) : '';
+                        if (ty === '결합' && !tv) return;
+                        var k = m[0] + '|' + ty + '|' + sp + '|' + tv; if (seen[k]) return; seen[k] = 1;
+                        var p = Math.round(r.p), dc = Math.round(r.dc || 0), gift = r.gd && c.guide[r.gd] ? Math.round(c.guide[r.gd][2] / 1000) * 1000 : null;
+                        if (p < 1000 || dc > p) return;
+                        out.push([m[0], ty, sp, tv, p, dc, gift]);
+                    });
+                });
+            });
+            return out;
+        }
+        function hpGet() {   // 홈페이지가 읽는 것과 같은 공개 값 (읽기 전용)
+            var url = db && db.drive && db.drive.url;
+            if (!url || !DRIVE_URL_RE.test(url)) return Promise.reject(new Error('url'));
+            return fetch(url + '?a=prices&_=' + Date.now(), { method: 'GET', redirect: 'follow', credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store' })
+                .then(function (res) { if (!res.ok) { var he = new Error('http'); he.code = 'http'; throw he; } return res.json(); });
+        }
+        function hpLoad() {
+            if (!authed || !db || !driveOn() || hp.busy) return;
+            hp.busy = true; var mine = hp;
+            hpGet().then(function (j) {
+                if (mine !== hp) return;
+                hp.busy = false; hp.loaded = true; hp.err = '';
+                if (!j || j.ok !== true) { hp.err = '서버 프로그램(Apps Script)을 새 코드로 바꿔 "새 버전"으로 배포해 주세요.'; hp.loaded = false; }
+                else { hp.at = Number(j.at) || 0; hp.by = String(j.by || '').slice(0, 20); hp.date = String(j.date || '').slice(0, 40); hp.off = !!j.off; hp.items = Array.isArray(j.items) ? j.items : []; }
+                if (state.view === 'policy') render();
+            }, function (e) { if (mine !== hp) return; hp.busy = false; hp.err = driveErrText(e); if (state.view === 'policy') render(); });
+        }
+        function hpPublish(off, auto) {   // 대표만: 지금 단가표를 홈페이지에 반영 (off: 끄고 구글 시트 값으로)
+            var P = polCur();
+            if (!isBoss()) return;
+            if (!driveOn()) { if (!auto) toast('홈페이지 반영은 공유 저장소를 연결한 기기에서 할 수 있어요.'); return; }
+            var items = off || !P ? [] : hpFeed(P.data);
+            if (!off && !items.length) { toast('홈페이지에 보낼 요금이 없어요. (SKB·LG U+·KT·스카이라이프·헬로비전 단가표가 필요해요)'); return; }
+            var mine = hp; hp.busy = true; if (state.view === 'policy') render();
+            ibCall('priceSet', off ? { off: true } : { items: items, date: (P.data.date || '') }).then(function (res) {
+                if (mine !== hp) return;
+                hp.busy = false; hp.loaded = true; hp.err = ''; hp.at = Number(res.at) || Date.now(); hp.by = staffName(me); hp.off = !!off;
+                hp.items = off ? [] : items; hp.date = off ? '' : (P.data.date || '');
+                toast(off ? '홈페이지 요금 자동 반영을 껐어요. 홈페이지는 구글 시트에 적힌 값으로 보여요.' : '홈페이지 베스트 추천 요금에 반영했어요. (' + items.length + '개 상품 · 홈페이지를 새로 열면 바로 보여요)');
+                if (state.view === 'policy') render();
+            }, function (e) {
+                if (mine !== hp) return;
+                hp.busy = false; hp.err = driveErrText(e);
+                toast('홈페이지에 반영하지 못했어요. ' + hp.err);
+                if (state.view === 'policy') render();
+            });
+        }
+        function hpAuto() {   // 새 단가표를 넣거나 되돌린 뒤: 반영을 꺼 둔 게 아니면 자동으로 홈페이지에도
+            if (!isBoss() || !driveOn()) return;
+            function go(j) {
+                if (j && j.ok === true && j.off && Number(j.at) > 0) { toast('홈페이지 요금 자동 반영이 꺼져 있어서 홈페이지는 그대로예요. (켜려면 [홈페이지에 반영])'); return; }
+                hpPublish(false, true);
+            }
+            if (hp.loaded) { go({ ok: true, off: hp.off, at: hp.at }); return; }
+            hpGet().then(go, function () { hpPublish(false, true); });
+        }
+        function hpBar(D) {
+            if (!isBoss()) return null;
+            var title = h('b', {}, '홈페이지 요금 자동 반영');
+            if (!driveOn()) return h('div', { class: 'hp-bar' }, h('div', { class: 'hp-top' }, title, h('span', { class: 'hp-st off' }, '공유 저장소를 연결한 기기에서 쓸 수 있어요.')));
+            if (!hp.loaded && !hp.busy && !hp.err) setTimeout(hpLoad, 0);
+            var feed = hpFeed(D), same = hp.loaded && !hp.off && JSON.stringify(hp.items) === JSON.stringify(feed);
+            var st = hp.err ? ['warn', '⚠ ' + hp.err] : !hp.loaded ? ['off', '홈페이지 상태를 확인하는 중...'] : hp.off ? ['off', hp.at ? '꺼짐 — 홈페이지는 구글 시트에 적힌 값으로 보여요' : '아직 반영한 적 없어요 — [홈페이지에 반영]을 누르면 시작돼요'] : same ? ['ok', '✔ 지금 단가표가 홈페이지에 반영돼 있어요'] : ['warn', '⚠ 홈페이지 값이 지금 단가표와 달라요 — [홈페이지에 반영]을 눌러 주세요'];
+            var when = hp.loaded && hp.at ? '마지막 반영 ' + fmtDT(hp.at) + (hp.by ? ' · ' + hp.by : '') + (hp.date && !hp.off ? ' · ' + hp.date + ' 단가표' : '') : '';
+            var list = feed.map(function (x) {
+                return h('div', {}, h('span', {}, HP_NAME[x[0]] + ' ' + (x[1] === '결합' ? x[2] + ' + ' + x[3] : x[2] + ' 단독')),
+                    h('b', {}, '월 ' + (x[4] - x[5]).toLocaleString('ko-KR') + (x[5] ? ' (결합)' : '') + ' · ' + (x[6] !== null ? (x[6] / 10000) + '만' : '사은품 그대로')));
+            });
+            return h('div', { class: 'hp-bar', 'data-fk': 'hp-bar' },
+                h('div', { class: 'hp-top' }, title, h('span', { class: 'hp-st ' + st[0], role: 'status' }, st[1]),
+                    h('div', { class: 'hp-btns' },
+                        h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'hp-pub', disabled: hp.busy ? true : null,
+                            onclick: function () { if (confirm('지금 단가표(' + (D.date || '') + ')의 월요금·결합요금·사은품(가이드 최대 금액)을 홈페이지 베스트 추천 요금에 반영할까요?')) hpPublish(false); } }, hp.busy ? '반영하는 중...' : '홈페이지에 반영'),
+                        hp.loaded && !hp.off ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'hp-off', disabled: hp.busy ? true : null,
+                            onclick: function () { if (confirm('홈페이지 요금 자동 반영을 끌까요?\n끄면 홈페이지는 구글 시트에 적힌 값으로 보여요. (다시 [홈페이지에 반영]을 누르면 켜져요)')) hpPublish(true); } }, '반영 끄기') : null)),
+                when ? h('div', { class: 'hp-when' }, when) : null,
+                h('details', {}, h('summary', {}, '홈페이지에 보낼 값 미리보기 (' + feed.length + '개)'),
+                    h('div', { class: 'hp-list' }, list),
+                    h('p', { class: 'hp-note' }, '※ 홈페이지에 이미 있는 상품(같은 통신사·속도·TV)만 월요금·결합요금·사은품 금액이 바뀌고, 화면 모양·상품 이름·한줄평은 그대로예요. SK는 SKB 정책, 사은품은 가이드 최대 금액이에요. 요금할인형(알뜰형)과 가이드 금액이 없는 상품의 사은품은 지금 홈페이지 그대로 둬요. 새 단가표를 불러오면 자동으로 반영돼요.')));
         }
         function renderPolicy() {
             var P = polCur(), S = state.pol, boss = isBoss();
@@ -4636,7 +4780,7 @@
             var acts = h('div', { class: 'pol-acts' },
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'calc', 'aria-pressed': calcOpen() ? 'true' : 'false', onclick: function () { calcToggle(); this.setAttribute('aria-pressed', calcOpen() ? 'true' : 'false'); } }, '계산기'),
                 h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'pol-to-idr', title: picked ? picked.c.name + ' ' + picked.r.n + ' 로 신분증 요청 진행' : '상담할 상품 줄을 먼저 눌러 주세요', onclick: polToIdr }, '신분증요청 바로진행'));
-            return h('div', {}, head, meta,
+            return h('div', {}, head, meta, hpBar(D),
                 h('div', { class: 'pol-tools' }, h('div', { class: 'pol-row1' }, cars, acts), h('div', { class: 'pol-search' }, q, h('div', { class: 'pol-sps' }, sps)),
                     picked ? h('div', { class: 'pol-picknote' }, '선택: ', h('b', {}, picked.c.name + ' · ' + picked.r.n), polPick ? ' · ' + polPick.stage + '차 상담 ' + (polPick.v > 0 ? won(polPick.v) : '지원 없음') : '', h('button', { type: 'button', class: 'link-btn', onclick: function () { polPick = null; polLast = null; polOn = Object.create(null); render(); } }, '선택 지우기')) : null),
                 cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '조건에 맞는 요금제가 없어요. 통신사·속도·검색어를 바꿔 보세요.')),
