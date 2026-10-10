@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WED6IzNu0939ZhCBhnyAEIKBcsx11DbO45ysuUR7R/0='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dUaHdfUAUaVB/c/zlnwLYqM4oFiLkikDOfOqoOk8yzo='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -130,7 +130,7 @@
         .reg-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
         .reg-head h2 { font-size: 17px; font-weight: 800; letter-spacing: -0.5px; margin-right: auto; }
         .reg-head small { font-size: 12.5px; color: var(--muted); font-weight: 600; }
-        .reg-months { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: thin; }
+        .reg-months { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0 8px; }
         .reg-months .btn { flex: none; }
         .reg-months .btn[aria-pressed="true"] { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
         .reg-row { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 9px 2px; border-top: 1px solid var(--line); }
@@ -172,6 +172,8 @@
         .section { margin-bottom: 28px; }
         .section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
         .section-head h2 { font-size: 18px; font-weight: 800; letter-spacing: -0.6px; }
+        .section-head > .btn, .section-head > button { flex-shrink: 0; white-space: nowrap; }
+        @media (max-width: 480px) { .section-head { flex-wrap: wrap; } .section-head > div:first-child { flex: 1 1 100%; } }
         .link-btn { background: none; border: none; color: var(--olive-700); font-weight: 700; font-size: 13.5px; padding: 4px 2px; text-decoration: underline; text-underline-offset: 3px; }
 
         .who { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
@@ -590,7 +592,7 @@
         .pol-meta small { color: var(--muted); font-size: 12.5px; }
         .pol-old { border-left: 5px solid var(--orange); background: #FFF6EE; }
         .pol-tools { position: sticky; top: 0; z-index: 5; background: var(--bg, #F4F5EC); padding: 6px 0 10px; display: grid; gap: 8px; }
-        .pol-cars, .pol-sps { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
+        .pol-cars, .pol-sps { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 2px; }
         .pol-cars .btn, .pol-sps .btn { flex: none; font-weight: 800; }
         .pol-cars .btn[aria-pressed="true"] { color: #fff; border-color: var(--c, var(--olive-700)); background: var(--c, var(--olive-700)); }
         .pol-sps .btn[aria-pressed="true"] { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
@@ -658,8 +660,20 @@
         .calc-k.wide { grid-column: span 2; font-size: 14px; }
         @media (max-width: 700px) { .calc { left: 10px; right: 10px; width: auto; top: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); } .pol-row1 { flex-wrap: wrap; } .pol-acts { width: 100%; } .pol-acts .btn { flex: 1 1 0; } }
         @media print { .calc { display: none !important; } }
-        .pol-imp textarea { min-height: 160px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+        /* ---------- 스마트기기 최적화 (2026-10-10): 옆으로 숨거나 잘리는 곳 없이 ---------- */
         @media (max-width: 900px) {
+            .pol-row1 { flex-direction: column; align-items: stretch; }
+            .pol-acts { width: 100%; }
+            .pol-acts .btn { flex: 1 1 0; min-height: 44px; }
+            .pol-search { flex-direction: column; align-items: stretch; }
+            .pol-search input { max-width: none; width: 100%; }
+            .pol-cars .btn, .pol-sps .btn { flex: 1 1 auto; min-height: 40px; }
+            .pol-head h2 { font-size: 19px; }
+            .pol-meta { padding: 10px 12px; }
+            .pol-meta small { flex-basis: 100%; }
+        }
+        .pol-imp textarea { min-height: 160px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; }
+        @media (max-width: 1100px) {   /* 태블릿 가로까지: 단가표를 상품별 카드로 (옆으로 숨는 칸 없이) */
             .pol-info, .pol-more { grid-template-columns: minmax(0, 1fr); }
             .pol-more details { border-right: none; border-bottom: 1px solid var(--line); }
             .pol-tbl thead { display: none; }
@@ -741,9 +755,9 @@
                     padding: calc(10px + env(safe-area-inset-top, 0px)) calc(12px + env(safe-area-inset-right, 0px)) 8px calc(12px + env(safe-area-inset-left, 0px)); }
             .brand { padding: 0; font-size: 17px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .brand small { display: none; }
-            .nav { order: 3; flex: 1 0 100%; flex-direction: row; overflow-x: auto; gap: 4px; padding-bottom: 2px; scrollbar-width: none; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; }
-            .nav::-webkit-scrollbar { display: none; }
-            .nav button { white-space: nowrap; padding: 8px 14px; font-size: 14.5px; flex: none; }
+            .nav { order: 3; flex: 1 0 100%; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; padding-bottom: 2px; overflow: visible; }
+            .nav button { white-space: normal; word-break: keep-all; line-height: 1.2; padding: 7px 4px; font-size: 13.5px; min-height: 38px; text-align: center; justify-content: center; position: relative; }
+            .nav-badge { position: absolute; top: -4px; right: -2px; margin: 0; }
             .rail-foot { margin: 0 0 0 auto; padding: 0; border: none; display: flex; align-items: center; gap: 8px; min-width: 0; }
             .rail-foot label { display: none; }
             .rail-foot select { width: auto; max-width: 118px; padding: 6px 8px; }
@@ -783,6 +797,7 @@
             .row .who { grid-column: 2; }
         }
         @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+        @media (max-width: 640px) { .nav { grid-template-columns: repeat(5, minmax(0, 1fr)); } .nav button { font-size: 12.5px; padding: 6px 2px; } }
     </style>
 </head>
 <body>
@@ -851,7 +866,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-10.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-10.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
