@@ -1685,18 +1685,21 @@
         
         let bossData = [];
 
+        function sgSafeCell(c) {   // 시트 글자 안전하게: < > " ' ` 와 문자 코드(&#39; 등)를 지워서 화면 코드로 실행되거나 버튼을 깨뜨리지 않게
+            return String(c).replace(/[<>"'`]/g, '').replace(/&#x?[0-9a-f]*;?/gi, '').replace(/&(quot|apos|lt|gt|amp)(?![a-z0-9=])/gi, '');
+        }
         function parseCsvText(text) {
             const rows = []; let currentRow = []; let currentCell = ''; let inQuotes = false;
             for (let i = 0; i < text.length; i++) {
                 const char = text[i]; const nextChar = text[i + 1];
                 if (char === '"') { if (inQuotes && nextChar === '"') { currentCell += '"'; i++; } else { inQuotes = !inQuotes; } } 
-                else if (char === ',' && !inQuotes) { currentRow.push(currentCell.trim()); currentCell = ''; }
+                else if (char === ',' && !inQuotes) { currentRow.push(sgSafeCell(currentCell.trim())); currentCell = ''; }
                 else if ((char === '\r' || char === '\n') && !inQuotes) {
                     if (char === '\r' && nextChar === '\n') { i++; }
-                    currentRow.push(currentCell.trim()); rows.push(currentRow); currentRow = []; currentCell = '';
+                    currentRow.push(sgSafeCell(currentCell.trim())); rows.push(currentRow); currentRow = []; currentCell = '';
                 } else { currentCell += char; }
             }
-            if (currentCell !== '' || currentRow.length > 0) { currentRow.push(currentCell.trim()); rows.push(currentRow); }
+            if (currentCell !== '' || currentRow.length > 0) { currentRow.push(sgSafeCell(currentCell.trim())); rows.push(currentRow); }
             return rows;
         }
 
