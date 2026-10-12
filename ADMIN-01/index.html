@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ZFFT7jN9+GrstQxlA/voxih8dwxsoepIhVj4Z+inYsE='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HbvouqEcQ7K98QCXLzcK8XAcDxOx5KwbYwGebB7Y/wU='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -914,7 +914,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-12.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-12.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -4637,7 +4637,7 @@
         }
         function polComb(r) { return r.p + (r.ad || 0) - r.dc; }   // 휴대폰 결합 시 월요금 = 표 요금 + (되돌린 인터넷+TV 결합할인) - 휴대폰 결합할인
         function won(n) { return Math.round(n).toLocaleString('ko-KR') + '원'; }
-        function polFee(r) { var sum = Math.round((r.g + r.c) * 10) / 10; return { fee: Math.min(sum, r.t) * 10000, warn: Math.abs(sum - r.t) > 0.05 ? '원본 표의 상품권+현금(' + sum + ')과 합계(' + r.t + ')가 달라요. 낮은 금액 기준으로 계산했어요 — 확인 필요' : '' }; }
+        function polFee(r) { var sum = Math.round((r.g + r.c) * 10) / 10; return { fee: Math.round(r.t * 10000), warn: Math.abs(sum - r.t) > 0.05 ? '원본 표의 상품권+현금(' + sum + ')과 합계(' + r.t + ')가 달라요. 수수료는 합계 기준으로 계산했어요' : '' }; }
         function polSpeed(n) { return /1G|1기가/i.test(n) ? '1G' : /500M/i.test(n) ? '500M' : /200M|160M/i.test(n) ? '200M' : /100M/i.test(n) ? '100M' : ''; }
         function polMatch(r, sp, q) {
             if (sp === 'tv' && !r.tv) return false;
@@ -4694,6 +4694,8 @@
                     h('table', {}, c.region.map(function (r) { return h('tr', {}, h('td', {}, r[0]), h('td', {}, r[1])); }))) : null);
         }
         var POL_TELCO = { skt: 'SK브로드밴드 (SKT 정책)', skb: 'SK브로드밴드 (SKB 정책)', lgu: 'LG U+', hello: 'LG헬로비전', kt: 'KT', sky: 'KT 스카이라이프', pop: 'SK브로드밴드 POP', lgsoho: 'LG U+ 소호(사업자)', skbsoho: 'SK브로드밴드 소호(사업자)' };
+        function polBase(id) { var m = /^(kt|skt|skb|lgu?)usim$/.exec(id || ''); return m ? (m[1] === 'lg' ? 'lgu' : m[1]) : id; }   // 유심동판(모바일 동판) 단가표 → 같은 통신사 유선 기준
+        function polNotTv(p) { return /와이파이|WIFI|전화|CCTV|USIM|유심/i.test(p); }
         function polParts(n) { return String(n).replace(/\s+\([^)]*\)\s*$/, '').split(/\s*\+\s*/).map(function (x) { return x.trim(); }).filter(Boolean); }
         /* 설치비 (부가세 포함, 각 통신사 공식 홈페이지 기준 · 2026-10 확인)
            SK: 인터넷 36,300 / 인터넷+TV 56,100(인터넷 34,100+TV 22,000) / 인터넷+전화 30,800 · 주말·공휴일·야간 25% 할증
@@ -4703,9 +4705,9 @@
            헬로비전: 공식 금액 미공개 (상담 1855-1082) */
         function polWon(n) { return Math.round(n).toLocaleString('ko-KR') + '원'; }
         function polInstallInfo(c, r, g) {   // { wd: 평일, we: 주말·야간(할증 계산한 금액), weLabel, note } 또는 { none: 안내 }
-            var parts = polParts(r.n), tv = !!r.tv || parts.slice(1).some(function (p) { return !/와이파이|WIFI|전화|CCTV/i.test(p); });
+            var parts = polParts(r.n), tv = !!r.tv || parts.slice(1).some(function (p) { return !polNotTv(p); });
             var phone = parts.some(function (p) { return /전화/.test(p); }), cctv = /CCTV/i.test(r.n);
-            var id = c.id, gn = g && g.name ? g.name : '';
+            var id = polBase(c.id), gn = g && g.name ? g.name : '';
             if (id === 'retail') id = /LG/.test(gn) ? 'lgu' : /SK/.test(gn) ? 'skb' : '';   // 소매 정책: 묶음 이름으로 통신사 구분
             var X = 1.25, extra = [];
             function out(wd, note) { return { wd: wd, we: Math.round(wd * X), weLabel: '주말·공휴일·야간', note: [note].concat(extra).filter(Boolean).join(' · ') }; }
@@ -4742,11 +4744,11 @@
         }
         function polIntake(c, r, g) {   // 신분증 요청 접수 메모의 ● 접수정보 ● 칸
             var parts = polParts(r.n), first = parts[0] || r.n;
-            var tvs = parts.slice(1).filter(function (p) { return !/와이파이|WIFI|전화|CCTV/i.test(p); });
+            var tvs = parts.slice(1).filter(function (p) { return !polNotTv(p); });
             var ph = parts.filter(function (p) { return /전화/.test(p); });
             var wifi = /와이파이|WIFI/i.test(r.n) ? '유' : '';
             var fee = won(r.p) + (r.dc != null ? ' (결합 시 ' + won(polComb(r)) + ')' : '');
-            return [['인터넷통신사', POL_TELCO[c.id] || c.name], ['인터넷상품', first.replace(/와이파이(기본)?\s*/, '').trim() || first], ['WIFI 유,무', wifi], ['TV상품+셋탑1', tvs.length ? tvs.join(' + ') + ' (셋탑 1대)' : 'X'], ['전화상품', ph.length ? ph.join(' + ') : 'X'], ['월요금', fee], ['설치비', polInstall(c, r, g)]];
+            return [['인터넷통신사', POL_TELCO[c.id] || (polBase(c.id) !== c.id && POL_TELCO[polBase(c.id)] ? POL_TELCO[polBase(c.id)] + ' · 유심동판(' + (g && g.name ? g.name : 'MNP') + ')' : c.name)], ['인터넷상품', first.replace(/와이파이(기본)?\s*/, '').trim() || first], ['WIFI 유,무', wifi], ['TV상품+셋탑1', tvs.length ? tvs.join(' + ') + ' (셋탑 1대)' : 'X'], ['전화상품', ph.length ? ph.join(' + ') : 'X'], ['월요금', fee], ['설치비', polInstall(c, r, g)]];
         }
         function polToIdr() {
             var p = polPick || polLast;
