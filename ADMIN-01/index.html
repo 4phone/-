@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nE6pqJl3Aq1/tvw9jb1DfQ1OOH9G0zUkb2LnL5o+018='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rMXXJ2Y2HXWbMZ2uWsGxFL0cRQ5ZeMISv6BZpL7pzZQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -901,7 +901,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-10.11';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-12.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2429,7 +2429,7 @@
             var copy = h('button', { type: 'button', class: 'btn btn-primary', onclick: function () {
                 copyText(code, area).then(function (okc) { if (okc) toast('팀 연결 코드를 복사했어요.'); else { area.focus(); area.select(); toast('길게 눌러(또는 Ctrl+C) 직접 복사해 주세요.'); } });
             } }, '코드 복사');
-            var linkBtn = h('button', { type: 'button', class: 'btn', onclick: function () {
+            var linkBtn = db.drive.acc ? null : h('button', { type: 'button', class: 'btn', onclick: function () {
                 var info = parseTeamCode(code);
                 copyText(inviteLink(info.url, info.k), null).then(function (okc) { toast(okc ? '초대 링크를 복사했어요. 휴대폰으로 보내 눌러서 여세요.' : '복사하지 못했어요. 코드를 길게 눌러 직접 복사해 주세요.'); });
             } }, '초대 링크 복사');
@@ -2564,6 +2564,7 @@
                     h('button', { type: 'button', class: 'btn btn-dark', onclick: syncManual }, '지금 동기화'),
                     h('button', { type: 'button', class: 'btn', onclick: showTeamCodeGuarded }, '팀 연결 코드 보기'),
                     h('button', { type: 'button', class: 'btn', onclick: rotateTeamKey }, '팀 키 교체'),
+                    isBoss() ? h('button', { type: 'button', class: 'btn', 'data-act': 'ct-check', onclick: contactCheck }, '구글 연락처 연결 확인') : null,
                     h('button', { type: 'button', class: 'btn btn-danger', onclick: disconnectDrive }, '연결 끊기'))
                    : h('div', { class: 'actions' },
                     h('button', { type: 'button', class: 'btn btn-dark', onclick: openInitForm }, '처음 연결하기 (관리자)'),
@@ -2633,14 +2634,14 @@
         function profLine(a) { return [a.name, a.birth ? '생년월일 ' + a.birth : '', a.phone ? mfPhone(a.phone) : ''].filter(Boolean).join(' · '); }
         function profFields(prefix) {   // 가입할 때 입력: 이름, 생년월일, 핸드폰 번호
             var name = h('input', { type: 'text', id: prefix + '-name', autocomplete: 'name', placeholder: '이름', 'aria-label': '이름', maxlength: 20 });
-            var birth = h('input', { type: 'text', id: prefix + '-birth', inputmode: 'numeric', autocomplete: 'off', placeholder: '생년월일 6자리 (예: 880202)', 'aria-label': '생년월일 6자리', maxlength: 8 });
+            var birth = h('input', { type: 'text', id: prefix + '-birth', inputmode: 'numeric', autocomplete: 'off', placeholder: '생년월일 6자리 (예: 900101)', 'aria-label': '생년월일 6자리', maxlength: 8 });
             var phone = h('input', { type: 'tel', id: prefix + '-phone', inputmode: 'tel', autocomplete: 'tel', placeholder: '핸드폰 번호 (예: 01012345678)', 'aria-label': '핸드폰 번호', maxlength: 13 });
             return {
                 els: [name, birth, phone],
                 read: function () { return { name: name.value.trim().slice(0, 20), birth: birth.value.replace(/\D/g, ''), phone: phone.value.replace(/\D/g, '') }; },
                 check: function (p) {
                     if (!p.name) { name.focus(); return '이름을 입력해 주세요.'; }
-                    if (!/^\d{6}$/.test(p.birth)) { birth.focus(); return '생년월일은 숫자 6자리로 입력해 주세요. (예: 880202)'; }
+                    if (!/^\d{6}$/.test(p.birth)) { birth.focus(); return '생년월일은 숫자 6자리로 입력해 주세요. (예: 900101)'; }
                     if (!/^01\d{8,9}$/.test(p.phone)) { phone.focus(); return '핸드폰 번호를 정확히 입력해 주세요. (예: 01012345678)'; }
                     return null;
                 }
@@ -2876,11 +2877,11 @@
             openForm({
                 title: '관리자 계정 만들기', saveText: '관리자 계정 만들기',
                 fields: [
-                    { key: 'email', label: '관리자 이메일', required: true, max: 120, value: 'ssangmin0000@gmail.com', hint: '관리자로 등록할 수 있는 이메일이에요.' },
+                    { key: 'email', label: '관리자 이메일', required: true, max: 120, hint: 'Apps Script 코드에 적어 둔 관리자 이메일을 입력해 주세요.' },
                     { key: 'pw', label: '계정 비밀번호', type: 'password', required: true, max: 100, hint: MIN_PW + '자 이상, 이 기기 비밀번호와 다르게 만들어 주세요.' },
                     { key: 'pw2', label: '계정 비밀번호 확인', type: 'password', required: true, max: 100 },
-                    { key: 'pname', label: '이름', required: true, max: 20, value: '전상민' },
-                    { key: 'pbirth', label: '생년월일 6자리', required: true, max: 8, hint: '예: 880202' },
+                    { key: 'pname', label: '이름', required: true, max: 20 },
+                    { key: 'pbirth', label: '생년월일 6자리', required: true, max: 8, hint: '예: 900101' },
                     { key: 'pphone', label: '핸드폰 번호', required: true, max: 13, hint: '예: 01012345678' },
                     { key: 'code', label: '관리자 코드', type: 'password', required: true, max: 100, hint: 'Apps Script에서 createAdminInvite 함수를 실행하면 실행 로그에 나오는 32자리 코드예요.' }
                 ],
@@ -2888,7 +2889,7 @@
                     if (!acctOk(acctNorm(v.email))) return '이메일 주소를 올바르게 입력해 주세요.';
                     var pr = pwProblem(v.pw); if (pr) return pr;
                     if (v.pw !== v.pw2) return '두 비밀번호가 서로 달라요.';
-                    if (!/^\d{6}$/.test(v.pbirth.replace(/\D/g, ''))) return '생년월일은 숫자 6자리로 입력해 주세요. (예: 880202)';
+                    if (!/^\d{6}$/.test(v.pbirth.replace(/\D/g, ''))) return '생년월일은 숫자 6자리로 입력해 주세요. (예: 900101)';
                     if (!/^01\d{8,9}$/.test(v.pphone.replace(/\D/g, ''))) return '핸드폰 번호를 정확히 입력해 주세요. (예: 01012345678)';
                     if (!/^[0-9a-f]{32}$/.test(v.code.trim())) return '관리자 코드는 영문 소문자·숫자 32자리예요. 실행 로그에 나온 코드를 그대로 붙여넣어 주세요.';
                     return null;
@@ -3559,6 +3560,16 @@
         /* ---------- 구글 연락처 이름: 💙 SK. 홍길동. S25. 26년 10월 10일 (유선은 모델 대신 가입 상품) ----------
            하트: SK 💙 · U+ ❤️ · KT 🤍 · 알뜰(선불·후불·알뜰폰) 💜 · 스카이라이프 💛 · 헬로비전 💚 · 그 밖 🤎 */
         var CT_HEART = { SK: '💙', 'U+': '❤️', KT: '🤍', '스카이라이프': '💛', '헬로비전': '💚', '알뜰': '💜', '기타': '🤎' };
+        function contactCheck(e) {   // 설정: 구글 연락처 저장 준비 상태 (빠진 단계를 알려줌)
+            var b = e && e.currentTarget; if (b) { b.disabled = true; b.textContent = '확인하는 중...'; }
+            ibCall('contactCheck', {}).then(function (r) {
+                if (b) { b.disabled = false; b.textContent = '구글 연락처 연결 확인'; }
+                alert((r.step === 'ready' ? '✔ ' : '⚠ ') + String(r.msg || '서버 응답을 확인하지 못했어요. Apps Script를 새 코드로 바꾸고 "새 버전"으로 배포했는지 확인해 주세요.').slice(0, 300) + (r.step === 'ready' && r.total ? '\n(지금 연락처 ' + r.total + '개)' : ''));
+            }, function (er) {
+                if (b) { b.disabled = false; b.textContent = '구글 연락처 연결 확인'; }
+                alert('⚠ ' + (er && er.code === 'bad_action' ? '서버 프로그램(Apps Script)이 예전 버전이에요. 새 코드로 바꾸고 배포 → 배포 관리 → 연필 → 새 버전 → 배포를 해 주세요.' : driveErrText(er)));
+            });
+        }
         function ctCarrier(raw, kind) {   // 가입 통신사 칸 → { tag, heart, sub } (목록에서 고른 값 · 직접 적은 값 모두)
             var t = String(raw || '').replace(/\s+/g, ' ').trim(), k = t.replace(/\s+/g, '').toUpperCase();
             var pre = /선불|후불/.exec(t), alt = kind === 'mobile' && (!!pre || /알뜰|MVNO/.test(k)), co = '';
@@ -3636,8 +3647,8 @@
                 try { regMsg = regUpsert(M, y, m, d) ? ' 가입 장부에도 정리했어요.' : ''; } catch (re) { regMsg = ' (가입 장부 정리는 실패했어요)'; }
                 var cr = res.contact;   // 구글 연락처 결과 (그림 저장과 따로)
                 if (cr && cr.ok) { M.contactId = String(cr.id || ''); regMsg += cr.updated ? ' 같은 번호의 구글 연락처를 "' + ct.label + '"(으)로 바꿨어요.' : ' 구글 연락처에 "' + ct.label + '"(으)로 저장했어요.'; }
-                else if (cr) regMsg += ' (구글 연락처: ' + String(cr.msg || '저장하지 못했어요').slice(0, 120) + ')';
-                else regMsg += ' (구글 연락처 저장은 서버 프로그램(Apps Script)을 새 버전으로 바꾸면 돼요)';
+                var ctWarn = cr && !cr.ok ? String(cr.msg || '저장하지 못했어요').slice(0, 160) : !cr ? '서버 프로그램(Apps Script)이 예전 버전이라 연락처는 저장하지 않았어요. 새 코드로 바꾸고 "새 버전"으로 배포해 주세요.' : '';
+                if (ctWarn) { regMsg += ' (구글 연락처는 저장 안 됨)'; setTimeout(function () { alert('가입 확인서 그림은 드라이브에 저장했어요.\n\n⚠ 구글 연락처는 저장하지 못했어요.\n' + ctWarn + '\n\n설정 → 공유 저장소 → [구글 연락처 연결 확인]으로 빠진 단계를 볼 수 있어요.'); }, 60); }
                 mfCount(M, 'save');
                 if (replaceId) toast((res.replaced ? '이전 파일은 지우고 수정본을 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' : '이전 파일을 찾지 못해서(이미 지웠거나 옮긴 경우) 수정본만 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.') + regMsg);
                 else toast('구글 드라이브 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' + regMsg);
