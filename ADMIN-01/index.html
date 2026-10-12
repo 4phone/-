@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HbvouqEcQ7K98QCXLzcK8XAcDxOx5KwbYwGebB7Y/wU='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-BmYQRa9XGp0F62mhzwechLsu1D933yyIBiEgySOBTU8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -636,6 +636,9 @@
         .pol-head { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; padding: 12px 16px; background: var(--c); color: #fff; }
         .pol-head h2 { font-size: 21px; font-weight: 900; letter-spacing: -0.5px; }
         .pol-head span { font-size: 13px; opacity: .92; font-weight: 600; }
+        .pol-area { margin-left: auto; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 7px 14px; border-radius: 999px; background: #fff; color: var(--c); font-size: 13.5px; font-weight: 900; text-decoration: none; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,.18); }
+        .pol-area:hover { filter: brightness(.96); }
+        .pol-area:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
         .pol-info { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; padding: 10px 16px; background: #FBFCF7; border-bottom: 1px solid var(--line); font-size: 13.5px; }
         .pol-comb { color: #1F4FA8; font-weight: 700; }
         .pol-guide { display: flex; flex-wrap: wrap; gap: 4px 12px; }
@@ -679,6 +682,13 @@
         .pol-region table { width: 100%; border-collapse: collapse; margin-top: 6px; }
         .pol-region td { padding: 4px 6px; border-bottom: 1px solid #ECEFE3; vertical-align: top; }
         .pol-region td:first-child { font-weight: 800; white-space: nowrap; width: 110px; }
+        .pol-rs { display: flex; gap: 6px; margin: 8px 0 4px; max-width: 560px; }
+        .pol-rs input { flex: 1 1 auto; min-width: 0; font-size: 16px; padding: 9px 12px; border: 1.5px solid var(--line); border-radius: 10px; background: #fff; }
+        .pol-rs input:focus { outline: none; border-color: var(--c); box-shadow: 0 0 0 3px rgba(0,0,0,.06); }
+        .pol-rs button { flex: 0 0 auto; min-height: 40px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--c); color: #fff; font-weight: 900; font-size: 14px; cursor: pointer; }
+        .pol-rs-out { font-size: 13.5px; font-weight: 700; line-height: 1.5; margin: 2px 0 6px; }
+        .pol-rs-out.ok { color: #1F7A3A; } .pol-rs-out.no { color: #B42318; } .pol-rs-out.hint { color: #8A5A00; }
+        .pol-region mark { background: #FFE58A; color: inherit; border-radius: 4px; padding: 0 2px; font-weight: 900; }
         .pol-closed .pol-tbl td { color: #9AA08C !important; }
         .pol-scroll { overflow-x: auto; }
         .pol-empty { padding: 30px 20px; text-align: center; color: var(--muted); }
@@ -914,7 +924,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-12.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-12.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -4681,7 +4691,7 @@
             var guideList = Object.keys(c.guide).map(function (k) { var g = c.guide[k]; return h('span', {}, g[0] + ' ', h('b', {}, g[1] === g[2] ? won(g[2]) : g[1].toLocaleString('ko-KR') + '~' + won(g[2]))); });
             function box(title, items, open) { return items.length ? h('details', { open: open ? true : false }, h('summary', {}, title + ' (' + items.length + ')'), h('ul', {}, items.map(function (t) { return h('li', {}, t); }))) : h('details', {}, h('summary', {}, title + ' (없음)')); }
             return h('section', { class: 'pol-card' + (c.closed ? ' pol-closed' : ''), style: '--c:' + c.color, 'data-car': c.id },
-                h('div', { class: 'pol-head' }, h('h2', {}, c.name), h('span', {}, c.sub)),
+                h('div', { class: 'pol-head' }, h('h2', {}, c.name), h('span', {}, c.sub), polAreaBtn(c)),
                 h('div', { class: 'pol-info' },
                     h('div', {}, c.comb ? h('div', { class: 'pol-comb' }, '결합: ' + c.comb) : null, c.penalty ? h('div', { class: 'pol-pen' }, c.penalty) : null),
                     guideList.length ? h('div', {}, h('b', {}, '사은품 가이드 (상품권 포함) '), h('div', { class: 'pol-guide' }, guideList)) : h('div', { class: 'p-none' }, '사은품 가이드 금액 표기 없음')),
@@ -4689,9 +4699,87 @@
                     h('thead', {}, h('tr', {}, h('th', {}, '상품'), h('th', {}, '설치비'), h('th', {}, '월요금(미결합)'), h('th', {}, '결합요금'), h('th', {}, '가이드(최대)'), h('th', {}, '수수료'), h('th', {}, '1차 상담'), h('th', {}, '2차 상담'), h('th', {}, '3차 상담'))),
                     h('tbody', {}, rows))),
                 h('div', { class: 'pol-more' }, box('추가 · 차감 정책', c.extra, true), box('회선 유지 · 환수 기준', c.refund, false), box('주의사항', c.notes, c.notes.length > 0)),
-                c.region.length ? h('details', { class: 'pol-region' }, h('summary', { style: 'font-weight:800;cursor:pointer;color:var(--olive-700)' }, '가능 지역 (' + c.region.length + '개 권역)'),
-                    c.regionNote ? h('div', { class: 'p-none', style: 'margin-top:4px' }, c.regionNote) : null,
-                    h('table', {}, c.region.map(function (r) { return h('tr', {}, h('td', {}, r[0]), h('td', {}, r[1])); }))) : null);
+                c.region.length ? polRegionBox(c) : null);
+        }
+        /* 가능 지역: 글자 목록 + 시·군·구/주소 검색 (목록은 시·군·구 단위라 최종 확인은 공식 조회) */
+        var polRegQ = Object.create(null);   // 통신사별 검색어 (화면을 다시 그려도 유지)
+        var POL_SIDO = { '서울': '서울', '서울시': '서울', '서울특별시': '서울', '부산': '부산', '부산시': '부산', '부산광역시': '부산', '대구': '대구', '대구시': '대구', '대구광역시': '대구', '인천': '인천', '인천시': '인천', '인천광역시': '인천', '광주': '광주', '광주광역시': '광주', '대전': '대전', '대전광역시': '대전', '울산': '울산', '울산광역시': '울산', '세종': '세종', '세종시': '세종', '세종특별자치시': '세종', '경기': '경기', '경기도': '경기', '강원': '강원', '강원도': '강원', '강원특별자치도': '강원', '충북': '충북', '충청북도': '충북', '충남': '충남', '충청남도': '충남', '전북': '전북', '전라북도': '전북', '전북특별자치도': '전북', '전남': '전남', '전라남도': '전남', '경북': '경북', '경상북도': '경북', '경남': '경남', '경상남도': '경남', '제주': '제주', '제주도': '제주', '제주특별자치도': '제주' };
+        function polRegNames(c) {   // [{ area, name, row }]
+            var out = [];
+            c.region.forEach(function (r, i) {   // '서울/인천/경기' 처럼 묶인 권역은 '/' 칸 수가 같으면 칸마다 시·도를 나눠 붙임
+                var as = String(r[0]).split('/'), segs = String(r[1]).split('/'), split = as.length > 1 && as.length === segs.length;
+                (split ? segs : [String(r[1])]).forEach(function (seg, k) { seg.split(/[,\/·]/).forEach(function (n) { n = n.trim(); if (n) out.push({ area: split ? as[k].trim() : r[0], name: n, row: i }); }); });
+            });
+            return out;
+        }
+        function polStem(n) { return n.length > 2 ? n.replace(/(특별시|광역시|특별자치시|특별자치도|시|군|구)$/, '') : n; }
+        function polRegFind(c, q) {   // → { kind: 'ok'|'multi'|'no'|'dong'|'empty', hits: [names], msg }
+            var toks = String(q || '').replace(/[()\[\]{}]/g, ' ').split(/[\s,]+/).map(function (t) { return t.trim(); }).filter(Boolean);
+            if (!toks.length) return { kind: 'empty', hits: [] };
+            var sido = '', rest = [];
+            toks.forEach(function (t) { if (POL_SIDO[t]) sido = POL_SIDO[t]; else rest.push(t); });
+            var names = polRegNames(c), hits = [];
+            rest.forEach(function (t) {
+                if (/^\d/.test(t)) return;   // 번지·건물번호
+                var ts = polStem(t);
+                names.forEach(function (x) {
+                    var ok = x.name === t || (ts.length >= 2 && polStem(x.name) === ts) || (t.length >= 2 && !/(동|읍|면|리|로|길|가)$/.test(t) && x.name.indexOf(t) === 0 && x.name.length > t.length);
+                    if (ok && hits.indexOf(x) < 0) hits.push(x);
+                });
+            });
+            if (sido) { var f = hits.filter(function (x) { return x.area.indexOf(sido) >= 0; }); hits = f; }
+            if (hits.length) {
+                var areas = {}; hits.forEach(function (x) { areas[x.area + '|' + x.name] = 1; });
+                var label = hits.map(function (x) { return x.area + ' ' + x.name; }).filter(function (v, i, a) { return a.indexOf(v) === i; });
+                var dupName = hits.some(function (x) { return hits.some(function (y) { return y !== x && y.name === x.name && y.area !== x.area; }); });
+                return { kind: dupName && !sido ? 'multi' : 'ok', hits: hits, msg: (dupName && !sido ? '같은 이름이 여러 권역에 있어요: ' : '가능 지역에 있어요: ') + label.join(' · ') + (dupName && !sido ? ' — 시·도를 함께 확인해 주세요' : '') };
+            }
+            var onlyDong = rest.length && rest.every(function (t) { return /^\d/.test(t) || /(동|읍|면|리|로|길|가)$/.test(t) || /\d/.test(t); });
+            if (onlyDong) return { kind: 'dong', hits: [], msg: '동·도로명만으로는 어느 시·군·구인지 알 수 없어요. 시·군·구를 함께 적어 주세요 (예: 부천시 중동, 양천구 목동)' };
+            return { kind: 'no', hits: [], msg: '가능 지역 목록에 없어요' + (sido ? ' (' + sido + ')' : '') + ' — 접수 전 [설치가능 주소 조회]로 한 번 더 확인해 주세요' };
+        }
+        function polRegionBox(c) {
+            var names = polRegNames(c), cells = [], out = h('div', { class: 'pol-rs-out', 'aria-live': 'polite' });
+            var inp = h('input', { type: 'search', enterkeyhint: 'search', autocomplete: 'off', maxlength: '60', 'aria-label': c.name + ' 가능 지역 검색', placeholder: '시·군·구 또는 주소 (예: 부천시 중동)' });
+            function run(quiet) {
+                var q = inp.value.trim(); polRegQ[c.id] = q;
+                var r = polRegFind(c, q);
+                cells.forEach(function (m) { var hit = r.hits.some(function (x) { return x.row === m.x.row && x.name === m.x.name && x.area === m.x.area; }); if (hit) { if (!m.el.firstChild || m.el.firstChild.nodeName !== 'MARK') { var k = h('mark', {}, m.x.name); m.el.textContent = ''; m.el.appendChild(k); } } else if (m.el.firstChild && m.el.firstChild.nodeName === 'MARK') m.el.textContent = m.x.name; });
+                out.className = 'pol-rs-out' + (r.kind === 'ok' ? ' ok' : r.kind === 'no' ? ' no' : r.kind === 'empty' ? '' : ' hint');
+                out.textContent = r.kind === 'empty' ? (quiet ? '' : '검색할 시·군·구나 주소를 적어 주세요.') : (r.kind === 'ok' ? '✔ ' : r.kind === 'no' ? '✘ ' : '※ ') + r.msg + (r.kind === 'ok' || r.kind === 'multi' ? ' (목록은 시·군·구 단위 — 최종 확인은 [설치가능 주소 조회])' : '');
+                if (!quiet && r.hits.length) { var first = cells.filter(function (m) { return m.x.row === r.hits[0].row && m.x.name === r.hits[0].name && m.x.area === r.hits[0].area; })[0]; if (first) try { first.el.scrollIntoView({ block: 'nearest' }); } catch (e) { /* 무시 */ } }
+            }
+            inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); run(false); } });
+            inp.addEventListener('input', function () { polRegQ[c.id] = inp.value; if (!inp.value.trim()) run(true); });
+            var rows = c.region.map(function (r, i) {
+                var td = h('td', {}), parts = String(r[1]).split(/(\s*[,\/·]\s*)/), mine = names.filter(function (y) { return y.row === i; }), k = 0;
+                parts.forEach(function (p) {
+                    var n = p.trim(), x = n && !/^[,\/·]$/.test(n) ? mine[k++] : null;
+                    if (x) { var sp = h('span', {}, n); cells.push({ x: x, el: sp }); td.appendChild(sp); } else td.appendChild(document.createTextNode(p));
+                });
+                return h('tr', {}, h('td', {}, r[0]), td);
+            });
+            var box = h('details', { class: 'pol-region', open: true }, h('summary', { style: 'font-weight:800;cursor:pointer;color:var(--olive-700)' }, '가능 지역 (' + c.region.length + '개 권역) · 지역 검색'),
+                h('div', { class: 'pol-rs' }, inp, h('button', { type: 'button', onclick: function () { run(false); } }, '검색')),
+                out,
+                c.regionNote ? h('div', { class: 'p-none', style: 'margin-top:4px' }, c.regionNote) : null,
+                h('table', {}, rows));
+            if (polRegQ[c.id]) { inp.value = polRegQ[c.id]; run(true); }
+            return box;
+        }
+        /* 설치 가능 주소 조회 (각 통신사 공식 페이지 · 대표님이 알려준 주소만, 단가표 파일로는 바꿀 수 없음) */
+        var POL_AREA = {
+            skt: 'https://m.tworld.co.kr/product/wireplan/service-area',
+            skb: 'https://www.bworld.co.kr/myb/product/join/address/svcAveSearch.do',
+            lgu: 'https://www.lguplus.com/support/online/coverage-check',
+            kt: 'https://help.kt.com/serviceinfo/SearchHomePhone.do',
+            hello: 'https://www.lghellovision.net/customer/area/joinAreaList.do'
+        };
+        var POL_AREA_OF = { skt: 'skt', sktusim: 'skt', skb: 'skb', pop: 'skb', skbsoho: 'skb', skbusim: 'skb', lgu: 'lgu', lgsoho: 'lgu', lgusim: 'lgu', kt: 'kt', ktusim: 'kt', hello: 'hello' };
+        function polAreaBtn(c) {
+            var u = POL_AREA[POL_AREA_OF[c.id]];
+            if (!u) return null;
+            return h('a', { class: 'pol-area', href: u, target: '_blank', rel: 'noopener noreferrer', referrerpolicy: 'no-referrer', title: c.name + ' 공식 홈페이지에서 설치 가능 주소 조회 (새 창)', 'data-area': '1' }, '설치가능 주소 조회 ↗');
         }
         var POL_TELCO = { skt: 'SK브로드밴드 (SKT 정책)', skb: 'SK브로드밴드 (SKB 정책)', lgu: 'LG U+', hello: 'LG헬로비전', kt: 'KT', sky: 'KT 스카이라이프', pop: 'SK브로드밴드 POP', lgsoho: 'LG U+ 소호(사업자)', skbsoho: 'SK브로드밴드 소호(사업자)' };
         function polBase(id) { var m = /^(kt|skt|skb|lgu?)usim$/.exec(id || ''); return m ? (m[1] === 'lg' ? 'lgu' : m[1]) : id; }   // 유심동판(모바일 동판) 단가표 → 같은 통신사 유선 기준
