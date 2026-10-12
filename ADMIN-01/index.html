@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2lK0EfMq7K14SIsY5AfnwFvD9/zJ3rCEUqh33bp3whI='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nY1EPxw4GMAsG+QAlslvQZLoNPugDB253bzKJHeW7/g='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -214,6 +214,11 @@
         .cal-num { font-weight: 700; font-size: 13px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; flex: none; }
         .cal-cell.sun .cal-num { color: var(--danger); } .cal-cell.sat .cal-num { color: var(--blue); }
         .cal-cell.today .cal-num { background: var(--gold); color: #1B1E0C; }
+        .chip.ev-done { text-decoration: line-through; opacity: .65; }
+        .chip.ev-ext { opacity: .6; font-style: italic; }
+        .ev-st { display: inline-block; font-size: 11.5px; font-weight: 800; padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; }
+        .ev-st.todo { background: #F1F4E6; color: #4F5A33; } .ev-st.doing { background: #FFF3BF; color: #7A5B00; } .ev-st.done { background: #DDF0DD; color: #1F6B2A; } .ev-st.ext { background: #E8EEF8; color: #2B4C7E; }
+        .row.ev-closed .title { text-decoration: line-through; color: #7A8270; }
         .chip { font-size: 12px; line-height: 1.3; padding: 2px 6px; border-left: 4px solid var(--c, #9AA38A); background: #F1F4E6; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .more { font-size: 12px; color: var(--muted); padding-left: 2px; }
         .cal-count { display: none; font-size: 11px; font-weight: 800; color: #1B1E0C; background: var(--gold); border-radius: 10px; padding: 0 6px; align-self: center; }
@@ -924,7 +929,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-12.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-12.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1040,6 +1045,7 @@
             list(d.events, 50000).forEach(function (e) {
                 if (!e || !isYmd(e.date) || !str(e.title, 120).trim()) return;
                 out.events.push({ id: str(e.id, 40) || uid(), title: str(e.title, 120).trim(), date: e.date, time: /^\d{2}:\d{2}$/.test(e.time || '') ? e.time : '', staffId: okStaff(e.staffId), memo: str(e.memo, 2000), u: num(e.u), b: num(e.b) });
+                if (str(e.taskId, 40)) out.events[out.events.length - 1].taskId = str(e.taskId, 40);   // 이 일정으로 만든 할 일
             });
             list(d.notices, 50000).forEach(function (n) {
                 if (!n || !str(n.title, 120).trim()) return;
@@ -1060,6 +1066,7 @@
                 if (num(t.ps) > 0) nt.ps = Math.floor(num(t.ps));   // 지금 중지 중이면 중지한 시각
                 if (isYmd(t.ext)) { nt.ext = t.ext; if (str(t.extId, 40)) nt.extId = str(t.extId, 40); }   // 내일업무로 연장한 원래 업무
                 if (str(t.from, 40)) { nt.from = str(t.from, 40); if (isYmd(t.fromDate)) nt.fromDate = t.fromDate; }   // 연장해서 새로 만든 업무
+                if (str(t.evId, 40)) nt.evId = str(t.evId, 40);   // 캘린더 일정과 연결된 할 일
             });
             list(d.regs, 20000).forEach(function (r) {   // 가입 장부 (드라이브 저장한 가입 확인서) — 빈 칸은 저장하지 않음
                 if (!r || ['mobile', 'wired'].indexOf(r.kind) < 0 || !isYmd(r.date)) return;
@@ -1404,9 +1411,43 @@
             return withNone ? [{ v: '', t: noneText || '미지정' }].concat(o) : o;
         }
 
+        /* ---------- 캘린더 일정 ↔ 할 일 연결 ----------
+           일정을 만들면 담당자(없으면 작성한 사람)의 그 날짜 할 일이 같이 생기고,
+           할 일을 완료하면 캘린더에도 완료로, 내일로 옮기면 캘린더에도 내일 일정으로 들어가요. */
+        function evTask(e) { return e && e.taskId ? db.tasks.filter(function (t) { return t.id === e.taskId; })[0] || null : null; }
+        function taskEv(t) { return t && t.evId ? db.events.filter(function (e) { return e.id === t.evId; })[0] || null : null; }
+        function evTaskMemo(e) { return (e.time ? e.time + ' 일정' : '종일 일정') + (e.memo ? '\n' + e.memo : ''); }
+        function evMakeTask(e) {   // 일정 → 할 일 (담당자가 있으면 담당자, '전체 공통'이면 작성한 사람)
+            var t = { id: uid(), title: e.title, staffId: e.staffId || me, due: e.date, priority: 'normal', status: 'todo', memo: evTaskMemo(e), u: 0, evId: e.id };
+            db.tasks.push(stamp(t)); e.taskId = t.id;
+            return t;
+        }
+        function evSyncTask(e) {   // 일정을 고치면 연결된 할 일도 (끝난 할 일은 제목만)
+            var t = evTask(e); if (!t) return;
+            t.title = e.title;
+            if (!closed(t)) { t.due = e.date; t.staffId = e.staffId || t.staffId || me; t.memo = evTaskMemo(e); }
+            stamp(t);
+        }
+        function taskSyncEv(t) {   // 할 일을 고치면 연결된 일정도 (제목·날짜)
+            var e = taskEv(t); if (!e) return;
+            var ch = false;
+            if (e.title !== t.title) { e.title = t.title; ch = true; }
+            if (!closed(t) && t.due && e.date !== t.due) { e.date = t.due; ch = true; }
+            if (ch) stamp(e);
+        }
+        function evState(e) {   // 캘린더에 보일 상태: 'todo' | 'doing' | 'done' | 'ext' | ''
+            var t = evTask(e); if (!t) return '';
+            return t.ext ? 'ext' : t.status;
+        }
+        function evStateTag(e) {
+            var st = evState(e), t = evTask(e); if (!st) return null;
+            var txt = st === 'ext' ? koDate(t.ext) + '로 이동' : st === 'done' ? '완료' : st === 'doing' ? '진행 중' : '할 일';
+            return h('span', { class: 'ev-st ' + st }, txt);
+        }
+
         /* ---------- 일정 / 공지 / 업무 / 직원 입력 ---------- */
         function editEvent(ev, presetDate) {
-            var isNew = !ev;
+            var isNew = !ev, linked = evTask(ev);
             openForm({
                 title: isNew ? '일정 추가' : '일정 수정', saveText: isNew ? '일정 저장' : '변경 저장',
                 fields: [
@@ -1415,16 +1456,22 @@
                     { key: 'time', label: '시간', type: 'time', value: ev ? ev.time : '', hint: '비워 두면 종일 일정으로 표시돼요.' },
                     { key: 'staffId', label: '담당', type: 'select', options: staffOptions(true, '전체 공통'), value: ev ? ev.staffId : me },
                     { key: 'memo', label: '메모', type: 'textarea', value: ev ? ev.memo : '' }
-                ],
+                ].concat(linked ? [] : [{ key: 'mkTask', label: '할 일에도 등록 (완료·내일로 옮기기가 캘린더에 같이 반영돼요)', type: 'checkbox', value: isNew }]),
                 validate: function (v) { return isYmd(v.date) ? null : '날짜를 올바르게 입력해 주세요.'; },
                 onSave: function (v) {
-                    if (isNew) { db.events.push(stamp({ id: uid(), title: v.title, date: v.date, time: v.time, staffId: v.staffId, memo: v.memo, u: 0 })); }
-                    else { ev.title = v.title; ev.date = v.date; ev.time = v.time; ev.staffId = v.staffId; ev.memo = v.memo; stamp(ev); }
+                    if (isNew) { var ne = stamp({ id: uid(), title: v.title, date: v.date, time: v.time, staffId: v.staffId, memo: v.memo, u: 0 }); db.events.push(ne); if (v.mkTask) { evMakeTask(ne); stamp(ne); } }
+                    else { ev.title = v.title; ev.date = v.date; ev.time = v.time; ev.staffId = v.staffId; ev.memo = v.memo; if (linked) evSyncTask(ev); else if (v.mkTask) evMakeTask(ev); stamp(ev); }
                     state.selDate = v.date; var d = parseYmd(v.date); state.calY = d.getFullYear(); state.calM = d.getMonth();
                     commit(isNew ? '일정을 저장했어요.' : '일정을 수정했어요.');
                 },
-                onDelete: isNew ? null : function () { db.events = db.events.filter(function (x) { return x.id !== ev.id; }); tomb(ev.id); commit('일정을 삭제했어요.'); },
-                deleteConfirm: '이 일정을 삭제할까요?' + delNote()
+                onDelete: isNew ? null : function () {
+                    db.events = db.events.filter(function (x) { return x.id !== ev.id; }); tomb(ev.id);
+                    var lt = evTask(ev);   // 아직 안 끝난 연결 할 일은 같이 지움 (완료·이동한 할 일은 기록으로 남김)
+                    if (lt && !closed(lt)) { db.tasks = db.tasks.filter(function (x) { return x.id !== lt.id; }); tomb(lt.id); }
+                    else if (lt) { delete lt.evId; stamp(lt); }
+                    commit('일정을 삭제했어요.' + (lt && !closed(lt) ? ' 연결된 할 일도 지웠어요.' : ''));
+                },
+                deleteConfirm: '이 일정을 삭제할까요?' + (linked && !closed(linked) ? '\n연결된 할 일 "' + linked.title + '"도 함께 지워져요.' : '') + delNote()
             });
         }
         function editNotice(n) {
@@ -1474,10 +1521,10 @@
                 onSave: function (v) {
                     var pri = ['high', 'normal', 'low'].indexOf(v.priority) >= 0 ? v.priority : 'normal';
                     if (isNew) { var nt = { id: uid(), title: v.title, staffId: v.staffId, due: v.due, priority: pri, status: 'todo', memo: v.memo, u: 0 }; setTaskStatus(nt, v.status); setEst(nt, v.est); db.tasks.push(stamp(nt)); }
-                    else { t.title = v.title; t.staffId = v.staffId; t.due = v.due; t.priority = pri; setTaskStatus(t, v.status); t.memo = v.memo; setEst(t, v.est); stamp(t); }
-                    commit(isNew ? '업무를 저장했어요.' : '업무를 수정했어요.');
+                    else { t.title = v.title; t.staffId = v.staffId; t.due = v.due; t.priority = pri; setTaskStatus(t, v.status); t.memo = v.memo; setEst(t, v.est); stamp(t); taskSyncEv(t); }
+                    commit(isNew ? '업무를 저장했어요.' : '업무를 수정했어요.' + (t && t.evId && taskEv(t) ? ' (캘린더에도 반영)' : ''));
                 },
-                onDelete: isNew ? null : function () { db.tasks = db.tasks.filter(function (x) { return x.id !== t.id; }); tomb(t.id); commit('업무를 삭제했어요.'); },
+                onDelete: isNew ? null : function () { var le = taskEv(t); db.tasks = db.tasks.filter(function (x) { return x.id !== t.id; }); tomb(t.id); if (le) { delete le.taskId; stamp(le); } commit('업무를 삭제했어요.' + (le ? ' 캘린더 일정은 그대로 남아요.' : '')); },
                 deleteConfirm: '이 업무를 삭제할까요?' + delNote()
             });
         }
@@ -1586,14 +1633,16 @@
             if (!confirm('"' + t.title + '"\n이 업무를 내일(' + koDate(tm) + ') 업무로 옮길까요?\n오늘 업무에는 "내일업무로 연장"으로 남아요.')) return;
             var nt = { id: uid(), title: t.title, staffId: t.staffId, due: tm, priority: t.priority, status: 'todo', memo: t.memo || '', u: 0, from: t.id, fromDate: from };
             if (t.est) nt.est = t.est;
+            var oe = taskEv(t);   // 캘린더에서 온 할 일이면 내일 날짜에 일정도 새로 넣음 (오늘 일정은 '내일로 이동'으로 표시)
+            if (oe) { var ne = { id: uid(), title: oe.title, date: tm, time: oe.time, staffId: oe.staffId, memo: oe.memo, u: 0, taskId: nt.id }; db.events.push(stamp(ne)); nt.evId = ne.id; }
             db.tasks.push(stamp(nt));
             t.ext = tm; t.extId = nt.id; stamp(t);
-            commit('내일(' + koDate(tm) + ') 업무로 옮겼어요.');
+            commit('내일(' + koDate(tm) + ') 업무로 옮겼어요.' + (oe ? ' 캘린더에도 내일 일정으로 넣었어요.' : ''));
         }
         function undoMoveNext(t) {   // 연장 취소: 내일로 만든 업무를 지우고 원래 업무를 다시 오늘 업무로
             var nt = t.extId ? db.tasks.filter(function (x) { return x.id === t.extId; })[0] : null;
             if (!confirm('내일업무로 연장한 것을 취소할까요?' + (nt ? '\n내일 업무로 만든 "' + nt.title + '"은(는) 지워지고, 이 업무가 다시 해야 할 업무가 돼요.' : ''))) return;
-            if (nt) { db.tasks = db.tasks.filter(function (x) { return x.id !== nt.id; }); tomb(nt.id); }
+            if (nt) { var ne = taskEv(nt); if (ne) { db.events = db.events.filter(function (x) { return x.id !== ne.id; }); tomb(ne.id); } db.tasks = db.tasks.filter(function (x) { return x.id !== nt.id; }); tomb(nt.id); }
             delete t.ext; delete t.extId; stamp(t);
             commit('연장을 취소했어요.');
         }
@@ -1627,9 +1676,10 @@
             var sum = '오늘 일정 ' + evs.length + '건, ' + (isAdmin ? '직원들이 진행 중인 업무가 전체 ' : '진행할 내 업무 ') + openAll.length + '건이 있어요.' + (late ? ' 마감이 지난 업무가 ' + late + '건 있어요.' : '');
 
             var evBox = evs.length ? h('div', { class: 'panel' }, evs.map(function (e) {
-                return h('button', { type: 'button', class: 'row', onclick: function () { editEvent(e); } },
+                var es = evState(e);
+                return h('button', { type: 'button', class: 'row' + (es === 'done' || es === 'ext' ? ' ev-closed' : ''), onclick: function () { editEvent(e); } },
                     h('span', { class: 'time' + (e.time ? '' : ' all') }, e.time || '종일'),
-                    h('span', {}, h('div', { class: 'title' }, e.title), e.memo ? h('div', { class: 'sub' }, e.memo.split('\n')[0]) : null),
+                    h('span', {}, h('div', { class: 'title' }, e.title, evStateTag(e)), e.memo ? h('div', { class: 'sub' }, e.memo.split('\n')[0]) : null),
                     whoTag(e.staffId, e.staffId ? null : '전체'));
             })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '오늘 등록된 일정이 없어요.'));
 
@@ -1697,7 +1747,7 @@
                         onclick: function () { state.selDate = key; if (out) { state.calY = d.getFullYear(); state.calM = d.getMonth(); } render(); }
                     },
                         h('span', { class: 'cal-num' }, d.getDate()),
-                        list.slice(0, 3).map(function (e) { return h('span', { class: 'chip', style: '--c:' + staffColor(e.staffId) }, (e.time ? e.time + ' ' : '') + e.title); }),
+                        list.slice(0, 3).map(function (e) { var es = evState(e); return h('span', { class: 'chip' + (es === 'done' ? ' ev-done' : es === 'ext' ? ' ev-ext' : ''), style: '--c:' + staffColor(e.staffId) }, (es === 'done' ? '✓ ' : es === 'ext' ? '→ ' : '') + (e.time ? e.time + ' ' : '') + e.title); }),
                         list.length > 3 ? h('span', { class: 'more' }, '+' + (list.length - 3) + '건 더') : null,
                         list.length ? h('span', { class: 'cal-count' }, list.length) : null));
                 })(new Date(y, m, 1 - offset + i));
@@ -1707,9 +1757,10 @@
             var panel = h('div', { class: 'day-panel' },
                 h('div', { class: 'section-head' }, h('h2', {}, koDate(state.selDate) + ' 일정'), h('button', { type: 'button', class: 'btn btn-primary btn-sm', onclick: function () { editEvent(null, state.selDate); } }, '이 날 일정 추가')),
                 sel.length ? h('div', { class: 'panel' }, sel.map(function (e) {
-                    return h('button', { type: 'button', class: 'row', onclick: function () { editEvent(e); } },
+                    var es = evState(e);
+                    return h('button', { type: 'button', class: 'row' + (es === 'done' || es === 'ext' ? ' ev-closed' : ''), onclick: function () { editEvent(e); } },
                         h('span', { class: 'time' + (e.time ? '' : ' all') }, e.time || '종일'),
-                        h('span', {}, h('div', { class: 'title' }, e.title), e.memo ? h('div', { class: 'sub' }, e.memo.split('\n')[0]) : null),
+                        h('span', {}, h('div', { class: 'title' }, e.title, evStateTag(e)), e.memo ? h('div', { class: 'sub' }, e.memo.split('\n')[0]) : null),
                         whoTag(e.staffId, e.staffId ? null : '전체'));
                 })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '이 날은 등록된 일정이 없어요.')));
 
