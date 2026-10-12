@@ -123,8 +123,16 @@
         .status-ok { background: #E6FFFA; color: #319795; border: 1px solid #81E6D9; }
         .status-no { background: #FFF5F5; color: #E53E3E; border: 1px solid #FEB2B2; }
         .map-sub { font-size: 14px; color: #718096; text-align: left; margin: -6px 0 14px; font-weight: 500; line-height: 1.5; word-break: keep-all; }
-        .map-search-box input { min-width: 0; font-size: 16px; }
-        .map-search-box button { min-width: 64px; font-size: 15px; }
+        .map-search-row { display: flex; gap: 8px; margin: 0 0 10px; }
+        .map-search-row input { flex: 1 1 auto; min-width: 0; padding: 12px 14px; border-radius: 10px; border: 2px solid #1F5A5E; font-size: 16px; font-weight: 700; background: #fff; color: #1A202C; -webkit-user-select: text; user-select: text; }
+        .map-search-row input:focus { outline: none; box-shadow: 0 0 0 3px rgba(31,90,94,.18); }
+        .map-search-row button { flex: 0 0 auto; min-width: 68px; background: #1F5A5E; color: #fff; border: none; padding: 0 16px; border-radius: 10px; font-weight: 800; font-size: 15px; cursor: pointer; }
+        .map-gps-btn { color: #1F5A5E; font-weight: 900; }
+        .map-addr-text span, .map-addr-sub { -webkit-user-select: text; user-select: text; }
+        .status-check { background: #EBF4FF; color: #2B6CB0; border: 1px solid #BEE3F8; }
+        .map-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 2147483000; background: rgba(26,32,44,.94); color: #fff; font-size: 14px; font-weight: 700; padding: 10px 16px; border-radius: 12px; max-width: calc(100% - 32px); text-align: center; line-height: 1.45; pointer-events: none; opacity: 0; transition: opacity .2s; word-break: keep-all; }
+        .map-toast.on { opacity: 1; }
+        .map-prod-note { font-size: 12.5px; font-weight: 700; color: #2B6CB0; background: #EBF4FF; padding: 8px 12px; line-height: 1.5; word-break: keep-all; }
         .map-msg { display: none; text-align: left; font-size: 13.5px; font-weight: 700; line-height: 1.5; padding: 10px 12px; border-radius: 10px; margin: -4px 0 12px; word-break: keep-all; }
         .map-msg.on { display: block; } .map-msg.err { background: #FFF5F5; color: #C53030; } .map-msg.info { background: #EBF8FF; color: #2B6CB0; }
         .map-cands { display: none; text-align: left; border: 2px solid #1F5A5E; border-radius: 12px; margin: -4px 0 14px; overflow: hidden; background: #fff; }
@@ -1354,16 +1362,15 @@
         <div class="quick-popup-content" style="max-width: 500px; padding: 25px 20px;" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="map-popup-title">
             <button class="quick-close-btn" onclick="closeMapPopup(event)">✕ 닫기</button>
             <h3 id="map-popup-title" style="font-size: 22px; font-weight: 800; margin-bottom: 15px; color: #111; letter-spacing: -1px; text-align: left; word-break: keep-all;">우리집 설치·개통 가능 지역 확인</h3>
-            <p class="map-sub">도로명·지번·동·건물 이름으로 검색하거나 지도를 움직여 과녁을 맞추면 <b>통신사별 개통 가능 여부</b>를 바로 알려드려요.</p>
+            <p class="map-sub">도로명·지번 주소로 검색하거나 지도를 움직여 설치할 곳을 고르면, <b>통신사별 개통 가능 여부</b>를 확인할 수 있어요.</p>
 
+            <div class="map-search-row">
+                <input type="search" id="map-search-input" enterkeyhint="search" autocomplete="off" maxlength="80" aria-label="설치 주소 검색" placeholder="예) 화정로1길 6 (도로명·지번으로 검색)">
+                <button type="button" onclick="searchMapAddress()" aria-label="주소 검색">검색</button>
+            </div>
             <div class="map-container-wrapper">
-                <div class="map-search-box">
-                    <input type="search" id="map-search-input" enterkeyhint="search" autocomplete="off" maxlength="80" aria-label="설치 주소 검색" placeholder="예) 봉화로 222-24, 고잔동, 아파트 이름">
-                    <button type="button" onclick="searchMapAddress()" aria-label="주소 검색">검색</button>
-                </div>
                 <div id="kakao-map" style="width: 100%; height: 100%;"></div>
-                <div class="map-center-pin"></div>
-                <div class="map-gps-btn" onclick="moveToCurrentLocation()" role="button" tabindex="0" aria-label="현재 위치로 이동"></div>
+                <div class="map-gps-btn" onclick="moveToCurrentLocation()" role="button" tabindex="0" aria-label="현재 위치로 이동" title="현재 위치로 이동">◎</div>
             </div>
             <div id="map-msg" class="map-msg" role="status" aria-live="polite"></div>
             <div id="map-cands" class="map-cands" role="listbox" aria-label="검색된 주소"></div>
@@ -1374,13 +1381,13 @@
                     <span style="font-size:12px; font-weight:700; color:#A0AEC0; flex-shrink:0;">기준</span>
                 </div>
                 <div id="current-map-jibun" class="map-addr-sub"></div>
-                <div class="map-car-guide">통신사를 누르면 가입 가능한 상품이 보여요</div>
+                <div class="map-car-guide">통신사를 누르면 상품과 가입신청 버튼이 보여요</div>
                 <div id="map-car-list"></div>
                 <div id="map-prod-panel" class="map-prod-panel" hidden></div>
             </div>
 
             <div class="map-notice">
-                <b>[중요 체크]</b> SK브로드밴드·KT·LG U+는 전국망, 스카이라이프는 KT망이라 대부분 설치되고, LG헬로비전·SK POP은 서비스 권역 기준으로 판별해요. 건물의 통신 단자함·전선 사정에 따라 실제와 다를 수 있으니 통신사 옆 <b>[공식 조회]</b>로 확인하시거나, 아래 버튼으로 상담원의 최종 전산 조회를 받아보세요!
+                <b>[중요 체크]</b> 같은 동네라도 건물마다 개통 여부가 달라서, SK브로드밴드·KT·LG U+·스카이라이프는 <b>[공식 조회]</b>를 누르면 주소가 복사된 채로 각 통신사 공식 조회 화면이 열려요(붙여넣기만 하면 돼요). LG헬로비전·SK POP은 공식 서비스 권역 밖이면 바로 '설치 불가'로 알려드려요. 아래 버튼을 누르시면 상담원이 통신사 전산으로 정확히 조회해 드려요!
             </div>
 
             <button id="map-submit-btn" class="submit-btn" style="background: linear-gradient(135deg, #FF5722 0%, #E64A19 100%); color: #fff; margin-top: 15px; border-radius: 12px; font-size: 17px; letter-spacing: -0.5px;" onclick="goToFastFormFromMap()">
@@ -1916,6 +1923,28 @@
                 rr2: rd ? rd.region_2depth_name || '' : '', rr3: rd ? rd.region_3depth_name || '' : ''
             };
         }
+        let mapMarker = null;
+        function mapMark(x, y) {   // 고른 주소 위치에 빨간 표시(마커)
+            if (!mapReady() || !isFinite(x) || !isFinite(y)) return;
+            const pos = new kakao.maps.LatLng(y, x);
+            try {
+                if (!mapMarker) mapMarker = new kakao.maps.Marker({ position: pos, map: kakaoMap });
+                else { mapMarker.setPosition(pos); mapMarker.setMap(kakaoMap); }
+            } catch (e) { console.error('지도 표시 오류', e); }
+        }
+        function mapToast(text) {
+            let t = document.getElementById('map-toast');
+            if (!t) { t = document.createElement('div'); t.id = 'map-toast'; t.className = 'map-toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+            t.textContent = text; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 3200);
+        }
+        function mapCopy(text) {   // 주소 복사 (최신 방식 → 안 되면 예전 방식)
+            if (!text) return Promise.resolve(false);
+            if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).then(() => true, () => mapCopyOld(text));
+            return Promise.resolve(mapCopyOld(text));
+        }
+        function mapCopyOld(text) {
+            try { const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:-1000px;left:0;opacity:0'; document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length); const ok = document.execCommand('copy'); document.body.removeChild(ta); return ok; } catch (e) { return false; }
+        }
         function mapMsg(text, kind) { const el = document.getElementById('map-msg'); if (!el) return; el.textContent = text || ''; el.className = 'map-msg' + (text ? ' on ' + (kind || 'info') : ''); }
         function mapReady() { return !!(window.kakao && kakao.maps && kakaoMap && geocoder); }
 
@@ -1929,7 +1958,7 @@
                 setTimeout(() => {   // 팝업이 뜨는 시간을 기다렸다가 지도를 그려야 깨지지 않아요
                     try {
                         const container = document.getElementById('kakao-map');
-                        kakaoMap = new kakao.maps.Map(container, { center: new kakao.maps.LatLng(37.3168, 126.8309), level: 4 });   // 기본: 안산시 고잔동 근처
+                        kakaoMap = new kakao.maps.Map(container, { center: new kakao.maps.LatLng(37.3168, 126.8309), level: 4, keyboardShortcuts: false });   // 기본: 안산시 고잔동 근처 (지도 단축키 끔: 검색창 복사·붙여넣기 방해 방지)
                         geocoder = new kakao.maps.services.Geocoder();
                         mapPlaces = kakao.maps.services.Places ? new kakao.maps.services.Places() : null;
                         kakao.maps.event.addListener(kakaoMap, 'dragend', function () { updateMapCenterAddress(); });
@@ -1962,6 +1991,7 @@
 
         function mapShowInfo(info) {
             mapInfo = info;
+            mapMark(info.x, info.y);
             const main = info.road ? info.road + (info.bld ? ' (' + info.bld + ')' : '') : info.jibun;
             selectedMapAddress = main;
             document.getElementById('current-map-addr').textContent = main || '주소 없음';
@@ -2060,11 +2090,12 @@
             } else mapMsg('이 브라우저에서는 위치 정보를 쓸 수 없어요. 주소로 검색해 주세요.', 'err');
         }
 
-        function mapCarStatus(c) {   // { ok: true|false|null, text }
+        function mapCarStatus(c) {   // { ok: false(불가) | 'check'(공식 조회로 확인) | null(주소 전), text }
+            // 전국망·KT망은 같은 동네도 건물마다 개통 여부가 달라서 '공식 조회'로만 확정 (추측으로 '가능'이라고 하지 않음)
             if (!mapInfo) return { ok: null, text: '주소 선택 전' };
-            if (c.net === 'all') return { ok: true, text: c.tag === 'KT망' ? '설치 가능 (KT망)' : '설치 가능 (전국망)' };
+            if (c.net === 'all') return { ok: 'check', text: '공식 조회로 확인' };
             const ok = mapRegionOk(c.net === 'hello' ? mapHelloRegions : mapPopRegions(), mapInfo);
-            return { ok, text: ok ? '설치 가능 지역' : '설치 불가 지역' };
+            return ok ? { ok: 'check', text: '권역 안 · 공식 조회로 확인' } : { ok: false, text: '설치 불가 지역' };
         }
         function checkRegionAvailability() { mapRenderCarriers(); }   // 예전 이름 호환
         function mapRenderCarriers() {
@@ -2075,11 +2106,16 @@
                 const b = document.createElement('button'); b.type = 'button'; b.className = 'map-car-btn'; b.setAttribute('aria-pressed', mapCarSel === c.k ? 'true' : 'false'); b.dataset.car = c.k;
                 const nm = document.createElement('span'); nm.className = 'map-car-nm';
                 const nb = document.createElement('b'); nb.textContent = c.name; const ns = document.createElement('small'); ns.textContent = c.tag; nm.appendChild(nb); nm.appendChild(ns);
-                const bd = document.createElement('span'); bd.className = 'map-status-badge ' + (st.ok === null ? 'status-wait' : st.ok ? 'status-ok' : 'status-no'); bd.textContent = st.text;
+                const bd = document.createElement('span'); bd.className = 'map-status-badge ' + (st.ok === null ? 'status-wait' : st.ok === false ? 'status-no' : 'status-check'); bd.textContent = st.text;
                 b.appendChild(nm); b.appendChild(bd);
                 b.addEventListener('click', () => { mapCarSel = mapCarSel === c.k ? '' : c.k; mapRenderCarriers(); if (mapCarSel) { const p = document.getElementById('map-prod-panel'); try { p.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* 무시 */ } } });
                 const a = document.createElement('a'); a.className = 'map-car-link'; a.href = c.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.referrerPolicy = 'no-referrer';
-                a.textContent = '공식 조회 ↗'; a.title = c.name + ' 홈페이지에서 설치 가능 주소 조회 (새 창)'; a.setAttribute('aria-label', c.name + ' 공식 설치 가능 지역 조회 (새 창)');
+                a.textContent = '공식 조회 ↗'; a.title = c.name + ' 홈페이지에서 설치 가능 주소 조회 (새 창 · 주소가 복사돼요)'; a.setAttribute('aria-label', c.name + ' 공식 설치 가능 지역 조회 (새 창, 주소 복사)');
+                a.addEventListener('click', () => {   // 새 창은 그대로 열고, 고른 주소는 복사해 둠 (조회 화면에 붙여넣기)
+                    const addr = mapInfo ? (mapInfo.road || mapInfo.jibun) : '';
+                    if (!addr) { mapToast(c.name + ' 공식 조회 화면을 열었어요. 주소를 입력해 확인해 주세요.'); return; }
+                    mapCopy(addr).then(ok => mapToast(ok ? '주소를 복사했어요: ' + addr + ' — 조회 화면 주소 칸에 붙여넣기 하세요.' : c.name + ' 조회 화면에 ' + addr + ' 를 입력해 확인해 주세요.'));
+                });
                 row.appendChild(b); row.appendChild(a); box.appendChild(row);
             });
             mapRenderProducts();
@@ -2098,11 +2134,13 @@
             if (!c) { p.hidden = true; return; }
             p.hidden = false; p.style.setProperty('--mc', c.color);
             const st = mapCarStatus(c);
-            const hd = document.createElement('div'); hd.className = 'map-prod-h'; hd.textContent = c.name + ' 가입 가능 상품';
+            const hd = document.createElement('div'); hd.className = 'map-prod-h'; hd.textContent = c.name + ' 상품';
             const hs = document.createElement('small'); hs.textContent = '상품을 누르면 바로 가입신청으로 넘어가요 · 월요금은 휴대폰 결합 시 기준 (결합 할인이 없는 상품은 기본 요금)'; hd.appendChild(hs); p.appendChild(hd);
             function empty(text, wait) { const e = document.createElement('div'); e.className = 'map-prod-empty' + (wait ? ' wait' : ''); e.textContent = text; p.appendChild(e); }
             if (st.ok === null) return empty('먼저 주소를 검색하거나 지도를 움직여 설치할 곳을 골라 주세요.', true);
-            if (st.ok === false) return empty('이 주소는 ' + c.name + ' 설치 가능 지역이 아니에요. 전국망(SK브로드밴드·KT·LG U+)을 눌러 상품을 확인해 주세요.');
+            if (st.ok === false) return empty('이 주소는 ' + c.name + ' 공식 서비스 권역이 아니라 설치할 수 없어요. 다른 통신사를 눌러 상품을 확인해 주세요.');
+            const nt = document.createElement('div'); nt.className = 'map-prod-note';
+            nt.textContent = '이 주소의 개통 여부는 [공식 조회]에서 확인하거나, 가입신청 후 상담원이 통신사 전산으로 확인해 드려요.'; p.appendChild(nt);
             const rows = mapProvRows(c);
             if (!rows.length) return empty(window.sgPlanLoadFailed ? '요금표를 불러오지 못했어요. 아래 [1분 빠른 접수하기]로 상담받아 보세요.' : (allData && allData.length ? '이 통신사 상품은 상담 시 안내해 드려요. 아래 [1분 빠른 접수하기]를 눌러 주세요.' : '요금표를 불러오는 중이에요. 잠시 뒤 다시 눌러 주세요.'), true);
             let lastType = '';
@@ -2162,7 +2200,10 @@
         }
         document.addEventListener('DOMContentLoaded', function () {
             const inp = document.getElementById('map-search-input');
-            if (inp) inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); searchMapAddress(); } });
+            if (inp) {
+                inp.addEventListener('keydown', function (e) { e.stopPropagation(); if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); searchMapAddress(); } });
+                ['copy', 'cut', 'paste', 'keyup', 'contextmenu', 'mousedown', 'touchstart'].forEach(function (n) { inp.addEventListener(n, function (e) { e.stopPropagation(); }, n === 'touchstart' ? { passive: true } : false); });
+            }
             const gps = document.querySelector('.map-gps-btn');
             if (gps) gps.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); moveToCurrentLocation(); } });
         });
