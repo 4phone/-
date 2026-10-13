@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nY1EPxw4GMAsG+QAlslvQZLoNPugDB253bzKJHeW7/g='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-m14Jf9r23YbrqOCJyiZHSDeaWuH8P7EihTSAzGWEDo4='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -156,6 +156,11 @@
         .dl-chk { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
         .dl-row input[type="date"] { padding: 5px 6px; font-size: 13px; }
         .dl-memo { grid-column: 2 / -1; padding: 6px 9px; font-size: 13px; }
+        .dl-memo-row { grid-column: 2 / -1; display: flex; gap: 6px; align-items: center; min-width: 0; }
+        .dl-memo-row .dl-memo { flex: 1 1 auto; min-width: 0; }
+        .dl-name .reg-kind { font-size: 11px; }
+        .btn-del { color: #B42318; border-color: #F1C0BA; background: #fff; }
+        .btn-del:hover { background: #FFF1F0; }
         @media (max-width: 520px) { .dl-row { grid-template-columns: 44px minmax(0, 1fr) auto; } .dl-row input[type="date"] { grid-column: 2 / -1; } }
         .form-card { display: grid; gap: 6px; text-align: left; padding: 28px 24px; min-height: 130px; background: #fff; border: 2px solid var(--line); border-radius: 12px; cursor: pointer; font: inherit; color: var(--ink); }
         .form-card b { font-size: 21px; font-weight: 800; letter-spacing: -0.6px; } .form-card span { font-size: 14px; color: var(--muted); }
@@ -283,7 +288,7 @@
         .t-row.dragging .t-drag { cursor: grabbing; }
         /* 콜 인입 */
         .nav-badge { display: inline-block; min-width: 20px; margin-left: 8px; padding: 1px 6px; border-radius: 999px; background: #E53E3E; color: #fff; font-size: 12px; font-weight: 800; text-align: center; line-height: 18px; }
-        .ib-row { display: grid; grid-template-columns: 128px 86px minmax(0, 1fr) 150px 86px; gap: 10px 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); border-left: 5px solid #E53E3E; }
+        .ib-row { display: grid; grid-template-columns: 128px 86px minmax(0, 1fr) minmax(0, 1.25fr) 150px 86px; gap: 10px 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); border-left: 5px solid #E53E3E; }
         .ib-row.done { border-left-color: transparent; background: #FAFBF6; }
         .ib-row.done .ib-label { color: var(--muted); }
         .ib-time { font-size: 13px; color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -370,6 +375,16 @@
         .ib-chk { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 700; cursor: pointer; }
         .ib-chk small { flex-basis: 100%; font-weight: 500; color: var(--muted); font-size: 12px; }
         .ib-act { display: flex; justify-content: flex-end; }
+        .btn-refresh { white-space: nowrap; }
+        .ib-asg { display: grid; gap: 4px; min-width: 0; }
+        .ib-asg-list { display: flex; flex-wrap: wrap; gap: 5px; }
+        .ib-asg-btn { font: inherit; font-size: 12.5px; font-weight: 700; padding: 4px 10px; min-height: 30px; border-radius: 999px; border: 1.5px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+        .ib-asg-btn:hover { border-color: var(--c, #3E441E); }
+        .ib-asg-btn.on { background: var(--c, #3E441E); border-color: var(--c, #3E441E); color: #fff; }
+        .ib-asg-btn:focus-visible { outline: 3px solid var(--c, #3E441E); outline-offset: 2px; }
+        .ib-asg-by { font-size: 12px; color: var(--muted); font-weight: 600; }
+        .ib-asg-by.none { font-weight: 500; opacity: .8; }
+        .ib-chk.ro { cursor: default; } .ib-chk.ro input { cursor: not-allowed; }
         .ib-act .btn.on { background: #F1F4E6; }
         .ib-notes { grid-column: 1 / -1; background: #FAFBF6; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; }
         .ib-note { border-bottom: 1px dashed var(--line); padding-bottom: 6px; }
@@ -385,7 +400,7 @@
         @media (max-width: 900px) {
             .ib-row { grid-template-columns: minmax(0, 1fr) auto; padding: 12px; }
             .ib-time { grid-column: 1 / -1; }
-            .ib-kind { grid-row: 2; } .ib-main { grid-column: 1 / -1; }
+            .ib-kind { grid-row: 2; } .ib-main { grid-column: 1 / -1; } .ib-asg { grid-column: 1 / -1; }
             .ib-status { margin-left: 0; flex-basis: 100%; }
         }
         body.t-dragging, body.t-dragging * { user-select: none; -webkit-user-select: none; }
@@ -910,8 +925,8 @@
         var INTAKE_TPL = "이름 : \n주민번호(전체) : \n휴대폰번호 : \n휴대폰통신사 : \n설치주소 : \n이메일주소(필수) : \n인증가능시간(필수) : \n\n■ 납부정보 ■ \n은행 /카드사 : \n계좌/카드번호 : \n카드유효기간 : \n예금주 성함/주민번호 : \n본인이면 \"본인\" \n\n● 접수정보 ● \n인터넷통신사 : \n인터넷상품: \nWIFI 유,무: \nTV상품+셋탑1 : \n전화상품 : X \n월요금 : \n설치비 : \n\n◆ 고객사은품 ◆ \n상품권 : 원 \n현금 : 원 \n상품권종류 : \n은행+계좌 : \n예금주: \n(본인,납부자외 불가)";   // 신분증 요청: 고객 접수 메모 양식 (복사해서 그대로 사용)
         var INTAKE_KEEP_DAYS = 30;   // 접수 메모(주민번호·계좌 등)는 30일 지나면 자동으로 지움
         var DEALERS = ['스카이', '이티', '안모', '성연', '수석', '신창', '에이탑', '반추'];
-        var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo'];
-        var REG_LONG = { plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120 };
+        var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo', 'addr'];
+        var REG_LONG = { plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120, addr: 150 };
         var REG_MANUAL = { price: 1, memo: 1 };   // 장부에서만 적는 칸 (확인서를 다시 저장해도 지우지 않음)
         var REG_COLS = [   // 장부 엑셀 순서 그대로 (한 줄 복사)
             ['모바일&유선', function (r) { return r.kind === 'mobile' ? '모바일' : '유선'; }], ['담당자', 'seller'], ['거래처', 'dealer'], ['통신사', 'carrier'],
@@ -929,7 +944,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-12.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-12.9';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -987,6 +1002,14 @@
         }
 
         /* ---------- 저장소: 비밀번호로 암호화해서 이 브라우저에 저장 ---------- */
+        var VIEW_KEY = 'sg_admin_view';   // 이 창(탭)에서 보던 메뉴 이름만 (개인정보 없음, 창을 닫으면 지워짐)
+        function ssGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+        function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch (e) { /* 무시 */ } }
+        document.addEventListener('keydown', function (e) {   // 로그인한 상태에서 F5·Ctrl+R(맥 Cmd+R): 페이지를 다시 열지 않고 화면만 새로고침
+            if (!authed || !db) return;
+            var k = e.key, isR = (k === 'r' || k === 'R' || e.keyCode === 82) && (e.ctrlKey || e.metaKey) && !e.altKey;
+            if (k === 'F5' || e.keyCode === 116 || isR) { e.preventDefault(); viewRefresh(); }
+        }, true);
         function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
         function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
         function devId() {   // 이 기기를 구분하는 무작위 번호 (로그인 기기 수 세기용, 개인정보 아님)
@@ -1221,7 +1244,10 @@
 
         /* --- 로그인 상태 / 자동 잠금 --- */
         function startSession() {
-            authed = true; resetIdle(); render();
+            authed = true;
+            var sv = String(ssGet(VIEW_KEY) || '').split('|');   // 새로고침 전에 보던 메뉴로 돌아가기
+            if (VIEWS.some(function (v) { return v.v === sv[0]; })) { state.view = sv[0]; state.form = sv[0] === 'forms' && /^(mobile|wired)$/.test(sv[1] || '') ? sv[1] : ''; }
+            resetIdle(); render();
             if (pendingToast) { toast(pendingToast); pendingToast = ''; }
             if (pendingJoin) setTimeout(offerPendingJoin, 50);
             var after = function () {   // 속도: 꼭 필요한 동기화부터 끝낸 뒤 나머지를 차례로
@@ -1719,6 +1745,7 @@
                 h('div', { class: 'today-head' },
                     h('div', {}, h('div', { class: 'today-date' }, (now.getMonth() + 1) + '월 ' + now.getDate() + '일', h('small', {}, WEEK[now.getDay()] + '요일')), h('p', { class: 'today-sum' }, sum)),
                     h('div', { class: 'actions' },
+                        refreshBtn(),
                         h('button', { type: 'button', class: 'btn btn-primary', onclick: function () { editEvent(null, today); } }, '일정 추가'),
                         h('button', { type: 'button', class: 'btn', onclick: function () { editTask(null); } }, '업무 추가'),
                         h('button', { type: 'button', class: 'btn', onclick: function () { editNotice(null); } }, '공지 쓰기'))),
@@ -1765,7 +1792,7 @@
                 })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '이 날은 등록된 일정이 없어요.')));
 
             return h('div', {},
-                h('div', { class: 'page-head' }, h('h1', {}, '캘린더')),
+                h('div', { class: 'page-head' }, h('h1', {}, '캘린더'), h('div', { class: 'actions' }, refreshBtn())),
                 h('div', { class: 'cal-bar' },
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'cal-prev', 'aria-label': '이전 달', onclick: function () { shiftMonth(-1); } }, '이전 달'),
                     h('div', { class: 'cal-title', 'aria-live': 'polite' }, y + '년 ' + (m + 1) + '월'),
@@ -1865,7 +1892,7 @@
                 return row;
             });
             return h('div', {},
-                h('div', { class: 'page-head' }, h('h1', {}, '업무'), h('div', { class: 'actions' },
+                h('div', { class: 'page-head' }, h('h1', {}, '업무'), h('div', { class: 'actions' }, refreshBtn(),
                     conflictItems().length ? h('button', { type: 'button', class: 'btn', 'data-fk': 'clean-conflicts', title: '동시에 고쳐서 생긴 [충돌본] 항목만 지워요', onclick: cleanConflicts }, '[충돌본] ' + conflictItems().length + '건 정리') : null,
                     h('label', { class: 'date-filter' }, '날짜별 보기', dateIn),
                     h('button', { type: 'button', class: 'btn' + (isYday ? ' on-yday' : ''), 'aria-pressed': isYday ? 'true' : 'false', 'data-fk': 'flt-yesterday', onclick: function () { state.date = ydS; render(); } }, '어제'),
@@ -2435,6 +2462,20 @@
             readInvite();
             if (authed && db) offerPendingJoin(); else if (!authed) render();
         });
+        var viewBusy = false;
+        function viewRefresh() {   // 화면 새로고침: 로그인은 그대로, 다른 직원이 바꾼 내용만 바로 불러옴
+            if (!authed || !db) return;
+            if (state.view === 'calls') { ib.busy = false; ibLoad(true); toast('새로 확인하고 있어요.'); return; }
+            if (state.view === 'visits') { vs.busy = false; vsLoad(); toast('새로 확인하고 있어요.'); return; }
+            if (state.view === 'idreq') { idr.busy = false; idrLoad(); }
+            if (!driveOn()) { render(); toast('이 기기는 공유 저장소에 연결되어 있지 않아 이 기기 내용만 보여요.'); return; }
+            if (viewBusy) return;
+            viewBusy = true; render();
+            syncManual().then(function () { viewBusy = false; if (authed && db) render(); }, function () { viewBusy = false; if (authed && db) render(); });
+        }
+        function refreshBtn() {
+            return h('button', { type: 'button', class: 'btn btn-refresh', 'data-act': 'view-refresh', disabled: viewBusy, title: '다른 직원이 바꾼 내용을 바로 불러와요 (F5와 같아요)', onclick: viewRefresh }, viewBusy ? '불러오는 중...' : '↻ 새로고침');
+        }
         function syncManual() {
             toast('드라이브와 동기화하는 중...');
             return syncJob(doSync).then(function (r) {
@@ -4032,7 +4073,7 @@
             var v = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return el ? String(el.value || '').trim() : ''; };
             var c = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return !!(el && el.checked); };
             var ppl = function (t) { return t && /\d$/.test(t) ? t + '인' : t; };   // 결합 (4) 인 → 4인
-            var r = { kind: kind, date: date, dealer: v('netUse'), seller: v('seller'), carrier: v('carrier'), phone: mfPhone(v('phone')), name: v('name') || v('appName'), birth: v('birth'), prev: v('prevCarrier') };
+            var r = { kind: kind, date: date, dealer: v('netUse'), seller: v('seller'), carrier: v('carrier'), phone: mfPhone(v('phone')), name: v('name') || v('appName'), birth: v('birth'), prev: v('prevCarrier'), addr: v('addr') };
             r.comb = c('cOld') ? '기결합' : c('cNew') ? '결합' : c('cNone') ? '미결합' : '';
             r.combKind = c('cOld') ? ppl(v('cOldN')) : c('cNew') ? ppl(v('cNewN')) : '';
             if (kind === 'mobile') {
@@ -4104,7 +4145,7 @@
                     h('div', { class: 'reg-main' }, h('span', { class: 'reg-kind ' + r.kind }, r.kind === 'mobile' ? '모바일' : '유선'), h('b', {}, r.name || '(이름 없음)'), h('span', { class: 'reg-sub' }, sub)),
                     h('div', { class: 'reg-act' },
                         h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-act': 'reg-copy', onclick: function () { clip(regLine(r, i + 1), (r.name || '') + ' 한 줄을 복사했어요. 장부 엑셀의 첫 칸을 누르고 붙여넣기(Ctrl+V) 하세요.'); } }, '한 줄 복사'),
-                        h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editReg(r); } }, '수정')));
+                        h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editReg(r); } }, '수정'), regDelBtn(r)));
             });
             return h('section', { class: 'reg-box', 'data-ledger': 'all' },
                 h('div', { class: 'reg-head' }, h('h2', {}, '가입 장부'), h('small', {}, ymLabel(state.regYm) + ' ' + list.length + '건'),
@@ -4116,14 +4157,26 @@
         }
         function dealerText(name, list) {   // 카카오톡 개통 확인용 텍스트
             var lines = list.map(function (r, i) {
-                var st = r.inst ? '설치완료' + (r.instDate ? ' ' + mdText(r.instDate) : '') : '미설치';
-                return (i + 1) + ') ' + mdText(r.date) + ' ' + (r.name || '(이름 없음)') + ' - ' + st + (r.memo ? ' / ' + r.memo.replace(/\s+/g, ' ') : '');
+                var w = r.kind === 'mobile' ? '개통' : '설치';
+                var st = r.inst ? w + '완료' + (r.instDate ? ' ' + mdText(r.instDate) : '') : '미' + w;
+                return (i + 1) + ') ' + mdText(r.date) + ' ' + (r.kind === 'mobile' ? '[모바일] ' : '') + (r.name || '(이름 없음)') + ' - ' + st + (r.memo ? ' / ' + r.memo.replace(/\s+/g, ' ') : '');
             });
             return '[' + name + '] ' + ymLabel(state.regYm) + ' 개통 확인 (총 ' + list.length + '건)\n' + lines.join('\n');
         }
         function regSet(r, fn) { fn(r); stamp(r); commit(); }
+        function regDelText(r) { return '"' + (r.name || '(이름 없음)') + '" ' + mdText(r.date) + ' ' + (r.kind === 'mobile' ? '모바일' : '유선') + ' 줄을 지울까요?\n가입 장부와 거래처별 개통 확인에서 함께 지워져요. (드라이브에 저장된 확인서 파일은 그대로예요)' + delNote(); }
+        function regRemove(r) {   // 장부 한 줄 삭제 (대표만)
+            if (!isBoss()) { toast('가입 장부 삭제는 대표만 할 수 있어요.'); return; }
+            db.regs = db.regs.filter(function (x) { return x.id !== r.id; }); tomb(r.id); delete regDraft[r.id];
+            commit('가입 장부에서 지웠어요.');
+        }
+        function regDelBtn(r) {   // 대표에게만 보이는 [삭제]
+            if (!isBoss()) return null;
+            return h('button', { type: 'button', class: 'btn btn-sm btn-del', 'data-act': 'reg-del', 'aria-label': (r.name || '') + ' 장부 줄 삭제', onclick: function () { if (confirm(regDelText(r))) regRemove(r); } }, '삭제');
+        }
         function dealerLedger() {   // 유선 확인서 아래: 거래처별 개통 확인
-            var list = regMonth('wired'), groups = Object.create(null), order = [];
+            var list = regMonth(''), groups = Object.create(null), order = [];   // 유선 + 모바일
+            var nW = list.filter(function (r) { return r.kind === 'wired'; }).length, nM = list.length - nW;
             list.forEach(function (r) { var k = r.dealer || ''; if (!groups[k]) { groups[k] = []; order.push(k); } groups[k].push(r); });
             order.sort(function (a, b) {
                 var ia = DEALERS.indexOf(a), ib = DEALERS.indexOf(b);
@@ -4138,12 +4191,13 @@
                 });
                 var name = k || '접수처 미지정', open = g.filter(function (r) { return !r.inst; }).length;
                 return h('div', { class: 'dl-grp', 'data-dealer': name },
-                    h('div', { class: 'dl-head' }, h('h3', {}, name, h('small', {}, '총 ' + g.length + '건 · 미설치 ' + open + '건')),
+                    h('div', { class: 'dl-head' }, h('h3', {}, name, h('small', {}, '총 ' + g.length + '건 · 미완료 ' + open + '건')),
                         h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-act': 'dealer-copy', onclick: function () { clip(dealerText(name, g), name + ' 개통 확인 내용을 복사했어요. 카카오톡에 붙여넣기 하세요.'); } }, '텍스트 복사')),
                     g.map(function (r) {
-                        var cb = h('input', { type: 'checkbox', 'data-fk': 'inst-' + r.id, checked: !!r.inst, 'aria-label': (r.name || '') + ' 설치 완료' });
+                        var doneWord = r.kind === 'mobile' ? '개통' : '설치';
+                        var cb = h('input', { type: 'checkbox', 'data-fk': 'inst-' + r.id, checked: !!r.inst, 'aria-label': (r.name || '') + ' ' + doneWord + ' 완료' });
                         cb.addEventListener('change', function () { var on = this.checked; regSet(r, function (x) { if (on) { x.inst = true; if (!x.instDate) x.instDate = ymd(new Date()); } else { delete x.inst; delete x.instDate; } }); });
-                        var dt = h('input', { type: 'date', 'data-fk': 'instd-' + r.id, 'aria-label': (r.name || '') + ' 설치일', value: r.instDate || '' });
+                        var dt = h('input', { type: 'date', 'data-fk': 'instd-' + r.id, 'aria-label': (r.name || '') + ' ' + doneWord + '일', value: r.instDate || '' });
                         dt.addEventListener('change', function () { var v = this.value; regSet(r, function (x) { if (isYmd(v)) { x.instDate = v; x.inst = true; } else delete x.instDate; }); });
                         var mm = h('input', { type: 'text', class: 'dl-memo', 'data-fk': 'instm-' + r.id, maxlength: 300, placeholder: '진행상태 메모', 'aria-label': (r.name || '') + ' 진행상태 메모', value: regDraft[r.id] != null ? regDraft[r.id] : (r.memo || '') });
                         mm.addEventListener('input', function () { regDraft[r.id] = this.value; });
@@ -4155,14 +4209,14 @@
                         });
                         return h('div', { class: 'dl-row' + (r.inst ? ' inst' : ''), 'data-reg': r.id },
                             h('span', { class: 'dl-date' }, mdText(r.date)),
-                            h('button', { type: 'button', class: 'dl-name', title: '눌러서 장부 내용 고치기', onclick: function () { editReg(r); } }, r.name || '(이름 없음)'),
-                            h('label', { class: 'dl-chk' }, cb, '설치'), dt, mm);
+                            h('button', { type: 'button', class: 'dl-name', title: '눌러서 장부 내용 고치기', onclick: function () { editReg(r); } }, h('span', { class: 'reg-kind ' + r.kind }, r.kind === 'mobile' ? '모바일' : '유선'), r.name || '(이름 없음)'),
+                            h('label', { class: 'dl-chk' }, cb, doneWord), dt, h('div', { class: 'dl-memo-row' }, mm, regDelBtn(r)));
                     }));
             });
             return h('section', { class: 'reg-box', 'data-ledger': 'dealer' },
-                h('div', { class: 'reg-head' }, h('h2', {}, '거래처별 개통 확인'), h('small', {}, ymLabel(state.regYm) + ' 유선 ' + list.length + '건')),
+                h('div', { class: 'reg-head' }, h('h2', {}, '거래처별 개통 확인'), h('small', {}, ymLabel(state.regYm) + ' 유선 ' + nW + '건 · 모바일 ' + nM + '건')),
                 regMonthsBar(),
-                blocks.length ? blocks : h('div', { class: 'reg-empty' }, ymLabel(state.regYm) + '에 드라이브 저장한 유선 가입 확인서가 없어요.'));
+                blocks.length ? blocks : h('div', { class: 'reg-empty' }, ymLabel(state.regYm) + '에 드라이브 저장한 가입 확인서가 없어요.'));
         }
         function editReg(r) {   // 장부 한 줄 고치기 (할부원금처럼 확인서에 없는 칸도 여기서)
             var t = function (key, label, o) { o = o || {}; return { key: key, label: label, value: r[key] || '', half: o.full ? false : true, max: o.max || REG_LONG[key] || 60, type: o.type }; };
@@ -4173,8 +4227,9 @@
                 t('model', '모델'), t('serial', '일련번호'), t('disc', '공시&선약(프약)'), t('subsidy', '공시금액'), t('price', '할부원금'), t('months', '할부개월'),
                 t('plan', '요금제'), t('extra', '부가서비스'), t('ins', '보험가입여부(종류)'), t('combKind', '결합종류'), t('comb', '결합여부'), t('keep', '요금제유지개월'),
                 t('plan2', '변경요금제'), t('bill1', '가입후요금'), t('bill2', '3개월후 요금'), t('prev', '이전사업자'), t('type', '가입유형'),
-                { key: 'instDate', label: '설치일 (유선)', type: 'date', value: r.instDate || '', half: true },
-                { key: 'memo', label: '진행상태 메모', value: r.memo || '', max: 300, half: true }
+                { key: 'instDate', label: '설치일 · 개통일', type: 'date', value: r.instDate || '', half: true },
+                { key: 'memo', label: '진행상태 메모', value: r.memo || '', max: 300, half: true },
+                t('addr', '주소', { max: 150 })
             ];
             openForm({
                 title: '가입 장부 고치기', saveText: '변경 저장', cls: 'wide wide3', fields: fields,
@@ -4186,8 +4241,8 @@
                     delete regDraft[r.id]; stamp(r);
                     commit('가입 장부를 고쳤어요.');
                 },
-                onDelete: function () { db.regs = db.regs.filter(function (x) { return x.id !== r.id; }); tomb(r.id); delete regDraft[r.id]; commit('가입 장부에서 지웠어요.'); },
-                deleteConfirm: '이 가입 장부 줄을 지울까요? (드라이브에 저장된 확인서 파일은 그대로예요)' + delNote()
+                onDelete: isBoss() ? function () { regRemove(r); } : null,
+                deleteConfirm: regDelText(r)
             });
         }
 
@@ -4201,7 +4256,7 @@
                     mforms[f].el);
             }
             return h('div', {},
-                h('div', { class: 'page-head' }, h('h1', {}, '가입 확인서')),
+                h('div', { class: 'page-head' }, h('h1', {}, '가입 확인서'), h('div', { class: 'actions' }, refreshBtn())),
                 h('p', { class: 'forms-sub' }, '만들 가입 확인서의 종류를 선택해 주세요. 드라이브 저장한 확인서는 아래 장부에 자동으로 정리돼요.'),
                 h('div', { class: 'forms-grid' },
                     h('div', { class: 'forms-col' },
@@ -4239,6 +4294,7 @@
         function ibNorm(x) {
             return { id: x.id, t: x.t, kind: x.kind, label: String(x.label).slice(0, 60), dev: x.dev === 'm' ? 'm' : 'pc', name: typeof x.name === 'string' ? x.name.slice(0, 20) : '', phone: typeof x.phone === 'string' ? x.phone.replace(/\D/g, '').slice(0, 11) : '',
                 chk: x.chk && typeof x.chk.by === 'string' ? { by: x.chk.by.slice(0, 20), at: Number(x.chk.at) || 0 } : null,
+                asg: x.asg && typeof x.asg.to === 'string' && x.asg.to ? { to: x.asg.to.slice(0, 20), by: String(x.asg.by || '').slice(0, 20), at: Number(x.asg.at) || 0 } : null,
                 cm: Array.isArray(x.cm) ? x.cm.filter(function (c) { return c && typeof c.id === 'string' && typeof c.text === 'string'; }).map(function (c) { return { id: c.id, by: String(c.by || '').slice(0, 20), em: String(c.em || ''), text: c.text.slice(0, 500), at: Number(c.at) || 0 }; }) : [] };
         }
         function ibUnchecked() { return ib.items.filter(function (x) { return !x.chk; }).length; }
@@ -4291,7 +4347,18 @@
             var n = ibNorm(item);
             ib.items = ib.items.map(function (x) { return x.id === n.id ? n : x; });
         }
+        function ibAssign(x, name) {   // 담당자 지정 (모든 직원 가능, 같은 사람을 다시 누르면 지정 해제)
+            if (ib.saving[x.id]) return;
+            var to = x.asg && x.asg.to === name ? '' : name;
+            ib.saving[x.id] = 1;
+            var before = x.asg;
+            x.asg = to ? { to: to, by: staffName(me), at: Date.now() } : null;   // 바로 화면에 표시
+            render();
+            ibCall('ibAssign', { id: x.id, to: to }).then(function (res) { delete ib.saving[x.id]; ibReplace(res.item); ibPaint(); toast(to ? to + ' 님을 담당자로 정했어요.' : '담당자 지정을 풀었어요.'); },
+                function (e) { delete ib.saving[x.id]; x.asg = before; render(); toast('담당자를 저장하지 못했어요. ' + driveErrText(e)); });
+        }
         function ibCheck(x, on) {
+            if (!isBoss()) { toast('확인 표시는 대표님만 할 수 있어요.'); render(); return; }
             if (ib.saving[x.id]) return;
             ib.saving[x.id] = 1;
             var before = x.chk;
@@ -4333,8 +4400,16 @@
             var n = ibUnchecked();
             var rows = list.map(function (x) {
                 var k = IB_KIND[x.kind], open = !!ib.open[x.id];
-                var chk = h('input', { type: 'checkbox', 'data-fk': 'ib-chk-' + x.id, 'aria-label': '확인 표시', checked: !!x.chk });
+                var boss = isBoss();
+                var chk = h('input', { type: 'checkbox', 'data-fk': 'ib-chk-' + x.id, 'aria-label': '확인 표시', checked: !!x.chk, disabled: !boss, title: boss ? '' : '확인 표시는 대표님만 할 수 있어요' });
                 chk.addEventListener('change', function () { ibCheck(x, this.checked); });
+                var asg = h('div', { class: 'ib-asg', role: 'group', 'aria-label': '담당자 지정' },
+                    h('div', { class: 'ib-asg-list' }, db.staff.slice().sort(byO).map(function (st) {
+                        var on = !!(x.asg && x.asg.to === st.name);
+                        return h('button', { type: 'button', class: 'ib-asg-btn' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', 'data-fk': 'ib-asg-' + x.id + '-' + st.id, style: '--c:' + staffColor(st.id),
+                            title: on ? '다시 누르면 지정을 풀어요' : st.name + ' 님을 담당자로 정하기', onclick: function () { ibAssign(x, st.name); } }, st.name);
+                    })),
+                    x.asg ? h('small', { class: 'ib-asg-by' }, '담당 ' + x.asg.to + ' · 지정 ' + (x.asg.by || '직원') + (x.asg.at ? ' · ' + ibTime(x.asg.at) : '')) : h('small', { class: 'ib-asg-by none' }, '담당자를 눌러 지정해 주세요'));
                 var notes = null;
                 if (open) {
                     var input = h('textarea', { class: 'ib-in', rows: 2, maxlength: 500, 'data-fk': 'ib-note-' + x.id, 'aria-label': '댓글 입력', placeholder: '댓글 (예: 10:40 통화 완료, 내일 설치 예약)' });
@@ -4357,13 +4432,14 @@
                         h('div', { class: 'ib-sub' }, h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC'),
                             x.name ? h('b', {}, x.name) : null,
                             x.phone ? h('a', { href: 'tel:' + x.phone, class: 'ib-phone' }, mfPhone(x.phone)) : null)),
-                    h('label', { class: 'ib-chk' }, chk, h('span', {}, '확인'), x.chk ? h('small', {}, x.chk.by + (x.chk.at ? ' · ' + ibTime(x.chk.at) : '')) : null),
+                    asg,
+                    h('label', { class: 'ib-chk' + (boss ? '' : ' ro') }, chk, h('span', {}, '확인'), x.chk ? h('small', {}, x.chk.by + (x.chk.at ? ' · ' + ibTime(x.chk.at) : '')) : (boss ? null : h('small', {}, '대표 확인 전'))),
                     h('div', { class: 'ib-act' }, h('button', { type: 'button', class: 'btn btn-sm' + (open ? ' on' : ''), 'data-fk': 'ib-open-' + x.id, 'aria-expanded': open ? 'true' : 'false',
                         onclick: function () { if (ib.open[x.id]) delete ib.open[x.id]; else ib.open[x.id] = 1; render(); } }, '댓글' + (x.cm.length ? ' ' + x.cm.length : ''))),
                     notes);
             });
             return h('div', {}, head,
-                h('p', { class: 'forms-sub' }, '고객이 홈페이지에서 전화·카톡·문자 버튼을 누르거나 접수를 마치면 여기에 바로 올라와요. 확인한 건은 [확인]에 체크하고, 처리 내용은 댓글로 남겨 주세요.'),
+                h('p', { class: 'forms-sub' }, '고객이 홈페이지에서 전화·카톡·문자 버튼을 누르거나 접수를 마치면 여기에 바로 올라와요. 이름 버튼을 눌러 담당자를 정하고(모든 직원 가능), 처리 내용은 댓글로 남겨 주세요. [확인] 체크는 대표님만 할 수 있어요.'),
                 h('div', { class: 'filters' }, h('label', {}, '종류', kindSel), h('label', { class: 'ib-todo' }, todo, '확인 안 한 것만'),
                     h('span', { class: 'ib-status', id: 'ib-status', role: 'status' }, ibStatusText())),
                 h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '확인 안 함 ' + n + '건 · 전체 ' + ib.items.length + '건 (최근 300건)')),
@@ -4462,14 +4538,14 @@
                 var head = [0, 4, sum.length];
                 sum.push(['날짜'].concat(kinds.map(function (k) { return IB_KIND[k][1]; }), ['합계']));
                 days.forEach(function (d) { var row = [d], tot = 0; kinds.forEach(function (k) { row.push(byDay[d][k]); tot += byDay[d][k]; }); row.push(tot); sum.push(row); });
-                var det = [['일시', '종류', '누른 버튼 / 접수 종류', '기기', '성함', '연락처', '확인', '확인자', '확인 시각', '댓글']];
+                var det = [['일시', '종류', '누른 버튼 / 접수 종류', '기기', '성함', '연락처', '담당자', '지정한 사람', '확인', '확인자', '확인 시각', '댓글']];
                 items.forEach(function (x) {
-                    det.push([fmtDT(x.t), IB_KIND[x.kind][1], x.label, x.dev === 'm' ? '모바일' : 'PC', x.name, x.phone ? mfPhone(x.phone) : '', x.chk ? 'O' : '', x.chk ? x.chk.by : '', x.chk && x.chk.at ? fmtDT(x.chk.at) : '',
+                    det.push([fmtDT(x.t), IB_KIND[x.kind][1], x.label, x.dev === 'm' ? '모바일' : 'PC', x.name, x.phone ? mfPhone(x.phone) : '', x.asg ? x.asg.to : '', x.asg ? x.asg.by : '', x.chk ? 'O' : '', x.chk ? x.chk.by : '', x.chk && x.chk.at ? fmtDT(x.chk.at) : '',
                         x.cm.map(function (c) { return c.by + ': ' + c.text; }).join(' / ')]);
                 });
                 saveBlob('콜인입_' + r.label + '.xlsx', xlsxBlob([
                     { name: '요약', widths: [18, 10, 10, 10, 10, 10, 10], rows: sum, head: head },
-                    { name: '상세', widths: [20, 8, 30, 8, 10, 15, 6, 10, 20, 50], rows: det, head: [0], freeze: 1 }]));
+                    { name: '상세', widths: [20, 8, 30, 8, 10, 15, 10, 10, 6, 10, 20, 50], rows: det, head: [0], freeze: 1 }]));
                 toast('콜 인입 ' + r.label + ' 엑셀을 내려받았어요. (' + items.length + '건)');
             }, function (e) { btn.disabled = false; btn.textContent = label; toast('엑셀을 만들지 못했어요. ' + driveErrText(e)); });
         }
@@ -5089,7 +5165,7 @@
         function renderPolicy() {
             var P = polShown(), CUR = polCur(), S = state.pol, boss = isBoss(), viewing = !!(P && CUR && P !== CUR);
             var head = h('div', { class: 'page-head' }, h('h1', {}, '인터넷상담'),
-                h('div', { class: 'actions' },
+                h('div', { class: 'actions' }, refreshBtn(),
                     (db.policies || []).length > 1 ? h('button', { type: 'button', class: 'btn', 'data-act': 'pol-history', onclick: polHistory }, '이전 단가표') : null,
                     boss ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'pol-import', onclick: polImport }, '단가표 불러오기') : null));
             if (!P) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, boss ? '아직 단가표가 없어요. 오른쪽 위 [단가표 불러오기]로 Claude가 보낸 단가표 파일을 넣어 주세요.' : '아직 단가표가 없어요. 대표님이 단가표를 넣으면 여기에 보여요.')));
@@ -5481,6 +5557,7 @@
             var ae = document.activeElement, fk = ae && ae.getAttribute ? ae.getAttribute('data-fk') : null, fkSel = null;
             if (fk && (ae.tagName === 'TEXTAREA' || (ae.tagName === 'INPUT' && /^(text|search|tel)$/.test(ae.type)))) { try { fkSel = [ae.selectionStart, ae.selectionEnd]; } catch (e) { fkSel = null; } }
             if (!authed || !db) { renderLogin(); return; }
+            ssSet(VIEW_KEY, state.view + '|' + (state.view === 'forms' ? state.form || '' : ''));
             var keepEl = null, keepSel = null, keepY = window.scrollY;
             mfAll(function (F) { if (ae && F.el.contains(ae)) keepEl = ae; });   // 가입 확인서 작성 중 화면이 새로 그려져도 쓰던 칸 그대로
             if (idr.ui && ae && idr.ui.form.contains(ae)) keepEl = ae;          // 신분증 요청 입력 중에도 쓰던 칸·커서 그대로
