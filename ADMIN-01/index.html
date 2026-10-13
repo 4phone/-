@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-m14Jf9r23YbrqOCJyiZHSDeaWuH8P7EihTSAzGWEDo4='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-/sNjt/1IkfekPmRNIyiPil7zjHhHWZXGHYMkdRE6Pf8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -944,7 +944,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-12.9';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-13.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1252,6 +1252,7 @@
             if (pendingJoin) setTimeout(offerPendingJoin, 50);
             var after = function () {   // 속도: 꼭 필요한 동기화부터 끝낸 뒤 나머지를 차례로
                 if (!authed || !db) return;
+                try { if (regFillAddrs()) commit(); } catch (e) { /* 주소 채우기 실패는 무시 */ }
                 ibStart();                                           // 콜 인입 실시간 확인 시작
                 if (db.account) { setTimeout(maybeOfferKeys, 200); setTimeout(refreshMyProf, 250); }
             };
@@ -2278,6 +2279,17 @@
                 if (typeof c.title === 'string' && c.title.indexOf('[충돌본] ') !== 0) c.title = ('[충돌본] ' + c.title).slice(0, 120);
                 return c;
             }
+            function carryNew(n, o) {   // 두 쪽 차이가 '새로 생긴 칸(주소·일정 연결)이 한쪽에만 있음'뿐이면 그 칸을 채워 같은 내용으로 맞춤
+                var NEWK = ['addr', 'taskId', 'evId'], keys = Object.keys(n).concat(Object.keys(o)), diff = false, only = true;
+                keys.forEach(function (k) {
+                    if (['u', 'b'].indexOf(k) >= 0 || JSON.stringify(n[k]) === JSON.stringify(o[k])) return;
+                    diff = true;
+                    if (NEWK.indexOf(k) < 0 || (n[k] !== undefined && o[k] !== undefined)) only = false;
+                });
+                if (!diff || !only) return false;
+                NEWK.forEach(function (k) { if (n[k] === undefined && o[k] !== undefined) n[k] = o[k]; });
+                return true;
+            }
             function pickItem(x, y, copies) {
                 if (!x) return y; if (!y) return x;
                 if (body(x) === body(y)) return x.u > y.u ? x : y.u > x.u ? y : ((x.ord || 0) >= (y.ord || 0) ? x : y);   // 내용이 같으면 문제 없음 (순서 정보가 있는 쪽 우선)
@@ -2285,6 +2297,7 @@
                 if (x.u !== y.u) { newer = x.u > y.u ? x : y; older = newer === x ? y : x; }
                 else { newer = body(x) >= body(y) ? x : y; older = newer === x ? y : x; }
                 // 나중에 고친 쪽이, 먼저 고친 쪽의 최신 내용을 모른 채(= 동기화되기 전 기준으로) 고쳤다면 '동시에 고친 것'
+                if (x.u === y.u && carryNew(newer, older)) return newer;   // 예전 화면이 새 칸만 빠뜨린 복사본: 충돌 아님, 새 칸을 살림
                 if (copies && (x.u === y.u || ((newer.b || 0) > 0 && newer.b < older.u))) copies.push(conflictCopy(older));
                 return newer;
             }
@@ -4093,13 +4106,31 @@
             Object.keys(r).forEach(function (k) { if (r[k] === '' || r[k] == null) delete r[k]; });
             return r;
         }
+        function regAddrFromIntake(r) {   // 같은 고객(휴대폰 번호, 없으면 이름)의 신분증 요청 접수 메모에서 '설치주소'
+            var ph = digitsOnly(r.phone), nm = String(r.name || '').trim(), hit = '';
+            (db.intakes || []).slice().sort(function (a, b) { return (b.t || 0) - (a.t || 0); }).some(function (x) {
+                var t = x.text || '', xp = digitsOnly(intakeVal(t, '휴대폰번호')), xn = (intakeVal(t, '이름') || x.name || '').trim();
+                var same = ph.length >= 10 ? xp === ph : (nm && xn === nm);
+                var a = intakeVal(t, '설치주소');
+                if (same && a && !/^(X|x|없음|-)$/.test(a)) { hit = a.slice(0, REG_LONG.addr); return true; }
+                return false;
+            });
+            return hit;
+        }
+        function regFillAddrs() {   // 주소가 빈 장부 줄을 접수 메모로 채움 (찾은 것만, 한 번에 저장)
+            if (!db || !db.regs) return 0;
+            var n = 0;
+            db.regs.forEach(function (r) { if (r.addr) return; var a = regAddrFromIntake(r); if (a) { r.addr = a; stamp(r); n++; } });
+            return n;
+        }
         function regUpsert(M, y, m, d) {   // 드라이브 저장 성공 → 장부에 추가 (같은 확인서를 다시 저장하면 그 줄을 고침)
             if (!db || !M.sheet) return false;
             if (!db.regs) db.regs = [];
             var rec = regFromForm(M.sheet, M.kind, ymd(new Date(y, m - 1, d)));
             var ex = M.regId ? db.regs.filter(function (x) { return x.id === M.regId; })[0] : null;
+            if (!rec.addr && !(ex && ex.addr)) { var ia = regAddrFromIntake(rec); if (ia) rec.addr = ia; }   // 주소: 확인서 → 장부에 적어 둔 값 → 신분증 요청 접수 메모 순서
             if (ex) {
-                REG_FIELDS.forEach(function (f) { if (REG_MANUAL[f]) return; if (rec[f]) ex[f] = rec[f]; else delete ex[f]; });
+                REG_FIELDS.forEach(function (f) { if (REG_MANUAL[f]) return; if (rec[f]) ex[f] = rec[f]; else if (f !== 'addr') delete ex[f]; });   // 주소는 확인서에 비어 있으면 장부에 적어 둔 값을 지우지 않음
                 ex.kind = rec.kind; ex.date = rec.date; stamp(ex);
             } else {
                 rec.id = uid(); rec.u = 0; db.regs.push(stamp(rec)); M.regId = rec.id;
@@ -4229,7 +4260,7 @@
                 t('plan2', '변경요금제'), t('bill1', '가입후요금'), t('bill2', '3개월후 요금'), t('prev', '이전사업자'), t('type', '가입유형'),
                 { key: 'instDate', label: '설치일 · 개통일', type: 'date', value: r.instDate || '', half: true },
                 { key: 'memo', label: '진행상태 메모', value: r.memo || '', max: 300, half: true },
-                t('addr', '주소', { max: 150 })
+                { key: 'addr', label: '주소', value: r.addr || regAddrFromIntake(r) || '', half: true, max: 150, hint: !r.addr && regAddrFromIntake(r) ? '신분증 요청 접수 메모의 설치주소를 가져왔어요. [변경 저장]을 누르면 저장돼요.' : '' }
             ];
             openForm({
                 title: '가입 장부 고치기', saveText: '변경 저장', cls: 'wide wide3', fields: fields,
