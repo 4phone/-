@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-OjBprYPhOx0PKB9WAhO0H+AaNQsLjYICszo23r3bsoQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-VdfFCZ2HI3hjhPxuQdFo2wMnf1NEzcBlHjlq+eTsUmo='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -445,6 +445,32 @@
         @media (max-height: 760px) { dialog.wide .dlg-body { gap: 9px 18px; } dialog.wide .field { gap: 4px; } dialog.wide textarea { min-height: 56px; } }
         .err { color: var(--danger); font-size: 13.5px; min-height: 20px; font-weight: 600; padding: 0 22px; }
         .dlg-foot { padding: 12px 22px 18px; display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+        dialog.rpt-dlg { width: min(1040px, calc(100vw - 24px)); max-width: none; }
+        dialog.rpt-dlg .dlg-body.rpt-body { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); align-items: start; gap: 16px 20px; }
+        dialog.rpt-dlg .dlg-body.rpt-body > * { grid-column: auto; }
+        .rpt-row label, .rpt-who { white-space: nowrap; }
+        .rpt-form { display: grid; gap: 12px; min-width: 0; }
+        .rpt-sec { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; background: #fff; }
+        .rpt-sec h3 { font-size: 15px; font-weight: 800; margin: 0; }
+        .rpt-sec h3 small { font-weight: 600; color: var(--muted); font-size: 12px; }
+        .rpt-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+        .rpt-row label { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; }
+        .rpt-row input[data-rpt="mob"], .rpt-row input[data-rpt="wired"], .rpt-row input[data-rpt="saved"] { width: 72px; text-align: right; font-size: 16px; }
+        .rpt-full { display: grid; gap: 4px; font-weight: 700; font-size: 14px; }
+        .rpt-list { margin: 0; padding-left: 18px; display: grid; gap: 3px; font-size: 14px; }
+        .rpt-list small { color: var(--muted); margin-left: 4px; }
+        .rpt-ok { margin: 0; color: #1F6B2A; font-weight: 700; font-size: 14px; }
+        .rpt-warn { margin: 0; color: #B42318; font-weight: 700; font-size: 14px; }
+        .rpt-note { display: flex; gap: 6px; align-items: center; }
+        .rpt-note input { flex: 1 1 auto; min-width: 0; }
+        .rpt-sec > .btn { justify-self: start; }
+        .rpt-who { font-size: 14px; }
+        .rpt-side { position: sticky; top: 0; display: grid; gap: 6px; min-width: 0; }
+        .rpt-side-h { font-size: 13px; font-weight: 800; color: var(--muted); }
+        .rpt-pre { margin: 0; white-space: pre-wrap; word-break: break-word; background: #FEE500; color: #191600; border-radius: 14px; padding: 14px 16px; font: 15px/1.65 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; min-height: 240px; }
+        .rpt-miss { flex: 1 1 260px; align-self: center; font-size: 13px; font-weight: 700; color: #B42318; }
+        .rpt-miss.ok { color: #1F6B2A; }
+        @media (max-width: 760px) { dialog.rpt-dlg .dlg-body.rpt-body { grid-template-columns: minmax(0, 1fr); } .rpt-side { position: static; } }
         .dlg-foot .left { margin-right: auto; }
 
         .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); background: var(--olive-900); color: #fff; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 14.5px; z-index: 9999; box-shadow: 0 10px 30px rgba(0,0,0,.35); max-width: 92vw; }
@@ -944,7 +970,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-14.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-14.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1525,14 +1551,14 @@
             return [{ label: '오늘', value: ymd(d) }, { label: '내일', value: ymd(new Date(y, m, day + 1)) },
                     { label: '다음 주 월요일', value: ymd(new Date(y, m, day + ((8 - d.getDay()) % 7 || 7))) }, { label: '마감일 없음', value: '' }];
         }
-        function editTask(t) {
-            var isNew = !t;
+        function editTask(t, pre) {
+            var isNew = !t; pre = pre || {};
             openForm({
                 title: isNew ? '업무 추가' : '업무 수정', saveText: isNew ? '업무 저장' : '변경 저장', cls: 'wide',
                 fields: [
                     { key: 'title', label: '업무 내용', required: true, value: t ? t.title : '' },
-                    { key: 'staffId', label: '담당자', type: 'select', options: staffOptions(true), value: t ? t.staffId : me, half: true },
-                    { key: 'due', label: '마감일', type: 'date', value: t ? t.due : ymd(new Date()), quick: dateQuick(), half: true },
+                    { key: 'staffId', label: '담당자', type: 'select', options: staffOptions(true), value: t ? t.staffId : (pre.staffId != null ? pre.staffId : me), half: true },
+                    { key: 'due', label: '마감일', type: 'date', value: t ? t.due : (pre.due || ymd(new Date())), quick: dateQuick(), half: true },
                     { key: 'priority', label: '우선순위', type: 'seg', options: PRIORITY.map(function (p) { return { v: p.v, t: p.t }; }), value: t ? t.priority : 'normal', half: true },
                     { key: 'status', label: '진행 상태', type: 'select', options: STATUS.map(function (s) { return { v: s.v, t: s.t }; }), value: t ? t.status : 'todo', half: true, disabled: !!(t && !canChangeStatus(t)),
                       hint: t && !canChangeStatus(t) ? '완료한 업무는 대표만 되돌릴 수 있어요.' + (taskTimeText(t) ? ' (' + taskTimeText(t) + ')' : '') : t && taskTimeText(t) ? taskTimeText(t) : '진행 중·완료로 바꾸면 시간이 자동 기록돼요.' },
@@ -1550,6 +1576,7 @@
                     if (isNew) { var nt = { id: uid(), title: v.title, staffId: v.staffId, due: v.due, priority: pri, status: 'todo', memo: v.memo, u: 0 }; setTaskStatus(nt, v.status); setEst(nt, v.est); db.tasks.push(stamp(nt)); }
                     else { t.title = v.title; t.staffId = v.staffId; t.due = v.due; t.priority = pri; setTaskStatus(t, v.status); t.memo = v.memo; setEst(t, v.est); stamp(t); taskSyncEv(t); }
                     commit(isNew ? '업무를 저장했어요.' : '업무를 수정했어요.' + (t && t.evId && taskEv(t) ? ' (캘린더에도 반영)' : ''));
+                    if (pre.after) setTimeout(pre.after, 30);
                 },
                 onDelete: isNew ? null : function () { var le = taskEv(t); db.tasks = db.tasks.filter(function (x) { return x.id !== t.id; }); tomb(t.id); if (le) { delete le.taskId; stamp(le); } commit('업무를 삭제했어요.' + (le ? ' 캘린더 일정은 그대로 남아요.' : '')); },
                 deleteConfirm: '이 업무를 삭제할까요?' + delNote()
@@ -1905,7 +1932,7 @@
                 h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '진행 ' + openN + '건, 완료 ' + list.filter(function (t) { return t.status === 'done' && !t.ext; }).length + '건' + (list.some(function (t) { return t.ext; }) ? ', 내일로 연장 ' + list.filter(function (t) { return t.ext; }).length + '건' : '')),
                     h('div', { class: 'actions' },
                         h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-fk': 'report-doing', onclick: function () { captureReport(list, 'doing'); } }, '진행중보고'),
-                        h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-fk': 'report', onclick: function () { captureReport(list); } }, '마감보고'))),
+                        h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-fk': 'report', onclick: function () { openCloseReport(); } }, '마감보고'))),
                 h('div', { class: 'panel' },
                     rows.length ? [h('div', { class: 't-head' }, h('div', {}, '번호'), h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows]
                         : h('div', { class: 'empty' }, state.date ? '이 날(' + koDate(state.date) + ') 마감인 업무가 없어요. 담당·상태 필터를 걸어 두었다면 함께 확인해 보세요.' : (db.tasks.length ? '조건에 맞는 업무가 없어요. 필터를 바꿔 보세요.' : '아직 등록된 업무가 없어요. 오른쪽 위 [업무 추가]로 시작해 보세요.'))));
@@ -1999,6 +2026,131 @@
             if (i < 0 || j < 0 || j >= ids.length) return;
             ids[i] = ids[j]; ids[j] = id;
             if (taskReorder(ids, grp === 'done')) commit();
+        }
+
+        /* ---------- 마감보고 (카카오톡 글 양식) ----------
+           판매·가입확인서: 그 날 드라이브 저장한 가입 장부(판매자 = 보고자) 자동 / 총 상담: 모바일·유선만 적으면 합계 자동
+           금일업무: 그 날 마감인데 완료 못 한 업무 자동 + 사유 직접 / 익일업무: 다음 날 업무 자동 / 특이사항: 직접(+추가)
+           빈칸이 없어야 [마감보고 완료 · 복사]가 눌려요. 적은 내용은 이 화면 메모리에만 (기기에 저장하지 않음) */
+        var rptDraft = Object.create(null);
+        function rptKey(date, who) { return date + '|' + who; }
+        function rptData(date, who) {
+            var nm = who ? staffName(who) : '';
+            var regs = (db.regs || []).filter(function (r) { return r.date === date && (!who || String(r.seller || '').trim() === nm); });
+            var mine = function (t) { return !who || t.staffId === who; };
+            var today = db.tasks.filter(function (t) { return mine(t) && t.due === date && t.status !== 'done' && !/^\[충돌본\] /.test(t.title); }).sort(taskSort);
+            var next = nextDay(date);
+            var tmr = db.tasks.filter(function (t) { return mine(t) && t.due === next && t.status !== 'done' && !t.ext && !/^\[충돌본\] /.test(t.title); }).sort(taskSort);
+            return { regs: regs, mob: regs.filter(function (r) { return r.kind === 'mobile'; }).length, today: today, tmr: tmr, next: next };
+        }
+        function rptMD(d) { var x = parseYmd(d); return (x.getMonth() + 1) + '월' + x.getDate() + '일'; }
+        function rptText(date, D, f) {
+            var n = function (v) { return parseInt(v, 10) || 0; };
+            var L = ['《 ' + rptMD(date) + ' 마감보고 》', '',
+                '▶ 판매·가입확인서 ' + D.regs.length + '건',
+                '▶ 총 상담 ' + (n(f.mob) + n(f.wired)) + '건 (모바일 ' + n(f.mob) + '건, 유선 ' + n(f.wired) + '건)',
+                '▶ 번호저장 ' + n(f.saved) + '건', '', '◆ 금일업무 ◆'];
+            if (D.today.length) {
+                L.push('- 금일 업무 진행 미완료 ' + D.today.length + '건');
+                D.today.forEach(function (t) { L.push('  · ' + t.title + (t.ext ? ' (→ ' + rptMD(t.ext) + ' 이동)' : t.status === 'doing' ? ' (진행 중)' : '')); });
+                L.push('- 사유 : ' + String(f.reason || '').trim());
+            } else L.push('- 금일 업무 모두 완료');
+            L.push('', '◆ 익일업무 ◆');
+            D.tmr.forEach(function (t) { L.push('- ' + t.title); });
+            L.push('◆ 특이사항 ◆');
+            f.notes.forEach(function (x) { if (String(x).trim()) L.push('- ' + String(x).trim()); });
+            return L.join('\n');
+        }
+        function rptMissing(D, f) {
+            var miss = [], isNum = function (v) { return /^\d{1,4}$/.test(String(v == null ? '' : v).trim()); };
+            if (!isNum(f.mob)) miss.push('총 상담 - 모바일 건수');
+            if (!isNum(f.wired)) miss.push('총 상담 - 유선 건수');
+            if (!isNum(f.saved)) miss.push('번호저장 건수');
+            if (D.today.length && !String(f.reason || '').trim()) miss.push('금일업무 미완료 사유');
+            if (!D.tmr.length) miss.push('익일업무 (업무 화면에 ' + koDate(D.next) + ' 업무 등록)');
+            if (!f.notes.length || f.notes.some(function (x) { return !String(x).trim(); })) miss.push(f.notes.length > 1 ? '특이사항 (빈 줄은 채우거나 지워 주세요)' : '특이사항');
+            return miss;
+        }
+        function openCloseReport(date, who) {
+            if (!db) return;
+            date = date || (isYmd(state.date || '') ? state.date : ymd(new Date()));
+            var fixed = isStaffUser();
+            if (who == null) who = fixed ? me : (state.who && state.who !== 'all' && state.who !== 'none' && staffById(state.who) ? state.who : me);
+            var key = rptKey(date, who), f = rptDraft[key] || (rptDraft[key] = { mob: '', wired: '', saved: '', savedTouched: false, reason: '', notes: [''] });
+            var D = rptData(date, who);
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide rpt-dlg';
+            var pre = h('pre', { class: 'rpt-pre', 'aria-live': 'polite' });
+            var missBox = h('div', { class: 'rpt-miss', role: 'status' });
+            var doneBtn = h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'rpt-done' }, '마감보고 완료 · 복사');
+            var totalEl = h('b', { class: 'rpt-total' });
+            function num(key, label) {
+                var i = h('input', { type: 'text', inputmode: 'numeric', maxlength: 4, 'data-rpt': key, 'aria-label': label, placeholder: '0', autocomplete: 'off' });
+                i.value = f[key];
+                i.addEventListener('input', function () {
+                    this.value = this.value.replace(/[^\d]/g, '').slice(0, 4); f[key] = this.value;
+                    if (key === 'saved') f.savedTouched = this.value !== '';
+                    if ((key === 'mob' || key === 'wired') && !f.savedTouched) { var a = parseInt(f.mob, 10), b = parseInt(f.wired, 10); f.saved = f.mob !== '' && f.wired !== '' ? String((a || 0) + (b || 0)) : ''; savedIn.value = f.saved; }
+                    upd();
+                });
+                return i;
+            }
+            var mobIn = num('mob', '모바일 상담 건수'), wIn = num('wired', '유선 상담 건수'), savedIn = num('saved', '번호저장 건수');
+            var reason = D.today.length ? h('input', { type: 'text', maxlength: 200, 'data-rpt': 'reason', placeholder: '예) 시간 부족으로 미완료', 'aria-label': '미완료 사유' }) : null;
+            if (reason) { reason.value = f.reason; reason.addEventListener('input', function () { f.reason = this.value; upd(); }); }
+            var notesBox = h('div', { class: 'rpt-notes' });
+            function paintNotes() {
+                notesBox.textContent = '';
+                f.notes.forEach(function (v, i) {
+                    var inp = h('input', { type: 'text', maxlength: 300, 'data-rpt': 'note-' + i, placeholder: i === 0 ? '예) 강춘옥님 부가서비스 해지 및 요금제 변경 완료' : '특이사항 ' + (i + 1), 'aria-label': '특이사항 ' + (i + 1) });
+                    inp.value = v; inp.addEventListener('input', function () { f.notes[i] = this.value; upd(); });
+                    notesBox.appendChild(h('div', { class: 'rpt-note' }, inp,
+                        f.notes.length > 1 ? h('button', { type: 'button', class: 'btn btn-sm', 'aria-label': '특이사항 ' + (i + 1) + ' 지우기', onclick: function () { f.notes.splice(i, 1); paintNotes(); upd(); } }, '지우기') : null));
+                });
+            }
+            paintNotes();
+            function upd() {
+                var a = parseInt(f.mob, 10) || 0, b = parseInt(f.wired, 10) || 0;
+                totalEl.textContent = (f.mob === '' && f.wired === '') ? '-' : String(a + b);
+                var miss = rptMissing(D, f);
+                doneBtn.disabled = miss.length > 0;
+                missBox.textContent = miss.length ? '아직 적을 곳: ' + miss.join(' · ') : '모두 적었어요. [마감보고 완료 · 복사]를 누르고 카카오톡에 붙여넣기 하세요.';
+                missBox.className = 'rpt-miss' + (miss.length ? '' : ' ok');
+                pre.textContent = rptText(date, D, f);
+            }
+            doneBtn.addEventListener('click', function () {
+                if (rptMissing(D, f).length) { upd(); return; }
+                clip(rptText(date, D, f), rptMD(date) + ' 마감보고를 복사했어요. 카카오톡 대화창에 붙여넣기(Ctrl+V, 휴대폰은 입력창 길게 누르기) 하세요.');
+            });
+            var whoSel = null;
+            if (!fixed) {
+                whoSel = h('select', { 'data-rpt': 'who', 'aria-label': '보고자' }, db.staff.slice().sort(byO).map(function (st) { return h('option', { value: st.id }, st.name); }));
+                whoSel.value = who; whoSel.addEventListener('change', function () { openCloseReport(date, this.value); });
+            }
+            var dateIn = h('input', { type: 'date', 'data-rpt': 'date', value: date, 'aria-label': '보고 날짜' });
+            dateIn.addEventListener('change', function () { if (isYmd(this.value)) openCloseReport(this.value, who); });
+            var reopen = function () { openCloseReport(date, who); };
+            var body = h('div', { class: 'dlg-body rpt-body' },
+                h('div', { class: 'rpt-form' },
+                    h('div', { class: 'rpt-row' }, h('label', {}, '보고 날짜', dateIn), whoSel ? h('label', {}, '보고자', whoSel) : h('div', { class: 'rpt-who' }, '보고자 ', h('b', {}, staffName(who)))),
+                    h('section', { class: 'rpt-sec' }, h('h3', {}, '▶ 판매·가입확인서 ', h('b', {}, D.regs.length + '건'), h('small', {}, ' 자동 (가입 장부 · 모바일 ' + D.mob + ' / 유선 ' + (D.regs.length - D.mob) + ')'))),
+                    h('section', { class: 'rpt-sec' }, h('h3', {}, '▶ 총 상담 ', totalEl, '건', h('small', {}, ' 합계 자동')),
+                        h('div', { class: 'rpt-row' }, h('label', {}, '모바일', mobIn, '건'), h('label', {}, '유선', wIn, '건'), h('label', {}, '번호저장', savedIn, '건'))),
+                    h('section', { class: 'rpt-sec' }, h('h3', {}, '◆ 금일업무 ◆', h('small', {}, ' ' + koDate(date) + ' 마감 · 미완료 자동')),
+                        D.today.length ? h('ul', { class: 'rpt-list' }, D.today.map(function (t) { return h('li', {}, t.title, t.ext ? h('small', {}, ' → ' + rptMD(t.ext) + ' 이동') : t.status === 'doing' ? h('small', {}, ' 진행 중') : null); })) : h('p', { class: 'rpt-ok' }, '미완료 업무가 없어요 (모두 완료)'),
+                        reason ? h('label', { class: 'rpt-full' }, '사유', reason) : null),
+                    h('section', { class: 'rpt-sec' }, h('h3', {}, '◆ 익일업무 ◆', h('small', {}, ' ' + koDate(D.next) + ' 업무 자동')),
+                        D.tmr.length ? h('ul', { class: 'rpt-list' }, D.tmr.map(function (t) { return h('li', {}, t.title); })) : h('p', { class: 'rpt-warn' }, koDate(D.next) + '에 등록된 업무가 없어요.'),
+                        h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'rpt-add-next', onclick: function () { editTask(null, { due: D.next, staffId: who, after: reopen }); } }, '+ 익일 업무 등록')),
+                    h('section', { class: 'rpt-sec' }, h('h3', {}, '◆ 특이사항 ◆', h('small', {}, ' 직접 작성')), notesBox,
+                        h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'rpt-add-note', onclick: function () { f.notes.push(''); paintNotes(); upd(); var l = notesBox.querySelectorAll('input'); if (l.length) l[l.length - 1].focus(); } }, '+ 특이사항 추가'))),
+                h('div', { class: 'rpt-side' }, h('div', { class: 'rpt-side-h' }, '카카오톡에 붙여넣을 내용 (미리보기)'), pre));
+            var form = h('form', { novalidate: true },
+                h('div', { class: 'dlg-head' }, rptMD(date) + ' 마감보고'),
+                body,
+                h('div', { class: 'dlg-foot' }, missBox, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), doneBtn));
+            form.addEventListener('submit', function (e) { e.preventDefault(); });
+            dlg.appendChild(form); showDlg(dlg); upd();
+            setTimeout(function () { try { (f.mob === '' ? mobIn : f.wired === '' ? wIn : mobIn).focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }, 30);
         }
 
         /* ---------- 마감보고: 지금 보이는 업무 목록을 그림(이미지)으로 만들어 복사 ---------- */
