@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-/sNjt/1IkfekPmRNIyiPil7zjHhHWZXGHYMkdRE6Pf8='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-OjBprYPhOx0PKB9WAhO0H+AaNQsLjYICszo23r3bsoQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -944,7 +944,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-13.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-14.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -3725,7 +3725,8 @@
             var what = M.kind === 'mobile' ? (v('model') || (c('noBuy') ? '유심(비구매)' : ''))
                 : [v('netPlan'), v('tvPlan'), c('addY') ? v('addPlan') : ''].filter(Boolean).join(' + ');
             var when = String(y % 100).padStart(2, '0') + '년 ' + m + '월 ' + d + '일';
-            var label = (cr.tag ? cr.heart + ' ' + cr.tag + '. ' : cr.heart + ' ') + [name, what, cr.sub, when].filter(Boolean).join('. ');   // 통신사를 안 적었으면 하트 뒤에 바로 이름
+            var hz = cr.heart + (M.kind === 'wired' ? '유선' : '');   // 유선 가입자는 하트 바로 뒤에 '유선' (예: 💙유선 SK. 홍길동. 500M. 26년 10월 14일)
+            var label = (cr.tag ? hz + ' ' + cr.tag + '. ' : hz + ' ') + [name, what, cr.sub, when].filter(Boolean).join('. ');   // 통신사를 안 적었으면 하트 뒤에 바로 이름
             label = label.slice(0, 80);
             var note = ['사거리인터넷 ' + (M.kind === 'mobile' ? '모바일' : '유선') + ' 가입', v('carrier'), v('seller') ? '담당 ' + v('seller') : '', v('netUse') ? '거래처 ' + v('netUse') : '', '가입 ' + y + '-' + pad(m) + '-' + pad(d)].filter(Boolean).join(' · ').slice(0, 200);
             return { label: label, phone: digitsOnly(v('phone')), note: note };
