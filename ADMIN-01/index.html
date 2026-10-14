@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-VdfFCZ2HI3hjhPxuQdFo2wMnf1NEzcBlHjlq+eTsUmo='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HQgNzZAdTavPg0E7FVGEvfaDQq87BKCGb7vw4Tx5HVE='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -453,12 +453,17 @@
         .rpt-sec { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 8px; background: #fff; }
         .rpt-sec h3 { font-size: 15px; font-weight: 800; margin: 0; }
         .rpt-sec h3 small { font-weight: 600; color: var(--muted); font-size: 12px; }
+        .rpt-sec h3 small.rpt-edited { color: #B54708; }
         .rpt-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
         .rpt-row label { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 14px; }
-        .rpt-row input[data-rpt="mob"], .rpt-row input[data-rpt="wired"], .rpt-row input[data-rpt="saved"] { width: 72px; text-align: right; font-size: 16px; }
+        .rpt-row input[data-rpt="smob"], .rpt-row input[data-rpt="swired"], .rpt-row input[data-rpt="mob"], .rpt-row input[data-rpt="wired"], .rpt-row input[data-rpt="saved"] { width: 72px; text-align: right; font-size: 16px; }
         .rpt-full { display: grid; gap: 4px; font-weight: 700; font-size: 14px; }
         .rpt-list { margin: 0; padding-left: 18px; display: grid; gap: 3px; font-size: 14px; }
         .rpt-list small { color: var(--muted); margin-left: 4px; }
+        .rpt-done-list { list-style: none; padding-left: 0; }
+        .rpt-done-list li { color: var(--muted); }
+        .rpt-chk { display: inline-block; width: 18px; color: #1F6B2A; font-weight: 800; }
+        .rpt-done-tag { margin-left: 6px; font-size: 11.5px; font-weight: 800; color: #1F6B2A; background: #E3F4E1; border-radius: 999px; padding: 1px 8px; vertical-align: 1px; white-space: nowrap; }
         .rpt-ok { margin: 0; color: #1F6B2A; font-weight: 700; font-size: 14px; }
         .rpt-warn { margin: 0; color: #B42318; font-weight: 700; font-size: 14px; }
         .rpt-note { display: flex; gap: 6px; align-items: center; }
@@ -970,7 +975,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-14.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-14.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2038,23 +2043,34 @@
             var nm = who ? staffName(who) : '';
             var regs = (db.regs || []).filter(function (r) { return r.date === date && (!who || String(r.seller || '').trim() === nm); });
             var mine = function (t) { return !who || t.staffId === who; };
-            var today = db.tasks.filter(function (t) { return mine(t) && t.due === date && t.status !== 'done' && !/^\[충돌본\] /.test(t.title); }).sort(taskSort);
+            var dueToday = db.tasks.filter(function (t) { return mine(t) && t.due === date && !/^\[충돌본\] /.test(t.title); }).sort(taskSort);
+            var today = dueToday.filter(function (t) { return t.status !== 'done'; }), doneT = dueToday.filter(function (t) { return t.status === 'done'; });
             var next = nextDay(date);
             var tmr = db.tasks.filter(function (t) { return mine(t) && t.due === next && t.status !== 'done' && !t.ext && !/^\[충돌본\] /.test(t.title); }).sort(taskSort);
-            return { regs: regs, mob: regs.filter(function (r) { return r.kind === 'mobile'; }).length, today: today, tmr: tmr, next: next };
+            return { regs: regs, mob: regs.filter(function (r) { return r.kind === 'mobile'; }).length, today: today, done: doneT, tmr: tmr, next: next };
+        }
+        // 판매·가입확인서 건수: 기본은 가입 장부 자동값, 직접 고치면 고친 값 (null = 자동)
+        function rptSale(D, f) {
+            var am = String(D.mob), aw = String(D.regs.length - D.mob);
+            var m = f.smob == null ? am : f.smob, w = f.swired == null ? aw : f.swired;
+            return { m: m, w: w, am: am, aw: aw, edited: f.smob != null || f.swired != null, total: (parseInt(m, 10) || 0) + (parseInt(w, 10) || 0) };
         }
         function rptMD(d) { var x = parseYmd(d); return (x.getMonth() + 1) + '월' + x.getDate() + '일'; }
         function rptText(date, D, f) {
             var n = function (v) { return parseInt(v, 10) || 0; };
             var L = ['《 ' + rptMD(date) + ' 마감보고 》', '',
-                '▶ 판매·가입확인서 ' + D.regs.length + '건',
+                '▶ 판매·가입확인서 ' + rptSale(D, f).total + '건',
                 '▶ 총 상담 ' + (n(f.mob) + n(f.wired)) + '건 (모바일 ' + n(f.mob) + '건, 유선 ' + n(f.wired) + '건)',
                 '▶ 번호저장 ' + n(f.saved) + '건', '', '◆ 금일업무 ◆'];
+            if (D.done.length) {
+                L.push('- 완료 ' + D.done.length + '건');
+                D.done.forEach(function (t) { L.push('  ✔ ' + t.title + ' (완료)'); });
+            }
             if (D.today.length) {
-                L.push('- 금일 업무 진행 미완료 ' + D.today.length + '건');
+                L.push('- 미완료 ' + D.today.length + '건');
                 D.today.forEach(function (t) { L.push('  · ' + t.title + (t.ext ? ' (→ ' + rptMD(t.ext) + ' 이동)' : t.status === 'doing' ? ' (진행 중)' : '')); });
                 L.push('- 사유 : ' + String(f.reason || '').trim());
-            } else L.push('- 금일 업무 모두 완료');
+            } else L.push(D.done.length ? '- 금일 업무 모두 완료' : '- 금일 마감 업무 없음');
             L.push('', '◆ 익일업무 ◆');
             D.tmr.forEach(function (t) { L.push('- ' + t.title); });
             L.push('◆ 특이사항 ◆');
@@ -2063,6 +2079,9 @@
         }
         function rptMissing(D, f) {
             var miss = [], isNum = function (v) { return /^\d{1,4}$/.test(String(v == null ? '' : v).trim()); };
+            var S = rptSale(D, f);
+            if (!isNum(S.m)) miss.push('판매·가입확인서 - 모바일 건수');
+            if (!isNum(S.w)) miss.push('판매·가입확인서 - 유선 건수');
             if (!isNum(f.mob)) miss.push('총 상담 - 모바일 건수');
             if (!isNum(f.wired)) miss.push('총 상담 - 유선 건수');
             if (!isNum(f.saved)) miss.push('번호저장 건수');
@@ -2083,6 +2102,17 @@
             var missBox = h('div', { class: 'rpt-miss', role: 'status' });
             var doneBtn = h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'rpt-done' }, '마감보고 완료 · 복사');
             var totalEl = h('b', { class: 'rpt-total' });
+            var saleTotal = h('b', { class: 'rpt-total' }), saleNote = h('small', {}), saleReset = h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'rpt-sale-reset', hidden: true }, '자동값으로');
+            function saleNum(key, autoKey, label) {
+                var i = h('input', { type: 'text', inputmode: 'numeric', maxlength: 4, 'data-rpt': key, 'aria-label': label, placeholder: '0', autocomplete: 'off' });
+                i.value = rptSale(D, f)[key === 'smob' ? 'm' : 'w'];
+                i.addEventListener('input', function () {
+                    this.value = this.value.replace(/[^\d]/g, '').slice(0, 4);
+                    f[key] = this.value === rptSale(D, f)[autoKey] ? null : this.value;   // 자동값과 같으면 다시 '자동'
+                    upd();
+                });
+                return i;
+            }
             function num(key, label) {
                 var i = h('input', { type: 'text', inputmode: 'numeric', maxlength: 4, 'data-rpt': key, 'aria-label': label, placeholder: '0', autocomplete: 'off' });
                 i.value = f[key];
@@ -2094,6 +2124,8 @@
                 });
                 return i;
             }
+            var sMobIn = saleNum('smob', 'am', '판매·가입확인서 모바일 건수'), sWIn = saleNum('swired', 'aw', '판매·가입확인서 유선 건수');
+            saleReset.addEventListener('click', function () { f.smob = null; f.swired = null; var S = rptSale(D, f); sMobIn.value = S.m; sWIn.value = S.w; upd(); });
             var mobIn = num('mob', '모바일 상담 건수'), wIn = num('wired', '유선 상담 건수'), savedIn = num('saved', '번호저장 건수');
             var reason = D.today.length ? h('input', { type: 'text', maxlength: 200, 'data-rpt': 'reason', placeholder: '예) 시간 부족으로 미완료', 'aria-label': '미완료 사유' }) : null;
             if (reason) { reason.value = f.reason; reason.addEventListener('input', function () { f.reason = this.value; upd(); }); }
@@ -2111,6 +2143,11 @@
             function upd() {
                 var a = parseInt(f.mob, 10) || 0, b = parseInt(f.wired, 10) || 0;
                 totalEl.textContent = (f.mob === '' && f.wired === '') ? '-' : String(a + b);
+                var S = rptSale(D, f);
+                saleTotal.textContent = (S.m === '' && S.w === '') ? '-' : String(S.total);
+                saleNote.textContent = S.edited ? ' 직접 수정함 (가입 장부 자동값: 모바일 ' + S.am + ' / 유선 ' + S.aw + ')' : ' 가입 장부에서 자동 · 숫자를 눌러 고칠 수 있어요';
+                saleNote.className = S.edited ? 'rpt-edited' : '';
+                saleReset.hidden = !S.edited;
                 var miss = rptMissing(D, f);
                 doneBtn.disabled = miss.length > 0;
                 missBox.textContent = miss.length ? '아직 적을 곳: ' + miss.join(' · ') : '모두 적었어요. [마감보고 완료 · 복사]를 누르고 카카오톡에 붙여넣기 하세요.';
@@ -2132,11 +2169,13 @@
             var body = h('div', { class: 'dlg-body rpt-body' },
                 h('div', { class: 'rpt-form' },
                     h('div', { class: 'rpt-row' }, h('label', {}, '보고 날짜', dateIn), whoSel ? h('label', {}, '보고자', whoSel) : h('div', { class: 'rpt-who' }, '보고자 ', h('b', {}, staffName(who)))),
-                    h('section', { class: 'rpt-sec' }, h('h3', {}, '▶ 판매·가입확인서 ', h('b', {}, D.regs.length + '건'), h('small', {}, ' 자동 (가입 장부 · 모바일 ' + D.mob + ' / 유선 ' + (D.regs.length - D.mob) + ')'))),
+                    h('section', { class: 'rpt-sec' }, h('h3', {}, '▶ 판매·가입확인서 ', saleTotal, '건', saleNote),
+                        h('div', { class: 'rpt-row' }, h('label', {}, '모바일', sMobIn, '건'), h('label', {}, '유선', sWIn, '건'), saleReset)),
                     h('section', { class: 'rpt-sec' }, h('h3', {}, '▶ 총 상담 ', totalEl, '건', h('small', {}, ' 합계 자동')),
                         h('div', { class: 'rpt-row' }, h('label', {}, '모바일', mobIn, '건'), h('label', {}, '유선', wIn, '건'), h('label', {}, '번호저장', savedIn, '건'))),
-                    h('section', { class: 'rpt-sec' }, h('h3', {}, '◆ 금일업무 ◆', h('small', {}, ' ' + koDate(date) + ' 마감 · 미완료 자동')),
-                        D.today.length ? h('ul', { class: 'rpt-list' }, D.today.map(function (t) { return h('li', {}, t.title, t.ext ? h('small', {}, ' → ' + rptMD(t.ext) + ' 이동') : t.status === 'doing' ? h('small', {}, ' 진행 중') : null); })) : h('p', { class: 'rpt-ok' }, '미완료 업무가 없어요 (모두 완료)'),
+                    h('section', { class: 'rpt-sec' }, h('h3', {}, '◆ 금일업무 ◆', h('small', {}, ' ' + koDate(date) + ' 마감 업무 자동 · 완료 ' + D.done.length + ' / 미완료 ' + D.today.length)),
+                        D.done.length ? h('ul', { class: 'rpt-list rpt-done-list' }, D.done.map(function (t) { return h('li', {}, h('span', { class: 'rpt-chk', 'aria-hidden': 'true' }, '✔'), t.title, h('b', { class: 'rpt-done-tag' }, '완료')); })) : null,
+                        D.today.length ? h('ul', { class: 'rpt-list' }, D.today.map(function (t) { return h('li', {}, t.title, t.ext ? h('small', {}, ' → ' + rptMD(t.ext) + ' 이동') : t.status === 'doing' ? h('small', {}, ' 진행 중') : h('small', {}, ' 미완료')); })) : h('p', { class: 'rpt-ok' }, D.done.length ? '미완료 업무가 없어요 (모두 완료)' : koDate(date) + ' 마감 업무가 없어요'),
                         reason ? h('label', { class: 'rpt-full' }, '사유', reason) : null),
                     h('section', { class: 'rpt-sec' }, h('h3', {}, '◆ 익일업무 ◆', h('small', {}, ' ' + koDate(D.next) + ' 업무 자동')),
                         D.tmr.length ? h('ul', { class: 'rpt-list' }, D.tmr.map(function (t) { return h('li', {}, t.title); })) : h('p', { class: 'rpt-warn' }, koDate(D.next) + '에 등록된 업무가 없어요.'),
