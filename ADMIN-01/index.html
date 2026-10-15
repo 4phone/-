@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HQgNzZAdTavPg0E7FVGEvfaDQq87BKCGb7vw4Tx5HVE='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-TlbMLMz/4U68g/i8Zx1EQAc2L9OFt4NF5Z7ZfoZZJy0='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -308,6 +308,19 @@
         .idr-btns .btn:disabled { opacity: .45; cursor: not-allowed; }
         .idr-form-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
         .idr-form-top > span { font-weight: 800; }
+        .idr-top-l { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+        .idr-top-l > b { font-weight: 800; white-space: nowrap; }
+        .idr-kinds { display: inline-flex; gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #FFF; }
+        .idr-kinds button { min-height: 36px; padding: 0 14px; border: 0; border-left: 1px solid var(--line); background: transparent; font: inherit; font-size: 14px; font-weight: 700; color: var(--muted); cursor: pointer; white-space: nowrap; }
+        .idr-kinds button:first-child { border-left: 0; }
+        .idr-kinds button[aria-pressed="true"] { background: var(--olive-700); color: #FFF; }
+        .idr-kinds button:focus-visible { outline: 2px solid var(--olive-700); outline-offset: -2px; }
+        .idr-docs { margin: -4px 0 12px; padding: 9px 12px; border-radius: 10px; background: #F6F7EE; font-size: 13px; line-height: 1.6; color: var(--muted); }
+        .idr-docs-h { margin-right: 6px; font-weight: 800; color: var(--ink); }
+        .idr-doc { display: inline-block; margin: 2px 4px 2px 0; padding: 1px 9px; border-radius: 999px; border: 1px solid var(--line); background: #FFF; color: var(--ink); font-size: 12.5px; white-space: nowrap; }
+        .idr-kind-tag { display: inline-block; margin-right: 6px; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 800; background: #E8EEF9; color: #2D4E8A; vertical-align: 1px; white-space: nowrap; }
+        .idr-kind-tag.corp { background: #F1E8F9; color: #5B2D8A; }
+        @media (max-width: 520px) { .idr-form-top { flex-wrap: wrap; align-items: center; } .idr-top-l { display: contents; } .idr-top-l > b { order: 1; } .idr-reset { order: 2; margin-left: auto; } .idr-kinds { order: 3; flex: 1 1 100%; display: flex; } .idr-kinds button { flex: 1 1 0; padding: 0 4px; font-size: 13.5px; min-height: 42px; } .idr-reset { white-space: nowrap; } }
         .idr-reset { border-color: var(--olive-700); color: var(--olive-700); font-weight: 700; }
         .idr-msg { width: 100%; box-sizing: border-box; font: inherit; font-size: 14px; line-height: 1.6; padding: 12px; border-radius: 10px; border: 1px solid var(--line); background: #FBFCF8; resize: vertical; }
         .idr-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
@@ -975,7 +988,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-14.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-15.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -5535,11 +5548,20 @@
                 } }, '메모 지우기')));
             return h('div', { style: 'display:contents' }, row, box);
         }
+        var IDR_KINDS = {   // 고객 구분 → 고객이 올릴 서류 (서버·고객 페이지와 같은 순서)
+            person: { label: '개인', docs: ['신분증'] },
+            biz: { label: '개인사업자', docs: ['신분증', '사업자등록증', '통장사본'] },
+            corp: { label: '법인', docs: ['대표자 신분증', '사업자등록증', '통장사본', '인감증명서'] }
+        };
+        function idrKind(k) { return IDR_KINDS[k] ? k : 'person'; }
         function idrLink(code) { return SITE_URL + '/id.html?c=' + code; }
-        function idrMessage(name, staff, code, exp) {
+        function idrMessage(name, staff, code, exp, kind) {
             var d = new Date(exp), until = (d.getMonth() + 1) + '월 ' + d.getDate() + '일 ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+            var K = IDR_KINDS[idrKind(kind)], need = K.docs.length > 1
+                ? '가입 접수를 위해 아래 서류 사진이 필요합니다.\n' + K.docs.map(function (x, i) { return (i + 1) + '. ' + x; }).join('\n') + '\n\n아래 사거리인터넷 공식 홈페이지 주소에서 촬영하거나 앨범에서 골라 올려 주세요.\n\n'
+                : '가입 접수를 위해 신분증 사진이 필요합니다.\n아래 사거리인터넷 공식 홈페이지 주소에서 촬영해 올려 주세요.\n\n';
             return '[사거리인터넷] ' + name + ' 고객님, 안녕하세요.\n방금 상담해 드린 사거리인터넷 담당자 ' + staff + '입니다.\n\n'
-                + '가입 접수를 위해 신분증 사진이 필요합니다.\n아래 사거리인터넷 공식 홈페이지 주소에서 촬영해 올려 주세요.\n\n'
+                + need
                 + '▶ ' + idrLink(code) + '\n\n'
                 + '· 고객님 전용 주소이며 ' + until + '까지 한 번만 사용할 수 있어요.\n'
                 + '· 의심되시면 대표번호 1833-2440으로 확인 전화 주세요.';
@@ -5558,6 +5580,12 @@
             } }, '양식 다시 넣기');
             U.phone.addEventListener('input', function () { var d = this.value.replace(/\D/g, '').slice(0, 11); this.value = d.length > 7 ? d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7) : d.length > 3 ? d.slice(0, 3) + '-' + d.slice(3) : d; });
             [U.name, U.phone].forEach(function (x) { x.addEventListener('input', function () { idrPaint(); }); });
+            U.kind = 'person';
+            U.kindBtns = ['person', 'biz', 'corp'].map(function (k) {
+                return h('button', { type: 'button', 'data-kind': k, 'aria-pressed': k === 'person' ? 'true' : 'false', onclick: function () { idrSetKind(k); } }, IDR_KINDS[k].label);
+            });
+            U.kinds = h('div', { class: 'idr-kinds', role: 'group', 'aria-label': '고객 구분', 'data-fk': 'idr-kinds' }, U.kindBtns);
+            U.docs = h('div', { class: 'idr-docs', 'data-fk': 'idr-docs', 'aria-live': 'polite' });
             U.make = h('button', { type: 'submit', class: 'btn btn-primary', 'data-fk': 'idr-make' }, '전용 링크 만들기');
             U.reset = h('button', { type: 'button', class: 'btn btn-sm idr-reset', 'data-fk': 'idr-reset', onclick: function () { idrReset(); } }, '+ 다른 고객 기입');
             U.form = h('form', { class: 'panel idr-form', onsubmit: function (e) {
@@ -5566,21 +5594,23 @@
                 if (!nm) { toast('고객 성함을 입력해 주세요.'); U.name.focus(); return; }
                 if (!/^01\d{8,9}$/.test(ph)) { toast('고객 휴대폰 번호를 확인해 주세요.'); U.phone.focus(); return; }
                 U.make.disabled = true; U.make.textContent = '만드는 중...';
-                var note = intakeFill(U.memo.value, nm, ph);
-                ibCall('idCreate', { name: nm, phone: ph, memo: intakeShort(note) }).then(function (res) {   // 서버에는 상품 요약만 (주민번호·계좌 등은 보내지 않음)
+                var note = intakeFill(U.memo.value, nm, ph), kind = U.kind;
+                ibCall('idCreate', { name: nm, phone: ph, memo: intakeShort(note), kind: kind }).then(function (res) {   // 서버에는 상품 요약만 (주민번호·계좌 등은 보내지 않음)
                     U.make.disabled = false; U.make.textContent = '전용 링크 만들기';
+                    if (kind !== 'person' && (!res || res.kind !== kind)) { toast('서버가 예전 버전이라 ' + IDR_KINDS[kind].label + ' 서류 요청을 만들 수 없어요. 구글 Apps Script(drive-storage.gs)를 새 버전으로 바꿔 [배포] 해 주세요.'); return; }
                     if (intakeHas(U.memo.value) && res && res.code) intakeSave(String(res.code), nm, note);   // 빈 양식(이름·번호만)은 저장하지 않음
-                    idr.last = { name: nm, phone: ph, code: res.code, exp: res.exp, text: idrMessage(nm, res.staff || '담당자', res.code, res.exp) };
+                    idr.last = { name: nm, phone: ph, kind: kind, code: res.code, exp: res.exp, text: idrMessage(nm, res.staff || '담당자', res.code, res.exp, kind) };
                     idrPaint(); idr.items = null; idr.busy = false; idrLoad();
                     toast('고객 전용 링크를 만들었어요. 아래에서 문자로 보내 주세요.');
                 }, function (e) { U.make.disabled = false; U.make.textContent = '전용 링크 만들기'; toast('링크를 만들지 못했어요. ' + driveErrText(e)); });
             } },
-                h('div', { class: 'idr-form-top' }, h('span', {}, '고객 정보'), U.reset),
+                h('div', { class: 'idr-form-top' }, h('div', { class: 'idr-top-l' }, h('b', {}, '고객 정보'), U.kinds), U.reset),
+                U.docs,
                 h('div', { class: 'idr-grid' },
                     h('label', { class: 'idr-field' }, h('span', {}, '고객 성함'), U.name),
                     h('label', { class: 'idr-field' }, h('span', {}, '고객 휴대폰'), U.phone),
                     h('div', { class: 'idr-field idr-wide' }, h('div', { class: 'idr-intake-top' }, h('span', {}, '고객 접수 메모 ', h('small', {}, '(고객에게는 안 보여요 · 아래 최근 요청 목록에서 복사)')), U.tpl), U.memo)),
-                h('div', { class: 'idr-form-foot' }, h('p', {}, '고객 전용 주소는 72시간 동안 한 번만 쓸 수 있어요. 사진은 서버에 남기지 않고 관리자 메일로만 보내져요. 접수 메모는 팀 암호로 잠가서 보관하고 ' + INTAKE_KEEP_DAYS + '일 뒤 자동으로 지워요.'), U.make));
+                h('div', { class: 'idr-form-foot' }, h('p', {}, '고객 전용 주소는 72시간 동안 한 번만 쓸 수 있어요. 사진·서류는 서버에 남기지 않고 관리자 메일로만 보내져요. 접수 메모는 팀 암호로 잠가서 보관하고 ' + INTAKE_KEEP_DAYS + '일 뒤 자동으로 지워요.'), U.make));
             U.title = h('div', { class: 'vs-h' }, '고객에게 보낼 문자');
             U.area = h('textarea', { class: 'idr-msg', readonly: true, rows: '9', 'aria-label': '고객에게 보낼 문자 내용' });
             U.sms = h('button', { type: 'button', class: 'btn btn-primary', 'data-fk': 'idr-sms', onclick: function () { if (idrReady()) window.location.href = idrSms(idr.last.phone, idr.last.text); } }, '문자로 보내기');
@@ -5592,13 +5622,23 @@
             idrPaint();
             return U;
         }
+        function idrSetKind(k) {   // 개인 / 개인사업자 / 법인: 고객이 올릴 서류가 달라짐
+            var U = idr.ui; if (!U) return;
+            U.kind = idrKind(k);
+            U.kindBtns.forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-kind') === U.kind ? 'true' : 'false'); });
+            idrPaint();
+        }
         function idrReady() {   // 링크를 만들었고, 그 뒤로 성함·번호를 바꾸지 않았을 때만 보낼 수 있음
             var U = idr.ui, L = idr.last;
-            return !!(U && L && U.name.value.trim() === L.name && U.phone.value.replace(/\D/g, '') === L.phone);
+            return !!(U && L && U.name.value.trim() === L.name && U.phone.value.replace(/\D/g, '') === L.phone && U.kind === (L.kind || 'person'));
         }
         function idrPaint() {   // 문자 미리보기와 버튼 상태만 고침 (입력 칸은 건드리지 않음)
             var U = idr.ui; if (!U) return;
-            var L = idr.last, ok = idrReady();
+            var L = idr.last, ok = idrReady(), KD = IDR_KINDS[idrKind(U.kind)];
+            U.docs.textContent = '';
+            U.docs.appendChild(h('div', {}, h('span', { class: 'idr-docs-h' }, '고객이 올릴 서류 ' + KD.docs.length + '가지'),
+                KD.docs.map(function (x, i) { return h('b', { class: 'idr-doc' }, (KD.docs.length > 1 ? (i + 1) + '. ' : '') + x); })));
+            U.docs.appendChild(h('div', {}, KD.docs.length > 1 ? '신분증은 자동 촬영, 나머지 서류는 촬영하거나 앨범에서 골라 올려요.' : '신분증만 자동 촬영해서 올려요.'));
             U.title.textContent = L ? L.name + ' 고객님께 보낼 문자' : '고객에게 보낼 문자';
             U.area.value = L ? L.text : '고객 성함과 휴대폰을 적고 [전용 링크 만들기]를 누르면 여기에 보낼 문자가 나타나요.';
             U.area.classList.toggle('idr-msg-empty', !ok);
@@ -5606,12 +5646,12 @@
             U.result.classList.toggle('idr-ready', ok);
             U.note.textContent = !L ? '※ 전용 링크를 만들면 [문자로 보내기] · [내용 복사] · [링크만 복사]를 누를 수 있어요.'
                 : ok ? '※ [문자로 보내기]는 휴대폰에서 누르면 문자 앱이 이 내용으로 열려요. 컴퓨터에서는 [내용 복사] 후 보내 주세요.'
-                : '※ 성함이나 휴대폰 번호가 바뀌었어요. 이 고객에게 보내려면 [전용 링크 만들기]를 다시 눌러 주세요.';
+                : '※ 성함·휴대폰 번호·고객 구분이 바뀌었어요. 이 고객에게 보내려면 [전용 링크 만들기]를 다시 눌러 주세요.';
         }
         function idrReset() {   // 다른 고객: 적던 내용과 만든 링크를 지우고 처음부터
             var U = idrUI();
             U.name.value = ''; U.phone.value = ''; U.memo.value = INTAKE_TPL;
-            idr.last = null; idrPaint();
+            idr.last = null; idrSetKind('person');
             try { U.name.focus(); } catch (e) { /* 무시 */ }
             toast('새 고객 정보를 입력해 주세요.');
         }
@@ -5627,7 +5667,7 @@
             var rows = items.map(function (x) {
                 var s = ST[x.state] || ST.ready;
                 return h('div', { class: 'idr-row', 'data-code': x.code }, h('div', { class: 'ib-time' }, ibTime(x.t)),
-                    h('div', { class: 'idr-who' }, h('b', {}, x.name), ' ', mfPhone(x.phone)),
+                    h('div', { class: 'idr-who' }, x.kind && x.kind !== 'person' && IDR_KINDS[x.kind] ? h('span', { class: 'idr-kind-tag' + (x.kind === 'corp' ? ' corp' : '') }, IDR_KINDS[x.kind].label) : null, h('b', {}, x.name), ' ', mfPhone(x.phone)),
                     h('div', { class: 'idr-memo' }, (x.memo ? x.memo + ' · ' : '') + '담당 ' + x.staff),
                     h('div', {}, h('span', { class: 'idr-st ' + s[1] }, s[0] + (x.state === 'done' && x.done ? ' ' + ibTime(x.done) : ''))),
                     idrNote(x));
