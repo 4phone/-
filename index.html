@@ -11,7 +11,7 @@
     <!-- 카톡 미리보기 간판(OG 태그) 끝 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사거리인터넷 - 털보아저씨가 추가비밀지원금 쏘는 곳!</title>
+    <title>사거리인터넷 - 털보아저씨가 최대 사은품 쏘는 곳!</title>
     <!-- 투명 파비콘 적용 완료 -->
     <link rel="icon" href="사거리로고_투명.png" type="image/png">
     
@@ -1814,9 +1814,14 @@
             return JSON.stringify(allData) !== before;
         }
 
+        // 사은품 칸: '+떡값 / +추가비밀지원금' 부분은 보이지 않게 → ' or 가전사은품' (금액은 가이드 금액만)
+        function sgGiftClean(t) {
+            return String(t || '').replace(/\s*[+＋]\s*(?:떡값|추가\s*비밀\s*지원금|비밀\s*지원금)(?:\s*\([^)]*\))?(?:\s*지원금)?/g, ' or 가전사은품')
+                .replace(/(?:떡값|추가\s*비밀\s*지원금|비밀\s*지원금)(?:\s*\([^)]*\))?/g, '가전사은품');
+        }
         async function loadData() {
             const feedP = sgFeedFetch();   // 관리자 단가표(요금 자동 반영)도 함께 받기 시작
-            try { const text = await sgFetchCsv(csvUrl, 3); allData = parseCsvText(text).slice(1).filter(r => r[0] && r[0].trim() !== ""); window.sgPlanLoadFailed = false; } catch(e) { window.sgPlanLoadFailed = true; console.error("요금표 로드 실패", e); }
+            try { const text = await sgFetchCsv(csvUrl, 3); allData = parseCsvText(text).slice(1).filter(r => r[0] && r[0].trim() !== ""); allData.forEach(r => { if (r[7]) r[7] = sgGiftClean(r[7]); }); window.sgPlanLoadFailed = false; } catch(e) { window.sgPlanLoadFailed = true; console.error("요금표 로드 실패", e); }
             sgSheetRows = allData.map(r => r.slice());
             try {
                 const rResponse = await fetch(regionCsvUrl); const rText = await rResponse.text(); const rRows = parseCsvText(rText);
@@ -3208,13 +3213,13 @@
     })();
     </script>
 
-    <!-- [추가] 구글 시트 등에서 불러온 글자의 '떡값' 표현을 '추가비밀지원금'으로 통일 -->
+    <!-- [추가] 구글 시트 등에서 불러온 글자의 '떡값'·'추가비밀지원금' 표현은 보이지 않게 → 'or 가전사은품' -->
     <script>
     (function () {
-        var RULES = [[/떡값\s*\(\s*추가\s*지원금\s*\)/g, '추가비밀지원금'], [/떡값\s*\(\s*돈\s*\)/g, '추가비밀지원금'], [/떡값\s*지원금/g, '추가비밀지원금'], [/떡값/g, '추가비밀지원금']];
+        var RULES = [[/\s*[+＋]\s*(?:떡값|추가\s*비밀\s*지원금|비밀\s*지원금)(?:\s*\([^)]*\))?(?:\s*지원금)?/g, ' or 가전사은품'], [/(?:떡값|추가\s*비밀\s*지원금|비밀\s*지원금)(?:\s*\([^)]*\))?/g, '가전사은품']];
         function fixText(node) {
             var v = node.nodeValue;
-            if (!v || v.indexOf('떡값') < 0) return;
+            if (!v || !/떡값|비밀\s*지원금/.test(v)) return;
             for (var i = 0; i < RULES.length; i++) v = v.replace(RULES[i][0], RULES[i][1]);
             node.nodeValue = v;
         }
