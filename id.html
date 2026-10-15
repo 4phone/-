@@ -91,6 +91,29 @@ window.__sgServer.catch(function () {});
     .call { margin-top: 16px; width: 100%; }
     footer { max-width: 560px; margin: 0 auto; padding: 4px 18px calc(30px + env(safe-area-inset-bottom, 0px)); font-size: 12px; line-height: 1.8; color: #7D8C8A; }
     footer b { color: #4E6265; font-weight: 600; }
+    .need { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 6px; }
+    .need li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: #FFFFFF; font-size: 14px; font-weight: 700; }
+    .need li i { flex: none; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 12.5px; font-weight: 800; background: #EEF5F4; color: var(--teal); }
+    .need li em { margin-left: auto; font-style: normal; font-size: 12.5px; font-weight: 700; color: #9A5B00; white-space: nowrap; }
+    .need li.ok { border-color: #CFE6D5; background: #F3FAF5; }
+    .need li.ok i { background: #1F6B3A; color: #FFFFFF; }
+    .need li.ok em { color: #1F6B3A; }
+    .slots { display: grid; gap: 10px; }
+    .slot { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: #FFFFFF; }
+    .slot.ok { border-color: #CFE6D5; background: #F7FBF8; }
+    .slot-h { display: flex; align-items: center; gap: 10px; }
+    .slot-h i { flex: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 13.5px; font-weight: 800; background: #EEF5F4; color: var(--teal); }
+    .slot.ok .slot-h i { background: #1F6B3A; color: #FFFFFF; }
+    .slot-h b { font-size: 16px; }
+    .slot-h em { margin-left: auto; font-style: normal; font-size: 12.5px; font-weight: 800; color: #9A5B00; white-space: nowrap; }
+    .slot.ok .slot-h em { color: #1F6B3A; }
+    .slot p { margin: 6px 0 10px 38px; font-size: 13px; line-height: 1.55; color: var(--muted); }
+    .slot-img { margin: 0 0 10px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #F3F6F5; }
+    .slot-img img { width: 100%; max-height: 360px; object-fit: contain; display: block; }
+    .slot-btns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .slot-btns .btn { min-height: 48px; padding: 0 10px; font-size: 14.5px; }
+    .slot-btns .btn-main { box-shadow: none; }
+    @media (max-width: 340px) { .slot-btns { grid-template-columns: minmax(0, 1fr); } .slot p { margin-left: 0; } }
     [hidden] { display: none !important; }
     @media (prefers-reduced-motion: reduce) { .scan, .sk { animation: none; } }
 </style>
@@ -100,8 +123,9 @@ window.__sgServer.catch(function () {});
 <main>
     <section class="card info" id="info">
         <div class="hello">사거리인터넷 공식 접수</div>
-        <h1><span id="cust-name" class="sk">고객</span>님,<br>신분증 사진을 올려 주세요</h1>
-        <p class="lead">신분증을 흰 틀에 대략 맞추면 <b>자동으로 촬영</b>돼요. 사진은 접수 담당자에게만 전달되며 홈페이지에 저장되지 않아요.</p>
+        <h1><span id="cust-name" class="sk">고객</span>님,<br><span id="h1-text">신분증 사진을 올려 주세요</span></h1>
+        <p class="lead" id="lead">신분증을 흰 틀에 대략 맞추면 <b>자동으로 촬영</b>돼요. 사진은 접수 담당자에게만 전달되며 홈페이지에 저장되지 않아요.</p>
+        <ul class="need" id="need" hidden aria-label="필요한 서류"></ul>
         <div class="trust">
             <div><b>업체</b><span>사거리인터넷<br><small>사업자등록번호 603-54-00909</small></span></div>
             <div><b>담당자</b><span id="staff-name" class="sk">확인 중</span></div>
@@ -135,14 +159,22 @@ window.__sgServer.catch(function () {});
     </section>
 
     <section class="card" id="shot-card" hidden>
-        <h2 class="sec-title">촬영된 신분증</h2>
+        <h2 class="sec-title" id="shot-title">촬영된 신분증</h2>
         <p class="sec-sub">얼굴 사진과 이름 · 글자가 잘 보이는지 확인해 주세요.</p>
         <div class="shot"><img id="shot-img" alt="촬영된 신분증 사진"></div>
         <button type="button" class="btn" id="btn-retake" style="width: 100%; margin-top: 10px">다시 촬영하기</button>
     </section>
 
+    <section class="card" id="docs-card" hidden>
+        <h2 class="sec-title" id="docs-title">사업자 서류</h2>
+        <p class="sec-sub">서류 <b>전체가 보이게</b>, 글자가 또렷하게 찍어 주세요. 앨범에 있는 사진(스캔·캡처)도 올릴 수 있어요.</p>
+        <div class="slots" id="slots"></div>
+        <input class="file" type="file" id="doc-cam" accept="image/*" capture="environment" aria-label="서류 촬영">
+        <input class="file" type="file" id="doc-pick" accept="image/*" aria-label="앨범에서 서류 사진 선택">
+    </section>
+
     <section class="card" id="send-card" hidden>
-        <label class="agree"><input type="checkbox" id="agree"><span><b>[필수] 개인정보 수집 · 이용 동의</b><small>· 수집 목적: 통신 상품 가입 접수 및 본인 확인<br>· 수집 항목: 신분증 사본(사진)<br>· 보유 기간: 가입 처리 완료 후 지체 없이 파기<br>· 동의하지 않으실 수 있으나, 이 경우 비대면 접수가 어려워요.</small></span></label>
+        <label class="agree"><input type="checkbox" id="agree"><span><b>[필수] 개인정보 수집 · 이용 동의</b><small>· 수집 목적: 통신 상품 가입 접수 및 본인 확인<br>· 수집 항목: <span id="agree-items">신분증 사본(사진)</span><br>· 보유 기간: 가입 처리 완료 후 지체 없이 파기<br>· 동의하지 않으실 수 있으나, 이 경우 비대면 접수가 어려워요.</small></span></label>
         <p class="msg" id="msg" role="alert"></p>
         <button type="button" class="btn btn-gold" id="btn-send" disabled>확인 (접수하기)</button>
     </section>
@@ -162,7 +194,63 @@ window.__sgServer.catch(function () {});
     var code = (new URLSearchParams(location.search).get('c') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 40);
     var serverP = window.__sgServer || Promise.reject(new Error('none'));   // <head>에서 미리 받기 시작한 서버 주소
     var info = null, shot = null, sending = false, doc = 'card';
+    // 고객 구분별 서류 (서버에서 받은 kind 기준 · 신분증은 자동 촬영, 나머지는 촬영/앨범 선택)
+    var KINDS = {
+        person: { title: '신분증 사진을 올려 주세요', id: '신분증', docs: [] },
+        biz: { title: '가입 서류 3가지를 올려 주세요', id: '신분증', box: '개인사업자 서류', docs: [
+            ['bizreg', '사업자등록증', '사업자등록증 원본 또는 사본 · 네 모서리가 다 보이게'],
+            ['bank', '통장사본', '은행명 · 계좌번호 · 예금주가 보이는 면 (모바일 통장사본 캡처도 돼요)']] },
+        corp: { title: '법인 가입 서류 4가지를 올려 주세요', id: '대표자 신분증', box: '법인 서류', docs: [
+            ['bizreg', '사업자등록증', '법인 사업자등록증 · 네 모서리가 다 보이게'],
+            ['bank', '통장사본', '법인 명의 통장 · 계좌번호 · 예금주가 보이는 면 (캡처도 돼요)'],
+            ['seal', '인감증명서', '법인 인감증명서 · 발급일과 인감이 또렷하게']] }
+    };
+    var kind = 'person', docShots = {}, docFor = '';
+    function K() { return KINDS[kind] || KINDS.person; }
+    function lacking() { var L = []; if (!shot) L.push(K().id); K().docs.forEach(function (d) { if (!docShots[d[0]]) L.push(d[1]); }); return L; }
     var DOCS = { card: { ratio: 85.6 / 54, w: 0.86, label: '신분증' }, paper: { ratio: 1 / 1.414, w: 0.62, label: '임시 신분증' } };
+    function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+    function setKind(k) {   // 서류 목록·제목·동의 항목을 구분에 맞게
+        kind = KINDS[k] ? k : 'person'; var C = K();
+        $('h1-text').textContent = C.title;
+        if (kind === 'corp') DOCS.card.label = '대표자 신분증';
+        $('shot-title').textContent = '촬영된 ' + C.id;
+        if (!C.docs.length) return;
+        $('lead').innerHTML = '';
+        $('lead').append(C.id + '은 흰 틀에 대략 맞추면 ', el('b', '', '자동으로 촬영'), '되고, 나머지 서류는 ', el('b', '', '촬영하거나 앨범에서 선택'), '하면 돼요. 사진은 접수 담당자에게만 전달되며 홈페이지에 저장되지 않아요.');
+        $('agree-items').textContent = [C.id].concat(C.docs.map(function (d) { return d[1]; })).join(' · ') + ' 사본(사진)';
+        $('docs-title').textContent = C.box;
+        var slots = $('slots'); slots.textContent = '';
+        C.docs.forEach(function (d, i) {
+            var box = el('div', 'slot'); box.setAttribute('data-k', d[0]);
+            var hd = el('div', 'slot-h'); hd.append(el('i', '', String(i + 2)), el('b', '', d[1]), el('em', '', '필요'));
+            var img = el('div', 'slot-img'); img.hidden = true; var im = el('img'); im.alt = '올린 ' + d[1] + ' 사진'; img.appendChild(im);
+            var btns = el('div', 'slot-btns');
+            var cam = el('button', 'btn btn-main', '촬영하기'); cam.type = 'button'; cam.setAttribute('data-act', 'cam');
+            var pick = el('button', 'btn', '앨범에서 선택'); pick.type = 'button'; pick.setAttribute('data-act', 'pick');
+            cam.addEventListener('click', function () { docFor = d[0]; $('doc-cam').value = ''; $('doc-cam').click(); });
+            pick.addEventListener('click', function () { docFor = d[0]; $('doc-pick').value = ''; $('doc-pick').click(); });
+            btns.append(cam, pick); box.append(hd, el('p', '', d[2]), img, btns); slots.appendChild(box);
+        });
+        $('docs-card').hidden = false; $('need').hidden = false; paintNeed();
+    }
+    function paintNeed() {   // 위쪽 체크 목록 + 서류 칸 상태
+        var C = K(); if (!C.docs.length) return;
+        var need = $('need'); need.textContent = '';
+        [['id', C.id]].concat(C.docs).forEach(function (d, i) {
+            var ok = d[0] === 'id' ? !!shot : !!docShots[d[0]], li = el('li', ok ? 'ok' : '');
+            li.append(el('i', '', ok ? '✓' : String(i + 1)), el('span', '', d[1]), el('em', '', ok ? '완료' : d[0] === 'id' ? '자동 촬영' : '필요'));
+            need.appendChild(li);
+        });
+        document.querySelectorAll('.slot').forEach(function (box) {
+            var k = box.getAttribute('data-k'), o = docShots[k];
+            box.classList.toggle('ok', !!o); box.querySelector('.slot-h em').textContent = o ? '✓ 완료' : '필요';
+            box.querySelector('.slot-h i').textContent = o ? '✓' : String([].indexOf.call(box.parentNode.children, box) + 2);
+            var im = box.querySelector('.slot-img'); im.hidden = !o; if (o) im.querySelector('img').src = o.data;
+            box.querySelector('[data-act=cam]').textContent = o ? '다시 촬영' : '촬영하기';
+            box.querySelector('[data-act=pick]').textContent = o ? '다른 사진 선택' : '앨범에서 선택';
+        });
+    }
 
     function bad(title, text) {
         stopCam();
@@ -183,7 +271,7 @@ window.__sgServer.catch(function () {});
         if (res.state === 'done') return bad('이미 접수가 완료되었어요', '같은 주소로는 한 번만 접수할 수 있어요. 다시 보내야 하시면 담당자에게 새 주소를 요청해 주세요.');
         if (res.state === 'expired') return bad('접수 기간이 지났어요', '보안을 위해 주소는 정해진 시간 동안만 열려요. 담당자에게 새 주소를 요청하시거나 1833-2440으로 연락해 주세요.');
         if (res.state !== 'ready') return bad('접수 주소를 확인할 수 없어요', '받으신 문자의 주소를 다시 눌러 주시거나, 대표번호 1833-2440으로 연락해 주세요.');
-        info = res;
+        info = res; setKind(res.kind);
         $('cust-name').textContent = (res.name || '') + ' 고객'; $('staff-name').textContent = (res.staff || '담당자') + ' (사거리인터넷)'; $('exp-text').textContent = fmt(res.exp);
         ['cust-name', 'staff-name', 'exp-text'].forEach(function (x) { $(x).classList.remove('sk'); });
         refresh();
@@ -336,7 +424,7 @@ window.__sgServer.catch(function () {});
     }
     function showShot() {
         $('shot-img').src = shot.data; $('cam-card').hidden = true; $('shot-card').hidden = false; $('send-card').hidden = false;
-        $('msg').textContent = ''; refresh();
+        $('msg').textContent = ''; refresh(); paintNeed();
         setTimeout(function () { $('shot-card').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
     }
     function stopCam() { if (timer) clearInterval(timer); timer = null; if (stream) stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; good = 0; prev = null; }
@@ -366,12 +454,12 @@ window.__sgServer.catch(function () {});
     window.addEventListener('resize', function () { if (stream) placeGuide(); });
     $('btn-start').addEventListener('click', startCam);
     $('btn-shoot').addEventListener('click', function () { if (stream && video.videoWidth) capture(true); });
-    $('btn-retake').addEventListener('click', function () { shot = null; $('shot-card').hidden = true; $('send-card').hidden = true; $('cam-card').hidden = false; $('fallback').hidden = true; startCam(); $('cam-card').scrollIntoView({ block: 'start' }); });
+    $('btn-retake').addEventListener('click', function () { shot = null; paintNeed(); refresh(); $('shot-card').hidden = true; $('send-card').hidden = true; $('cam-card').hidden = false; $('fallback').hidden = true; startCam(); $('cam-card').scrollIntoView({ block: 'start' }); });
     // 기본 카메라(직접 찍기): 자동 촬영이 안 되는 기기용
-    function shrink(file) {
+    function shrink(file, max) {
         return new Promise(function (resolve, reject) {
             var url = URL.createObjectURL(file), img = new Image();
-            img.onload = function () { var k = Math.min(1, 1800 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k); var g = c.getContext('2d'); g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); var d = c.toDataURL('image/jpeg', 0.88); resolve({ data: d, b64: d.split(',')[1] }); };
+            img.onload = function () { var k = Math.min(1, (max || 1800) / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k); var g = c.getContext('2d'); g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); var d = c.toDataURL('image/jpeg', 0.88); resolve({ data: d, b64: d.split(',')[1] }); };
             img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('load')); };
             img.src = url;
         });
@@ -379,22 +467,41 @@ window.__sgServer.catch(function () {});
     $('btn-native').addEventListener('click', function () { $('native').value = ''; $('native').click(); });
     $('native').addEventListener('change', function () { if (!this.files[0]) return; shrink(this.files[0]).then(function (o) { stopCam(); shot = o; showShot(); }, function () { setStatus('사진을 불러오지 못했어요. 다시 촬영해 주세요.'); }); });
 
+    // 개인사업자·법인 서류: 기본 카메라로 촬영하거나 앨범에서 선택 (글자가 읽히게 조금 더 크게 저장)
+    function onDoc() {
+        var f = this.files && this.files[0], k = docFor; if (!f || !k) return;
+        if (f.type && !/^image\//.test(f.type)) { $('msg').textContent = '사진(그림) 파일만 올릴 수 있어요. PDF는 화면을 캡처해서 올려 주세요.'; return; }
+        shrink(f, 2200).then(function (o) {
+            docShots[k] = o; $('msg').textContent = ''; paintNeed(); refresh();
+            var next = document.querySelector('.slot:not(.ok)');
+            setTimeout(function () { (next || (shot ? $('send-card') : $('cam-card'))).scrollIntoView({ behavior: 'smooth', block: next ? 'center' : 'start' }); }, 60);
+        }, function () { $('msg').textContent = '사진을 불러오지 못했어요. 다시 촬영해 주세요.'; $('send-card').hidden = !shot; });
+    }
+    $('doc-cam').addEventListener('change', onDoc);
+    $('doc-pick').addEventListener('change', onDoc);
+
     // 3) 동의 + 확인 → 접수
-    function refresh() { $('btn-send').disabled = !shot || !info || sending || !$('agree').checked; }
+    function refresh() {
+        var L = lacking(), b = $('btn-send');
+        b.disabled = !!L.length || !info || sending || !$('agree').checked;
+        if (!sending) b.textContent = L.length && shot ? L.join(' · ') + ' 사진을 올려 주세요' : '확인 (접수하기)';
+    }
     $('agree').addEventListener('change', function () { $('msg').textContent = ''; refresh(); });
     $('btn-send').addEventListener('click', function () {
         if (!shot || sending) return;
         if (!$('agree').checked) { $('msg').textContent = '개인정보 수집 · 이용에 동의해 주세요.'; return; }
         sending = true; refresh(); $('btn-send').textContent = '안전하게 접수 중입니다...';
-        call({ action: 'idUpload', code: code, agree: true, front: shot.b64, extra: '' }).then(function (res) {
+        var L = lacking(); if (L.length) { sending = false; refresh(); $('msg').textContent = L.join(', ') + ' 사진을 올려 주세요.'; return; }
+        var docs = K().docs.map(function (d) { return { k: d[0], b64: docShots[d[0]].b64 }; });
+        call({ action: 'idUpload', code: code, agree: true, front: shot.b64, extra: '', docs: docs }).then(function (res) {
             sending = false;
-            if (res && res.ok) { shot = null; ['info', 'cam-card', 'shot-card', 'send-card'].forEach(function (x) { $(x).hidden = true; }); $('done').hidden = false; window.scrollTo(0, 0); return; }
+            if (res && res.ok) { shot = null; docShots = {}; $('docs-card').hidden = true; $('need').hidden = true; ['info', 'cam-card', 'shot-card', 'send-card'].forEach(function (x) { $(x).hidden = true; }); $('done').hidden = false; window.scrollTo(0, 0); return; }
             var e = res && res.error;
             if (e === 'done') return bad('이미 접수가 완료되었어요', '같은 주소로는 한 번만 접수할 수 있어요.');
             if (e === 'expired') return bad('접수 기간이 지났어요', '담당자에게 새 주소를 요청하시거나 1833-2440으로 연락해 주세요.');
-            $('btn-send').textContent = '확인 (접수하기)'; refresh();
-            $('msg').textContent = e === 'invalid_image' ? '사진을 다시 촬영해 주세요.' : '접수하지 못했어요. 잠시 뒤 다시 눌러 주시거나 1833-2440으로 연락해 주세요.';
-        }).catch(function () { sending = false; $('btn-send').textContent = '확인 (접수하기)'; refresh(); $('msg').textContent = '연결이 원활하지 않아요. 잠시 뒤 다시 눌러 주세요.'; });
+            refresh();
+            $('msg').textContent = e === 'invalid_image' ? (res.message || '사진을 다시 촬영해 주세요.') : e === 'missing_docs' ? (res.message || '빠진 서류가 있어요.') : e === 'too_big' ? '사진 용량이 너무 커요. 서류를 다시 촬영해 주세요.' : '접수하지 못했어요. 잠시 뒤 다시 눌러 주시거나 1833-2440으로 연락해 주세요.';
+        }).catch(function () { sending = false; refresh(); $('msg').textContent = '연결이 원활하지 않아요. 잠시 뒤 다시 눌러 주세요.'; });
     });
 
     // 시작: 카메라 권한이 이미 있으면 바로 켜고, 아니면 버튼 한 번으로
