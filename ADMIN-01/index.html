@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-iISjJaqml8fD5eC7mA6ybrVXZQLq5MDn3w0x/HXjIE0='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-THd7cSTa62tShbuAdycuEYIxBIeSw7ypNN3iLhQnlZQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -344,6 +344,67 @@
         .xl-group { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
         .xl-label { font-size: 13px; font-weight: 800; color: #1D6F42; margin-right: 2px; }
         .xl-btn { min-width: 46px; }
+        /* ---------- 상담 리스트 ---------- */
+        .cl-sec-note { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12.5px; color: #1F6B2A; background: #EEF7EF; border: 1px solid #BFDDC4; border-radius: 10px; padding: 7px 12px; margin-bottom: 12px; }
+        .cl-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 8px; margin-bottom: 6px; scrollbar-width: thin; }
+        .cl-tab { flex: none; min-height: 38px; padding: 0 14px; border-radius: 10px 10px 4px 4px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: 14px; font-weight: 700; color: var(--muted); cursor: pointer; white-space: nowrap; }
+        .cl-tab[aria-pressed="true"] { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .cl-tab small { margin-left: 5px; font-weight: 600; opacity: .75; }
+        .cl-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 4px 0 10px; }
+        .cl-title { font-size: 19px; font-weight: 800; letter-spacing: -0.4px; }
+        .cl-title small { margin-left: 8px; font-size: 13px; font-weight: 700; color: var(--muted); }
+        .cl-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .cl-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 11px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; font-weight: 700; color: var(--ink); cursor: pointer; }
+        .cl-chip i { width: 14px; height: 14px; border-radius: 4px; background: var(--sc, #fff); border: 1px solid rgba(0,0,0,.18); flex: none; }
+        .cl-chip b { font-weight: 800; color: var(--muted); }
+        .cl-chip[aria-pressed="true"] { border-color: var(--olive-700); box-shadow: 0 0 0 2px rgba(62,68,30,.25); background: #F6F7EE; }
+        .cl-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+        .cl-tools input[type="search"] { flex: 1 1 220px; min-width: 0; }
+        .cl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+        table.cl-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        .cl-tbl th { position: sticky; top: 0; z-index: 1; background: #3E441E; color: #fff; font-size: 12.5px; font-weight: 700; padding: 8px 8px; text-align: left; white-space: nowrap; }
+        .cl-tbl td { padding: 7px 8px; border-bottom: 1px solid #EEF0E6; vertical-align: top; white-space: pre-wrap; word-break: break-word; }
+        .cl-tbl tr.cl-r { cursor: pointer; background: linear-gradient(rgba(var(--rc, 255,255,255), var(--ra, 0)), rgba(var(--rc, 255,255,255), var(--ra, 0))); }
+        .cl-tbl tr.cl-r:hover td { box-shadow: inset 0 0 0 9999px rgba(0,0,0,.035); }
+        .cl-tbl tr.cl-r td:first-child { border-left: 6px solid var(--sb, transparent); font-weight: 700; color: var(--muted); white-space: nowrap; }
+        .cl-tbl td { min-width: 64px; }
+        .cl-tbl td.nw { white-space: nowrap; }
+        .cl-tbl td.loc { min-width: 96px; }
+        .cl-tbl td.wide { min-width: 280px; }
+        .cl-tbl td.mid { min-width: 120px; }
+        .cl-tbl td.ph { white-space: nowrap; }
+        .cl-tbl tr.cl-sec td { background: #EEF0E4; font-weight: 800; font-size: 14.5px; color: #3E441E; padding: 10px 12px; border-left: 6px solid var(--sb, #3E441E); }
+        .cl-tbl tr.cl-hdr td { background: #F6F7EE; font-size: 12px; font-weight: 800; color: var(--muted); }
+        .cl-st { display: inline-block; margin-top: 3px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 800; color: #fff; background: var(--sb, #999); white-space: nowrap; }
+        .cl-st.lt { color: #4A2A40; }
+        .cl-empty { padding: 26px; text-align: center; color: var(--muted); }
+        .cl-who { font-size: 11.5px; color: var(--muted); }
+        .cl-status { font-size: 12.5px; color: var(--muted); }
+        .cl-status.err { color: #B42318; font-weight: 700; }
+        dialog.cl-dlg { width: min(760px, 96vw); }
+        .cl-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 14px; }
+        .cl-form label { display: grid; gap: 4px; font-size: 13px; font-weight: 700; color: var(--muted); min-width: 0; }
+        .cl-form label.full { grid-column: 1 / -1; }
+        .cl-form textarea { min-height: 76px; resize: vertical; font: inherit; }
+        .cl-form .cl-inline { display: flex; gap: 6px; align-items: center; } .cl-form .cl-inline input { flex: 1 1 auto; min-width: 0; }
+        .cl-stpick { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+        .cl-stpick .cl-chip[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--scr, rgba(62,68,30,.35)); }
+        .cl-meta { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+        @media (max-width: 900px) {
+            .cl-wrap { border: none; background: transparent; overflow: visible; }
+            table.cl-tbl, .cl-tbl tbody { display: block; }
+            .cl-tbl thead { display: none; }
+            .cl-tbl tr { display: block; margin-bottom: 10px; border-radius: 12px; border: 1px solid var(--line); border-left: 6px solid var(--sb, var(--line)); overflow: hidden; background-color: #fff; }
+            .cl-tbl tr.cl-r td:first-child { border-left: none; }
+            .cl-tbl td { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 8px; border-bottom: 1px dashed #EEF0E6; padding: 6px 10px; }
+            .cl-tbl td::before { content: attr(data-l); font-size: 12px; font-weight: 700; color: var(--muted); white-space: normal; }
+            .cl-tbl td.blank { display: none; }
+            .cl-tbl td, .cl-tbl td.wide, .cl-tbl td.mid, .cl-tbl td.loc { min-width: 0; } .cl-tbl td.nw { white-space: pre-wrap; }
+            .cl-tbl tr.cl-sec td, .cl-tbl tr.cl-hdr td { display: block; }
+            .cl-tbl tr.cl-sec td::before, .cl-tbl tr.cl-hdr td::before { content: none; }
+            .cl-tbl tr.cl-hdr { display: none; }
+            .cl-form { grid-template-columns: minmax(0, 1fr); }
+        }
         .xl-cal-btn { border-color: #1D6F42; color: #1D6F42; font-weight: 800; }
         dialog.xl-dlg { width: min(440px, 96vw); }
         .xl-quick { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -1035,7 +1096,7 @@
             ['가입날짜', function (r) { return parseInt(r.date.slice(8), 10) + '일'; }], ['모델', 'model'], ['일련번호', 'serial'], ['번호', 'phone'], ['고객명', 'name'], ['생년월일', 'birth'],
             ['공시&선약(프약)', 'disc'], ['공시금액', 'subsidy'], ['할부원금', 'price'], ['할부개월', 'months'], ['요금제', 'plan'], ['부가서비스', 'extra'], ['보험가입여부(종류)', 'ins'],
             ['결합종류', 'combKind'], ['결합여부', 'comb'], ['요금제유지개월', 'keep'], ['변경요금제', 'plan2'], ['가입후요금', 'bill1'], ['3개월후 요금', 'bill2'], ['이전사업자', 'prev'], ['가입유형', 'type']];
-        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'calls', t: '콜 인입' }, { v: 'visits', t: '홈페이지 인입' }, { v: 'policy', t: '인터넷상담' }, { v: 'idreq', t: '신분증 요청' }, { v: 'settings', t: '설정' }];
+        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'forms', t: '가입 확인서' }, { v: 'calls', t: '콜 인입' }, { v: 'visits', t: '홈페이지 인입' }, { v: 'policy', t: '인터넷상담' }, { v: 'idreq', t: '신분증 요청' }, { v: 'consult', t: '상담 리스트' }, { v: 'settings', t: '설정' }];
 
         // 공유 저장소 주소는 반드시 구글 Apps Script 웹 앱 주소여야 합니다 (그 밖의 주소로는 어떤 요청도 보내지 않음)
         var DRIVE_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,200}\/exec$/;
@@ -1046,7 +1107,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-15.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-16.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -4655,7 +4716,7 @@
         var IB_POLL_MS = 20000;
         function ibFresh() { return { items: [], rev: -1, at: 0, err: '', known: null, busy: false, timer: null, tick: 0, open: Object.create(null), draft: Object.create(null), kind: 'all', todo: false, pend: false, saving: Object.create(null), sel: Object.create(null), deleting: false }; }
         var ib = ibFresh();
-        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); vs = vsFresh(); idrFresh(); hp = hpFresh(); }   // 잠그면 콜 인입·홈페이지 인입 기록도 지움
+        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); vs = vsFresh(); idrFresh(); hp = hpFresh(); clStop(); }   // 잠그면 콜 인입·홈페이지 인입 기록도 지움
         function ibStart() {   // 로그인하면 시작 (공유 저장소를 쓰는 기기만)
             if (ib.timer || !driveOn()) return;
             ib.timer = setInterval(function () {
@@ -6052,6 +6113,371 @@
                     h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn btn-danger', onclick: resetAll }, '내용 모두 지우기'), h('button', { type: 'button', class: 'btn btn-danger', onclick: wipeDevice }, '이 기기에서 완전히 삭제'))));
         }
 
+        /* ---------- 상담 리스트 (고객 개인정보) ----------
+           · 엑셀 '인터넷 상담 리스트'와 같은 모양: 월별 시트(탭) · 시트마다 원래 열 · 원래 줄 색(판매성공·세이브·가망도·실패)
+           · 보안: 팀 키로 암호화(AES-256-GCM)한 뒤에만 드라이브로 보냄 → 서버·드라이브에는 암호문만 있음
+                   이 기기(브라우저 저장소)에는 저장하지 않고 화면 메모리에만 두며, 잠그면 바로 지움
+                   번호는 가려서 보이고 [번호 보기]를 눌러야 보임 · 줄·시트 삭제, 불러오기, 엑셀 내려받기는 대표님만
+                   줄마다 마지막으로 고친 사람·시각을 남김 · 서버가 하루 한 번 암호문 백업(30일)
+           · 기존 공유 저장소(data.json)와는 다른 파일이라, 예전 화면(구버전)을 쓰는 기기가 있어도 지워지지 않음 */
+        var CL_ST = [['sale', '판매성공', '00B0F0'], ['save', '세이브', '00B050'], ['vh', '매우높음', 'FF75DB'], ['h', '높음', 'FFD1F3'], ['n', '보통', ''], ['l', '낮음', 'BF9000'], ['vl', '매우낮음', '7F6000'], ['fail', '실패', 'C00000']];
+        var CL_AAD = 'consult-v1', CL_HEX = /^[0-9A-F]{6}$/, CL_KEY = /^c\d{1,2}$/;
+        function clFresh() { return { data: null, rev: -1, busy: false, err: '', at: 0, dirty: false, saving: false, again: false, editAt: 0, saveT: null, timer: null, sheet: '', q: '', st: 'all', showPh: false, base: 0, shrinkOk: false }; }
+        var cl = clFresh();
+        function clStop() { if (cl.timer) clearInterval(cl.timer); clearTimeout(cl.saveT); cl = clFresh(); }   // 잠그면 상담 리스트(고객 개인정보)도 메모리에서 지움
+        function clStInfo(st) { for (var i = 0; i < CL_ST.length; i++) if (CL_ST[i][0] === st) return CL_ST[i]; return null; }
+        function clRowHex(r) { if (r.c) return r.c; var s = clStInfo(r.st); return s ? s[2] : ''; }   // 원래 엑셀 색이 있으면 그 색 그대로
+        function clRgb(hex) { return parseInt(hex.slice(0, 2), 16) + ',' + parseInt(hex.slice(2, 4), 16) + ',' + parseInt(hex.slice(4, 6), 16); }
+        function clLight(hex) { var n = parseInt(hex, 16); return (((n >> 16) & 255) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 > 170; }
+        function clNorm(d) {   // 받은 내용(드라이브·불러오기 파일)은 항상 이 함수로 걸러서 사용 (글자 수·개수·형식)
+            var out = { sheets: [], rows: [], del: Object.create(null) }, ids = Object.create(null), sh = Object.create(null), okSt = { etc: 1 };
+            CL_ST.forEach(function (s) { okSt[s[0]] = 1; });
+            if (!d || typeof d !== 'object') return out;
+            function hexMap(m) { var o = null; if (m && typeof m === 'object') Object.keys(m).slice(0, 40).forEach(function (k) { if (CL_KEY.test(k) && CL_HEX.test(String(m[k]))) { o = o || {}; o[k] = String(m[k]); } }); return o; }
+            (Array.isArray(d.sheets) ? d.sheets.slice(0, 400) : []).forEach(function (s) {
+                var id = s && str(s.id, 40); if (!id || ids[id]) return;
+                var seen = Object.create(null), cols = (Array.isArray(s.cols) ? s.cols.slice(0, 40) : []).filter(function (c) { if (!c || !CL_KEY.test(c.k) || seen[c.k]) return false; seen[c.k] = 1; return true; }).map(function (c) { return { k: c.k, l: str(c.l, 60) }; });
+                if (!cols.length) return;
+                ids[id] = 1; sh[id] = 1;
+                out.sheets.push({ id: id, name: str(s.name, 30).trim() || '시트', title: str(s.title, 160), owner: str(s.owner, 20), cols: cols, o: num(s.o), u: num(s.u), by: str(s.by, 20) });
+            });
+            (Array.isArray(d.rows) ? d.rows.slice(0, 40000) : []).forEach(function (r) {
+                var id = r && str(r.id, 40); if (!id || ids[id] || !sh[r.sh] || ['row', 'sec', 'hdr'].indexOf(r.ty) < 0) return;
+                ids[id] = 1;
+                var v = {};
+                if (r.v && typeof r.v === 'object') Object.keys(r.v).slice(0, 40).forEach(function (k) { if ((CL_KEY.test(k) || (r.ty === 'sec' && k === 't')) && typeof r.v[k] === 'string' && r.v[k] !== '') v[k] = r.v[k].slice(0, 3000); });
+                var o = { id: id, sh: r.sh, ty: r.ty, o: num(r.o), v: v, u: num(r.u), by: str(r.by, 20) };
+                if (r.ty === 'row') o.st = okSt[r.st] ? r.st : 'n';
+                if (CL_HEX.test(String(r.c || ''))) o.c = String(r.c);
+                var cc = hexMap(r.cc), fc = hexMap(r.fc); if (cc) o.cc = cc; if (fc) o.fc = fc;
+                out.rows.push(o);
+            });
+            var dd = d.del && typeof d.del === 'object' ? d.del : {};
+            Object.keys(dd).slice(0, 40000).forEach(function (id) { var t = num(dd[id]); if (id.length <= 40 && t > 0) out.del[id] = t; });
+            return out;
+        }
+        function clMerge(a, b) {   // 두 쪽 내용 합치기: 줄·시트마다 나중에 고친 쪽, 지운 기록이 더 나중이면 지움
+            var del = Object.create(null);
+            [a.del, b.del].forEach(function (m) { Object.keys(m).forEach(function (id) { if (m[id] > (del[id] || 0)) del[id] = m[id]; }); });
+            function pick(la, lb) {
+                var map = Object.create(null);
+                la.concat(lb).forEach(function (x) {
+                    var y = map[x.id];
+                    if (!y || x.u > y.u || (x.u === y.u && JSON.stringify(x) > JSON.stringify(y))) map[x.id] = x;
+                });
+                return Object.keys(map).map(function (k) { return map[k]; }).filter(function (x) { var t = del[x.id]; return !(t !== undefined && t >= x.u); });
+            }
+            var sheets = pick(a.sheets, b.sheets), ok = Object.create(null);
+            sheets.forEach(function (s) { ok[s.id] = 1; });
+            return { sheets: sheets, rows: pick(a.rows, b.rows).filter(function (r) { return ok[r.sh]; }), del: del };
+        }
+        function clRowsOf(shId) { return cl.data.rows.filter(function (r) { return r.sh === shId; }).sort(function (p, q) { return (p.o - q.o) || (p.id < q.id ? -1 : 1); }); }
+        function clDataRows() { return cl.data ? cl.data.rows.filter(function (r) { return r.ty === 'row'; }).length : 0; }
+        function clDecode(blob) {
+            if (!blob) return Promise.resolve(clNorm({}));
+            return ensureTeam().then(function (t) { return decryptText(t.encKey, blob, CL_AAD); }).then(function (txt) { return clNorm(JSON.parse(txt)); });
+        }
+        function clLoad(force) {
+            if (!authed || !db || !driveOn() || cl.busy) return;
+            cl.busy = true;
+            var mine = cl;
+            ibCall('clGet', { rev: force || !cl.data ? -1 : cl.rev }).then(function (res) {
+                if (mine !== cl) return null;
+                if (res.same) { cl.busy = false; cl.err = ''; cl.at = Date.now(); clStatusPaint(); return null; }
+                return clDecode(res.blob).then(function (remote) {
+                    if (mine !== cl) return;
+                    cl.busy = false; cl.err = ''; cl.at = Date.now(); cl.rev = typeof res.rev === 'number' ? res.rev : 0;
+                    cl.data = cl.data && cl.dirty ? clMerge(cl.data, remote) : remote;
+                    cl.base = clDataRows();
+                    if (!cl.sheet || !cl.data.sheets.some(function (s) { return s.id === cl.sheet; })) cl.sheet = clDefaultSheet();
+                    if (state.view === 'consult' && !clEditing()) render();
+                    if (cl.dirty) clQueue();
+                });
+            }).catch(function (e) {
+                if (mine !== cl) return;
+                cl.busy = false;
+                cl.err = e && (e.name === 'OperationError' || e.name === 'SyntaxError') ? '상담 리스트를 풀지 못했어요. 팀 연결 코드가 맞는지 확인해 주세요. (내용은 그대로 보관돼 있어요)' : driveErrText(e);
+                if (state.view === 'consult') render();
+            });
+        }
+        function clEditing() { var d = document.getElementById('dlg'); return !!(d && d.open && d.className.indexOf('cl-dlg') >= 0); }
+        function clQueue() { cl.dirty = true; cl.editAt = Date.now(); clearTimeout(cl.saveT); cl.saveT = setTimeout(function () { clSave(0); }, 700); clStatusPaint(); }
+        function clSave(tries) {
+            if (!cl.data || !authed || !db || !driveOn()) return;
+            if (cl.saving) { cl.again = true; return; }
+            var n = clDataRows();
+            if (!cl.shrinkOk && cl.base > 20 && n < cl.base * 0.7) {   // 안전장치: 실수로 한꺼번에 많이 지워지는 것을 막음
+                cl.err = '상담 줄이 갑자기 많이 줄어서(' + cl.base + ' → ' + n + '줄) 저장을 멈췄어요. 새로고침 후 다시 확인해 주세요.'; render(); return;
+            }
+            cl.saving = true;
+            var mine = cl, at = cl.editAt, plain = JSON.stringify({ v: 1, sheets: cl.data.sheets, rows: cl.data.rows, del: cl.data.del });
+            clStatusPaint();
+            ensureTeam().then(function (t) {
+                return encryptText(t.encKey, plain, CL_AAD).then(function (blob) { return ibCall('clPut', { baseRev: Math.max(0, cl.rev), blob: blob }); });
+            }).then(function (res) {
+                if (mine !== cl) return;
+                cl.saving = false; cl.rev = res.rev; cl.err = ''; cl.at = Date.now(); cl.base = clDataRows(); cl.shrinkOk = false;
+                if (cl.editAt === at) cl.dirty = false;
+                clStatusPaint();
+                if (cl.dirty || cl.again) { cl.again = false; clQueue(); }
+            }, function (e) {
+                if (mine !== cl) return;
+                cl.saving = false;
+                if (e && e.code === 'conflict' && e.reply) {   // 다른 직원이 먼저 저장: 최신 내용과 합친 뒤 다시 저장
+                    var rp = e.reply;
+                    clDecode(rp.blob).then(function (remote) {
+                        if (mine !== cl) return;
+                        cl.data = clMerge(cl.data, remote); cl.rev = typeof rp.rev === 'number' ? rp.rev : cl.rev; cl.base = Math.max(cl.base, clDataRows());
+                        if (state.view === 'consult' && !clEditing()) render();
+                        if (tries < 4) clSave(tries + 1); else { cl.err = '저장이 계속 겹쳐요. 잠시 뒤 [저장 다시 시도]를 눌러 주세요.'; render(); }
+                    }, function () { cl.err = '다른 직원이 저장한 내용을 풀지 못해 저장을 멈췄어요. 새로고침해 주세요.'; render(); });
+                    return;
+                }
+                cl.err = '저장하지 못했어요. ' + driveErrText(e) + ' (고친 내용은 화면에 있어요. [저장 다시 시도]를 눌러 주세요.)';
+                render();
+            });
+        }
+        function clStatusText() {
+            if (cl.err) return cl.err;
+            if (cl.saving) return '암호화해서 저장하는 중...';
+            if (cl.dirty) return '저장 대기 중...';
+            if (!cl.at) return '불러오는 중...';
+            var d = new Date(cl.at);
+            return '🔒 암호화 저장됨 · ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()) + ' 확인';
+        }
+        function clStatusPaint() { var el = document.getElementById('cl-status'); if (el) { el.textContent = clStatusText(); el.className = 'cl-status' + (cl.err ? ' err' : ''); } }
+        function clYm(name) { var m = /(\d{2})\s*년\s*(\d{1,2})\s*월/.exec(name || ''); return m ? (+m[1]) * 12 + (+m[2]) - 1 : -1; }
+        function clDefaultSheet() {
+            var list = cl.data.sheets.slice().sort(function (a, b) { return a.o - b.o; }), now = new Date(), cur = (now.getFullYear() % 100) * 12 + now.getMonth(), best = null;
+            list.forEach(function (s) { var y = clYm(s.name); if (y === cur) best = s; });
+            if (!best) list.forEach(function (s) { var y = clYm(s.name); if (y >= 0 && (!best || y >= clYm(best.name))) best = s; });
+            return (best || list[list.length - 1] || {}).id || '';
+        }
+        function clColKind(c) { var l = c.l.replace(/\s/g, ''); return l === '/' ? 'no' : l === '날짜' ? 'date' : /최초인입시간/.test(l) ? 'time' : /연락처/.test(l) ? 'ph' : /담당자/.test(l) ? 'staff' : /상담내용|비고/.test(l) ? 'wide' : /재케어/.test(l) ? 'mid' : ''; }
+        function clMask(v) { return String(v).replace(/(\d{2,3})([-\s.]?)(\d{3,4})([-\s.]?)(\d{4})/g, function (m, a, s1, b, s2, c) { return a + s1 + '****' + s2 + c; }); }
+        function clStamp(x) { x.u = Math.max(Date.now(), (x.u || 0) + 1); x.by = staffName(me); }
+        function clCan(what) {   // 지우기·불러오기·엑셀은 대표님만
+            if (isBoss()) return true;
+            toast(what + '은(는) 대표님만 할 수 있어요.'); return false;
+        }
+        function clNextName() {
+            var best = -1; cl.data.sheets.forEach(function (s) { best = Math.max(best, clYm(s.name)); });
+            var now = new Date(), cur = (now.getFullYear() % 100) * 12 + now.getMonth(), n = best < 0 ? cur : best + 1;
+            return (Math.floor(n / 12)) + '년 ' + (n % 12 + 1) + '월';
+        }
+        function clNewSheet() {   // 다음 달 시트: 가장 최근 달 시트의 양식(열·제목·담당 표시)을 그대로 복사
+            if (!cl.data) return;
+            var name = clNextName();
+            if (cl.data.sheets.some(function (s) { return s.name === name; })) { toast(name + ' 시트가 이미 있어요.'); return; }
+            var tpl = null; cl.data.sheets.forEach(function (s) { if (clYm(s.name) >= 0 && (!tpl || clYm(s.name) > clYm(tpl.name) || (clYm(s.name) === clYm(tpl.name) && s.o > tpl.o))) tpl = s; });
+            if (!tpl) tpl = cl.data.sheets[cl.data.sheets.length - 1];
+            if (!confirm('"' + name + '" 시트를 새로 만들까요?\n' + (tpl ? '"' + tpl.name + '" 시트와 같은 양식(열)으로 만들어요.' : ''))) return;
+            var cols = tpl ? JSON.parse(JSON.stringify(tpl.cols)) : [{ k: 'c1', l: '/' }, { k: 'c2', l: '날 짜' }, { k: 'c4', l: '담당자' }, { k: 'c5', l: '유입경로' }, { k: 'c6', l: '위치' }, { k: 'c8', l: '연 락 처' }, { k: 'c10', l: '현 통신사' }, { k: 'c11', l: '상 담 내 용' }, { k: 'c20', l: '최초인입시간' }, { k: 'c21', l: '1차 재케어 날짜 및 시간' }, { k: 'c23', l: '2차 재케어 날짜 및 시간' }, { k: 'c25', l: '3차 재케어 날짜 및 시간' }, { k: 'c27', l: '판매 여부' }];
+            var title = tpl && tpl.title ? tpl.title.replace(/\d{2}\s*년\s*\d{1,2}\s*월/, name) : name + '  - 인터넷 상담 리스트 -';
+            var o = 0; cl.data.sheets.forEach(function (s) { o = Math.max(o, s.o); });
+            var s = { id: uid(), name: name, title: title, owner: tpl ? tpl.owner : '', cols: cols, o: o + 1 };
+            clStamp(s); cl.data.sheets.push(s); cl.sheet = s.id; cl.q = ''; cl.st = 'all';
+            clQueue(); render(); toast(name + ' 시트를 만들었어요.');
+        }
+        function clSheetEdit(s) {   // 시트 이름·제목·담당 표시 고치기 (대표님: 시트 삭제)
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'cl-dlg';
+            var nm = h('input', { type: 'text', maxlength: 30, value: s.name }), tt = h('input', { type: 'text', maxlength: 160, value: s.title }), ow = h('input', { type: 'text', maxlength: 20, value: s.owner });
+            var del = isBoss() ? h('button', { type: 'button', class: 'btn btn-danger left', 'data-act': 'cl-sheet-del', onclick: function () {
+                var n = clRowsOf(s.id).filter(function (r) { return r.ty === 'row'; }).length;
+                if (!confirm('"' + s.name + '" 시트를 통째로 지울까요?\n상담 ' + n + '줄이 모든 직원 화면에서 사라져요.')) return;
+                if (prompt('지우려면 시트 이름 "' + s.name + '"을(를) 그대로 적어 주세요.') !== s.name) { toast('이름이 달라서 지우지 않았어요.'); return; }
+                var t = Date.now(); cl.data.del[s.id] = t; clRowsOf(s.id).forEach(function (r) { cl.data.del[r.id] = t; });
+                cl.data.sheets = cl.data.sheets.filter(function (x) { return x.id !== s.id; }); cl.data.rows = cl.data.rows.filter(function (r) { return r.sh !== s.id; });
+                cl.shrinkOk = true; cl.sheet = clDefaultSheet(); closeDlg(); clQueue(); render(); toast('"' + s.name + '" 시트를 지웠어요.');
+            } }, '시트 삭제') : null;
+            dlg.appendChild(h('form', { novalidate: true, onsubmit: function (e) {
+                e.preventDefault();
+                var n2 = nm.value.trim(); if (!n2) { nm.focus(); return; }
+                if (n2 !== s.name && cl.data.sheets.some(function (x) { return x.name === n2; })) { toast('같은 이름의 시트가 있어요.'); return; }
+                s.name = n2; s.title = tt.value.trim(); s.owner = ow.value.trim(); clStamp(s); closeDlg(); clQueue(); render();
+            } }, h('div', { class: 'dlg-head' }, '시트 설정'),
+                h('div', { class: 'dlg-body' }, h('div', { class: 'cl-form' }, h('label', {}, '시트 이름 (탭)', nm), h('label', {}, '담당 표시 (예: 찬양)', ow), h('label', { class: 'full' }, '시트 제목', tt),
+                    h('p', { class: 'cl-meta' }, '열: ' + s.cols.map(function (c) { return c.l; }).join(' · ')))),
+                h('div', { class: 'dlg-foot' }, del, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), h('button', { type: 'submit', class: 'btn btn-primary' }, '저장'))));
+            showDlg(dlg);
+        }
+        function clEdit(s, r) {   // 상담 한 줄 쓰기·고치기 (r 없으면 새 줄)
+            var isNew = !r, row = r ? JSON.parse(JSON.stringify(r)) : { id: uid(), sh: s.id, ty: 'row', o: 0, v: {}, st: 'n' };
+            if (isNew) {
+                var now = new Date();
+                s.cols.forEach(function (c) {
+                    var kd = clColKind(c);
+                    if (kd === 'no') { var mx = 0; clRowsOf(s.id).forEach(function (x) { var n = parseInt(x.v[c.k], 10); if (n > mx) mx = n; }); row.v[c.k] = String(mx + 1); }
+                    if (kd === 'date') row.v[c.k] = ymd(now);
+                    if (kd === 'time') row.v[c.k] = pad2(now.getHours()) + ':' + pad2(now.getMinutes());
+                    if (kd === 'staff') row.v[c.k] = staffName(me);
+                });
+            }
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'cl-dlg';
+            var inputs = {};
+            if (row.ty === 'sec' || row.ty === 'hdr') {
+                var tin = h('input', { type: 'text', maxlength: 300, value: row.v.t || '' });
+                dlg.appendChild(h('form', { novalidate: true, onsubmit: function (e) { e.preventDefault(); var cur = clFind(row.id); if (!cur) { closeDlg(); return; } if (cur.ty === 'sec') { cur.v = { t: tin.value.trim() }; clStamp(cur); clQueue(); } closeDlg(); render(); } },
+                    h('div', { class: 'dlg-head' }, row.ty === 'sec' ? '구분 제목 줄' : '머리글 줄'),
+                    h('div', { class: 'dlg-body' }, row.ty === 'sec' ? h('label', {}, '제목', tin) : h('p', {}, '시트 중간에 있던 열 머리글 줄이에요. (엑셀 원본 그대로)')),
+                    h('div', { class: 'dlg-foot' }, isBoss() ? h('button', { type: 'button', class: 'btn btn-danger left', onclick: function () { if (confirm('이 줄을 지울까요?')) { clRemove(row.id); closeDlg(); } } }, '줄 삭제') : null,
+                        h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), row.ty === 'sec' ? h('button', { type: 'submit', class: 'btn btn-primary' }, '저장') : null)));
+                showDlg(dlg); return;
+            }
+            var stSel = row.st, keepC = row.c || '';
+            var pick = h('div', { class: 'cl-stpick', role: 'group', 'aria-label': '상담 상태(줄 색)' });
+            function paintPick() {
+                pick.textContent = '';
+                if (keepC && !CL_ST.some(function (x) { return x[2] === keepC; })) pick.appendChild(h('button', { type: 'button', class: 'cl-chip', 'aria-pressed': 'true', style: '--sc:#' + keepC, title: '엑셀 원래 색' }, h('i', {}), '원래 색 그대로'));
+                CL_ST.forEach(function (x) {
+                    var on = !keepC && stSel === x[0];
+                    pick.appendChild(h('button', { type: 'button', class: 'cl-chip', 'data-st': x[0], 'aria-pressed': on ? 'true' : 'false', style: '--sc:' + (x[2] ? '#' + x[2] : '#fff'), onclick: function () { stSel = x[0]; keepC = ''; paintPick(); } }, h('i', {}), x[1]));
+                });
+            }
+            paintPick();
+            var fields = s.cols.map(function (c) {
+                var kd = clColKind(c), val = row.v[c.k] || '', long = kd === 'wide' || kd === 'mid' || val.length > 40 || val.indexOf('\n') >= 0;
+                var el = long ? h('textarea', { maxlength: 3000, rows: kd === 'wide' ? 5 : 2, 'data-cl': c.k }) : h('input', { type: 'text', maxlength: 300, 'data-cl': c.k, inputmode: kd === 'no' ? 'numeric' : (kd === 'ph' ? 'tel' : false) });
+                el.value = val;
+                inputs[c.k] = el;
+                var body = el;
+                if (kd === 'date') body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { el.value = ymd(new Date()); } }, '오늘'));
+                if (kd === 'time') body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { var d = new Date(); el.value = pad2(d.getHours()) + ':' + pad2(d.getMinutes()); } }, '지금'));
+                return h('label', { class: long ? 'full' : '' }, c.l || c.k, body);
+            });
+            var meta = !isNew && (r.by || r.u) ? h('p', { class: 'cl-meta' }, '마지막 수정: ' + (r.by || '?') + (r.u ? ' · ' + ibTime(r.u) : '')) : null;
+            dlg.appendChild(h('form', { novalidate: true, onsubmit: function (e) {
+                e.preventDefault();
+                var v = {}; Object.keys(inputs).forEach(function (k) { var t = inputs[k].value.replace(/\s+$/, ''); if (t) v[k] = t.slice(0, 3000); });
+                if (!Object.keys(v).some(function (k) { return clColKind(s.cols.filter(function (c) { return c.k === k; })[0] || { l: '' }) !== 'no'; })) { toast('내용을 하나 이상 적어 주세요.'); return; }
+                var cur = isNew ? row : clFind(row.id);
+                if (!cur) { toast('다른 직원이 이 줄을 지웠어요. 화면을 새로고침해 주세요.'); closeDlg(); render(); return; }
+                cur.v = v; cur.st = stSel || 'n'; if (keepC) cur.c = keepC; else delete cur.c;
+                if (isNew) { var mo = 0; clRowsOf(s.id).forEach(function (x) { mo = Math.max(mo, x.o); }); cur.o = mo + 1; cl.data.rows.push(cur); }
+                clStamp(cur); closeDlg(); clQueue(); render(); toast(isNew ? '상담을 추가했어요.' : '상담 내용을 고쳤어요.');
+            } }, h('div', { class: 'dlg-head' }, (isNew ? '상담 추가' : '상담 고치기') + ' · ' + s.name),
+                h('div', { class: 'dlg-body' }, h('div', { class: 'cl-form' }, h('div', { class: 'cl-meta' }, '상태 (줄 색)'), pick, fields, meta)),
+                h('div', { class: 'dlg-foot' }, !isNew && isBoss() ? h('button', { type: 'button', class: 'btn btn-danger left', 'data-act': 'cl-row-del', onclick: function () { if (confirm('이 상담 줄을 지울까요? 모든 직원 화면에서 사라져요.')) { clRemove(row.id); closeDlg(); } } }, '줄 삭제') : null,
+                    h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), h('button', { type: 'submit', class: 'btn btn-primary', 'data-act': 'cl-save' }, isNew ? '추가' : '저장'))));
+            showDlg(dlg);
+            var first = s.cols.filter(function (c) { var k = clColKind(c); return k !== 'no' && k !== 'date' && k !== 'time' && k !== 'staff'; })[0];
+            setTimeout(function () { try { (first ? inputs[first.k] : dlg.querySelector('input,textarea')).focus(); } catch (e) { /* 무시 */ } }, 30);
+        }
+        function clFind(id) { for (var i = 0; i < cl.data.rows.length; i++) if (cl.data.rows[i].id === id) return cl.data.rows[i]; return null; }
+        function clRemove(id) {
+            if (!clCan('줄 삭제')) return;
+            cl.data.del[id] = Date.now(); cl.data.rows = cl.data.rows.filter(function (r) { return r.id !== id; });
+            clQueue(); render(); toast('줄을 지웠어요.');
+        }
+        function clImport(file) {   // 대표님: 엑셀에서 변환한 상담 리스트 파일 불러오기 (같은 이름의 시트는 건너뜀)
+            if (!clCan('불러오기') || !file) return;
+            if (file.size > 12 * 1024 * 1024) { toast('파일이 너무 커요.'); return; }
+            var fr = new FileReader();
+            fr.onload = function () {
+                var d; try { d = JSON.parse(String(fr.result || '')); } catch (e) { d = null; }
+                if (!d || d.kind !== 'sageori-consult') { toast('상담 리스트 변환 파일이 아니에요.'); return; }
+                var inn = clNorm(d), names = Object.create(null), skip = [];
+                cl.data.sheets.forEach(function (s) { names[s.name] = 1; });
+                var add = inn.sheets.filter(function (s) { if (names[s.name] || cl.data.sheets.some(function (x) { return x.id === s.id; })) { skip.push(s.name); return false; } return true; });
+                var ok = Object.create(null); add.forEach(function (s) { ok[s.id] = 1; });
+                var rows = inn.rows.filter(function (r) { return ok[r.sh] && !clFind(r.id); });
+                var nr = rows.filter(function (r) { return r.ty === 'row'; }).length;
+                if (!add.length) { toast('새로 넣을 시트가 없어요. (같은 이름의 시트는 건너뛰어요: ' + skip.join(', ') + ')'); return; }
+                if (!confirm('시트 ' + add.length + '개 · 상담 ' + nr + '줄을 불러올까요?\n' + add.map(function (s) { return s.name; }).join(', ') + (skip.length ? '\n(이미 있어서 건너뜀: ' + skip.join(', ') + ')' : ''))) return;
+                var t = Date.now(), base = 0; cl.data.sheets.forEach(function (s) { base = Math.max(base, s.o); });
+                add.forEach(function (s) { s.o = base + s.o; s.u = t; s.by = staffName(me); cl.data.sheets.push(s); delete cl.data.del[s.id]; });
+                rows.forEach(function (r) { r.u = t; r.by = staffName(me); cl.data.rows.push(r); delete cl.data.del[r.id]; });
+                cl.sheet = clDefaultSheet(); clQueue(); render();
+                toast('시트 ' + add.length + '개 · 상담 ' + nr + '줄을 불러왔어요. 암호화해서 저장하고 있어요. (불러온 파일은 지워 주세요)');
+            };
+            fr.readAsText(file);
+        }
+        function clExcel() {   // 대표님: 엑셀로 내려받기 (모든 시트 · 원래 열 그대로 + 상태 칸)
+            if (!clCan('엑셀 내려받기') || !cl.data) return;
+            if (!confirm('상담 리스트 전체를 엑셀 파일로 내려받을까요?\n고객 개인정보가 들어 있으니 다 쓴 뒤에는 바로 지워 주세요.')) return;
+            var used = Object.create(null);
+            var sheets = cl.data.sheets.slice().sort(function (a, b) { return a.o - b.o; }).map(function (s) {
+                var nm = s.name.replace(/[\\\/\?\*\[\]:]/g, ' ').slice(0, 28) || '시트'; while (used[nm]) nm = nm.slice(0, 26) + '_' + Math.floor(Math.random() * 9); used[nm] = 1;
+                var rows = [[s.title || s.name], s.owner ? ['[ ' + s.owner + ' ]'] : [], s.cols.map(function (c) { return c.l; }).concat(['상태', '마지막 수정'])];
+                clRowsOf(s.id).forEach(function (r) {
+                    if (r.ty === 'sec') rows.push([r.v.t || '']);
+                    else if (r.ty === 'hdr') rows.push(s.cols.map(function (c) { return c.l; }));
+                    else { var si = clStInfo(r.st); rows.push(s.cols.map(function (c) { return r.v[c.k] || ''; }).concat([si ? si[1] : '', (r.by || '') + (r.u ? ' ' + fmtDT(r.u) : '')])); }
+                });
+                return { name: nm, widths: s.cols.map(function (c) { var k = clColKind(c); return k === 'wide' ? 50 : k === 'mid' ? 26 : k === 'no' ? 5 : 13; }).concat([10, 22]), rows: rows, head: [0, 2], freeze: 3 };
+            });
+            saveBlob('상담리스트_' + ymd(new Date()) + '.xlsx', xlsxBlob(sheets));
+            toast('엑셀로 내려받았어요. 개인정보가 들어 있으니 다 쓴 뒤 지워 주세요.');
+        }
+        function renderConsult() {
+            var boss = isBoss();
+            var fileIn = h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: function () { clImport(this.files && this.files[0]); this.value = ''; } });
+            var head = h('div', { class: 'page-head' }, h('h1', {}, '상담 리스트'),
+                h('div', { class: 'actions' },
+                    h('button', { type: 'button', class: 'btn', 'data-fk': 'cl-refresh', onclick: function () { cl.busy = false; clLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침'),
+                    cl.data ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'cl-newsheet', onclick: clNewSheet }, '+ ' + clNextName() + ' 시트') : null,
+                    boss && cl.data ? h('button', { type: 'button', class: 'btn', 'data-act': 'cl-excel', onclick: clExcel }, '엑셀 내려받기') : null,
+                    boss && cl.data ? h('button', { type: 'button', class: 'btn', 'data-act': 'cl-import', onclick: function () { fileIn.click(); } }, '변환 파일 불러오기') : null, fileIn));
+            if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '상담 리스트는 구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
+            if (!cl.timer) cl.timer = setInterval(function () { if (state.view === 'consult' && !document.hidden && !cl.dirty && !cl.saving && !clEditing()) clLoad(false); }, 30000);   // 다른 직원이 고친 내용 30초마다 확인
+            if (!cl.data && !cl.busy && !cl.err) setTimeout(function () { clLoad(true); }, 0);
+            var note = h('div', { class: 'cl-sec-note' }, '🔒', h('span', {}, '고객 개인정보라 팀 키로 암호화해서 드라이브에 보관하고, 이 기기에는 저장하지 않아요. 잠그면 화면에서도 지워져요. 번호는 [번호 보기]를 눌러야 보여요.'));
+            var status = h('span', { class: 'cl-status' + (cl.err ? ' err' : ''), id: 'cl-status', role: 'status' }, clStatusText());
+            var retry = cl.err && cl.data ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { cl.err = ''; cl.shrinkOk = false; clSave(0); } }, '저장 다시 시도') : null;
+            if (!cl.data) return h('div', {}, head, note, h('div', { class: 'panel' }, h('div', { class: 'empty' }, cl.err ? cl.err : '상담 리스트를 불러오는 중이에요...')));
+            if (!cl.data.sheets.length) return h('div', {}, head, note, h('p', {}, status), h('div', { class: 'panel' }, h('div', { class: 'empty' }, boss ? '아직 상담 리스트가 없어요. 오른쪽 위 [변환 파일 불러오기]로 엑셀에서 변환한 파일을 넣거나, [+ 시트]로 새로 시작해 주세요.' : '아직 상담 리스트가 없어요. 대표님이 상담 리스트를 넣으면 여기에 보여요. [+ 시트]로 새로 시작할 수도 있어요.')));
+            var sheets = cl.data.sheets.slice().sort(function (a, b) { return a.o - b.o; });
+            var s = sheets.filter(function (x) { return x.id === cl.sheet; })[0] || sheets[sheets.length - 1]; cl.sheet = s.id;
+            var all = clRowsOf(s.id), data = all.filter(function (r) { return r.ty === 'row'; });
+            var tabs = h('div', { class: 'cl-tabs', role: 'tablist', 'aria-label': '시트' }, sheets.map(function (x) {
+                var n = cl.data.rows.filter(function (r) { return r.sh === x.id && r.ty === 'row'; }).length;
+                return h('button', { type: 'button', class: 'cl-tab', role: 'tab', 'data-sheet': x.name, 'aria-pressed': x.id === s.id ? 'true' : 'false', onclick: function () { cl.sheet = x.id; cl.st = 'all'; render(); } }, x.name, h('small', {}, String(n)));
+            }));
+            var cnt = Object.create(null); data.forEach(function (r) { cnt[r.st] = (cnt[r.st] || 0) + 1; });
+            var legend = h('div', { class: 'cl-legend', role: 'group', 'aria-label': '상태별 보기' },
+                h('button', { type: 'button', class: 'cl-chip', 'aria-pressed': cl.st === 'all' ? 'true' : 'false', onclick: function () { cl.st = 'all'; render(); } }, '전체 ', h('b', {}, String(data.length))),
+                CL_ST.concat(cnt.etc ? [['etc', '기타 색', '999999']] : []).map(function (x) {
+                    return h('button', { type: 'button', class: 'cl-chip', 'data-st': x[0], 'aria-pressed': cl.st === x[0] ? 'true' : 'false', style: '--sc:' + (x[2] ? '#' + x[2] : '#fff'), onclick: function () { cl.st = cl.st === x[0] ? 'all' : x[0]; render(); } }, h('i', {}), x[1] + ' ', h('b', {}, String(cnt[x[0]] || 0)));
+                }));
+            var q = h('input', { type: 'search', 'data-fk': 'cl-q', placeholder: '찾기 (이름·번호·지역·내용)', 'aria-label': '상담 찾기', value: cl.q });
+            q.addEventListener('input', function () { cl.q = this.value; clearTimeout(renderConsult.t); renderConsult.t = setTimeout(render, 160); });
+            var tools = h('div', { class: 'cl-tools' }, q,
+                h('button', { type: 'button', class: 'btn', 'data-act': 'cl-ph', 'aria-pressed': cl.showPh ? 'true' : 'false', onclick: function () { cl.showPh = !cl.showPh; render(); } }, cl.showPh ? '번호 가리기' : '번호 보기'),
+                h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'cl-add', onclick: function () { clEdit(s, null); } }, '+ 상담 추가'));
+            var qq = cl.q.trim().toLowerCase(), qd = qq.replace(/\D/g, '');
+            var shown = all.filter(function (r) {
+                if (r.ty !== 'row') return cl.st === 'all' && !qq;   // 구분 제목·머리글 줄은 전체 보기에서만
+                if (cl.st !== 'all' && r.st !== cl.st) return false;
+                if (!qq) return true;
+                var txt = Object.keys(r.v).map(function (k) { return r.v[k]; }).join(' ').toLowerCase();
+                return txt.indexOf(qq) >= 0 || (qd.length >= 3 && txt.replace(/\D/g, '').indexOf(qd) >= 0);
+            });
+            var kinds = s.cols.map(clColKind);
+            var thead = h('thead', {}, h('tr', {}, s.cols.map(function (c) { return h('th', {}, c.l); })));
+            var body = h('tbody', {}, shown.map(function (r) {
+                if (r.ty === 'sec') return h('tr', { class: 'cl-sec', 'data-row': r.id, style: r.c ? '--sb:#' + r.c : false, onclick: function () { clEdit(s, r); } }, h('td', { colspan: s.cols.length }, r.v.t || ''));
+                if (r.ty === 'hdr') return h('tr', { class: 'cl-hdr', 'data-row': r.id, onclick: function () { clEdit(s, r); } }, s.cols.map(function (c) { return h('td', {}, c.l); }));
+                var hex = clRowHex(r), si = clStInfo(r.st);
+                var st = hex ? '--sb:#' + hex + ';--rc:' + clRgb(hex) + ';--ra:' + (clLight(hex) ? '.28' : '.14') : '';
+                return h('tr', { class: 'cl-r', 'data-row': r.id, style: st || false, tabindex: '0', onclick: function () { clEdit(s, r); }, onkeydown: function (e) { if (e.key === 'Enter') clEdit(s, r); } },
+                    s.cols.map(function (c, i) {
+                        var kd = kinds[i], v = r.v[c.k] || '', shownV = kd === 'ph' && !cl.showPh ? clMask(v) : v, cc = r.cc && r.cc[c.k], fc = r.fc && r.fc[c.k];
+                        var css = (cc ? 'background:rgba(' + clRgb(cc) + ',' + (clLight(cc) ? '.5' : '.3') + ');' : '') + (fc ? 'color:#' + fc + ';font-weight:700;' : '');
+                        var td = h('td', { 'data-l': c.l, class: (kd === 'wide' ? 'wide' : kd === 'mid' ? 'mid' : kd === 'ph' ? 'ph nw' : (kd === 'date' || kd === 'time' || kd === 'staff' || kd === 'no') ? 'nw' : /위치/.test(c.l) ? 'loc' : '') + (v ? '' : ' blank'), style: css || false }, shownV);
+                        if (i === 0) { td.classList.remove('blank'); td.appendChild(h('div', {}, h('span', { class: 'cl-st' + (hex && clLight(hex) ? ' lt' : ''), style: hex ? '--sb:#' + hex : '--sb:#9AA088' }, si && r.st !== 'etc' ? si[1] : (r.st === 'etc' ? '기타 색' : '보통')))); }
+                        return td;
+                    }));
+            }));
+            var titleEl = h('div', { class: 'cl-title' }, s.title || s.name, s.owner ? h('small', {}, '[ ' + s.owner + ' ]') : null);
+            return h('div', {}, head, note,
+                tabs,
+                h('div', { class: 'cl-head' }, titleEl, h('div', { class: 'actions' }, status, retry, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-sheet-set', onclick: function () { clSheetEdit(s); } }, '시트 설정'))),
+                legend, tools,
+                h('div', { class: 'cl-wrap' }, h('table', { class: 'cl-tbl' }, thead, shown.length ? body : h('tbody', {}, h('tr', {}, h('td', { class: 'cl-empty', colspan: s.cols.length }, data.length ? '조건에 맞는 상담이 없어요.' : '이 시트에는 아직 상담이 없어요. [+ 상담 추가]로 적어 주세요.'))))),
+                h('p', { class: 'ib-help' }, '줄을 누르면 고칠 수 있어요. 고친 내용은 자동으로 암호화해서 저장되고, 다른 직원 화면에도 30초 안에 반영돼요. 줄·시트 삭제, 불러오기, 엑셀 내려받기는 대표님만 할 수 있어요.'));
+        }
+        window.addEventListener('beforeunload', function (e) { if (cl.dirty || cl.saving) { e.preventDefault(); e.returnValue = ''; } });   // 저장 전에 창을 닫으면 한 번 더 확인
+
         /* ---------- 전체 화면 ---------- */
         function render() {
             if (taskDrag && authed && db) return;   // 업무를 끄는 중: 놓으면 바로 다시 그림
@@ -6076,6 +6502,7 @@
             else if (view === 'calls') { content = renderCalls(); if (!ib.timer && driveOn()) setTimeout(ibStart, 0); }
             else if (view === 'visits') { content = renderVisits(); if (!ib.timer && driveOn()) setTimeout(ibStart, 0); }
             else if (view === 'idreq') { content = renderIdreq(); }
+            else if (view === 'consult') { content = renderConsult(); }
             else if (view === 'policy') { content = renderPolicy(); }
             else if (view === 'settings') content = renderSettings();
             else content = renderToday();
@@ -6086,7 +6513,7 @@
 
             var nav = h('nav', { class: 'nav', 'aria-label': '메뉴' }, VIEWS.map(function (v) {
                 var badge = v.v === 'calls' && ibUnchecked() ? h('span', { class: 'nav-badge', 'aria-label': '확인 안 한 콜 ' + ibUnchecked() + '건' }, String(Math.min(ibUnchecked(), 99))) : null;
-                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; if (v.v === 'forms') state.form = ''; if (v.v === 'tasks') state.date = ymd(new Date()); render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); if (v.v === 'calls') { ib.busy = false; ibLoad(false); } if (v.v === 'visits') { vs.busy = false; vsLoad(); } } }, v.t, badge);
+                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; if (v.v === 'forms') state.form = ''; if (v.v === 'tasks') state.date = ymd(new Date()); render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); if (v.v === 'calls') { ib.busy = false; ibLoad(false); } if (v.v === 'visits') { vs.busy = false; vsLoad(); } if (v.v === 'consult') { cl.busy = false; clLoad(false); } } }, v.t, badge);
             }));
             var note = driveBanner();
             var appWarn = inAppBrowser() ? h('div', { class: 'mode-note warn', 'data-note': 'inapp' }, h('span', {}, h('b', {}, '앱 안에서 열린 화면이에요 '), '이 안에서는 저장이 불안정할 수 있어요. 화면 메뉴(⋯ 또는 공유 버튼)의 "다른 브라우저로 열기"로 사파리·크롬에서 열어 주세요.')) : null;
