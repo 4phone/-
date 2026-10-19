@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rdzZbueC77/HZHsw0PmRc7fbPQWgi1SYj1jrH1nSKBw='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8FqM7qRVR68Y/AcW9luVGYPOuBlVdym9yj293EGyS3E='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -290,6 +290,8 @@
         .t-row.dragging { background: #FFFBE6; box-shadow: 0 8px 22px rgba(0,0,0,.18); position: relative; z-index: 3; }
         .t-row.dragging .t-drag { cursor: grabbing; }
         /* 콜 인입 */
+        .nav-step { float: right; margin: 3px 0 0 6px; padding: 0 5px; border: 1px solid rgba(255, 99, 82, .55); border-radius: 6px; color: #FF7A6B; font-size: 10.5px; font-weight: 800; line-height: 15px; letter-spacing: -.2px; }
+        .nav button[aria-current="page"] .nav-step { color: #FF8A7C; border-color: rgba(255, 138, 124, .7); }
         .nav-badge { display: inline-block; min-width: 20px; margin-left: 8px; padding: 1px 6px; border-radius: 999px; background: #E53E3E; color: #fff; font-size: 12px; font-weight: 800; text-align: center; line-height: 18px; }
         .ib-row { display: grid; grid-template-columns: 128px 86px minmax(0, 1fr) minmax(0, 1.25fr) 150px 86px; gap: 10px 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); border-left: 5px solid #E53E3E; }
         .ib-row.done { border-left-color: transparent; background: #FAFBF6; }
@@ -1019,6 +1021,8 @@
         .pol-tbl small { display: block; font-size: 11.5px; font-weight: 600; color: var(--hint); }
         .pol-tbl .p-none { color: #B0B4A6; font-weight: 700; font-size: 13px; }
         .pol-warn { display: block; margin-top: 3px; font-size: 12px; font-weight: 700; color: #C0392B; white-space: normal; }
+        .pol-tv { display: block; margin-top: 3px; font-size: 11.5px; font-weight: 600; color: #4B5A1E; line-height: 1.35; white-space: normal; }
+        .pol-tv b { color: #1F5FAF; font-weight: 800; }
         .pol-nt { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 600; color: var(--muted); white-space: normal; }
         .pol-more { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); }
         .pol-more details { padding: 10px 16px; border-right: 1px solid var(--line); font-size: 13.5px; }
@@ -1163,6 +1167,7 @@
             .nav { order: 3; flex: 1 0 100%; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; padding-bottom: 2px; overflow: visible; }
             .nav button { white-space: normal; word-break: keep-all; line-height: 1.2; padding: 7px 4px; font-size: 13.5px; min-height: 38px; text-align: center; justify-content: center; position: relative; }
             .nav-badge { position: absolute; top: -4px; right: -2px; margin: 0; }
+            .nav-step { float: none; position: absolute; top: -6px; left: 1px; margin: 0; padding: 0 3px; font-size: 9px; line-height: 12px; background: #2E3315; }
             .rail-foot { margin: 0 0 0 auto; padding: 0; border: none; display: flex; align-items: center; gap: 8px; min-width: 0; }
             .rail-foot label { display: none; }
             .rail-foot select { width: auto; max-width: 118px; padding: 6px 8px; }
@@ -1271,7 +1276,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-17.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-19.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -5524,6 +5529,44 @@
             } }, v <= 0 ? h('span', { class: 'p-none' }, '지원 없음') : won(v), on ? h('small', { class: 'p-picked' }, '✔ 짚어 둠') : null);
             return td;
         }
+        /* TV 채널 안내 (2026-10 각 통신사 공식 안내 기준 · 채널 수는 바뀔 수 있어요) — [채널 수, 한 줄 설명] */
+        var POL_TV = [
+            ['sk', /이코노미/, '약 183채널', '지상파·종편·드라마·예능·홈쇼핑·교육'],
+            ['sk', /스탠다드/, '약 236채널', '이코노미 +53채널 · 스포츠·골프·애니 추가'],
+            ['sk', /\bALL\b/i, '약 257채널', '스탠다드 +21채널 · 해외·다큐·UHD 전용 채널까지 전부'],
+            ['kt', /모든\s*G/i, '약 255채널', '베이직 +18채널 · VOD 16만여 편 무료·무광고'],
+            ['kt', /에센스/, '260여 채널', '라이트 +20여 채널 · OCN 등 영화·장르 채널 추가'],
+            ['kt', /라이트/, '240여 채널', '베이직 + KBS N 스포츠·SPOTV+ 등 스포츠 · UHD 3채널'],
+            ['kt', /베이직/, '약 237채널', '지상파·종편·뉴스 등 기본 채널'],
+            ['lg', /프리미엄\s*VOD/, '256채널', '프리미엄 +6채널 · UHD팩 + 매달 VOD 쿠폰'],
+            ['lg', /프리미엄(?!\s*(UHD|VOD))/, '250채널', '실속형 +35채널 · 최신 영화 무료 · 프리미엄 클럽 +Pack'],
+            ['lg', /고급형/, '234채널', '기본형 +13채널 · 프리미엄 클럽 +Pack'],
+            ['lg', /기본형/, '221채널', '실속형 +6채널'],
+            ['lg', /실속형/, '215채널', '지상파·종편·드라마·예능 등 기본 · 아이들나라'],
+            ['hello', /뉴프리미엄/, '245채널', '뉴베이직과 채널 수 같음 · 프리미엄 혜택 (권역별 확인)'],
+            ['hello', /뉴베이직/, '245채널', '이코노미 +136채널 · 스포츠·영화·드라마 등 대부분 채널'],
+            ['hello', /이코노미/, '109채널', '지상파·종편 위주 실속형'],
+            ['sky', /플러스/, '209채널', '베이직 +13채널'],
+            ['sky', /BASIC|베이직/i, '196채널', '스카이라이프 IPTV 베이직'],
+            ['pop', /TVPOP\s*180/i, '약 180채널', 'B tv POP 180 (지상파·종편·인기 채널 위주)']
+        ];
+        function polTvFam(c) {   // 통신사 → TV 종류 (소호·사업자 상품은 구성이 달라서 뺌)
+            var id = String(c.id || '');
+            if (/soho/.test(id)) return '';
+            if (id === 'pop') return 'pop';
+            if (/^(skt|skb)/.test(id)) return 'sk';
+            if (/^kt/.test(id)) return 'kt';
+            if (/^(lgu|lgusim)$/.test(id)) return 'lg';
+            if (id === 'hello') return 'hello';
+            if (id === 'sky') return 'sky';
+            return '';
+        }
+        function polTvInfo(c, r) {
+            var n = String(r.n || ''), fam = c.id === 'retail' ? (/스탠다드|ALL|이코노미/.test(n) ? 'sk' : 'lg') : polTvFam(c);   // 소매: LG·SKB 상품이 섞여 있음 if (!fam || (!r.tv && !/\+/.test(n))) return null;
+            for (var i = 0; i < POL_TV.length; i++) { var t = POL_TV[i]; if (t[0] === fam && t[1].test(n)) return { ch: t[2], up: t[3] }; }   // 위에서부터 (모든G·프리미엄 VOD처럼 긴 이름 먼저)
+            return null;
+        }
+        function polTvLine(c, r) { var t = polTvInfo(c, r); return t ? h('span', { class: 'pol-tv', title: t.ch + ' · ' + t.up + ' (각 통신사 공식 안내 2026-10 기준, 바뀔 수 있어요)' }, h('b', {}, '📺 ' + t.ch), ' ' + t.up) : null; }
         function polStageText(p) { return p.stage === 'g' ? '가이드 ' + won(p.v) + (p.gn ? ' (' + p.gn + ')' : '') : p.stage + '차 상담 ' + (p.v > 0 ? won(p.v) : '지원 없음'); }   // 짚어 둔 금액 글자 (1·2·3차 · 가이드)
         function polGuideCell(c, r, g, key, gmax) {   // 가이드(최대) 칸: 1·2·3차처럼 눌러서 짚어 두기
             if (gmax === null) return h('td', { class: 'p-guide', 'data-l': '가이드(최대)' }, h('span', { class: 'p-none' }, '-'));
@@ -5546,7 +5589,7 @@
                     var f = polFee(r), s1 = f.fee - POL_KEEP[0], s2 = f.fee - POL_KEEP[1], s3 = f.fee - POL_KEEP[2], key = c.id + '|' + g.name + '|' + r.n;
                     var gmax = r.gd && c.guide[r.gd] ? c.guide[r.gd][2] : null;
                     rows.push(h('tr', { class: 'pol-row' + (polOn[key] ? ' on' : ''), 'data-key': key, onclick: function () { polOn[key] = !polOn[key]; this.classList.toggle('on', !!polOn[key]); polLast = polOn[key] ? { key: key, c: c, r: r, g: g } : (polLast && polLast.key === key ? null : polLast); if (!polOn[key] && polPick && polPick.key === key) { polPick = null; render(); } clMemoAuto(); } },
-                        h('td', {}, r.n, f.warn ? h('span', { class: 'pol-warn' }, '⚠ ' + f.warn) : null, r.nt ? h('span', { class: 'pol-nt' }, r.nt) : null),
+                        h('td', {}, r.n, polTvLine(c, r), f.warn ? h('span', { class: 'pol-warn' }, '⚠ ' + f.warn) : null, r.nt ? h('span', { class: 'pol-nt' }, r.nt) : null),
                         polInstCell(c, r, g),
                         h('td', { class: 'p-price', 'data-l': '월요금(미결합)' }, won(r.p)),
                         r.dc != null ? h('td', { class: 'p-comb', 'data-l': '결합요금', title: r.ad ? '표 요금 ' + won(r.p) + ' + 인터넷·TV 결합할인 해제 ' + won(r.ad) + ' = ' + won(r.p + r.ad) + ' → 휴대폰 결합할인 -' + won(r.dc) : '' }, won(polComb(r)), h('small', {}, (r.ad ? '+' + r.ad.toLocaleString('ko-KR') + ' ' : '') + '-' + r.dc.toLocaleString('ko-KR'))) : h('td', { class: 'p-comb', 'data-l': '결합요금' }, h('span', { class: 'p-none' }, '-')),
@@ -9073,11 +9116,13 @@
             meSel.value = me;
             meSel.addEventListener('change', function () { me = this.value; lsSet(ME_KEY, me); render(); });
 
+            var NAV_STEP = { policy: 1, idreq: 2, forms: 3, consult: 4 };   // 상담 순서 (메뉴 오른쪽에 작게)
+            var navStep = function (v) { return NAV_STEP[v.v] ? h('span', { class: 'nav-step', 'aria-label': '상담 ' + NAV_STEP[v.v] + '단계' }, '상담' + NAV_STEP[v.v]) : null; };
             var nav = h('nav', { class: 'nav', 'aria-label': '메뉴' }, VIEWS.filter(function (v) { return v.v !== 'gl' || glCan(); }).map(function (v) {
                 var xw = v.v === 'consult' && isBoss() && cl.data ? clXrWait().length : 0;
-                if (xw) return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; render(); window.scrollTo(0, 0); cl.busy = false; clLoad(false); } }, v.t, h('span', { class: 'nav-badge', 'aria-label': '엑셀 내려받기 요청 ' + xw + '건' }, String(xw)));
+                if (xw) return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; render(); window.scrollTo(0, 0); cl.busy = false; clLoad(false); } }, v.t, navStep(v), h('span', { class: 'nav-badge', 'aria-label': '엑셀 내려받기 요청 ' + xw + '건' }, String(xw)));
                 var badge = v.v === 'calls' && ibUnchecked() ? h('span', { class: 'nav-badge', 'aria-label': '확인 안 한 콜 ' + ibUnchecked() + '건' }, String(Math.min(ibUnchecked(), 99))) : null;
-                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; if (v.v === 'forms') state.form = ''; if (v.v === 'tasks') state.date = ymd(new Date()); render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); if (v.v === 'calls') { ib.busy = false; ibLoad(false); } if (v.v === 'visits') { vs.busy = false; vsLoad(); } if (v.v === 'consult') { cl.busy = false; clLoad(false); } if (v.v === 'gl') { gl.busy = false; glLoad(false); } } }, v.t, badge);
+                return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; if (v.v === 'forms') state.form = ''; if (v.v === 'tasks') state.date = ymd(new Date()); render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); if (v.v === 'calls') { ib.busy = false; ibLoad(false); } if (v.v === 'visits') { vs.busy = false; vsLoad(); } if (v.v === 'consult') { cl.busy = false; clLoad(false); } if (v.v === 'gl') { gl.busy = false; glLoad(false); } } }, v.t, navStep(v), badge);
             }));
             var note = driveBanner();
             var appWarn = inAppBrowser() ? h('div', { class: 'mode-note warn', 'data-note': 'inapp' }, h('span', {}, h('b', {}, '앱 안에서 열린 화면이에요 '), '이 안에서는 저장이 불안정할 수 있어요. 화면 메뉴(⋯ 또는 공유 버튼)의 "다른 브라우저로 열기"로 사파리·크롬에서 열어 주세요.')) : null;
