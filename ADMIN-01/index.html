@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5Xj6DWbmeRmxgw6wZoG8A+uhpnMt0HjtDwRsXfZaVFM='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-C2Ro90XwS+MYQLOU6GF6A20gft1RhI5o0GdvGZwYlsM='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -473,6 +473,11 @@
         }
         @media (max-width: 900px) { .cl-memo-grip { display: none; } }
         /* 날짜·청약일 달력 버튼 */
+        .cl-telco-wrap { display: grid; gap: 6px; }
+        .cl-telco { display: flex; flex-wrap: wrap; gap: 4px; }
+        .cl-tchip { min-height: 28px; padding: 0 9px; border-radius: 999px; border: 1px solid #C9CDB8; background: #fff; color: #3E441E; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+        .cl-tchip:hover { background: #F3F7E6; }
+        .cl-tchip[aria-pressed="true"] { background: #3E441E; border-color: #3E441E; color: #fff; }
         .cl-cal { position: relative; display: inline-flex; flex: 0 0 auto; }
         .cl-cal-in { position: absolute; right: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0; padding: 0; }
         .cl-cal-btn { min-width: 34px; padding: 0 6px; }
@@ -1279,7 +1284,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-19.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-19.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -6622,7 +6627,7 @@
                 var v = {};
                 if (r.v && typeof r.v === 'object') Object.keys(r.v).slice(0, 40).forEach(function (k) { if ((CL_KEY.test(k) || (r.ty === 'sec' && k === 't')) && typeof r.v[k] === 'string' && r.v[k] !== '') v[k] = r.v[k].slice(0, 3000); });
                 var o = { id: id, sh: r.sh, ty: r.ty, o: num(r.o), v: v, u: num(r.u), by: str(r.by, 20) };
-                if (r.ty === 'row') { o.st = okSt[r.st] ? r.st : 'n'; if (str(r.rc, 40)) o.rc = str(r.rc, 40); if (/^\d{4}-\d{2}-\d{2}$/.test(String(r.rcd || ''))) o.rcd = String(r.rcd); }   // rc: 자동으로 만든 재케어 일정 · rcd: 그때의 등록 날짜
+                if (r.ty === 'row') { o.st = okSt[r.st] ? r.st : 'n'; if (str(r.rc, 40)) o.rc = str(r.rc, 40); if (/^\d{4}-\d{2}-\d{2}$/.test(String(r.rcd || ''))) o.rcd = String(r.rcd); if (/^(ok|fail|cust)$/.test(String(r.ctp || ''))) o.ctp = r.ctp; }   // rc: 자동으로 만든 재케어 일정 · rcd: 그때의 등록 날짜
                 if (CL_HEX.test(String(r.c || ''))) o.c = String(r.c);
                 var cc = hexMap(r.cc), fc = hexMap(r.fc); if (cc) o.cc = cc; if (fc) o.fc = fc;
                 out.rows.push(o);
@@ -6835,7 +6840,9 @@
                 showDlg(dlg); return;
             }
             var P = clFormParts(s, row), inputs = P.inputs, pick = P.pick, fields = P.fields;
-            var meta = !isNew && (r.by || r.u) ? h('p', { class: 'cl-meta' }, '마지막 수정: ' + (r.by || '?') + (r.u ? ' · ' + ibTime(r.u) : '')) : null;
+            var meta = !isNew && (r.by || r.u) ? h('p', { class: 'cl-meta' }, '마지막 수정: ' + (r.by || '?') + (r.u ? ' · ' + ibTime(r.u) : ''),
+                r.ctp ? ' · 📇 가망 번호: ' + ({ ok: '저장됨', fail: '저장 실패', cust: '이미 가입 고객 번호' }[r.ctp] || '') : '') : null;
+            var ctBtn = !isNew && r.st !== 'sale' && row.ty === 'row' ? h('button', { type: 'button', class: 'btn left', 'data-act': 'cl-ct-save', title: '이 고객 번호를 구글 연락처에 "가망 …"으로 저장', onclick: function () { var cur = clFind(row.id); if (cur) { clProspect(cur, s); toast('가망 번호를 저장하는 중이에요...'); } } }, '📇 가망 번호 저장') : null;
             dlg.appendChild(h('form', { novalidate: true, onsubmit: function (e) {
                 e.preventDefault();
                 var v = P.values();
@@ -6849,7 +6856,7 @@
                 if (isNew) clProspect(cur, s);   // 새 상담도 판매성공이 아니면 '가망' 연락처로
             } }, h('div', { class: 'dlg-head' }, (isNew ? '상담 추가' : '상담 고치기') + ' · ' + s.name),
                 h('div', { class: 'dlg-body' }, h('div', { class: 'cl-form' }, h('div', { class: 'cl-meta' }, '상태 (줄 색)'), pick, fields, meta)),
-                h('div', { class: 'dlg-foot' }, !isNew && isBoss() ? h('button', { type: 'button', class: 'btn btn-danger left', 'data-act': 'cl-row-del', onclick: function () { if (confirm('이 상담 줄을 지울까요? 모든 직원 화면에서 사라져요.')) { clRemove(row.id); closeDlg(); } } }, '줄 삭제') : null,
+                h('div', { class: 'dlg-foot' }, ctBtn, !isNew && isBoss() ? h('button', { type: 'button', class: 'btn btn-danger left', 'data-act': 'cl-row-del', onclick: function () { if (confirm('이 상담 줄을 지울까요? 모든 직원 화면에서 사라져요.')) { clRemove(row.id); closeDlg(); } } }, '줄 삭제') : null,
                     h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), h('button', { type: 'submit', class: 'btn btn-primary', 'data-act': 'cl-save' }, isNew ? '추가' : '저장'))));
             showDlg(dlg);
             var first = s.cols.filter(function (c) { var k = clColKind(c); return k !== 'no' && k !== 'date' && k !== 'time' && k !== 'staff'; })[0];
@@ -6883,6 +6890,17 @@
                 if (kd === 'date') body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { el.value = ymd(new Date()); } }, '오늘'));
                 if (kd === 'date') body.appendChild(clCalBtn(el, 'ymd'));
                 if (kd === 'time') body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { var d = new Date(); el.value = pad2(d.getHours()) + ':' + pad2(d.getMinutes()); } }, '지금'));
+                if (!kd && /현통신사/.test(c.l.replace(/\s/g, '')) && !long) {   // 현 통신사: 버튼으로 고르기 → 상담 내용 '기존 통신사' 줄에도 바로
+                    var cur = function () { return el.value.trim(); };
+                    var chips = h('div', { class: 'cl-telco', role: 'group', 'aria-label': '현 통신사 고르기' }, CL_TELCO.map(function (t) {
+                        return h('button', { type: 'button', class: 'cl-tchip', 'data-telco': t, 'aria-pressed': cur() === t ? 'true' : 'false', onclick: function () { el.value = cur() === t ? '' : t; el.dispatchEvent(new Event('input', { bubbles: true })); } }, t);
+                    }));
+                    el.addEventListener('input', function () {
+                        chips.querySelectorAll('.cl-tchip').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-telco') === cur() ? 'true' : 'false'); });
+                        clTelcoMemo(P.memoEl, cur());
+                    });
+                    body = h('span', { class: 'cl-telco-wrap' }, el, chips);
+                }
                 if (!kd && /청약/.test(c.l.replace(/\s/g, '')) && !long) body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-sub-today', onclick: function () { el.value = clMd(new Date()); } }, '오늘'), clCalBtn(el, 'md'));
                 return h('label', { class: long ? 'full' : '' }, kd === 'no' ? '순번' : (c.l || c.k), body);
             });
@@ -6905,6 +6923,16 @@
                 if (!kd && /청약/.test(c.l.replace(/\s/g, ''))) v[c.k] = clMd(now);   // 청약일: 오늘로
             });
             return v;
+        }
+        var CL_TELCO = ['SK', 'KT', 'U+', 'SKB', '헬로비전', '스카이라이프', '알뜰', '신규(없음)'];   // 현 통신사 버튼
+        function clTelcoMemo(memoEl, t) {   // 상담 내용 '■ 기존 통신사 · 약정' 줄 맨 앞에 현 통신사 (약정 등 뒤에 적은 글은 그대로)
+            if (!memoEl) return;
+            var m = /^■ 기존 통신사[^:\n]*:[ \t]*(.*)$/m.exec(memoEl.value), rest = m ? m[1].trim() : '';
+            var known = CL_TELCO.concat(['SKT', 'LG', 'LGU+', 'LG U+', 'LG헬로비전', '헬로', '스카이']).sort(function (a, b) { return b.length - a.length; });
+            for (var i = 0; i < known.length; i++) { var k = known[i]; if (rest === k || rest.indexOf(k + ' ') === 0 || rest.indexOf(k + '·') === 0) { rest = rest.slice(k.length).replace(/^\s*·?\s*/, ''); break; } }
+            var v = t ? t + (rest ? ' · ' + rest : '') : rest;
+            var nv = clTplPut(memoEl.value, '기존 통신사', v);
+            if (nv !== memoEl.value) { memoEl.value = nv; memoEl.dispatchEvent(new Event('input', { bubbles: true })); }
         }
         function clMd(d) { return (d.getMonth() + 1) + '/' + pad2(d.getDate()); }   // 청약일 표기 (예: 10/17)
         function clParseDay(v) {
@@ -7196,17 +7224,26 @@
             var note = ['사거리인터넷 가망 고객 (재케어)', '상담 ' + (dm ? dm[0] : ymd(now)), st ? '상태 ' + st[1] : '', staff ? '담당 ' + staff : '', '상담 리스트 [' + s.name + ']' + (no ? ' ' + no + '번' : '')].filter(Boolean).join(' · ') + '\n' + clTplClean(memo).replace(/\s+/g, ' ');
             return { label: label, note: note.slice(0, 200) };
         }
-        function clProspect(r, s) {   // 상담 완료: 판매성공이 아닌 고객 번호 → 구글 연락처 '가망 …' (가입하면 가입 확인서 저장 때 같은 연락처 이름이 가입 유형으로 바뀜)
+        function clProspect(r, s, tries) {   // 상담 완료: 판매성공이 아닌 고객 번호 → 구글 연락처 '가망 …' (가입하면 가입 확인서 저장 때 같은 연락처 이름이 가입 유형으로 바뀜)
             if (!r || r.ty !== 'row' || r.st === 'sale' || !driveOn()) return;
             var pc = clColBy(s, 'ph'), dig = pc ? digitsOnly(r.v[pc.k] || '') : '';
             if (!/^01\d{8,9}$/.test(dig)) return;
-            var c = clProspectInfo(r, s);
+            var c = clProspectInfo(r, s), id = r.id, mine = cl;
+            function mark(v) { var cur = cl === mine && cl.data ? clFind(id) : null; if (cur && cur.ctp !== v) { cur.ctp = v; clStamp(cur); clQueue(); } }   // 줄에 저장 결과 기록 (상담 고치기에 보임)
+            function fail(msg, again) {
+                mark('fail');
+                setTimeout(function () {
+                    if (cl !== mine) return;   // 그 사이 잠금
+                    if (again && (tries || 0) < 2 && confirm('⚠ 가망 번호를 구글 연락처에 저장하지 못했어요.\n\n이유: ' + msg + '\n\n[확인]을 누르면 다시 시도해요.')) clProspect((cl.data && clFind(id)) || r, s, (tries || 0) + 1);
+                    else if (!again || (tries || 0) >= 2) alert('⚠ 가망 번호를 구글 연락처에 저장하지 못했어요.\n\n이유: ' + msg + '\n\n상담 리스트에서 그 줄을 눌러 [📇 가망 번호 저장]으로 나중에 다시 저장할 수 있어요.');
+                }, 300);
+            }
             ibCall('ctProspect', { contact: { label: c.label, phone: dig, note: c.note } }, 60000).then(function (res) {
                 var x = res.contact || {};
-                if (x.ok && x.skipped) toast('이미 가입 고객으로 저장된 번호라 연락처는 그대로 뒀어요.');
-                else if (x.ok) toast('구글 연락처에 "' + x.label + '"(으)로 ' + (x.updated ? '바꿔 ' : '') + '저장했어요.');
-                else if (x.msg) toast('가망 연락처: ' + x.msg);
-            }, function (e) { toast('가망 연락처를 저장하지 못했어요. ' + driveErrText(e)); });
+                if (x.ok && x.skipped) { mark('cust'); toast('이미 가입 고객으로 저장된 번호라 연락처는 그대로 뒀어요.'); }
+                else if (x.ok) { mark('ok'); toast('📇 구글 연락처에 "' + x.label + '"(으)로 ' + (x.updated ? '바꿔 ' : '') + '저장했어요.'); }
+                else fail(x.msg || '알 수 없는 오류', x.code !== 'setup' && x.code !== 'auth' && x.code !== 'nophone');
+            }, function (e) { fail(driveErrText(e), !(e && e.code === 'bad_action')); });
         }
         function clMemoSave() {   // 상담 완료: 상담 리스트에 한 줄로 저장하고 상담 리스트로 이동
             var M = cl.memo, s = clMemoSheet();
@@ -7217,6 +7254,18 @@
             var mo = 0; clRowsOf(s.id).forEach(function (x) { mo = Math.max(mo, x.o); }); row.o = mo + 1;
             var rcMsg = clRecare(row, s);
             clStamp(row); cl.data.rows.push(row); clQueue();
+            if (row.st === 'sale') {   // 판매성공: 번호 저장 없이 신분증 요청으로 (번호는 가입 확인서 [드라이브/연락처 저장] 때)
+                var pc = clColBy(s, 'ph'), dig = pc ? digitsOnly(row.v[pc.k] || '') : '', U = idrUI();
+                if (/^01\d{8,9}$/.test(dig)) {
+                    var fm = dig.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3');
+                    if (digitsOnly(U.phone.value) !== dig) { U.name.value = ''; U.phone.value = fm; }
+                }
+                M.open = false; clMemoBlank(M); clMemoPaint();
+                if (polPick || polLast) polToIdr(); else { state.view = 'idreq'; render(); }
+                polPick = null; polLast = null; polOn = Object.create(null);
+                setTimeout(function () { toast('판매성공 — 상담 리스트 "' + s.name + '"에 저장하고 신분증 요청으로 왔어요. 고객 이름을 적고 링크를 보내 주세요. (번호는 가입 확인서 저장 때 저장돼요)'); try { (U.name.value ? U.phone : U.name).focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }, 80);
+                return;
+            }
             M.open = false; clMemoBlank(M); clMemoPaint();
             polPick = null; polLast = null; polOn = Object.create(null);   // 상담 끝: 단가표 선택도 비워서 다음 고객은 새로 시작
             state.view = 'consult'; cl.sheet = s.id; cl.st = 'all'; cl.q = ''; cl.hl = row.id;
@@ -7302,6 +7351,8 @@
                 h('p', { class: 'cl-memo-live' }, '⚡ 인터넷상담 표에서 상품 줄이나 1·2·3차·가이드 금액을 누르면 상담 통신사 · 상품 · 안내 요금 · 오퍼 · 설치비가 바로 바뀌어요.'),
                 h('div', { class: 'cl-form' }, h('div', { class: 'cl-meta' }, '상태 (줄 색)'), P.pick, P.fields)));
             M.el.appendChild(h('div', { class: 'cl-memo-f' }, h('small', {}, '🔒 저장하면 팀 키로 암호화돼요'), h('button', { type: 'button', class: 'btn btn-step', 'data-step': '2', 'data-act': 'cl-memo-save', onclick: clMemoSave }, '상담 완료 · 리스트에 저장')));
+            var svb = M.el.querySelector('[data-act="cl-memo-save"]'), svUpd = function () { if (svb && M.P) svb.textContent = M.P.st === 'sale' ? '상담 완료 · 신분증 요청으로' : '상담 완료 · 리스트·번호 저장'; };
+            P.pick.addEventListener('click', function () { setTimeout(svUpd, 0); }); svUpd();
         }
         window.addEventListener('beforeunload', function (e) { if (cl.dirty || cl.saving) { e.preventDefault(); e.returnValue = ''; } });   // 저장 전에 창을 닫으면 한 번 더 확인
 
