@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8FqM7qRVR68Y/AcW9luVGYPOuBlVdym9yj293EGyS3E='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5Xj6DWbmeRmxgw6wZoG8A+uhpnMt0HjtDwRsXfZaVFM='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1017,6 +1017,9 @@
         .pol-tbl .p-comb small { white-space: normal; }   /* '+5,500 -14,300' 이 좁으면 두 줄로 */
         .pol-tbl .p-guide { color: #6B2FA0; }
         .pol-tbl .p-fee { color: #333; background: #F7F7F2; }
+        .pol-tbl .p-gift { display: block; margin-top: 3px; font-size: 11.5px; font-weight: 800; color: #B5179E; white-space: nowrap; }
+        .pol-tbl .p-gift.none { font-weight: 600; color: #A0A48E; }
+        .pol-tbl .p-cash { display: block; font-size: 11px; color: #5B6150; }
         .pol-tbl .p-1 { color: #1F6B2A; } .pol-tbl .p-2 { color: #8A6400; } .pol-tbl .p-3 { color: #A33226; }
         .pol-tbl small { display: block; font-size: 11.5px; font-weight: 600; color: var(--hint); }
         .pol-tbl .p-none { color: #B0B4A6; font-weight: 700; font-size: 13px; }
@@ -1276,7 +1279,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-19.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-19.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -5594,7 +5597,9 @@
                         h('td', { class: 'p-price', 'data-l': '월요금(미결합)' }, won(r.p)),
                         r.dc != null ? h('td', { class: 'p-comb', 'data-l': '결합요금', title: r.ad ? '표 요금 ' + won(r.p) + ' + 인터넷·TV 결합할인 해제 ' + won(r.ad) + ' = ' + won(r.p + r.ad) + ' → 휴대폰 결합할인 -' + won(r.dc) : '' }, won(polComb(r)), h('small', {}, (r.ad ? '+' + r.ad.toLocaleString('ko-KR') + ' ' : '') + '-' + r.dc.toLocaleString('ko-KR'))) : h('td', { class: 'p-comb', 'data-l': '결합요금' }, h('span', { class: 'p-none' }, '-')),
                         polGuideCell(c, r, g, key, gmax),
-                        h('td', { class: 'p-fee', 'data-l': '수수료' }, won(f.fee), h('small', {}, (f.fee / 10000) + '만')),
+                        h('td', { class: 'p-fee', 'data-l': '수수료', title: '상품권 ' + r.g + '만 + 현금 ' + r.c + '만 = 합계 ' + r.t + '만' }, won(f.fee), h('small', {}, (f.fee / 10000) + '만'),
+                            r.g > 0 ? h('span', { class: 'p-gift' }, '🎁 상품권 ' + r.g + '만') : h('span', { class: 'p-gift none' }, '상품권 없음'),
+                            r.g > 0 ? h('small', { class: 'p-cash' }, '현금 ' + r.c + '만') : null),
                         polCell(s1, 'p-1', '1차 상담', key, 1, c, r, g), polCell(s2, 'p-2', '2차 상담', key, 2, c, r, g), polCell(s3, 'p-3', '3차 상담', key, 3, c, r, g)));
                 });
             });
