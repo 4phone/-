@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-C2Ro90XwS+MYQLOU6GF6A20gft1RhI5o0GdvGZwYlsM='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-K5GUVPnXK+aAWgHfptjjVITqPA6JlQVW5xB3hxsza2U='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -368,6 +368,17 @@
         .cl-chip b { font-weight: 800; color: var(--muted); }
         .cl-chip[aria-pressed="true"] { border-color: var(--olive-700); box-shadow: 0 0 0 2px rgba(62,68,30,.25); background: #F6F7EE; }
         .cl-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+        .cl-daybar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: flex-end; margin: -2px 0 8px; }
+        .cl-daybar .cl-today[aria-pressed="true"] { background: #3E441E; border-color: #3E441E; color: #fff; }
+        .cl-day-now { margin-right: auto; font-size: 13.5px; color: #3E441E; }
+        .cl-day-pick { display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; min-height: 32px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 14px; cursor: pointer; }
+        .cl-day-in { border: none; padding: 2px; font: inherit; font-size: 13px; background: transparent; min-width: 0; }
+        table.cl-tbl { min-width: 900px; }   /* 상담 메모 창을 열어 좁아져도 칸이 찌그러지지 않게 (옆으로 밀어 보기) */
+        .cl-clip { max-height: 7.3em; overflow: hidden; position: relative; }
+        .cl-clip { border-bottom: 1px dashed rgba(62,68,30,.25); }
+        .cl-clip.open { max-height: none; border-bottom: none; }
+        .cl-more { display: inline-block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: clip; margin-top: 2px; padding: 0 6px; border: 1px solid #C9CDB8; border-radius: 999px; background: #fff; color: #3E441E; font-size: 11px; line-height: 18px; font-weight: 800; cursor: pointer; }
+        .cl-more:hover { background: #F3F7E6; }
         .cl-tools input[type="search"] { flex: 1 1 220px; min-width: 0; }
         .cl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
         table.cl-tbl { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
@@ -405,7 +416,7 @@
             .cl-tbl td::before { content: attr(data-l); font-size: 12px; font-weight: 700; color: var(--muted); white-space: normal; }
             .cl-tbl td.blank { display: none; }
             .cl-tbl td.nw { white-space: pre-wrap; overflow: visible; }
-            table.cl-tbl { table-layout: auto; font-size: 14px; } .cl-tbl colgroup { display: none; }
+            table.cl-tbl { table-layout: auto; font-size: 14px; min-width: 0; } .cl-tbl colgroup { display: none; }
             .cl-tbl tr.cl-r td:first-child { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,.03); }
             .cl-tbl tr.cl-r td:first-child::before { content: none; }
             .cl-tbl tr.cl-r td:first-child div { margin: 0; } .cl-tbl tr.cl-r td:first-child .cl-st { margin: 0; }
@@ -473,7 +484,10 @@
         }
         @media (max-width: 900px) { .cl-memo-grip { display: none; } }
         /* 날짜·청약일 달력 버튼 */
-        .cl-telco-wrap { display: grid; gap: 6px; }
+        .cl-telco-cell { align-content: start; }
+        .cl-form > label, .cl-form > .cl-fld { align-content: start; align-self: start; }
+        .cl-telco-cap { font-size: 13px; font-weight: 700; color: var(--muted); }
+        .cl-telco-cell .cl-telco { min-height: 36px; align-items: center; }
         .cl-telco { display: flex; flex-wrap: wrap; gap: 4px; }
         .cl-tchip { min-height: 28px; padding: 0 9px; border-radius: 999px; border: 1px solid #C9CDB8; background: #fff; color: #3E441E; font-size: 12.5px; font-weight: 700; cursor: pointer; }
         .cl-tchip:hover { background: #F3F7E6; }
@@ -1284,7 +1298,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-19.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-19.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -3194,6 +3208,7 @@
                     h('button', { type: 'button', class: 'btn', onclick: rotateTeamKey }, '팀 키 교체'),
                     isBoss() ? h('button', { type: 'button', class: 'btn', 'data-act': 'ct-check', onclick: contactCheck }, '구글 연락처 연결 확인') : null,
                     isBoss() ? h('button', { type: 'button', class: 'btn', 'data-act': 'ai-key', onclick: aiKeyOpen }, '단가표 사진 변환 키') : null,
+                    isBoss() ? h('button', { type: 'button', class: 'btn', 'data-act': 'sms-key', onclick: smsKeyOpen }, '문자 인증 설정') : null,
                     h('button', { type: 'button', class: 'btn btn-danger', onclick: disconnectDrive }, '연결 끊기'))
                    : h('div', { class: 'actions' },
                     h('button', { type: 'button', class: 'btn btn-dark', onclick: openInitForm }, '처음 연결하기 (관리자)'),
@@ -5940,6 +5955,23 @@
                 ui.done(m, errs);
             });
         }
+        function smsKeyOpen() {   // 설정: 인증번호 문자 (SOLAPI) — 키는 서버에만, 화면엔 끝 4자리만
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = '';
+            var st = h('p', { class: 'ph-tip', 'aria-live': 'polite' }, '확인하는 중이에요...');
+            var k = h('input', { type: 'password', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'SOLAPI API Key', placeholder: 'API Key' });
+            var sec = h('input', { type: 'password', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'SOLAPI API Secret', placeholder: 'API Secret' });
+            var from = h('input', { type: 'tel', autocomplete: 'off', 'aria-label': '발신번호', placeholder: '01056901800 (SOLAPI에 등록한 발신번호)' });
+            function show(r) { st.textContent = r.set ? '✅ 문자 인증 사용 중 (키 끝자리 …' + r.tail + ' · 발신번호 ' + r.from + '). 인증번호가 대표님 휴대폰 문자로 가요.' : '아직 문자 설정이 없어요. 지금은 인증번호가 회사 메일로 가요.'; }
+            function call(p, okMsg) { return ibCall('smsKey', p).then(function (r) { show(r); if (okMsg) toast(okMsg); k.value = ''; sec.value = ''; }, function (e) { st.textContent = driveErrText(e); }); }
+            dlg.appendChild(h('form', { novalidate: true, onsubmit: function (e) { e.preventDefault(); if (!k.value.trim() || !sec.value.trim()) { toast('API Key와 API Secret을 모두 넣어 주세요.'); return; } call({ op: 'set', key: k.value.trim(), secret: sec.value.trim(), from: from.value }, '문자 인증 설정을 저장했어요.'); } },
+                h('div', { class: 'dlg-head' }, '문자 인증 설정 (SOLAPI)'),
+                h('div', { class: 'dlg-body' }, st,
+                    h('p', {}, '[내용 모두 지우기] 같은 되돌릴 수 없는 작업은 대표님 휴대폰 인증번호가 있어야 진행돼요. SOLAPI에서 받은 키를 넣으면 문자로, 넣기 전에는 회사 메일로 인증번호가 가요. 키는 구글 Apps Script 서버에만 보관돼요.'),
+                    h('label', { class: 'field' }, 'API Key', k), h('label', { class: 'field' }, 'API Secret', sec), h('label', { class: 'field' }, '발신번호 (비우면 010-5690-1800)', from)),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn btn-danger left', onclick: function () { if (confirm('문자 설정을 지울까요? 인증번호가 메일로 가게 돼요.')) call({ op: 'clear' }, '문자 설정을 지웠어요.'); } }, '설정 지우기'),
+                    h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), h('button', { type: 'submit', class: 'btn btn-primary', 'data-act': 'sms-key-save' }, '저장'))));
+            showDlg(dlg); call({});
+        }
         function aiKeyOpen() {   // 설정: 단가표 사진 변환 키 (대표님 · 키는 서버에만 보관, 화면에는 끝 4자리만)
             var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = '';
             var st = h('p', { class: 'ph-tip', 'aria-live': 'polite' }, '확인하는 중이에요...');
@@ -6508,8 +6540,31 @@
                 }
             });
         }
+        function otpGate(purpose, label) {   // 되돌릴 수 없는 작업 전: 대표님 휴대폰(문자)으로 인증번호 → 맞아야 진행 (서버에서 확인)
+            return ibCall('otpSend', { purpose: purpose, label: label }, 40000).then(function (r) {
+                var where = r.via === 'sms' ? '대표님 휴대폰(' + r.to + ') 문자' : '회사 메일(' + r.to + ') — 문자 설정 전이라 메일로 보냈어요';
+                function ask(msg) {
+                    var code = prompt((msg ? msg + '\n\n' : '') + '[' + label + '] 인증번호 6자리를 입력해 주세요.\n보낸 곳: ' + where + '\n(5분 안에 입력)');
+                    if (code === null) return Promise.reject(new Error('cancel'));
+                    return ibCall('otpCheck', { purpose: purpose, code: String(code).replace(/\D/g, '') }).then(function () { return true; }, function (e) {
+                        if (e && e.code === 'otp_wrong') return ask(e.serverMessage || '인증번호가 맞지 않아요.');
+                        throw e;
+                    });
+                }
+                return ask('');
+            });
+        }
         function resetAll() {
             var shared = driveOn();
+            if (shared && !resetAll.ok) {   // 공유 저장소(모든 직원 화면)에서 지우는 건 대표님 휴대폰 인증 후에만
+                if (!isBoss()) { alert('내용 모두 지우기는 대표님만 할 수 있어요.'); return; }
+                if (!confirm('⚠ 일정·공지·업무를 모든 직원 화면에서 지우는 작업이에요.\n진행하려면 대표님 휴대폰(010-5690-1800)으로 받은 인증번호가 필요해요.\n\n인증번호를 보낼까요?')) return;
+                otpGate('reset', '내용 모두 지우기').then(function () { resetAll.ok = true; try { resetAll(); } finally { resetAll.ok = false; } }, function (e) {
+                    if (e && e.message === 'cancel') { toast('지우기를 취소했어요.'); return; }
+                    alert('인증을 마치지 못해 지우지 않았어요.\n' + driveErrText(e));
+                });
+                return;
+            }
             if (!confirm(shared ? '일정, 공지, 업무를 모두 지웁니다 (직원 명단은 유지).\n공유 저장소에 연결되어 있어서 다른 직원의 화면에서도 사라지고, 되돌릴 수 없어요.\n먼저 암호화 백업을 받아 두셨나요?' : '직원, 일정, 공지, 업무를 모두 지웁니다. 되돌릴 수 없어요.\n먼저 백업을 받아 두셨나요?')) return;
             var t = prompt('정말 지우려면 "초기화"라고 입력해 주세요.');
             if (t !== '초기화') { toast('초기화를 취소했어요.'); return; }
@@ -6597,7 +6652,7 @@
            · 기존 공유 저장소(data.json)와는 다른 파일이라, 예전 화면(구버전)을 쓰는 기기가 있어도 지워지지 않음 */
         var CL_ST = [['sale', '판매성공', '00B0F0'], ['save', '세이브', '00B050'], ['vh', '매우높음', 'FF75DB'], ['h', '높음', 'FFD1F3'], ['n', '보통', ''], ['l', '낮음', 'BF9000'], ['vl', '매우낮음', '7F6000'], ['fail', '실패', 'C00000']];
         var CL_AAD = 'consult-v1', CL_HEX = /^[0-9A-F]{6}$/, CL_KEY = /^c\d{1,2}$/;
-        function clFresh() { return { data: null, rev: -1, busy: false, err: '', at: 0, dirty: false, saving: false, again: false, editAt: 0, saveT: null, timer: null, sheet: '', q: '', st: 'all', showPh: false, base: 0, shrinkOk: false, memo: null, hl: '' }; }
+        function clFresh() { return { data: null, rev: -1, busy: false, err: '', at: 0, dirty: false, saving: false, again: false, editAt: 0, saveT: null, timer: null, sheet: '', q: '', st: 'all', showPh: false, base: 0, shrinkOk: false, memo: null, hl: '', day: '', open: {}, openAll: false }; }
         var cl = clFresh();
         function clStop() {   // 잠그면 상담 리스트·상담 메모 창(고객 개인정보)을 메모리·화면에서 모두 지움
             if (cl.timer) clearInterval(cl.timer); clearTimeout(cl.saveT);
@@ -6605,6 +6660,18 @@
             document.body.classList.remove('cl-memo-on', 'cl-memo-min');
             cl = clFresh();
         }   // 잠그면 상담 리스트(고객 개인정보)도 메모리에서 지움
+        function clRowDay(s, r) { var dc = s.cols.filter(function (c) { return clColKind(c) === 'date'; })[0]; return dc ? String(r.v[dc.k] || '').slice(0, 10) : ''; }
+        function shown0(s, all) { return all.filter(function (r) { return r.ty === 'row' && clRowDay(s, r) === cl.day; }); }
+        function clDayGo(day) {   // 날짜별 보기: 그 달 시트로 옮겨서 그날 상담만
+            cl.day = /^\d{4}-\d{2}-\d{2}$/.test(day || '') ? day : '';
+            if (cl.day && cl.data) {
+                var ym = (+cl.day.slice(2, 4)) * 12 + (+cl.day.slice(5, 7)) - 1;
+                var hit = cl.data.sheets.filter(function (x) { return clYm(x.name) === ym; }).sort(function (a, b) { return b.o - a.o; })[0];
+                if (hit) cl.sheet = hit.id; else toast(cl.day.slice(0, 7) + ' 상담 시트가 없어요.');
+                cl.st = 'all'; cl.q = '';
+            }
+            render(); try { window.scrollTo(0, 0); } catch (e) { /* 무시 */ }
+        }
         function clStInfo(st) { for (var i = 0; i < CL_ST.length; i++) if (CL_ST[i][0] === st) return CL_ST[i]; return null; }
         function clRowHex(r) { if (r.c) return r.c; var s = clStInfo(r.st); return s ? s[2] : ''; }   // 원래 엑셀 색이 있으면 그 색 그대로
         function clRgb(hex) { return parseInt(hex.slice(0, 2), 16) + ',' + parseInt(hex.slice(2, 4), 16) + ',' + parseInt(hex.slice(4, 6), 16); }
@@ -6886,7 +6953,7 @@
                 P.inputs[c.k] = el;
                 if (isMemo && !P.memoEl) P.memoEl = el;
                 if (isMemo) return h('div', { class: 'cl-fld full' }, h('div', { class: 'cl-lab' }, h('span', {}, c.l || c.k), h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-tpl', onclick: function () { clTplInsert(el); } }, '메모 양식 넣기')), el);
-                var body = el;
+                var body = el, tExtra = null;
                 if (kd === 'date') body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { el.value = ymd(new Date()); } }, '오늘'));
                 if (kd === 'date') body.appendChild(clCalBtn(el, 'ymd'));
                 if (kd === 'time') body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { var d = new Date(); el.value = pad2(d.getHours()) + ':' + pad2(d.getMinutes()); } }, '지금'));
@@ -6899,11 +6966,21 @@
                         chips.querySelectorAll('.cl-tchip').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-telco') === cur() ? 'true' : 'false'); });
                         clTelcoMemo(P.memoEl, cur());
                     });
-                    body = h('span', { class: 'cl-telco-wrap' }, el, chips);
+                    tExtra = chips;   // 버튼은 오른쪽 칸(위치 아래)에 따로
                 }
                 if (!kd && /청약/.test(c.l.replace(/\s/g, '')) && !long) body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-sub-today', onclick: function () { el.value = clMd(new Date()); } }, '오늘'), clCalBtn(el, 'md'));
-                return h('label', { class: long ? 'full' : '' }, kd === 'no' ? '순번' : (c.l || c.k), body);
+                var lab = h('label', { class: long || kd === 'ph' ? 'full' : '' }, kd === 'no' ? '순번' : (c.l || c.k), body);
+                if (kd === 'ph') P.phLab = lab;
+                return tExtra ? [lab, h('div', { class: 'cl-fld cl-telco-cell' }, h('span', { class: 'cl-telco-cap' }, '통신사 버튼'), tExtra)] : lab;
             });
+            P.fields = [].concat.apply([], P.fields);
+            (function () {   // 연락처는 상담 내용 바로 위 (한 줄 전체)
+                var mi = -1;
+                P.fields.forEach(function (f, i) { if (mi < 0 && P.memoEl && f.contains && f.contains(P.memoEl)) mi = i; });
+                var pi = P.phLab ? P.fields.indexOf(P.phLab) : -1;
+                if (pi >= 0 && mi >= 0 && pi < mi) { P.fields.splice(pi, 1); P.fields.splice(mi - 1, 0, P.phLab); }
+                else if (pi >= 0 && mi >= 0 && pi > mi) { P.fields.splice(pi, 1); P.fields.splice(mi, 0, P.phLab); }
+            })();
             P.values = function () {
                 var v = {};
                 Object.keys(P.inputs).forEach(function (k) { var t = P.inputs[k] === P.memoEl ? clTplClean(P.inputs[k].value) : P.inputs[k].value.replace(/\s+$/, ''); if (t) v[k] = t.slice(0, 3000); });
@@ -7112,12 +7189,22 @@
                 }));
             var q = h('input', { type: 'search', 'data-fk': 'cl-q', placeholder: '찾기 (이름·번호·지역·내용)', 'aria-label': '상담 찾기', value: cl.q });
             q.addEventListener('input', function () { cl.q = this.value; clearTimeout(renderConsult.t); renderConsult.t = setTimeout(render, 160); });
+            var dayIn = h('input', { type: 'date', class: 'cl-day-in', 'aria-label': '날짜 골라서 보기', value: cl.day || '' });
+            dayIn.addEventListener('change', function () { clDayGo(this.value); });
+            var todayN = data.filter(function (r) { return clRowDay(s, r) === ymd(new Date()); }).length;
+            var dayBar = h('div', { class: 'cl-daybar', role: 'group', 'aria-label': '날짜별 보기' },
+                cl.day ? h('span', { class: 'cl-day-now' }, '📅 ' + koDate(cl.day) + ' 상담 ', h('b', {}, String(shown0(s, all).length) + '건')) : null,
+                h('button', { type: 'button', class: 'btn btn-sm cl-today', 'data-act': 'cl-today', 'aria-pressed': cl.day === ymd(new Date()) ? 'true' : 'false', onclick: function () { clDayGo(cl.day === ymd(new Date()) ? '' : ymd(new Date())); } }, '오늘 ' + todayN + '건'),
+                h('label', { class: 'cl-day-pick', title: '달력에서 날짜를 고르면 그날 상담만 보여요' }, '📅', dayIn),
+                cl.day ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-day-all', onclick: function () { clDayGo(''); } }, '전체 날짜') : null,
+                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-open-all', 'aria-pressed': cl.openAll ? 'true' : 'false', onclick: function () { cl.openAll = !cl.openAll; cl.open = {}; render(); } }, cl.openAll ? '▲ 내용 모두 접기' : '▼ 내용 모두 펼치기'));
             var tools = h('div', { class: 'cl-tools' }, q,
                 h('button', { type: 'button', class: 'btn', 'data-act': 'cl-ph', 'aria-pressed': cl.showPh ? 'true' : 'false', onclick: function () { cl.showPh = !cl.showPh; render(); } }, cl.showPh ? '번호 가리기' : '번호 보기'),
                 h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'cl-add', onclick: function () { clEdit(s, null); } }, '+ 상담 추가'));
             var qq = cl.q.trim().toLowerCase(), qd = qq.replace(/\D/g, '');
             var shown = all.filter(function (r) {
-                if (r.ty !== 'row') return cl.st === 'all' && !qq;   // 구분 제목·머리글 줄은 전체 보기에서만
+                if (r.ty !== 'row') return cl.st === 'all' && !qq && !cl.day;   // 구분 제목·머리글 줄은 전체 보기에서만
+                if (cl.day && clRowDay(s, r) !== cl.day) return false;   // 날짜별 보기 (오늘 · 달력)
                 if (cl.st !== 'all' && r.st !== cl.st) return false;
                 if (!qq) return true;
                 var txt = Object.keys(r.v).map(function (k) { return r.v[k]; }).join(' ').toLowerCase();
@@ -7136,7 +7223,9 @@
                     cols.map(function (c, i) {
                         var kd = kinds[i], v = r.v[c.k] || '', shownV = kd === 'ph' && !cl.showPh ? clMask(v) : /^\d{4}-\d{2}-\d{2}/.test(v) ? clDay(v) : v, cc = r.cc && r.cc[c.k], fc = r.fc && r.fc[c.k];
                         var css = (cc ? 'background:rgba(' + clRgb(cc) + ',' + (clLight(cc) ? '.5' : '.3') + ');' : '') + (fc ? 'color:#' + fc + ';font-weight:700;' : '');
-                        var td = h('td', { 'data-l': clHead(c), class: (kd === 'wide' ? 'wide' : kd === 'mid' ? 'mid' : kd === 'ph' ? 'ph' : (kd === 'date' || kd === 'time' || kd === 'staff' || kd === 'no') ? 'nw' : /위치/.test(c.l) ? 'loc' : '') + (v ? '' : ' blank'), style: css || false }, shownV);
+                        var longV = (kd === 'wide' || kd === 'mid') && (String(shownV).length > (kd === 'mid' ? 50 : 90) || String(shownV).split('\n').length > 4), opened = cl.openAll || !!cl.open[r.id];
+                        var cellBody = longV ? [h('div', { class: 'cl-clip' + (opened ? ' open' : '') }, shownV), h('button', { type: 'button', class: 'cl-more', 'data-act': 'cl-more', onclick: function (e) { e.stopPropagation(); var on = !this.previousSibling.classList.contains('open'); this.previousSibling.classList.toggle('open', on); this.textContent = on ? '▲ 접기' : '▼ 더보기'; if (on) cl.open[r.id] = 1; else delete cl.open[r.id]; } }, opened ? '▲ 접기' : '▼ 더보기')] : shownV;
+                        var td = h('td', { 'data-l': clHead(c), class: (kd === 'wide' ? 'wide' : kd === 'mid' ? 'mid' : kd === 'ph' ? 'ph' : (kd === 'date' || kd === 'time' || kd === 'staff' || kd === 'no') ? 'nw' : /위치/.test(c.l) ? 'loc' : '') + (v ? '' : ' blank'), style: css || false }, cellBody);
                         if (i === 0) { td.classList.remove('blank'); td.appendChild(h('div', {}, h('span', { class: 'cl-st' + (hex && clLight(hex) ? ' lt' : ''), style: hex ? '--sb:#' + hex : '--sb:#9AA088' }, si && r.st !== 'etc' ? si[1] : (r.st === 'etc' ? '기타 색' : '보통')))); }
                         return td;
                     }));
@@ -7151,7 +7240,7 @@
             return h('div', {}, head, note, xrBox,
                 tabs,
                 h('div', { class: 'cl-head' }, titleEl, h('div', { class: 'actions' }, status, retry, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-sheet-set', onclick: function () { clSheetEdit(s); } }, '시트 설정'))),
-                legend, tools,
+                legend, dayBar, tools,
                 h('div', { class: 'cl-wrap' }, h('table', { class: 'cl-tbl' }, colg, thead, shown.length ? body : h('tbody', {}, h('tr', {}, h('td', { class: 'cl-empty', colspan: cols.length }, data.length ? '조건에 맞는 상담이 없어요.' : '이 시트에는 아직 상담이 없어요. [+ 상담 추가]로 적어 주세요.'))))),
                 h('p', { class: 'ib-help' }, '줄을 누르면 고칠 수 있어요. 고친 내용은 자동으로 암호화해서 저장되고, 다른 직원 화면에도 30초 안에 반영돼요. 줄·시트 삭제, 불러오기, 엑셀 내려받기는 대표님만 할 수 있어요.'));
         }
