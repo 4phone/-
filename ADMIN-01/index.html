@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-TT2MKhdKsupMxvbvT5I6OLIVSCOx5dDyE83DH9oPazg='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-FwFRl00AE6yBpOcR4/wuwCnlrVlpHd+VVbmOTb6TX3A='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -486,7 +486,10 @@
         /* 날짜·청약일 달력 버튼 */
         .cl-telco-cell { align-content: start; }
         .cl-form > label, .cl-form > .cl-fld { align-content: start; align-self: start; }
-        .cl-telco-cap { font-size: 13px; font-weight: 700; color: var(--muted); }
+        .cl-telco-cell { padding-top: 21px; }   /* 현 통신사 입력칸 높이에 맞춰 버튼 줄 정렬 (제목 없음) */
+        input.cl-telco-in[readonly] { background: #F6F7EE; cursor: default; }
+        input.cl-telco-in.free { background: #FFFBEA; border-color: #E0B400; }
+        .cl-tchip.cl-tfree { border-style: dashed; color: #7A5B00; }
         .cl-telco-cell .cl-telco { min-height: 36px; align-items: center; }
         .cl-telco { display: flex; flex-wrap: wrap; gap: 4px; }
         .cl-tchip { min-height: 28px; padding: 0 9px; border-radius: 999px; border: 1px solid #C9CDB8; background: #fff; color: #3E441E; font-size: 12.5px; font-weight: 700; cursor: pointer; }
@@ -995,7 +998,7 @@
         @media (max-width: 600px) { .ph-btns { width: 100%; } .ph-btns .btn { flex: 1 1 auto; min-height: 42px; } }
         .pol-mode button { white-space: nowrap; }
         .mp-dealers { margin-bottom: 8px; }
-        .mp-card .pol-head { flex-wrap: wrap; } .mp-card .mp-del { margin-left: auto; }
+        .mp-card .pol-head { flex-wrap: wrap; } .mp-card .mp-del { margin-left: auto; background: rgba(255,255,255,.15); color: #fff; border-color: rgba(255,255,255,.55); }
         .mp-tbl-box { padding: 10px 12px 4px; } .mp-tbl-title { font-weight: 800; color: #3E441E; margin-bottom: 6px; } .mp-tbl-title small { color: var(--muted); font-weight: 600; }
         table.mp-tbl { border-collapse: collapse; font-size: 13px; min-width: 100%; }
         .mp-tbl th { background: #3E441E; color: #fff; font-size: 12px; padding: 6px 8px; white-space: nowrap; position: sticky; top: 0; }
@@ -1004,6 +1007,10 @@
         .mp-tbl tr:hover td { background: #FFF8D6; }
         .mp-notes { margin: 6px 12px 10px; padding-left: 18px; font-size: 12.5px; color: #4D5A2A; }
         .mp-count { font-size: 13px; color: var(--muted); }
+        .mp-tbl td.mp-txt { text-align: left; white-space: normal; min-width: 90px; }
+        .mp-pols { padding: 8px 12px 0; display: grid; gap: 6px; }
+        .mp-pol summary { cursor: pointer; font-weight: 800; color: #3E441E; padding: 4px 0; }
+        .mp-ptbl td { text-align: left; white-space: normal; vertical-align: top; min-width: 70px; } .mp-ptbl td:first-child { font-weight: 700; min-width: 140px; }
         .mp-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; } .mp-tools input { flex: 1 1 260px; }
         .pol-tools { position: sticky; top: 0; z-index: 5; background: var(--bg, #F4F5EC); padding: 6px 0 10px; display: grid; gap: 8px; }
         .pol-cars, .pol-sps { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 2px; }
@@ -1310,7 +1317,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-19.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-19.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2585,7 +2592,7 @@
                 var tl = t.ext ? [(+t.ext.slice(5, 7)) + '/' + (+t.ext.slice(8, 10)) + ' 업무로 이동'] : taskTimeLines(t, true).slice(0, 3);
                 return { t: t, n: closed(t) ? '' : String(++seq), lines: lines, memo: memo, tl: tl, h: Math.max(58, 20 + lines.length * 28 + memo.length * 22 + (memo.length ? 4 : 0), tl.length ? 56 + tl.length * 21 : 0) };
             });
-            var headH = meta.filters ? 140 : 124, sumH = 70, thH = 46, rowsH = rows.reduce(function (a, r) { return a + r.h; }, 0), footH = extra ? 100 : 66, H = headH + sumH + thH + rowsH + footH;
+            var headH = meta.filters ? 140 : 124, sumH = 70, thH = 46, rowsH = rows.length ? rows.reduce(function (a, r) { return a + r.h; }, 0) : 80, footH = extra ? 100 : 66, H = headH + sumH + thH + rowsH + footH;
             var scale = 2; while (W * scale * H * scale > 14000000 && scale > 1) scale -= 0.25;
             var c = document.createElement('canvas'); c.width = Math.round(W * scale); c.height = Math.round(H * scale);
             var g = c.getContext('2d'); g.scale(scale, scale); g.textBaseline = 'alphabetic';
@@ -2636,6 +2643,7 @@
                 for (i = 0; i < r.tl.length; i++) { g.font = (i === 0 && t.status !== 'todo' ? '700 15px ' : '500 15px ') + F; g.fillStyle = i === 0 && t.status !== 'todo' ? '#3E441E' : '#66705A'; g.fillText(fitText(g, r.tl[i], cols[5].w - 4), xs[5] + 2, y + 66 + i * 21); }
                 y += r.h;
             });
+            if (!rows.length) { g.textAlign = 'center'; g.fillStyle = '#7B8568'; g.font = '700 22px ' + F; g.fillText(isDoing ? '현재 진행 중인 업무가 없어요.' : '보고할 업무가 없어요.', PAD + 464, y + 50); g.textAlign = 'left'; y += 80; }
             g.strokeStyle = '#D5DBC3'; g.lineWidth = 1; g.strokeRect(PAD + 0.5, top + 0.5, 927, y - top - 1);
 
             // 맺음
@@ -2668,7 +2676,7 @@
         }
         function captureReport(list, kind) {
             var name = kind === 'doing' ? '진행중보고' : '마감보고';
-            if (!list.length) { toast('보고할 업무가 없어요. 날짜나 담당자 조건을 확인해 주세요.'); return; }
+            if (!list.length && kind !== 'doing') { toast('보고할 업무가 없어요. 날짜나 담당자 조건을 확인해 주세요.'); return; }   // 진행중보고는 업무가 없어도 '진행 중 업무 없음'으로 보고
             var canvas;
             try { canvas = buildReportCanvas(list, reportMeta(), kind); } catch (e) { toast(name + ' 이미지를 만들지 못했어요.'); return; }
             var blobP = new Promise(function (res, rej) { canvas.toBlob(function (b) { if (b) res(b); else rej(new Error('blob')); }, 'image/png'); });
@@ -6165,7 +6173,8 @@
             var out = { v: 1, dealers: [] };
             (d && Array.isArray(d.dealers) ? d.dealers : []).slice(0, 30).forEach(function (x) {
                 var name = mpStr(x && x.name, 20); if (!name) return;
-                var dd = { name: name, date: mpStr(x.date, 40), src: mpStr(x.src, 200), at: +x.at || 0, by: mpStr(x.by, 20), notes: (Array.isArray(x.notes) ? x.notes : []).slice(0, 40).map(function (t) { return mpStr(t, 300); }).filter(Boolean), tables: [] };
+                var objs = function (arr, keys, n) { return (Array.isArray(arr) ? arr : []).slice(0, n).filter(function (o) { return o && typeof o === 'object'; }).map(function (o) { var r = {}; keys.forEach(function (k) { r[k] = mpStr(o[k], 300); }); return r; }).filter(function (o) { return o[keys[0]]; }); };
+                var dd = { name: name, carrier: mpStr(x.carrier, 20), keep: objs(x.keep, ['item', 'period', 'note'], 40), addons: objs(x.addons, ['name', 'add', 'miss', 'keep', 'note'], 40), adds: objs(x.adds, ['name', 'cond', 'amount'], 60), deducts: objs(x.deducts, ['name', 'cond', 'amount'], 60), date: mpStr(x.date, 60), src: mpStr(x.src, 200), at: +x.at || 0, by: mpStr(x.by, 20), notes: (Array.isArray(x.notes) ? x.notes : []).slice(0, 40).map(function (t) { return mpStr(t, 300); }).filter(Boolean), tables: [] };
                 (Array.isArray(x.tables) ? x.tables : []).slice(0, 40).forEach(function (t) {
                     if (!t || !Array.isArray(t.cols) || !Array.isArray(t.rows)) return;
                     var cols = t.cols.slice(0, 30).map(function (c) { return mpStr(c, 40); });
@@ -6254,14 +6263,21 @@
                     total += rows.length;
                     return h('div', { class: 'mp-tbl-box' }, h('div', { class: 'mp-tbl-title' }, t.name, t.unit ? h('small', {}, ' (' + t.unit + ')') : null),
                         h('div', { class: 'pol-scroll' }, h('table', { class: 'mp-tbl' }, h('thead', {}, h('tr', {}, t.cols.map(function (c) { return h('th', {}, c); }))),
-                            h('tbody', {}, rows.map(function (r) { return h('tr', {}, r.map(function (v, i) { return h('td', { class: i === 0 ? 'mp-model' : '' }, v); })); })))),
+                            h('tbody', {}, rows.map(function (r) { return h('tr', {}, r.map(function (v, i) { return h('td', { class: i === 0 ? 'mp-model' : /^[-+]?[\d,.]+$|^-$/.test(v) ? '' : 'mp-txt' }, v); })); })))),
                         t.notes.length ? h('ul', { class: 'mp-notes' }, t.notes.map(function (n) { return h('li', {}, n); })) : null);
                 }).filter(Boolean);
                 if (!tbls.length && words.length) return null;
-                return h('section', { class: 'pol-card mp-card', 'data-dealer': dl.name },
-                    h('div', { class: 'pol-head' }, h('h2', {}, dl.name), h('span', {}, (dl.date ? dl.date + ' 기준' : '') + (dl.at ? ' · 넣은 시각 ' + koDate(ymd(new Date(dl.at))) + (dl.by ? ' · ' + dl.by : '') : '')),
+                var pol = function (title, list, cols, keys) { return list.length ? h('details', { class: 'mp-pol', open: !words.length }, h('summary', {}, title + ' (' + list.length + ')'),
+                    h('div', { class: 'pol-scroll' }, h('table', { class: 'mp-tbl mp-ptbl' }, h('thead', {}, h('tr', {}, cols.map(function (c) { return h('th', {}, c); }))), h('tbody', {}, list.map(function (o) { return h('tr', {}, keys.map(function (k) { return h('td', {}, o[k] || ''); })); }))))) : null; };
+                return h('section', { class: 'pol-card mp-card', style: '--c:#3E441E', 'data-dealer': dl.name },
+                    h('div', { class: 'pol-head' }, h('h2', {}, dl.name + (dl.carrier ? ' · ' + dl.carrier : '')), h('span', {}, (dl.date ? dl.date + ' 기준' : '') + (dl.at ? ' · 넣은 시각 ' + koDate(ymd(new Date(dl.at))) + (dl.by ? ' · ' + dl.by : '') : '')),
                         boss ? h('button', { type: 'button', class: 'btn btn-sm mp-del', onclick: function () { mpRemove(dl.name); } }, '지우기') : null),
-                    dl.notes.length ? h('ul', { class: 'mp-notes' }, dl.notes.map(function (n) { return h('li', {}, n); })) : null,
+                    words.length ? null : h('div', { class: 'mp-pols' },
+                        pol('📅 유지기간', dl.keep, ['항목', '기간', '내용'], ['item', 'period', 'note']),
+                        pol('➕ 부가서비스', dl.addons, ['상품', '유치 시', '미유치', '유지', '비고'], ['name', 'add', 'miss', 'keep', 'note']),
+                        pol('💰 추가 정책', dl.adds, ['정책', '조건', '금액'], ['name', 'cond', 'amount']),
+                        pol('➖ 차감 · 미지급', dl.deducts, ['항목', '조건', '금액'], ['name', 'cond', 'amount'])),
+                    dl.notes.length && !words.length ? h('ul', { class: 'mp-notes' }, dl.notes.map(function (n) { return h('li', {}, n); })) : null,
                     tbls.length ? tbls : h('div', { class: 'p-none', style: 'padding:12px' }, '표가 없어요.'));
             }).filter(Boolean);
             return h('div', {}, head,
@@ -7086,19 +7102,23 @@
                 if (kd === 'time') body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { var d = new Date(); el.value = pad2(d.getHours()) + ':' + pad2(d.getMinutes()); } }, '지금'));
                 if (!kd && /현통신사/.test(c.l.replace(/\s/g, '')) && !long) {   // 현 통신사: 버튼으로 고르기 → 상담 내용 '기존 통신사' 줄에도 바로
                     var cur = function () { return el.value.trim(); };
+                    var lastT = el.value.trim();
+                    el.readOnly = true; el.classList.add('cl-telco-in'); el.setAttribute('placeholder', '아래 버튼으로 고르기');
+                    var lockIn = function () { el.readOnly = true; el.classList.remove('free'); };
+                    el.addEventListener('blur', lockIn);
                     var chips = h('div', { class: 'cl-telco', role: 'group', 'aria-label': '현 통신사 고르기' }, CL_TELCO.map(function (t) {
-                        return h('button', { type: 'button', class: 'cl-tchip', 'data-telco': t, 'aria-pressed': cur() === t ? 'true' : 'false', onclick: function () { el.value = cur() === t ? '' : t; el.dispatchEvent(new Event('input', { bubbles: true })); } }, t);
-                    }));
+                        return h('button', { type: 'button', class: 'cl-tchip', 'data-telco': t, 'aria-pressed': cur() === t ? 'true' : 'false', onclick: function () { lockIn(); el.value = cur() === t ? '' : t; el.dispatchEvent(new Event('input', { bubbles: true })); } }, t);
+                    }), h('button', { type: 'button', class: 'cl-tchip cl-tfree', 'data-act': 'cl-telco-free', onclick: function () { el.readOnly = false; el.classList.add('free'); if (CL_TELCO.indexOf(cur()) >= 0) { el.value = ''; el.dispatchEvent(new Event('input', { bubbles: true })); } try { el.focus(); } catch (e) { /* 무시 */ } } }, '✏ 직접입력'));
                     el.addEventListener('input', function () {
-                        chips.querySelectorAll('.cl-tchip').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-telco') === cur() ? 'true' : 'false'); });
-                        clTelcoMemo(P.memoEl, cur());
+                        chips.querySelectorAll('.cl-tchip[data-telco]').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-telco') === cur() ? 'true' : 'false'); });
+                        clTelcoMemo(P.memoEl, cur(), lastT); lastT = cur();
                     });
                     tExtra = chips;   // 버튼은 오른쪽 칸(위치 아래)에 따로
                 }
                 if (!kd && /청약/.test(c.l.replace(/\s/g, '')) && !long) body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-sub-today', onclick: function () { el.value = clMd(new Date()); } }, '오늘'), clCalBtn(el, 'md'));
                 var lab = h('label', { class: long || kd === 'ph' ? 'full' : '' }, kd === 'no' ? '순번' : (c.l || c.k), body);
                 if (kd === 'ph') P.phLab = lab;
-                return tExtra ? [lab, h('div', { class: 'cl-fld cl-telco-cell' }, h('span', { class: 'cl-telco-cap' }, '통신사 버튼'), tExtra)] : lab;
+                return tExtra ? [lab, h('div', { class: 'cl-fld cl-telco-cell' }, tExtra)] : lab;
             });
             P.fields = [].concat.apply([], P.fields);
             (function () {   // 연락처는 상담 내용 바로 위 (한 줄 전체)
@@ -7129,10 +7149,12 @@
             return v;
         }
         var CL_TELCO = ['SK', 'KT', 'U+', 'SKB', '헬로비전', '스카이라이프', '알뜰', '신규(없음)'];   // 현 통신사 버튼
-        function clTelcoMemo(memoEl, t) {   // 상담 내용 '■ 기존 통신사 · 약정' 줄 맨 앞에 현 통신사 (약정 등 뒤에 적은 글은 그대로)
+        function clTelcoMemo(memoEl, t, prev) {   // 상담 내용 '■ 기존 통신사 · 약정' 줄 맨 앞에 현 통신사 (약정 등 뒤에 적은 글은 그대로)
             if (!memoEl) return;
             var m = /^■ 기존 통신사[^:\n]*:[ \t]*(.*)$/m.exec(memoEl.value), rest = m ? m[1].trim() : '';
             var known = CL_TELCO.concat(['SKT', 'LG', 'LGU+', 'LG U+', 'LG헬로비전', '헬로', '스카이']).sort(function (a, b) { return b.length - a.length; });
+            prev = String(prev || '').trim();
+            if (prev && known.indexOf(prev) < 0) known.unshift(prev);   // 직접입력으로 적던 글자 (한 글자씩 바뀌어도 앞부분이 쌓이지 않게)
             for (var i = 0; i < known.length; i++) { var k = known[i]; if (rest === k || rest.indexOf(k + ' ') === 0 || rest.indexOf(k + '·') === 0) { rest = rest.slice(k.length).replace(/^\s*·?\s*/, ''); break; } }
             var v = t ? t + (rest ? ' · ' + rest : '') : rest;
             var nv = clTplPut(memoEl.value, '기존 통신사', v);
