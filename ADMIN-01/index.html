@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-K5GUVPnXK+aAWgHfptjjVITqPA6JlQVW5xB3hxsza2U='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-TT2MKhdKsupMxvbvT5I6OLIVSCOx5dDyE83DH9oPazg='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -993,6 +993,18 @@
         .ph-chip { font-size: 12px; font-weight: 800; border-radius: 999px; padding: 2px 9px; }
         .ph-chip.cur { background: var(--olive-700); color: #fff; } .ph-chip.view { background: #2F6CC0; color: #fff; }
         @media (max-width: 600px) { .ph-btns { width: 100%; } .ph-btns .btn { flex: 1 1 auto; min-height: 42px; } }
+        .pol-mode button { white-space: nowrap; }
+        .mp-dealers { margin-bottom: 8px; }
+        .mp-card .pol-head { flex-wrap: wrap; } .mp-card .mp-del { margin-left: auto; }
+        .mp-tbl-box { padding: 10px 12px 4px; } .mp-tbl-title { font-weight: 800; color: #3E441E; margin-bottom: 6px; } .mp-tbl-title small { color: var(--muted); font-weight: 600; }
+        table.mp-tbl { border-collapse: collapse; font-size: 13px; min-width: 100%; }
+        .mp-tbl th { background: #3E441E; color: #fff; font-size: 12px; padding: 6px 8px; white-space: nowrap; position: sticky; top: 0; }
+        .mp-tbl td { padding: 5px 8px; border-bottom: 1px solid #EEF0E6; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+        .mp-tbl td.mp-model { text-align: left; font-weight: 700; position: sticky; left: 0; background: #fff; }
+        .mp-tbl tr:hover td { background: #FFF8D6; }
+        .mp-notes { margin: 6px 12px 10px; padding-left: 18px; font-size: 12.5px; color: #4D5A2A; }
+        .mp-count { font-size: 13px; color: var(--muted); }
+        .mp-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; } .mp-tools input { flex: 1 1 260px; }
         .pol-tools { position: sticky; top: 0; z-index: 5; background: var(--bg, #F4F5EC); padding: 6px 0 10px; display: grid; gap: 8px; }
         .pol-cars, .pol-sps { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 2px; }
         .pol-cars .btn, .pol-sps .btn { flex: none; font-weight: 800; }
@@ -1298,7 +1310,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-19.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-19.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -4929,7 +4941,7 @@
         var IB_POLL_MS = 20000;
         function ibFresh() { return { items: [], rev: -1, at: 0, err: '', known: null, busy: false, timer: null, tick: 0, open: Object.create(null), draft: Object.create(null), kind: 'all', todo: false, pend: false, saving: Object.create(null), sel: Object.create(null), deleting: false }; }
         var ib = ibFresh();
-        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); vs = vsFresh(); idrFresh(); hp = hpFresh(); clStop(); glStop(); }   // 잠그면 콜 인입·홈페이지 인입 기록도 지움
+        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); vs = vsFresh(); idrFresh(); hp = hpFresh(); clStop(); glStop(); mp.data = null; mp.rev = -1; mp.q = ''; }   // 잠그면 콜 인입·홈페이지 인입 기록도 지움
         function ibStart() {   // 로그인하면 시작 (공유 저장소를 쓰는 기기만)
             if (ib.timer || !driveOn()) return;
             ib.timer = setInterval(function () {
@@ -6143,10 +6155,125 @@
                     h('div', { class: 'hp-list' }, list),
                     h('p', { class: 'hp-note' }, '※ 홈페이지에 이미 있는 상품(같은 통신사·속도·TV)만 월요금·결합요금·사은품 금액이 바뀌고, 화면 모양·상품 이름·한줄평은 그대로예요. SK는 SKB 정책, 사은품은 가이드 최대 금액이에요. 요금할인형(알뜰형)과 가이드 금액이 없는 상품의 사은품은 지금 홈페이지 그대로 둬요. 새 단가표를 불러오면 자동으로 반영돼요.')));
         }
+        /* ---------- 모바일 단가표 (거래처별) ----------
+           대표님이 거래처별 단가표 사진을 Claude에게 보내면 변환 파일(.json, kind: sageori-mobile)을 받아 [모바일 단가표 불러오기]로 넣어요.
+           팀 키로 암호화해서 서버(mobile-price.json)에 보관 · 모든 직원이 보고 · 바꾸기는 대표님만 · 파일에 없는 거래처는 그대로 둠 */
+        var MP_AAD = 'mp-v1';
+        var mp = { data: null, rev: -1, busy: false, err: '', dealer: '', q: '', at: 0 };
+        function mpStr(v, n) { return v == null ? '' : String(v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n); }
+        function mpNorm(d) {   // 받은 내용은 항상 걸러서 (거래처 30 · 표 40 · 열 30 · 줄 400)
+            var out = { v: 1, dealers: [] };
+            (d && Array.isArray(d.dealers) ? d.dealers : []).slice(0, 30).forEach(function (x) {
+                var name = mpStr(x && x.name, 20); if (!name) return;
+                var dd = { name: name, date: mpStr(x.date, 40), src: mpStr(x.src, 200), at: +x.at || 0, by: mpStr(x.by, 20), notes: (Array.isArray(x.notes) ? x.notes : []).slice(0, 40).map(function (t) { return mpStr(t, 300); }).filter(Boolean), tables: [] };
+                (Array.isArray(x.tables) ? x.tables : []).slice(0, 40).forEach(function (t) {
+                    if (!t || !Array.isArray(t.cols) || !Array.isArray(t.rows)) return;
+                    var cols = t.cols.slice(0, 30).map(function (c) { return mpStr(c, 40); });
+                    var rows = t.rows.slice(0, 400).filter(Array.isArray).map(function (r) { return cols.map(function (c, i) { return mpStr(r[i], 60); }); }).filter(function (r) { return r.some(Boolean); });
+                    if (cols.length && rows.length) dd.tables.push({ name: mpStr(t.name, 80) || '단가표', unit: mpStr(t.unit, 20), cols: cols, rows: rows, notes: (Array.isArray(t.notes) ? t.notes : []).slice(0, 20).map(function (n) { return mpStr(n, 300); }).filter(Boolean) });
+                });
+                if (dd.tables.length) out.dealers.push(dd);
+            });
+            return out;
+        }
+        function mpLoad(force) {
+            if (mp.busy || !driveOn()) return;
+            mp.busy = true; mp.err = '';
+            ibCall('mpGet', { rev: force ? -1 : mp.rev }).then(function (res) {
+                if (res.same) return null;
+                if (!res.blob) { mp.data = { v: 1, dealers: [] }; mp.rev = res.rev || 0; return null; }
+                return ensureTeam().then(function (t) { return decryptText(t.encKey, res.blob, MP_AAD); }).then(function (txt) { mp.data = mpNorm(JSON.parse(txt)); mp.rev = res.rev; });
+            }).then(function () { mp.busy = false; mp.at = Date.now(); if (state.view === 'policy' && state.pol.mob) render(); },
+                function (e) { mp.busy = false; mp.err = driveErrText(e); if (state.view === 'policy' && state.pol.mob) render(); });
+        }
+        function mpPut(next, tries) {   // 대표님: 암호화해서 저장 (먼저 저장된 게 있으면 받아서 다시 얹음)
+            return ensureTeam().then(function (t) { return encryptText(t.encKey, JSON.stringify(next), MP_AAD); }).then(function (blob) {
+                return ibCall('mpPut', { baseRev: Math.max(0, mp.rev), blob: blob });
+            }).then(function (res) { mp.rev = res.rev; mp.data = next; return next; });
+        }
+        function mpImport(file) {
+            if (!isBoss() || !file) return;
+            if (file.size > 3 * 1024 * 1024) { toast('파일이 너무 커요.'); return; }
+            file.text().then(function (txt) {
+                var d; try { d = JSON.parse(txt); } catch (e) { d = null; }
+                if (!d || d.kind !== 'sageori-mobile') { alert('모바일 단가표 변환 파일이 아니에요. Claude가 보낸 .json 파일을 골라 주세요.'); return; }
+                var inn = mpNorm(d), now = Date.now();
+                if (!inn.dealers.length) { alert('파일 안에 단가표가 없어요.'); return; }
+                var names = inn.dealers.map(function (x) { return x.name + ' (표 ' + x.tables.length + '개)'; });
+                if (!confirm('모바일 단가표를 넣을까요?\n\n' + names.join('\n') + '\n\n파일에 있는 거래처만 새 단가표로 바뀌고, 다른 거래처는 그대로예요. 모든 직원 화면에 바로 보여요.')) return;
+                function merge(base) {
+                    var out = { v: 1, dealers: (base && base.dealers ? base.dealers : []).filter(function (x) { return !inn.dealers.some(function (y) { return y.name === x.name; }); }) };
+                    inn.dealers.forEach(function (x) { x.at = now; x.by = staffName(me); out.dealers.push(x); });
+                    out.dealers.sort(function (a, b) { var ia = DEALERS.indexOf(a.name), ib = DEALERS.indexOf(b.name); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || (a.name < b.name ? -1 : 1); });
+                    return out;
+                }
+                toast('암호화해서 저장하는 중이에요...');
+                mpPut(merge(mp.data)).catch(function (e) {
+                    if (!(e && e.code === 'conflict' && e.reply)) throw e;
+                    mp.rev = e.reply.rev;   // 다른 기기에서 먼저 저장 → 최신 내용에 다시 얹음
+                    return (e.reply.blob ? ensureTeam().then(function (t) { return decryptText(t.encKey, e.reply.blob, MP_AAD); }).then(function (x) { return mpNorm(JSON.parse(x)); }) : Promise.resolve({ v: 1, dealers: [] })).then(function (base) { return mpPut(merge(base)); });
+                }).then(function () { mp.dealer = inn.dealers[0].name; render(); toast('모바일 단가표 ' + inn.dealers.length + '곳을 넣었어요. (' + inn.dealers.map(function (x) { return x.name; }).join(', ') + ')'); },
+                    function (e) { alert('모바일 단가표를 저장하지 못했어요.\n' + driveErrText(e)); });
+            });
+        }
+        function mpRemove(name) {
+            if (!isBoss() || !mp.data) return;
+            if (!confirm('"' + name + '" 모바일 단가표를 지울까요? 모든 직원 화면에서 사라져요.')) return;
+            var next = { v: 1, dealers: mp.data.dealers.filter(function (x) { return x.name !== name; }) };
+            mpPut(next).then(function () { mp.dealer = ''; render(); toast(name + ' 모바일 단가표를 지웠어요.'); }, function (e) { alert('지우지 못했어요.\n' + driveErrText(e)); });
+        }
+        function polModeSeg() {   // 인터넷상담: 유선 단가표 / 모바일 단가표
+            return h('div', { class: 'gl-seg pol-mode', role: 'group', 'aria-label': '단가표 종류' },
+                h('button', { type: 'button', 'data-act': 'pol-mode-net', 'aria-pressed': state.pol.mob ? 'false' : 'true', onclick: function () { state.pol.mob = false; render(); } }, '🌐 유선 단가표'),
+                h('button', { type: 'button', 'data-act': 'pol-mode-mob', 'aria-pressed': state.pol.mob ? 'true' : 'false', onclick: function () { state.pol.mob = true; mpLoad(false); render(); } }, '📱 모바일 단가표'));
+        }
+        function renderMobPol() {
+            var boss = isBoss();
+            var file = h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: function () { mpImport(this.files && this.files[0]); this.value = ''; } });
+            var head = h('div', { class: 'page-head' }, h('h1', {}, '인터넷상담'),
+                h('div', { class: 'actions' }, polModeSeg(), h('button', { type: 'button', class: 'btn', 'data-act': 'mp-refresh', onclick: function () { mp.busy = false; mpLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침'),
+                    boss ? h('label', { class: 'btn btn-primary', 'data-act': 'mp-import' }, '모바일 단가표 불러오기', file) : null));
+            if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '모바일 단가표는 공유 저장소를 연결한 기기에서 볼 수 있어요.')));
+            if (!mp.data && !mp.busy && !mp.err) setTimeout(function () { mpLoad(false); }, 0);
+            if (!mp.data) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, mp.err || '불러오는 중이에요...')));
+            var list = mp.data.dealers;
+            if (!list.length) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, boss ? '아직 모바일 단가표가 없어요. 거래처별 단가표 사진을 Claude에게 보내 변환 파일을 받은 뒤 [모바일 단가표 불러오기]로 넣어 주세요.' : '아직 모바일 단가표가 없어요. 대표님이 넣으면 여기에 보여요.')));
+            if (mp.dealer !== '*' && !list.some(function (x) { return x.name === mp.dealer; })) mp.dealer = list[0].name;
+            var tabs = h('div', { class: 'pol-cars mp-dealers', role: 'group', 'aria-label': '거래처' },
+                h('button', { type: 'button', class: 'btn btn-sm', 'data-dealer': '*', 'aria-pressed': mp.dealer === '*' ? 'true' : 'false', onclick: function () { mp.dealer = '*'; render(); } }, '전체 거래처'),
+                list.map(function (x) { return h('button', { type: 'button', class: 'btn btn-sm', 'data-dealer': x.name, 'aria-pressed': mp.dealer === x.name ? 'true' : 'false', onclick: function () { mp.dealer = x.name; render(); } }, x.name); }));
+            var q = h('input', { type: 'search', 'data-fk': 'mp-q', placeholder: '모델 찾기 (예: S25, 아이폰16 128)', 'aria-label': '모델 찾기', value: mp.q });
+            q.addEventListener('input', function () { mp.q = this.value; clearTimeout(renderMobPol.t); renderMobPol.t = setTimeout(render, 150); });
+            var words = mp.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+            var hit = function (r) { if (!words.length) return true; var t = r.join(' ').replace(/\s+/g, '').toLowerCase(); return words.every(function (w) { return t.indexOf(w) >= 0; }); };
+            var shownDealers = mp.dealer === '*' ? list : list.filter(function (x) { return x.name === mp.dealer; });
+            var total = 0;
+            var cards = shownDealers.map(function (dl) {
+                var tbls = dl.tables.map(function (t) {
+                    var rows = t.rows.filter(hit); if (!rows.length) return null;
+                    total += rows.length;
+                    return h('div', { class: 'mp-tbl-box' }, h('div', { class: 'mp-tbl-title' }, t.name, t.unit ? h('small', {}, ' (' + t.unit + ')') : null),
+                        h('div', { class: 'pol-scroll' }, h('table', { class: 'mp-tbl' }, h('thead', {}, h('tr', {}, t.cols.map(function (c) { return h('th', {}, c); }))),
+                            h('tbody', {}, rows.map(function (r) { return h('tr', {}, r.map(function (v, i) { return h('td', { class: i === 0 ? 'mp-model' : '' }, v); })); })))),
+                        t.notes.length ? h('ul', { class: 'mp-notes' }, t.notes.map(function (n) { return h('li', {}, n); })) : null);
+                }).filter(Boolean);
+                if (!tbls.length && words.length) return null;
+                return h('section', { class: 'pol-card mp-card', 'data-dealer': dl.name },
+                    h('div', { class: 'pol-head' }, h('h2', {}, dl.name), h('span', {}, (dl.date ? dl.date + ' 기준' : '') + (dl.at ? ' · 넣은 시각 ' + koDate(ymd(new Date(dl.at))) + (dl.by ? ' · ' + dl.by : '') : '')),
+                        boss ? h('button', { type: 'button', class: 'btn btn-sm mp-del', onclick: function () { mpRemove(dl.name); } }, '지우기') : null),
+                    dl.notes.length ? h('ul', { class: 'mp-notes' }, dl.notes.map(function (n) { return h('li', {}, n); })) : null,
+                    tbls.length ? tbls : h('div', { class: 'p-none', style: 'padding:12px' }, '표가 없어요.'));
+            }).filter(Boolean);
+            return h('div', {}, head,
+                h('p', { class: 'ph-tip' }, '거래처를 고르거나 [전체 거래처]에서 모델을 찾으면 거래처마다 같은 모델 단가를 한눈에 비교할 수 있어요. (팀 키로 암호화해서 보관 · 바꾸기는 대표님만)'),
+                tabs, h('div', { class: 'mp-tools' }, q, words.length ? h('span', { class: 'mp-count' }, '찾은 줄 ' + total + '개') : null),
+                cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '"' + mp.q + '"에 맞는 모델이 없어요.')));
+        }
         function renderPolicy() {
+            if (state.pol.mob) return renderMobPol();
             var P = polShown(), CUR = polCur(), S = state.pol, boss = isBoss(), viewing = !!(P && CUR && P !== CUR);
             var head = h('div', { class: 'page-head' }, h('h1', {}, '인터넷상담'),
-                h('div', { class: 'actions' }, driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else clMemoOpen(); } }, '📝 상담 메모') : null, refreshBtn(),
+                h('div', { class: 'actions' }, polModeSeg(), driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else clMemoOpen(); } }, '📝 상담 메모') : null, refreshBtn(),
                     (db.policies || []).length > 1 ? h('button', { type: 'button', class: 'btn', 'data-act': 'pol-history', onclick: polHistory }, '이전 단가표') : null,
                     boss ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'pol-import', onclick: polImport }, '단가표 불러오기') : null));
             if (!P) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, boss ? '아직 단가표가 없어요. 오른쪽 위 [단가표 불러오기]로 Claude가 보낸 단가표 파일을 넣어 주세요.' : '아직 단가표가 없어요. 대표님이 단가표를 넣으면 여기에 보여요.')));
@@ -8725,6 +8852,27 @@
         }
 
         /* ---------- 화면 영역: 장부 / 실적장표 / 전체 ---------- */
+        function glSubRegions(S, out, top) {   // 실적장표 아래쪽 표: 전단배포 · 전단부업 · 휴무표 (제목 글자로 찾음 · 없으면 버튼 안 보임)
+            var r, k, flyer = null, off = null, side = null, txt = function (rr, cc) { var v = S.cv[rr] && S.cv[rr][cc]; return v == null ? '' : String(v).replace(/\s/g, ''); };
+            for (r = top + 1; r <= S.nr; r++) {
+                var row = S.cv[r] || {};
+                Object.keys(row).forEach(function (cc) {
+                    cc = +cc; if (cc < out.dash.c1) return;
+                    var v = txt(r, cc);
+                    if (!flyer && /^전단배포$/.test(v)) { var nx = S.cv[r + 1] || {}, hasD = false, hasP = false; Object.keys(nx).forEach(function (q) { var t = txt(r + 1, q); if (t === '날짜') hasD = true; if (/배포인원/.test(t)) hasP = true; }); if (hasD && hasP) flyer = { r: r, c: cc }; }
+                    if (!off && /휴무(근무)?표$/.test(v)) off = { r: r, c: cc };
+                    if (!side && v === '핸드폰번호') { var hasS = Object.keys(row).some(function (q) { return /정산|미정산|현나감/.test(txt(r, q)); }); if (hasS) side = { r: r, c: cc }; }
+                });
+            }
+            function lastRow(r1, c1, c2, stop) { var last = r1; for (var x = r1; x <= Math.min(S.nr, stop || S.nr); x++) { var w = S.cv[x] || {}; for (var y = c1; y <= c2; y++) if (w[y] !== undefined && w[y] !== '' && String(w[y]).trim()) { last = x; break; } } return last; }
+            function maxCol(rr, from, limit) { var m = from; Object.keys(S.cv[rr] || {}).forEach(function (q) { q = +q; if (q >= from && q <= limit && String(S.cv[rr][q]).trim()) m = Math.max(m, q); }); S.mg.forEach(function (g) { if (g[0] <= rr && g[2] >= rr && g[1] >= from && g[1] <= limit) m = Math.max(m, g[3]); }); return m; }
+            var tops = [];
+            function grow(R0, stop) { S.mg.forEach(function (g) { if (g[0] >= R0.r1 && g[0] <= R0.r2 && g[1] >= R0.c1 && g[1] <= R0.c2 && (!stop || g[2] <= stop)) { R0.r2 = Math.max(R0.r2, g[2]); R0.c2 = Math.max(R0.c2, Math.min(g[3], R0.cmax || g[3])); } }); return R0; }   // 병합 칸 끝까지
+            if (flyer) { var fc2 = maxCol(flyer.r + 1, flyer.c, off && off.c > flyer.c ? off.c - 1 : flyer.c + 12); out.flyer = grow({ r1: flyer.r, r2: lastRow(flyer.r, flyer.c, fc2, flyer.r + 80), c1: flyer.c, c2: fc2, cmax: fc2 }, flyer.r + 80); tops.push(flyer.r); }
+            if (side) { var sc1 = off && off.c < side.c && side.c - off.c <= 3 ? off.c : Math.max(out.dash.c1, side.c - 1), sc2 = maxCol(side.r, side.c, side.c + 20); out.side = grow({ r1: side.r, r2: lastRow(side.r, sc1, sc2, side.r + 120), c1: sc1, c2: sc2, cmax: sc2 }, side.r + 120); tops.push(side.r); }
+            if (off) { var oc2 = maxCol(off.r, off.c, off.c + 30), stop = side && side.r > off.r ? side.r - 1 : 0; out.off = grow({ r1: off.r, r2: lastRow(off.r, off.c, oc2, stop || off.r + 80), c1: off.c, c2: oc2, cmax: oc2 }, stop || off.r + 80); tops.push(off.r); }
+            if (tops.length) out.dash.r2 = Math.max(top, Math.min.apply(null, tops) - 1);   // 실적장표는 아래쪽 표가 시작하기 전까지
+        }
         function glRegions(S) {
             if (S._reg) return S._reg;
             var dash = null, title = null, last = 0, r, c;
@@ -8739,6 +8887,7 @@
                 out.dash = { r1: 1, r2: Math.max(endRow, title.r), c1: c1, c2: S.nc };
                 out.img = { r1: title.r, r2: Math.max(title.r, (endTitle || endRow) + 4), c1: sangC || c1, c2: rightC };
                 out.dash.c1 = c1;
+                glSubRegions(S, out, title.r);
             }
             S._reg = out;
             return out;
@@ -9181,8 +9330,8 @@
                 return h('button', { type: 'button', class: 'cl-tab', role: 'tab', 'data-sheet': s.name, 'aria-pressed': s.id === gl.cur ? 'true' : 'false', onclick: function () { if (s.id === gl.cur) return; gl.cur = s.id; gl.view = 'book'; render(); } }, s.name);
             }));
             if (!E.S) return h('div', {}, head, note, gl.inbox ? h('p', { class: 'gl-inbox' }, '가입 확인서에서 들어온 ' + gl.inbox + '줄을 장부에 넣는 중이에요...') : null, tabs, h('div', { class: 'panel' }, h('div', { class: 'empty' }, E.err ? '시트를 불러오지 못했어요. ' + E.err : '시트를 불러와서 푸는 중이에요...')));
-            var R = glRegions(E.S), views = R.dash ? [['book', '장부'], ['dash', '실적장표'], ['all', '전체']] : [['all', '전체']];
-            if (!R[gl.view] || (gl.view !== 'all' && !R.dash)) gl.view = R.dash ? 'book' : 'all';
+            var R = glRegions(E.S), views = [['all', '전체'], ['book', '장부'], ['dash', '실적장표'], ['flyer', '전단배포'], ['side', '전단부업'], ['off', '휴무표']].filter(function (v) { return !!R[v[0]]; });
+            if (!R[gl.view]) gl.view = R.book ? 'book' : 'all';
             if (!gl.zoom) gl.zoom = window.innerWidth < 700 ? 60 : 80;
             var vbar = h('div', { class: 'gl-vbar' },
                 h('div', { class: 'gl-seg', role: 'group', 'aria-label': '보기' }, views.map(function (v) { return h('button', { type: 'button', 'data-gv': v[0], 'aria-pressed': gl.view === v[0] ? 'true' : 'false', onclick: function () { gl.view = v[0]; render(); } }, v[1]); })),
