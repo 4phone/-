@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0+fVtLpDOM+BFkMGK4+ghkm1a0mxZYOc5qq07a6TZoA='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-F670mYLmv8D6tTheh0NkQn98xLpQh4aqQ5aq1Q2TvrQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -420,6 +420,12 @@
         .mp-tbl td.mp-go { cursor: pointer; color: #2F55B8; text-decoration: underline dotted; text-underline-offset: 3px; }
         .mp-tbl td.mp-go:hover, .mp-tbl td.mp-go:focus { background: #EEF3DC; outline: none; }
         .mp-go-i { font-size: 11px; text-decoration: none; }
+        .hd-cell.picked { background: #FFF3BF !important; box-shadow: inset 0 0 0 3px var(--gold); }
+        .hd-tick { position: absolute; top: 4px; right: 6px; font-weight: 900; color: #7A5B00; }
+        .hd-cell { position: relative; }
+        .hd-multi-btn[aria-pressed="true"] { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .hd-mbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 0 0 10px; padding: 9px 12px; border-radius: 10px; background: #FFF9D6; border: 1px solid #F0E3A0; font-size: 14px; }
+        .hd-mbar > span { flex: 1 1 220px; font-weight: 700; }
         .cl-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
         .cl-daybar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: flex-end; margin: -2px 0 8px; }
         .cl-daybar .cl-today[aria-pressed="true"] { background: #3E441E; border-color: #3E441E; color: #fff; }
@@ -1371,7 +1377,7 @@
         var INTAKE_TPL = "이름 : \n주민번호(전체) : \n휴대폰번호 : \n휴대폰통신사 : \n설치주소 : \n이메일주소(필수) : \n인증가능시간(필수) : \n\n■ 납부정보 ■ \n은행 /카드사 : \n계좌/카드번호 : \n카드유효기간 : \n예금주 성함/주민번호 : \n본인이면 \"본인\" \n\n● 접수정보 ● \n인터넷통신사 : \n인터넷상품: \nWIFI 유,무: \nTV상품+셋탑1 : \n전화상품 : X \n월요금 : \n설치비 : \n\n◆ 고객사은품 ◆ \n상품권 : 원 \n현금 : 원 \n상품권종류 : \n은행+계좌 : \n예금주: \n(본인,납부자외 불가)";   // 신분증 요청: 고객 접수 메모 양식 (복사해서 그대로 사용)
         var INTAKE_KEEP_DAYS = 30;   // 접수 메모(주민번호·계좌 등)는 30일 지나면 자동으로 지움
         var DEALERS = ['스카이', '이티', '안모', '성연', '수석', '신창', '에이탑', '반추', '모빙'];
-        var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo', 'addr', 'bank', 'pay', 'fre'];
+        var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo', 'addr', 'bank', 'pay', 'fre', 'fee', 'gv', 'gh', 'ga'];
         var REG_LONG = { plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120, addr: 150, bank: 80 };
         var REG_MANUAL = { price: 1, memo: 1 };   // 장부에서만 적는 칸 (확인서를 다시 저장해도 지우지 않음)
         var REG_COLS = [   // 장부 엑셀 순서 그대로 (한 줄 복사)
@@ -1390,7 +1396,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-20.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-20.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -4819,6 +4825,8 @@
                 r.plan = [v('netPlan'), v('tvPlan')].filter(Boolean).join(' + ');
                 r.keep = digitsOnly(v('keepW')); r.bill1 = digitsOnly(v('billW'));
                 r.extra = c('addY') ? v('addPlan') : '';
+                var gw = function (n) { var t = digitsOnly(v(n)); return +t ? t : ''; };
+                r.gv = gw('giftV'); r.gh = gw('giftH'); r.ga = gw('giftA');   // 상품권 → 유선상품권 · 본사 → 유선직정산 · 추가지원금 → 지원금(입금하기)
                 if (v('dpNo')) r.bank = [v('dpBank'), v('dpNo')].filter(Boolean).join(' ') + (v('dpOwner') && v('dpOwner') !== r.name ? ' (' + v('dpOwner') + ')' : '');   // 사은품 입금계좌
             }
             Object.keys(r).forEach(function (k) { if (r[k] === '' || r[k] == null) delete r[k]; });
@@ -4845,10 +4853,11 @@
             if (!db || !M.sheet) return false;
             if (!db.regs) db.regs = [];
             var rec = regFromForm(M.sheet, M.kind, ymd(new Date(y, m - 1, d)));
+            if (M.fee && +M.fee) rec.fee = String(+M.fee);   // 상담에서 고른 상품 수수료 (접수 메모로 넘어온 값)
             var ex = M.regId ? db.regs.filter(function (x) { return x.id === M.regId; })[0] : null;
             if (!rec.addr && !(ex && ex.addr)) { var ia = regAddrFromIntake(rec); if (ia) rec.addr = ia; }   // 주소: 확인서 → 장부에 적어 둔 값 → 신분증 요청 접수 메모 순서
             if (ex) {
-                REG_FIELDS.forEach(function (f) { if (REG_MANUAL[f]) return; if (rec[f]) ex[f] = rec[f]; else if (!/^(addr|bank|pay|fre)$/.test(f)) delete ex[f]; });   // 주소·입금계좌·지원금은 확인서에 비어 있으면 장부에 적어 둔 값을 지우지 않음   // 주소는 확인서에 비어 있으면 장부에 적어 둔 값을 지우지 않음
+                REG_FIELDS.forEach(function (f) { if (REG_MANUAL[f]) return; if (rec[f]) ex[f] = rec[f]; else if (!/^(addr|bank|pay|fre|fee)$/.test(f)) delete ex[f]; });   // 주소·입금계좌·지원금은 확인서에 비어 있으면 장부에 적어 둔 값을 지우지 않음   // 주소는 확인서에 비어 있으면 장부에 적어 둔 값을 지우지 않음
                 ex.kind = rec.kind; ex.date = rec.date; stamp(ex);
             } else {
                 rec.id = uid(); rec.u = 0; db.regs.push(stamp(rec)); M.regId = rec.id;
@@ -4997,6 +5006,10 @@
                 { key: 'bank', label: '입금계좌 (사은품)', value: r.bank || '', half: true, max: 80, hint: '예: 국민 123456789012 (예금주가 다르면 괄호)' },
                 { key: 'pay', label: '유통망지원금 (PAY)', value: r.pay || '', half: true, max: 12, hint: '숫자만 · 가입고객리스트에는 -로 들어가요' },
                 { key: 'fre', label: '프리 (FRE)', value: r.fre || '', half: true, max: 12, hint: '숫자만 · 가입고객리스트에는 -로 들어가요' },
+                { key: 'fee', label: '액면단가 (수수료)', value: r.fee || '', half: true, max: 12, hint: '숫자만 (원) · 상담에서 고른 상품이면 자동' },
+                { key: 'gv', label: '유선상품권 (확인서 상품권)', value: r.gv || '', half: true, max: 12, hint: '숫자만 · 리스트에는 -로' },
+                { key: 'gh', label: '유선직정산 (확인서 본사)', value: r.gh || '', half: true, max: 12, hint: '숫자만 · 리스트에는 -로' },
+                { key: 'ga', label: '지원금 (확인서 추가지원금)', value: r.ga || '', half: true, max: 12, hint: '숫자만 · 리스트에는 -로, 입금 칸은 "입금하기"' },
                 { key: 'instDate', label: '설치일 · 개통일', type: 'date', value: r.instDate || '', half: true },
                 { key: 'memo', label: '진행상태 메모', value: r.memo || '', max: 300, half: true },
                 { key: 'addr', label: '주소', value: r.addr || regAddrFromIntake(r) || '', half: true, max: 150, hint: !r.addr && regAddrFromIntake(r) ? '신분증 요청 접수 메모의 설치주소를 가져왔어요. [변경 저장]을 누르면 저장돼요.' : '' }
@@ -5006,7 +5019,7 @@
                 validate: function (v) { return isYmd(v.date) ? (v.instDate && !isYmd(v.instDate) ? '설치일을 올바르게 입력해 주세요.' : null) : '가입날짜를 올바르게 입력해 주세요.'; },
                 onSave: function (v) {
                     var before = JSON.parse(JSON.stringify(r));
-                    if (v.hasOwnProperty('pay')) v.pay = digitsOnly(v.pay).replace(/^0+$/, ''); if (v.hasOwnProperty('fre')) v.fre = digitsOnly(v.fre).replace(/^0+$/, '');
+                    ['pay', 'fre', 'fee', 'gv', 'gh', 'ga'].forEach(function (f) { if (v.hasOwnProperty(f)) v[f] = digitsOnly(v[f]).replace(/^0+$/, ''); });
                     r.kind = v.kind === 'wired' ? 'wired' : 'mobile'; r.date = v.date;
                     REG_FIELDS.forEach(function (f) { if (!v.hasOwnProperty(f)) return; var x = String(v[f] || '').trim().slice(0, REG_LONG[f] || 60); if (x) r[f] = x; else delete r[f]; });
                     var ch = Object.keys(GL_REG_COL).concat(['addr']).filter(function (f) { return f !== 'kind' && (r[f] || '') !== (before[f] || '') && r[f]; });
@@ -5906,6 +5919,9 @@
                 lines = INTAKE_TPL.split('\n');
                 vals.forEach(function (kv) { var esc = kv[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), re = new RegExp('^(\\s*' + esc + '\\s*:).*$'); lines = lines.map(function (l) { return re.test(l) ? l.replace(re, '$1') + ' ' + kv[1] : l; }); });
             }
+            var feeLine = '수수료(액면단가) : ' + polFee(p.r).fee.toLocaleString('ko-KR') + '원', fi = -1, si = -1;
+            lines.forEach(function (l, i) { if (/^\s*수수료\(액면단가\)\s*:/.test(l)) fi = i; if (si < 0 && /^\s*설치비\s*:/.test(l)) si = i; });
+            if (fi >= 0) lines[fi] = feeLine; else if (si >= 0) lines.splice(si + 1, 0, feeLine); else lines.push(feeLine);   // 가입고객리스트 액면단가로 들어감
             U.memo.value = lines.join('\n');
             state.view = 'idreq'; render();
             setTimeout(function () {
@@ -6269,7 +6285,7 @@
         var mp = { data: null, rev: -1, busy: false, err: '', dealer: '', q: '', at: 0, cmp: false, band: 'top', ty: 'MNP', cls: 'all', sort: 'v', open: {}, idx: null };
         /* 모델별 비교 정보(cm·mk)가 없는 단가표(예전 변환 파일)도 열 이름·모델 코드로 자동으로 채움 — 변환 파일 양식이 조금 달라도 같은 방식으로 비교돼요 */
         var MP_FAM = [   // 모델 코드 → [이름, 모델군]  (앞에서부터 먼저 맞는 것)
-            [/IPD/, 'iPhone Duo', '고가'], [/IP18PM/, 'iPhone 18 Pro Max', '고가'], [/IP18P/, 'iPhone 18 Pro', '고가'],
+            [/IP_?DUO|IPD/, 'iPhone Duo', '고가'], [/IP18PM/, 'iPhone 18 Pro Max', '고가'], [/IP18P/, 'iPhone 18 Pro', '고가'],
             [/IP17PM/, 'iPhone 17 Pro Max', '고가'], [/IP17PR|IP17P[-_]/, 'iPhone 17 Pro', '고가'], [/IPA/, 'iPhone 17 Air', '고가'],
             [/IP17E/, 'iPhone 17e', '중저가'], [/IP17/, 'iPhone 17', '고가'], [/IP16E/, 'iPhone 16e', '중저가'], [/IP16PR/, 'iPhone 16 Pro', '고가'], [/IP16/, 'iPhone 16', '고가'],
             [/F976/, 'Z Fold8 Ultra', '고가'], [/F971/, 'Z Fold8', '고가'], [/F776/, 'Z Flip8', '고가'], [/F966/, 'Z Fold7', '고가'], [/F766/, 'Z Flip7', '고가'], [/F956/, 'Z Fold6 (DP 진열)', '고가'],
@@ -6395,7 +6411,7 @@
            휴무를 넣으면 그 직원의 그날 업무·일정이 다음 근무일로 옮겨지고,
            [내일로 이동] · 상담 리스트 재케어 · 마감보고 익일업무가 모두 휴무를 건너뛴 다음 근무일로 잡혀요. */
         var HD_AAD = 'hd-v1';
-        var hd = { data: null, rev: -1, busy: false, err: '', at: 0, y: 0, m: 0 };
+        var hd = { data: null, rev: -1, busy: false, err: '', at: 0, y: 0, m: 0, multi: false, sel: {} };
         function hdStr(v, n) { return v == null ? '' : String(v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n); }
         function hdEmpty() { return { v: 1, days: {}, memo: {} }; }
         function hdNorm(d) {   // 받은 내용은 항상 걸러서 (날짜 3000일 · 하루 인원 40명 · 메모 100자)
@@ -6566,6 +6582,38 @@
                 h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), h('button', { type: 'submit', class: 'btn btn-primary', 'data-act': 'hd-week-save' }, '적용'))));
             showDlg(dlg);
         }
+        function hdMultiEdit() {   // 대표님: 여러 날을 골라서 한 번에 휴무 넣기 / 빼기
+            var dates = Object.keys(hd.sel).sort();
+            if (!isBoss() || !hd.data || !dates.length) { toast('먼저 날짜를 눌러서 골라 주세요.'); return; }
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'hd-dlg';
+            var boxes = db.staff.slice().sort(byO).map(function (x) { return h('label', { class: 'hd-pick', style: '--c:' + staffColor(x.id) }, h('input', { type: 'checkbox', value: x.id }), h('i', {}), x.name); });
+            var all = h('input', { type: 'checkbox', 'data-act': 'hd-m-all' });
+            var mode = h('select', { 'aria-label': '넣기 또는 빼기' }, h('option', { value: 'add' }, '휴무 넣기'), h('option', { value: 'del' }, '휴무 빼기'));
+            dlg.appendChild(h('form', { novalidate: true, onsubmit: function (ev) {
+                ev.preventDefault();
+                var ids = boxes.map(function (l) { return l.querySelector('input'); }).filter(function (c) { return c.checked; }).map(function (c) { return c.value; });
+                if (!ids.length && !all.checked) { toast('쉬는 직원(또는 전체 휴무)을 골라 주세요.'); return; }
+                var add = mode.value === 'add';
+                closeDlg(); toast('암호화해서 저장하는 중이에요...');
+                hdSave(function (base) {
+                    dates.forEach(function (d) {
+                        var e = base.days[d] || { s: [], all: false, n: '' };
+                        if (add) { ids.forEach(function (id) { if (e.s.indexOf(id) < 0) e.s.push(id); }); if (all.checked) e.all = true; }
+                        else { e.s = e.s.filter(function (id) { return ids.indexOf(id) < 0; }); if (all.checked) e.all = false; }
+                        if (e.s.length || e.all || e.n) base.days[d] = e; else delete base.days[d];
+                    });
+                    return base;
+                }).then(function (r) { hd.sel = {}; hd.multi = false; hdAfterSave(r, dates.length + '일에 ' + (ids.map(staffName).join(', ') + (all.checked ? (ids.length ? ' · ' : '') + '전체 휴무' : '')) + ' 휴무를 ' + (add ? '넣었어요.' : '뺐어요.')); },
+                    function (err) { alert('휴무표를 저장하지 못했어요.\n' + driveErrText(err)); });
+            } }, h('div', { class: 'dlg-head' }, '고른 날 ' + dates.length + '일 한 번에'),
+                h('div', { class: 'dlg-body' },
+                    h('p', { class: 'hd-help' }, dates.map(function (d) { var x = parseYmd(d); return (x.getMonth() + 1) + '/' + x.getDate() + '(' + WEEK[x.getDay()] + ')'; }).join(' · ')),
+                    h('div', { class: 'hd-row' }, h('b', {}, '직원'), h('div', { class: 'hd-picks' }, boxes)),
+                    h('label', { class: 'hd-pick hd-all' }, all, h('span', {}, '전체 휴무 (가게 쉬는 날 · 모든 직원)')),
+                    h('label', { class: 'hd-note' }, '할 일', mode)),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), h('button', { type: 'submit', class: 'btn btn-primary', 'data-act': 'hd-multi-save' }, '적용'))));
+            showDlg(dlg);
+        }
         function hdMemoEdit() {   // 대표님: 이 달 메모 (예: 10월 일요일 휴무만 진행)
             if (!isBoss() || !hd.data) return;
             var key = hd.y + '-' + pad2(hd.m + 1), cur = hd.data.memo[key] || '';
@@ -6591,6 +6639,7 @@
                 h('div', { class: 'cal-title', 'aria-live': 'polite' }, String(y).slice(2) + '년 ' + (m + 1) + '월 휴무표'),
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'hd-next', onclick: function () { shift(1); } }, '다음 달'),
                 h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { hd.y = now.getFullYear(); hd.m = now.getMonth(); render(); } }, '이번 달'),
+                boss ? h('button', { type: 'button', class: 'btn btn-sm hd-multi-btn', 'data-act': 'hd-multi', 'aria-pressed': hd.multi ? 'true' : 'false', onclick: function () { hd.multi = !hd.multi; hd.sel = {}; render(); } }, hd.multi ? '✕ 여러 날 고르기 끝' : '☑ 여러 날 고르기') : null,
                 boss ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'hd-weekly', onclick: hdWeekly }, '📅 매주 반복 넣기') : null,
                 boss ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'hd-memo', onclick: hdMemoEdit }, '📝 이 달 메모') : null);
             var memo = hd.data.memo[y + '-' + pad2(m + 1)];
@@ -6604,12 +6653,17 @@
                     if (e) db.staff.slice().sort(byO).forEach(function (x) { if (e.s.indexOf(x.id) >= 0) { chips.push(h('span', { class: 'hd-chip', style: '--c:' + staffColor(x.id) }, x.name)); cnt[x.id] = (cnt[x.id] || []).concat([k]); } });
                     var attrs = { class: 'hd-cell' + (dow === 0 ? ' sun' : dow === 6 ? ' sat' : '') + (key === today ? ' today' : '') + (e ? ' has' : ''), 'data-day': key, 'aria-label': koDate(key) + (e ? ', 휴무 ' + hdNames(key).join(', ') : ', 휴무 없음') };
                     var kids = [h('span', { class: 'cal-num' }, String(k)), chips, e && e.n ? h('span', { class: 'hd-n' }, e.n) : null];
-                    if (boss) { attrs.type = 'button'; attrs.onclick = function () { hdDayEdit(key); }; cells.push(h('button', attrs, kids)); }
+                    if (boss && hd.multi) { attrs.class += hd.sel[key] ? ' picked' : ''; attrs['aria-pressed'] = hd.sel[key] ? 'true' : 'false'; kids.push(h('span', { class: 'hd-tick', 'aria-hidden': 'true' }, hd.sel[key] ? '✔' : '')); }
+                    if (boss) { attrs.type = 'button'; attrs.onclick = function () { if (hd.multi) { if (hd.sel[key]) delete hd.sel[key]; else hd.sel[key] = 1; render(); return; } hdDayEdit(key); }; cells.push(h('button', attrs, kids)); }
                     else cells.push(h('div', attrs, kids));
                 })(i - offset + 1);
             }
             var sum = db.staff.slice().sort(byO).filter(function (x) { return cnt[x.id]; }).map(function (x) { return h('div', { class: 'hd-sum-row' }, whoTag(x.id), h('b', {}, cnt[x.id].length + '일'), h('span', {}, cnt[x.id].join(', ') + '일')); });
-            return h('div', {}, head, note, bar,
+            var selN = Object.keys(hd.sel).length;
+            var mbar = boss && hd.multi ? h('div', { class: 'hd-mbar', role: 'status' }, h('span', {}, selN ? '고른 날 ' + selN + '일' : '쉬는 날을 여러 개 눌러서 고른 뒤 [쉬는 직원 정하기]를 눌러 주세요. (다른 달로 넘겨서 더 골라도 돼요)'),
+                h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'hd-multi-go', disabled: !selN, onclick: hdMultiEdit }, '쉬는 직원 정하기'),
+                selN ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { hd.sel = {}; render(); } }, '고른 날 지우기') : null) : null;
+            return h('div', {}, head, note, bar, mbar,
                 memo ? h('div', { class: 'hd-memo' }, '📌 ', memo) : null,
                 h('div', { class: 'cal-wrap hd-wrap' }, h('div', { class: 'cal-week' }, WEEK.map(function (w) { return h('div', {}, w); })), h('div', { class: 'cal-grid' }, cells)),
                 h('div', { class: 'panel hd-sum' }, h('h2', {}, (m + 1) + '월 직원별 휴무'), sum.length ? sum : h('div', { class: 'empty' }, boss ? '이 달은 아직 휴무가 없어요. 날짜를 누르거나 [매주 반복 넣기]로 넣어 주세요.' : '이 달은 등록된 휴무가 없어요.')));
@@ -6927,6 +6981,10 @@
                 return Math.round(n).toLocaleString('ko-KR');
             };
             S('giftV', won(v('상품권'))); S('giftA', won(v('현금')));
+            var acct = v('은행+계좌'), am = /^([^\d]*?)\s*([\d][\d\s-]{5,})\s*$/.exec(acct);   // 고객사은품 입금계좌 → 사은품 입금계좌 칸
+            if (am) { S('dpBank', am[1].replace(/[\/+,·]/g, ' ').trim()); S('dpNo', am[2].replace(/\s+/g, '')); } else if (acct) S('dpNo', acct);
+            S('dpOwner', v('예금주').replace(/[\d\-\/(),.]+/g, ' ').replace(/\s+/g, ' ').trim());
+            o.fee = dg(v('수수료(액면단가)'));
             return o;
         }
         function intakeToWired(text, who) {   // [가입확인서로 이동]: 유선 가입 확인서를 열고 접수 메모 내용을 칸에 채움 (채운 뒤에도 직접 고칠 수 있음)
@@ -6942,6 +7000,7 @@
             state.view = 'forms'; state.form = 'wired'; render();
             var M = mforms.wired; if (!M || !M.sheet) { toast('유선 가입 확인서를 열지 못했어요.'); return; }
             var sh = M.sheet, o = intakeWired(text), n = 0;
+            M.fee = o.fee || '';   // 수수료(액면단가): 확인서 화면에는 안 보이고 가입 장부 → 가입고객리스트 액면단가로
             Object.keys(o.set).forEach(function (k) {
                 var el = sh.querySelector('[data-mf="' + k + '"]'); if (!el) return;
                 el.value = o.set[k]; el.dispatchEvent(new Event('input', { bubbles: true })); n++;
@@ -9460,8 +9519,8 @@
                 return Promise.all(jobs);
             }).then(function () { gl.inboxBusy = false; gl.inbox = 0; if (state.view === 'gl') render(); }, function () { gl.inboxBusy = false; });
         }
-        var GL_REG_NEG = { pay: 1, fre: 1 };   // 가입고객리스트에 -(마이너스) 숫자로 적는 칸
-        var GL_REG_COL = { kind: '모바일&유선', seller: '담당자', dealer: '거래처', carrier: '통신사', model: '모델', serial: '일련번호', phone: '번호', name: '고객명', birth: '생년월일', disc: '공시&선약(프약)', subsidy: '공시금액', price: '할부원금', months: '할부개월', plan: '요금제', extra: '부가서비스', ins: '보험가입여부(종류)', combKind: '결합종류', comb: '결합여부', keep: '요금제유지개월', plan2: '변경요금제', bill1: '가입후요금', bill2: '3개월후 요금', prev: '이전사업자', type: '가입유형', bank: '입금계좌', pay: '유통망지원금', fre: '프리' };
+        var GL_REG_NEG = { pay: 1, fre: 1, gv: 1, gh: 1, ga: 1 };   // 가입고객리스트에 -(마이너스) 숫자로 적는 칸
+        var GL_REG_COL = { kind: '모바일&유선', seller: '담당자', dealer: '거래처', carrier: '통신사', model: '모델', serial: '일련번호', phone: '번호', name: '고객명', birth: '생년월일', disc: '공시&선약(프약)', subsidy: '공시금액', price: '할부원금', months: '할부개월', plan: '요금제', extra: '부가서비스', ins: '보험가입여부(종류)', combKind: '결합종류', comb: '결합여부', keep: '요금제유지개월', plan2: '변경요금제', bill1: '가입후요금', bill2: '3개월후 요금', prev: '이전사업자', type: '가입유형', bank: '입금계좌', pay: '유통망지원금', fre: '프리', fee: '액면단가', gv: '유선상품권', gh: '유선직정산', ga: '지원금' };
         function glPutReg(E, x) {   // 장부의 다음 빈 줄(모바일&유선·고객명이 빈 줄)에 가입 확인서 내용 쓰기 → 쓴 줄 번호
             var S = E.S, H = glHead(S), reg = x && x.reg; if (!H || !reg) return 0;
             var lab = {}, hr = S.cv[H.r] || {};
@@ -9494,8 +9553,9 @@
             });
             if (H.date && !only) put(H.date, (x.day || '') + '일');
             if (H.no && !only && (row2[H.no] == null || row2[H.no] === '')) put(H.no, maxNo + 1);
-            if (reg.kind === 'wired' && reg.addr && (!only || only.indexOf('addr') >= 0)) put(colOf('고객약속및수납유형'), reg.addr);   // 유선: 설치 주소 (엑셀에서 쓰던 자리)
-            if (reg.kind === 'wired' && !only && H.tax && typeof row2[H.tax] === 'string' && row2[H.tax].charAt(0) === '=') { delete row2[H.tax]; E.edits.set(target + ',' + H.tax, null); }   // 유선은 세금 15% 없음 (엑셀과 같게)
+            if (reg.kind === 'wired' && reg.addr && (!only || only.indexOf('addr') >= 0)) put(colOf('고객약속및수납유형'), reg.addr);
+            if (reg.ga && +String(reg.ga).replace(/\D/g, '') && (!only || only.indexOf('ga') >= 0)) put(colOf('입금'), '입금하기');   // 추가지원금은 우리가 입금 → 입금 칸 자동   // 유선: 설치 주소 (엑셀에서 쓰던 자리)
+            if (reg.kind === 'wired' && !only && H.tax && row2[H.tax] != null && row2[H.tax] !== '') { delete row2[H.tax]; E.edits.set(target + ',' + H.tax, null); }   // 유선(스카이 접수)은 세금 없음 — 윗줄에서 내려온 세금 수식·값도 지움
             if (target > S.nr) S.nr = target;
             return target;
         }
