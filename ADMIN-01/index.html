@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Lc/RZqAmjcT+h0A8B3TGu0BZ4WTQhA1kDDZ6B4PFAQQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-l7XJ2WZLODua0S529RiJ9TRXQNW9XzUpN2mZgFMGyhw='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -401,6 +401,15 @@
         .cal-off-day { font-size: 13px; color: #B3261E; font-weight: 700; }
         @media (max-width: 640px) { .nav button[data-fk="nav-gl"] { grid-column: span 2; } }
         @media (max-width: 700px) { .hd-cell { min-height: 64px; padding: 3px; } .hd-chip { font-size: 10px; padding: 0 3px; border-left-width: 2px; } .hd-n { display: none; } .hd-row { flex-direction: column; gap: 0; } .hd-row > b { padding-top: 4px; } }
+        .btn-close { background: #C2410C; border-color: #C2410C; color: #fff; font-weight: 800; }
+        .btn-close:hover { background: #9A3412; border-color: #9A3412; }
+        .rpt-step { display: inline-block; margin-right: 6px; padding: 0 5px; border-radius: 5px; background: #fff; color: #C2410C; font-size: 11px; font-weight: 900; line-height: 16px; vertical-align: 1px; }
+        .rpt-step.big { background: #C2410C; color: #fff; font-size: 12px; line-height: 18px; }
+        .cl-rpt-row { display: flex; justify-content: flex-end; margin: -4px 0 10px; }
+        .cl-rpt-opts { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin-bottom: 10px; font-size: 13px; }
+        .cl-rpt-opts input[type=date], .cl-rpt-opts select { padding: 7px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+        .cl-rpt-opts .chk { display: inline-flex; align-items: center; gap: 4px; }
+        .cl-rpt-out { width: 100%; box-sizing: border-box; font: 13px/1.55 inherit; font-family: inherit; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #FAFBF4; resize: vertical; white-space: pre-wrap; }
         .cl-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
         .cl-daybar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: flex-end; margin: -2px 0 8px; }
         .cl-daybar .cl-today[aria-pressed="true"] { background: #3E441E; border-color: #3E441E; color: #fff; }
@@ -1371,7 +1380,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-20.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-20.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2334,7 +2343,7 @@
                 h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '진행 ' + openN + '건, 완료 ' + list.filter(function (t) { return t.status === 'done' && !t.ext; }).length + '건' + (list.some(function (t) { return t.ext; }) ? ', 내일로 연장 ' + list.filter(function (t) { return t.ext; }).length + '건' : '')),
                     h('div', { class: 'actions' },
                         h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-fk': 'report-doing', onclick: function () { captureReport(list, 'doing'); } }, '진행중보고'),
-                        h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-fk': 'report', onclick: function () { openCloseReport(); } }, '마감보고'))),
+                        h('button', { type: 'button', class: 'btn btn-sm btn-close', 'data-fk': 'report', title: '하루 마감 순서: 마감1 상담리스트 → 마감2 실적장표 → 마감3 업무 마감보고', onclick: function () { openCloseReport(); } }, h('span', { class: 'rpt-step' }, '마감3'), '업무 마감보고'))),
                 h('div', { class: 'panel' },
                     rows.length ? [h('div', { class: 't-head' }, h('div', {}, '번호'), h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows]
                         : h('div', { class: 'empty' }, state.date ? '이 날(' + koDate(state.date) + ') 마감인 업무가 없어요. 담당·상태 필터를 걸어 두었다면 함께 확인해 보세요.' : (db.tasks.length ? '조건에 맞는 업무가 없어요. 필터를 바꿔 보세요.' : '아직 등록된 업무가 없어요. 오른쪽 위 [업무 추가]로 시작해 보세요.'))));
@@ -4392,6 +4401,21 @@
             showDlg(dlg);
             var ok = dlg.querySelector('[data-act="mf-replace-ok"]'); if (ok) ok.focus();
         }
+        function ctOkMsg(cr, ct) {   // 판매 고객 연락처 저장 결과 문구
+            return (cr.updated ? (cr.fromProspect ? '재케어(가망) 연락처를 판매 고객 "' + ct.label + '"(으)로 바꿨어요.' : '같은 번호의 구글 연락처를 "' + ct.label + '"(으)로 바꿨어요.') : '구글 연락처에 "' + ct.label + '"(으)로 저장했어요.')
+                + (cr.removed ? ' 남아 있던 재케어 연락처 ' + cr.removed + '개는 지웠어요.' : '');
+        }
+        function ctSaleRetry(M, ct, why) {   // 그림은 저장됐는데 연락처만 실패: 연락처만 다시 저장 (몇 번이든)
+            if (!confirm('가입 확인서 그림은 드라이브에 저장했어요.\n\n⚠ 구글 연락처는 아직 저장하지 못했어요.\n' + why + '\n\n[확인]을 누르면 연락처만 다시 저장해요.')) { toast('연락처는 저장하지 않았어요. 이 확인서를 다시 저장하면 연락처도 다시 저장해요.'); return; }
+            toast('연락처를 다시 저장하는 중이에요...');
+            ibCall('ctSale', { contact: ct, contactId: M.contactId || '' }, 90000).then(function (res) {
+                var cr = res && res.contact;
+                if (cr && cr.ok) { M.contactId = String(cr.id || ''); toast(ctOkMsg(cr, ct)); return; }
+                if (!cr) { alert('서버 프로그램(Apps Script)이 예전 버전이라 연락처를 다시 저장할 수 없어요. 새 코드로 바꾸고 "새 버전"으로 배포해 주세요.'); return; }
+                if (cr.code === 'nophone' || cr.code === 'setup' || cr.code === 'auth' || cr.code === 'invalid') { alert('⚠ 구글 연락처는 저장하지 못했어요.\n' + String(cr.msg || '').slice(0, 160)); return; }
+                ctSaleRetry(M, ct, String(cr.msg || '저장하지 못했어요').slice(0, 160));
+            }, function (e) { ctSaleRetry(M, ct, driveErrText(e)); });
+        }
         function mfUpload(M, sheet, btn, y, m, d, name, replaceId) {
             var b64;
             try { b64 = mfSnapshot(sheet).toDataURL('image/png').split(',')[1]; } catch (e) { toast('가입 확인서 그림을 만들지 못했어요.'); return; }
@@ -4407,9 +4431,9 @@
                 var regMsg = '';
                 try { regMsg = regUpsert(M, y, m, d) ? ' 가입 장부에도 정리했어요.' : ''; } catch (re) { regMsg = ' (가입 장부 정리는 실패했어요)'; }
                 var cr = res.contact;   // 구글 연락처 결과 (그림 저장과 따로)
-                if (cr && cr.ok) { M.contactId = String(cr.id || ''); regMsg += cr.updated ? ' 같은 번호의 구글 연락처를 "' + ct.label + '"(으)로 바꿨어요.' : ' 구글 연락처에 "' + ct.label + '"(으)로 저장했어요.'; }
+                if (cr && cr.ok) { M.contactId = String(cr.id || ''); regMsg += ' ' + ctOkMsg(cr, ct); }
                 var ctWarn = cr && !cr.ok ? String(cr.msg || '저장하지 못했어요').slice(0, 160) : !cr ? '서버 프로그램(Apps Script)이 예전 버전이라 연락처는 저장하지 않았어요. 새 코드로 바꾸고 "새 버전"으로 배포해 주세요.' : '';
-                if (ctWarn) { regMsg += ' (구글 연락처는 저장 안 됨)'; setTimeout(function () { alert('가입 확인서 그림은 드라이브에 저장했어요.\n\n⚠ 구글 연락처는 저장하지 못했어요.\n' + ctWarn + '\n\n설정 → 공유 저장소 → [구글 연락처 연결 확인]으로 빠진 단계를 볼 수 있어요.'); }, 60); }
+                if (ctWarn) { regMsg += ' (구글 연락처는 아직 저장 안 됨)'; var canRetry = !!(cr && cr.code !== 'nophone' && cr.code !== 'setup' && cr.code !== 'auth' && cr.code !== 'invalid'); setTimeout(function () { if (canRetry) ctSaleRetry(M, ct, ctWarn); else alert('가입 확인서 그림은 드라이브에 저장했어요.\n\n⚠ 구글 연락처는 저장하지 못했어요.\n' + ctWarn + '\n\n설정 → 공유 저장소 → [구글 연락처 연결 확인]으로 빠진 단계를 볼 수 있어요.'); }, 60); }
                 mfCount(M, 'save'); mfGate(M);
                 if (replaceId) toast((res.replaced ? '이전 파일은 지우고 수정본을 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' : '이전 파일을 찾지 못해서(이미 지웠거나 옮긴 경우) 수정본만 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.') + regMsg);
                 else toast('구글 드라이브 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' + regMsg);
@@ -7645,6 +7669,50 @@
             var rn = gone ? clRenumber(gone.sh) : 0;
             clQueue(); render(); toast('줄을 지웠어요.' + (rn ? ' 순번을 1번부터 다시 맞췄어요.' : '') + (dropped ? ' 재케어 일정도 지웠어요.' : ''));
         }
+        function clReport(s) {   // 상담 리스트 마감보고: 고른 날 · 담당자의 상담 목록을 카카오톡 글로 (번호는 기본으로 가림)
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'cl-dlg cl-rpt-dlg';
+            var col = function (kind, re) { return clColBy(s, kind, re); }, scol = col('staff'), pcol = col('ph'), nocol = col('no');
+            var cIn = col('', /유입/), cLoc = col('', /위치/), cTel = col('', /현통신사/), cMemo = col('', /상담내용/);
+            var vv = function (r, c) { return c ? String(r.v[c.k] || '').trim() : ''; };
+            var rows = clRowsOf(s.id).filter(function (r) { return r.ty === 'row'; });
+            var names = []; rows.forEach(function (r) { var n = vv(r, scol); if (n && names.indexOf(n) < 0) names.push(n); }); names.sort();
+            var day = h('input', { type: 'date', 'aria-label': '보고할 날짜', value: cl.day || ymd(new Date()) });
+            var who = h('select', { 'aria-label': '담당자' }, [h('option', { value: 'all' }, '전체 담당자')].concat(names.map(function (n) { return h('option', { value: n }, n); })));
+            var mine = names.filter(function (n) { return n === staffName(me) || (n.length >= 2 && staffName(me).slice(-n.length) === n); })[0];
+            who.value = !isBoss() && mine ? mine : 'all';
+            var hide = h('input', { type: 'checkbox', checked: true });
+            var out = h('textarea', { class: 'cl-rpt-out', readonly: true, rows: 14, 'aria-label': '마감보고 글' });
+            var stName = function (r) { var si = clStInfo(r.st); return si && r.st !== 'etc' ? si[1] : r.st === 'etc' ? '기타' : '보통'; };
+            function build() {
+                var d = isYmd(day.value) ? day.value : ymd(new Date()), w = who.value;
+                var list = rows.filter(function (r) { return clRowDay(s, r) === d && (w === 'all' || vv(r, scol) === w); });
+                list.sort(function (a, b) { return ((parseInt(vv(a, nocol), 10) || 1e9) - (parseInt(vv(b, nocol), 10) || 1e9)) || (a.o - b.o); });
+                var cnt = Object.create(null), order = []; list.forEach(function (r) { var k = stName(r); if (!cnt[k]) { cnt[k] = 0; order.push(k); } cnt[k]++; });
+                var L = ['《 ' + rptMD(d) + ' 상담리스트 마감보고 》', '▶ ' + s.name + ' 시트 · 담당 ' + (w === 'all' ? '전체' : w),
+                    '▶ 총 상담 ' + list.length + '건' + (list.length ? ' (' + order.map(function (k) { return k + ' ' + cnt[k]; }).join(' · ') + ')' : ''), '', '◆ 상담 목록 ◆'];
+                if (!list.length) L.push('- 이 날 상담이 없어요');
+                list.forEach(function (r) {
+                    var ph = vv(r, pcol), memo = vv(r, cMemo);
+                    var prod = (/^■ 상담 상품 :[ \t]*(\S.*)$/m.exec(memo) || [])[1] || '', fee = (/^■ 안내 요금 :[ \t]*(\S.*)$/m.exec(memo) || [])[1] || '';
+                    var first = prod ? '' : (memo.split('\n').filter(function (x) { return x.trim() && !/^■ [^:]+:\s*$/.test(x.trim()); })[0] || '').trim();
+                    L.push((vv(r, nocol) ? vv(r, nocol) + '. ' : '- ') + '[' + stName(r) + '] ' + [vv(r, scol), vv(r, cIn), vv(r, cLoc), vv(r, cTel), ph ? (hide.checked ? clMask(ph) : ph) : ''].filter(Boolean).join(' · '));
+                    var sub = [prod, fee].filter(Boolean).join(' · ') || first;
+                    if (sub) L.push('   ㄴ ' + sub.slice(0, 80));
+                });
+                out.value = L.join('\n');
+            }
+            day.addEventListener('change', build); who.addEventListener('change', build); hide.addEventListener('change', build);
+            build();
+            dlg.appendChild(h('div', {},
+                h('div', { class: 'dlg-head' }, h('span', { class: 'rpt-step big' }, '마감1'), ' 상담리스트 마감보고'),
+                h('div', { class: 'dlg-body' },
+                    h('div', { class: 'cl-rpt-opts' }, h('label', {}, '날짜 ', day), h('label', {}, '담당자 ', who), h('label', { class: 'chk' }, hide, ' 연락처 가리기')),
+                    out,
+                    h('p', { class: 'hd-help' }, '하루 마감 순서: 마감1 상담리스트 → 마감2 실적장표 → 마감3 업무 마감보고 · [복사]를 누르고 카카오톡 대화창에 붙여넣기 하세요.')),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'),
+                    h('button', { type: 'button', class: 'btn btn-close', 'data-act': 'cl-report-copy', onclick: function () { build(); clip(out.value, rptMD(isYmd(day.value) ? day.value : ymd(new Date())) + ' 상담리스트 마감보고를 복사했어요. 카카오톡 대화창에 붙여넣기 하세요.'); } }, '복사'))));
+            showDlg(dlg);
+        }
         function clRenumber(shId) {   // 순번(/) 열을 1, 2, 3… 빈 번호 없이 다시 매김 (원래 순서 그대로) → 바뀐 줄 수
             var s = cl.data.sheets.filter(function (x) { return x.id === shId; })[0]; if (!s) return 0;
             var nc = s.cols.filter(function (c) { return clColKind(c) === 'no'; })[0]; if (!nc) return 0;
@@ -7831,6 +7899,7 @@
             return h('div', {}, head, note, xrBox,
                 tabs,
                 h('div', { class: 'cl-head' }, titleEl, h('div', { class: 'actions' }, status, retry, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-sheet-set', onclick: function () { clSheetEdit(s); } }, '시트 설정'))),
+                h('div', { class: 'cl-rpt-row' }, h('button', { type: 'button', class: 'btn btn-sm btn-close', 'data-act': 'cl-report', title: '하루 마감 순서: 마감1 상담리스트 → 마감2 실적장표 → 마감3 업무 마감보고', onclick: function () { clReport(s); } }, h('span', { class: 'rpt-step' }, '마감1'), '상담리스트 마감보고')),
                 legend, dayBar, tools,
                 h('div', { class: 'cl-wrap' }, h('table', { class: 'cl-tbl' }, colg, thead, shown.length ? body : h('tbody', {}, h('tr', {}, h('td', { class: 'cl-empty', colspan: cols.length }, data.length ? '조건에 맞는 상담이 없어요.' : '이 시트에는 아직 상담이 없어요. [+ 상담 추가]로 적어 주세요.'))))),
                 h('p', { class: 'ib-help' }, '줄을 누르면 고칠 수 있어요. 고친 내용은 자동으로 암호화해서 저장되고, 다른 직원 화면에도 30초 안에 반영돼요. 줄·시트 삭제, 불러오기, 엑셀 내려받기는 대표님만 할 수 있어요.'));
@@ -9773,7 +9842,7 @@
             var boss = isBoss();
             var head = h('div', { class: 'page-head' }, h('h1', {}, '사거리가입고객리스트'), h('div', { class: 'actions' },
                 h('button', { type: 'button', class: 'btn', 'data-act': 'gl-refresh', onclick: function () { gl.busy = false; glLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침'),
-                gl.idx && glLatest() ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'gl-report', onclick: glReport, title: '그날 첫 보고는 시각 칸에 "목표", 그 뒤로는 보고한 시각이 적혀요' }, '📣 실적장표 보고') : null,
+                gl.idx && glLatest() ? h('button', { type: 'button', class: 'btn btn-close', 'data-act': 'gl-report', onclick: glReport, title: '하루 마감 순서: 마감1 상담리스트 → 마감2 실적장표 → 마감3 업무 마감보고 (그날 첫 보고는 시각 칸에 "목표", 그 뒤로는 보고한 시각이 적혀요)' }, h('span', { class: 'rpt-step' }, '마감2'), '실적장표 보고') : null,
                 gl.idx && glIdxList().length && glCanXlsx() ? h('button', { type: 'button', class: 'btn', 'data-act': 'gl-xlsx', onclick: glDownload }, '📥 엑셀 다운로드') : null,
                 boss && gl.idx && glLatest() ? h('button', { type: 'button', class: 'btn', 'data-act': 'gl-new', onclick: glNewMonth }, '+ ' + glNextName()) : null,
                 boss ? h('label', { class: 'btn', 'data-act': 'gl-import', title: '새 시트만 더해요. 이미 있는 장부는 절대 바꾸거나 지우지 않아요.' }, '엑셀 불러오기', h('input', { type: 'file', accept: '.xlsx', hidden: true, onchange: function () { glImport(this.files && this.files[0]); this.value = ''; } })) : null,
