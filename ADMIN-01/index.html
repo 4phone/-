@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-FwFRl00AE6yBpOcR4/wuwCnlrVlpHd+VVbmOTb6TX3A='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dlTpbeWCGhTVu5PRnqFhWqFPu8Fu+53jOgYkWlhR2CU='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1011,6 +1011,26 @@
         .mp-pols { padding: 8px 12px 0; display: grid; gap: 6px; }
         .mp-pol summary { cursor: pointer; font-weight: 800; color: #3E441E; padding: 4px 0; }
         .mp-ptbl td { text-align: left; white-space: normal; vertical-align: top; min-width: 70px; } .mp-ptbl td:first-child { font-weight: 700; min-width: 140px; }
+        .mp-vseg { margin: 0 0 10px; }
+        .mp-mbar { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-bottom: 8px; }
+        .mp-seg button { white-space: nowrap; }
+        .mp-reco { border-color: #E0B400; background: #FFF6D0; font-weight: 800; }
+        .mp-mwrap { max-height: calc(100vh - 300px); overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+        table.mp-mtbl th { position: sticky; top: 0; z-index: 2; } table.mp-mtbl th small { display: block; font-weight: 600; opacity: .8; font-size: 10.5px; }
+        table.mp-mtbl th.mp-mn, table.mp-mtbl td.mp-mn { position: sticky; left: 0; z-index: 1; text-align: left; background: #fff; min-width: 170px; white-space: normal; }
+        table.mp-mtbl th.mp-mn { z-index: 3; background: #3E441E; }
+        .mp-mrow { cursor: pointer; } .mp-mrow.open td { background: #FFFBEA; }
+        .mp-cls { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; font-size: 10.5px; font-weight: 800; vertical-align: 1px; }
+        .mp-cls.c0 { background: #E6EEFF; color: #2F55B8; } .mp-cls.c1 { background: #E6F4EA; color: #1F6B2A; } .mp-cls.c2 { background: #FDF0E6; color: #A3501E; }
+        .mp-rank { display: inline-block; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: #E0B400; color: #3B2E00; font-size: 10.5px; font-weight: 800; }
+        .mp-v { font-weight: 700; font-size: 14px; } .mp-v small { display: block; font-weight: 500; font-size: 10px; color: #8A937A; }
+        .mp-v.top { background: #DDF0DD !important; color: #1F6B2A; } .mp-na { color: #C9CDB8; text-align: center !important; }
+        td.mp-best { font-weight: 800; color: #1F6B2A; } th.mp-best { background: #1F6B2A !important; } td.mp-pr { color: #66705A; font-size: 12px; }
+        .mp-det td { background: #FFFDF4; white-space: normal; text-align: left; }
+        .mp-detail { display: flex; flex-wrap: wrap; gap: 10px; padding: 4px 0; }
+        .mp-dbox { border: 1px solid #E3E8D4; border-radius: 8px; padding: 6px 8px; background: #fff; } .mp-dbox > b { display: block; margin-bottom: 4px; color: #3E441E; }
+        table.mp-dtbl { border-collapse: collapse; font-size: 12px; } .mp-dtbl th { background: #F1F4E6; color: #4A5240; padding: 2px 6px; font-size: 11px; position: static; }
+        .mp-dtbl td { padding: 2px 6px; border-bottom: 1px solid #F1F4E6; text-align: right; white-space: nowrap; } .mp-dtbl td:first-child { text-align: left; color: #4A5240; }
         .mp-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; } .mp-tools input { flex: 1 1 260px; }
         .pol-tools { position: sticky; top: 0; z-index: 5; background: var(--bg, #F4F5EC); padding: 6px 0 10px; display: grid; gap: 8px; }
         .pol-cars, .pol-sps { display: flex; flex-wrap: wrap; gap: 6px; padding-bottom: 2px; }
@@ -6167,19 +6187,21 @@
            대표님이 거래처별 단가표 사진을 Claude에게 보내면 변환 파일(.json, kind: sageori-mobile)을 받아 [모바일 단가표 불러오기]로 넣어요.
            팀 키로 암호화해서 서버(mobile-price.json)에 보관 · 모든 직원이 보고 · 바꾸기는 대표님만 · 파일에 없는 거래처는 그대로 둠 */
         var MP_AAD = 'mp-v1';
-        var mp = { data: null, rev: -1, busy: false, err: '', dealer: '', q: '', at: 0 };
+        var mp = { data: null, rev: -1, busy: false, err: '', dealer: '', q: '', at: 0, view: 'model', band: 'top', ty: 'MNP', cls: 'all', sort: 'v', open: {}, idx: null };
         function mpStr(v, n) { return v == null ? '' : String(v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n); }
         function mpNorm(d) {   // 받은 내용은 항상 걸러서 (거래처 30 · 표 40 · 열 30 · 줄 400)
             var out = { v: 1, dealers: [] };
             (d && Array.isArray(d.dealers) ? d.dealers : []).slice(0, 30).forEach(function (x) {
                 var name = mpStr(x && x.name, 20); if (!name) return;
-                var objs = function (arr, keys, n) { return (Array.isArray(arr) ? arr : []).slice(0, n).filter(function (o) { return o && typeof o === 'object'; }).map(function (o) { var r = {}; keys.forEach(function (k) { r[k] = mpStr(o[k], 300); }); return r; }).filter(function (o) { return o[keys[0]]; }); };
-                var dd = { name: name, carrier: mpStr(x.carrier, 20), keep: objs(x.keep, ['item', 'period', 'note'], 40), addons: objs(x.addons, ['name', 'add', 'miss', 'keep', 'note'], 40), adds: objs(x.adds, ['name', 'cond', 'amount'], 60), deducts: objs(x.deducts, ['name', 'cond', 'amount'], 60), date: mpStr(x.date, 60), src: mpStr(x.src, 200), at: +x.at || 0, by: mpStr(x.by, 20), notes: (Array.isArray(x.notes) ? x.notes : []).slice(0, 40).map(function (t) { return mpStr(t, 300); }).filter(Boolean), tables: [] };
+                var objs = function (arr, keys, n) { return (Array.isArray(arr) ? arr : []).slice(0, n).filter(function (o) { return o && typeof o === 'object'; }).map(function (o) { var r = {}; keys.forEach(function (k) { r[k] = mpStr(o[k], 700); }); return r; }).filter(function (o) { return o[keys[0]]; }); };
+                var dd = { name: name, carrier: mpStr(x.carrier, 20), keep: objs(x.keep, ['item', 'period', 'note'], 40), addons: objs(x.addons, ['name', 'add', 'miss', 'keep', 'note'], 40), adds: objs(x.adds, ['name', 'cond', 'amount'], 60), deducts: objs(x.deducts, ['name', 'cond', 'amount'], 60), date: mpStr(x.date, 60), src: mpStr(x.src, 200), at: +x.at || 0, by: mpStr(x.by, 20), notes: (Array.isArray(x.notes) ? x.notes : []).slice(0, 40).map(function (t) { return mpStr(t, 700); }).filter(Boolean), tables: [] };
                 (Array.isArray(x.tables) ? x.tables : []).slice(0, 40).forEach(function (t) {
                     if (!t || !Array.isArray(t.cols) || !Array.isArray(t.rows)) return;
                     var cols = t.cols.slice(0, 30).map(function (c) { return mpStr(c, 40); });
                     var rows = t.rows.slice(0, 400).filter(Array.isArray).map(function (r) { return cols.map(function (c, i) { return mpStr(r[i], 60); }); }).filter(function (r) { return r.some(Boolean); });
-                    if (cols.length && rows.length) dd.tables.push({ name: mpStr(t.name, 80) || '단가표', unit: mpStr(t.unit, 20), cols: cols, rows: rows, notes: (Array.isArray(t.notes) ? t.notes : []).slice(0, 20).map(function (n) { return mpStr(n, 300); }).filter(Boolean) });
+                    var cm = Array.isArray(t.cm) && t.cm.length === t.cols.length ? t.cm.slice(0, 30).map(function (m) { return Array.isArray(m) && m.length === 5 && /^(010|MNP|기변)$/.test(m[3]) && /^(top|hi|mid|low)$/.test(m[2]) ? [mpStr(m[0], 40), Math.max(0, Math.min(20, +m[1] || 0)), m[2], m[3], m[4] === '공시' || m[4] === '선약' ? m[4] : ''] : null; }) : null;
+                    var mk = cm && Array.isArray(t.mk) && t.mk.length === t.rows.length ? t.mk.slice(0, 400).map(function (m) { return Array.isArray(m) && m.length === 3 && /^(고가|중저가|저가)$/.test(m[2]) ? [mpStr(m[0], 40), mpStr(m[1], 10) || '*', m[2]] : null; }) : null;
+                    if (cols.length && rows.length) dd.tables.push({ cm: mk ? cm : null, mk: mk, name: mpStr(t.name, 80) || '단가표', unit: mpStr(t.unit, 20), cols: cols, rows: rows, notes: (Array.isArray(t.notes) ? t.notes : []).slice(0, 20).map(function (n) { return mpStr(n, 700); }).filter(Boolean) });
                 });
                 if (dd.tables.length) out.dealers.push(dd);
             });
@@ -6231,6 +6253,105 @@
             var next = { v: 1, dealers: mp.data.dealers.filter(function (x) { return x.name !== name; }) };
             mpPut(next).then(function () { mp.dealer = ''; render(); toast(name + ' 모바일 단가표를 지웠어요.'); }, function (e) { alert('지우지 못했어요.\n' + driveErrText(e)); });
         }
+        function mpIndex() {   // 모델별 비교용 (단가표가 바뀔 때만 한 번 계산)
+            if (mp.idx && mp.idx.d === mp.data) return mp.idx;
+            var by = {}, caps = {}, order = [];
+            mp.data.dealers.forEach(function (dl, di) {
+                dl.tables.forEach(function (t) {
+                    if (!t.cm || !t.mk) return;
+                    var pi = t.cols.indexOf('출고가');
+                    t.rows.forEach(function (r, ri) {
+                        var m = t.mk[ri]; if (!m) return;
+                        var base = m[0], cap = m[1];
+                        if (!by[base]) { by[base] = { base: base, cls: m[2], cells: [], price: {} }; order.push(base); caps[base] = {}; }
+                        if (cap !== '*') caps[base][cap] = 1;
+                        if (pi >= 0 && r[pi] && /\d/.test(r[pi])) { var pv = +String(r[pi]).replace(/,/g, ''); if (pv) by[base].price[cap] = pv < 10000 ? pv * 1000 : pv; }
+                        t.cm.forEach(function (c, ci) {
+                            if (!c) return; var v = parseFloat(String(r[ci]).replace(/,/g, '')); if (!isFinite(v)) return;
+                            by[base].cells.push({ d: dl.name, di: di, cap: cap, tier: c[0], rk: c[1], band: c[2], ty: c[3], disc: c[4], v: v, code: r[t.cols[0] === '구분' ? 1 : 0] });
+                        });
+                    });
+                });
+            });
+            var rows = [];
+            order.forEach(function (base) {
+                var cs = Object.keys(caps[base]).sort(function (a, b) { var n = function (x) { return x === '2TB' ? 2048 : x === '1TB' ? 1024 : parseInt(x, 10); }; return n(a) - n(b); });
+                (cs.length ? cs : ['*']).forEach(function (cap) {
+                    var M = by[base];
+                    rows.push({ key: base + '|' + cap, base: base, cap: cap, cls: M.cls, price: M.price[cap] || M.price['*'] || 0, cells: M.cells.filter(function (x) { return x.cap === cap || x.cap === '*'; }) });
+                });
+            });
+            mp.idx = { d: mp.data, rows: rows, dealers: mp.data.dealers.map(function (x) { return { name: x.name, carrier: x.carrier }; }) };
+            return mp.idx;
+        }
+        var MP_BANDS = [['top', '최고 요금제'], ['mid', '중간 요금제 (44~79K대)'], ['low', '저가 요금제 (28~43K대)']];
+        function mpPick(row, di, ty, band) {   // 그 거래처에서 고른 구간·유형의 가장 높은 단가
+            var cs = row.cells.filter(function (x) { return x.di === di && x.ty === ty; });
+            if (band === 'top') { var mn = Infinity; cs.forEach(function (x) { if (x.rk < mn) mn = x.rk; }); cs = cs.filter(function (x) { return x.rk === mn; }); }
+            else cs = cs.filter(function (x) { return x.band === band; });
+            var best = null; cs.forEach(function (x) { if (!best || x.v > best.v) best = x; });
+            if (!best) return null;
+            var same = cs.filter(function (x) { return x.v === best.v; }).map(function (x) { return x.disc; });
+            return { v: best.v, tier: best.tier, disc: same.indexOf('') >= 0 || (same.indexOf('공시') >= 0 && same.indexOf('선약') >= 0) ? '' : best.disc };
+        }
+        function mpModelView() {
+            var I = mpIndex(), dl = I.dealers;
+            var seg = function (key, opts, label) { return h('div', { class: 'gl-seg mp-seg', role: 'group', 'aria-label': label }, opts.map(function (o) { return h('button', { type: 'button', 'data-mp': key + ':' + o[0], 'aria-pressed': mp[key] === o[0] ? 'true' : 'false', onclick: function () { mp[key] = o[0]; render(); } }, o[1]); })); };
+            var q = h('input', { type: 'search', 'data-fk': 'mp-mq', placeholder: '모델 찾기 (예: 플립8, S26, 아이폰17, A17)', 'aria-label': '모델 찾기', value: mp.q });
+            q.addEventListener('input', function () { mp.q = this.value; clearTimeout(mpModelView.t); mpModelView.t = setTimeout(render, 180); });
+            var words = mp.q.trim().toLowerCase().replace(/플립/g, 'flip').replace(/폴드/g, 'fold').replace(/아이폰/g, 'iphone').replace(/울트라/g, 'ultra').replace(/갤럭시\s*/g, '').split(/\s+/).filter(Boolean);
+            var rows = I.rows.filter(function (r) {
+                if (mp.cls === 'cheap' ? r.cls === '고가' : mp.cls !== 'all' && r.cls !== mp.cls) return false;
+                if (!words.length) return true;
+                var t = (r.base + ' ' + r.cap + ' ' + r.cells.map(function (x) { return x.code; }).join(' ')).toLowerCase().replace(/\s+/g, '');
+                return words.every(function (w) { return t.indexOf(w) >= 0; });
+            }).map(function (r) {
+                var picks = dl.map(function (d, di) { return mpPick(r, di, mp.ty, mp.band); });
+                var best = null; picks.forEach(function (p) { if (p && (best === null || p.v > best)) best = p.v; });
+                return { r: r, picks: picks, best: best };
+            }).filter(function (x) { return x.best !== null; });
+            if (mp.sort === 'v') rows.sort(function (a, b) { return b.best - a.best; });
+            var GO = { '고가': 0, '중저가': 1, '저가': 2 };
+            if (mp.sort === 'm') rows.sort(function (a, b) { return (GO[a.r.cls] - GO[b.r.cls]) || (I.rows.indexOf(a.r) - I.rows.indexOf(b.r)); });
+            var tyName = { MNP: 'MNP', '기변': '기변·재가입·보상', '010': '010 신규' }[mp.ty];
+            var bar = h('div', { class: 'mp-mbar' },
+                seg('ty', [['MNP', 'MNP'], ['기변', '기변'], ['010', '010 신규']], '가입 유형'),
+                seg('band', MP_BANDS, '요금제 구간'),
+                seg('cls', [['all', '전체'], ['고가', '고가'], ['cheap', '중저가·저가'], ['저가', '저가']], '모델군'),
+                seg('sort', [['v', '단가 높은 순'], ['m', '모델 순']], '정렬'),
+                h('button', { type: 'button', class: 'btn btn-sm mp-reco', 'data-act': 'mp-reco', onclick: function () { mp.cls = 'cheap'; mp.sort = 'v'; mp.q = ''; render(); } }, '💡 저가형 추천'));
+            var thead = h('thead', {}, h('tr', {}, h('th', { class: 'mp-mn' }, '모델'), h('th', {}, '출고가'), dl.map(function (d) { return h('th', {}, d.name, d.carrier ? h('small', {}, d.carrier) : null); }), h('th', { class: 'mp-best' }, '최고')));
+            var body = h('tbody', {}, rows.map(function (x, n) {
+                var r = x.r, open = !!mp.open[r.key];
+                var tr = h('tr', { class: 'mp-mrow' + (open ? ' open' : ''), 'data-key': r.key, tabindex: '0', onclick: function () { if (mp.open[r.key]) delete mp.open[r.key]; else mp.open[r.key] = 1; render(); }, onkeydown: function (e) { if (e.key === 'Enter') this.click(); } },
+                    h('td', { class: 'mp-mn' }, h('b', {}, r.base), r.cap !== '*' ? ' ' + r.cap : '', h('span', { class: 'mp-cls c' + GO[r.cls] }, r.cls), mp.sort === 'v' && mp.cls !== 'all' && n < 3 ? h('span', { class: 'mp-rank' }, '추천 ' + (n + 1)) : null),
+                    h('td', { class: 'mp-pr' }, r.price ? Math.round(r.price / 1000).toLocaleString('ko-KR') + '천' : ''),
+                    x.picks.map(function (p) {
+                        if (!p) return h('td', { class: 'mp-na' }, '·');
+                        return h('td', { class: 'mp-v' + (p.v === x.best ? ' top' : ''), title: p.tier + (p.disc ? ' · ' + p.disc : '') }, String(p.v), h('small', {}, p.tier.replace(/\s*\(.*$/, '') + (p.disc ? ' ' + p.disc : '')));
+                    }),
+                    h('td', { class: 'mp-best' }, String(x.best)));
+                if (!open) return tr;
+                var det = h('tr', { class: 'mp-det' }, h('td', { colspan: String(dl.length + 3) }, mpDetail(r, dl)));
+                return [tr, det];
+            }));
+            return h('div', {},
+                bar,
+                h('div', { class: 'mp-tools' }, q, h('span', { class: 'mp-count' }, '모델 ' + rows.length + '개 · ' + tyName + ' · ' + MP_BANDS.filter(function (b) { return b[0] === mp.band; })[0][1] + ' · 단위 만원 (초록 = 가장 높은 거래처)')),
+                h('p', { class: 'ph-tip' }, '줄을 누르면 그 모델의 거래처별 전체 구간 단가가 펼쳐져요. 거래처마다 통신사가 달라요(에이탑·반추 KT / 신창 SKT / 성연·수석 U+). 최고 요금제 = 거래처 표의 가장 높은 구간. 추가·차감 정책은 [거래처별]에서 확인하세요.'),
+                rows.length ? h('div', { class: 'pol-scroll mp-mwrap' }, h('table', { class: 'mp-tbl mp-mtbl' }, thead, body)) : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '맞는 모델이 없어요.')));
+        }
+        function mpDetail(r, dl) {   // 모델 한 줄 펼치기: 거래처별 구간 × (010 · MNP · 기변)
+            return h('div', { class: 'mp-detail' }, dl.map(function (d, di) {
+                var cs = r.cells.filter(function (x) { return x.di === di; }); if (!cs.length) return null;
+                var tiers = []; cs.forEach(function (x) { var k = x.rk + '|' + x.tier + '|' + x.disc; if (tiers.indexOf(k) < 0) tiers.push(k); });
+                tiers.sort(function (a, b) { return parseInt(a, 10) - parseInt(b, 10) || (a < b ? -1 : 1); });
+                var cell = function (k, ty) { var x = cs.filter(function (c) { return c.rk + '|' + c.tier + '|' + c.disc === k && c.ty === ty; }).sort(function (a, b) { return b.v - a.v; })[0]; return h('td', {}, x ? String(x.v) : '-'); };
+                return h('div', { class: 'mp-dbox' }, h('b', {}, d.name + (d.carrier ? ' · ' + d.carrier : '')),
+                    h('table', { class: 'mp-dtbl' }, h('thead', {}, h('tr', {}, h('th', {}, '구간'), h('th', {}, '010'), h('th', {}, 'MNP'), h('th', {}, '기변'))),
+                        h('tbody', {}, tiers.map(function (k) { var p = k.split('|'); return h('tr', {}, h('td', {}, p[1] + (p[2] ? ' · ' + p[2] : '')), cell(k, '010'), cell(k, 'MNP'), cell(k, '기변')); }))));
+            }));
+        }
         function polModeSeg() {   // 인터넷상담: 유선 단가표 / 모바일 단가표
             return h('div', { class: 'gl-seg pol-mode', role: 'group', 'aria-label': '단가표 종류' },
                 h('button', { type: 'button', 'data-act': 'pol-mode-net', 'aria-pressed': state.pol.mob ? 'false' : 'true', onclick: function () { state.pol.mob = false; render(); } }, '🌐 유선 단가표'),
@@ -6247,6 +6368,10 @@
             if (!mp.data) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, mp.err || '불러오는 중이에요...')));
             var list = mp.data.dealers;
             if (!list.length) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, boss ? '아직 모바일 단가표가 없어요. 거래처별 단가표 사진을 Claude에게 보내 변환 파일을 받은 뒤 [모바일 단가표 불러오기]로 넣어 주세요.' : '아직 모바일 단가표가 없어요. 대표님이 넣으면 여기에 보여요.')));
+            var vseg = h('div', { class: 'gl-seg mp-vseg', role: 'group', 'aria-label': '보기' },
+                h('button', { type: 'button', 'data-act': 'mp-v-model', 'aria-pressed': mp.view === 'model' ? 'true' : 'false', onclick: function () { mp.view = 'model'; mp.q = ''; render(); } }, '📊 모델별 비교'),
+                h('button', { type: 'button', 'data-act': 'mp-v-dealer', 'aria-pressed': mp.view === 'dealer' ? 'true' : 'false', onclick: function () { mp.view = 'dealer'; mp.q = ''; render(); } }, '🏢 거래처별 단가표·정책'));
+            if (mp.view === 'model') return h('div', {}, head, vseg, mpModelView());
             if (mp.dealer !== '*' && !list.some(function (x) { return x.name === mp.dealer; })) mp.dealer = list[0].name;
             var tabs = h('div', { class: 'pol-cars mp-dealers', role: 'group', 'aria-label': '거래처' },
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-dealer': '*', 'aria-pressed': mp.dealer === '*' ? 'true' : 'false', onclick: function () { mp.dealer = '*'; render(); } }, '전체 거래처'),
@@ -6280,7 +6405,7 @@
                     dl.notes.length && !words.length ? h('ul', { class: 'mp-notes' }, dl.notes.map(function (n) { return h('li', {}, n); })) : null,
                     tbls.length ? tbls : h('div', { class: 'p-none', style: 'padding:12px' }, '표가 없어요.'));
             }).filter(Boolean);
-            return h('div', {}, head,
+            return h('div', {}, head, vseg,
                 h('p', { class: 'ph-tip' }, '거래처를 고르거나 [전체 거래처]에서 모델을 찾으면 거래처마다 같은 모델 단가를 한눈에 비교할 수 있어요. (팀 키로 암호화해서 보관 · 바꾸기는 대표님만)'),
                 tabs, h('div', { class: 'mp-tools' }, q, words.length ? h('span', { class: 'mp-count' }, '찾은 줄 ' + total + '개') : null),
                 cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '"' + mp.q + '"에 맞는 모델이 없어요.')));
