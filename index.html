@@ -1753,10 +1753,12 @@
         const SG_TEAM_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
         window.sgTeamUrl = function () {   // 관리자 페이지와 같은 서버 주소 (ADMIN-01/team.json) — 한 번만 읽어서 같이 씀
             if (!window.sgTeamUrlP) {
-                window.sgTeamUrlP = fetch('ADMIN-01/team.json', { cache: 'no-store', credentials: 'omit' })
+                const get = p => fetch(p, { cache: 'no-store', credentials: 'omit' })
                     .then(r => r.ok ? r.json() : null)
                     .then(j => (j && typeof j.url === 'string' && SG_TEAM_RE.test(j.url)) ? j.url : '')
                     .catch(() => '');
+                // 광고 도착 주소가 하위 경로(/lp/ 등)여도 서버 주소를 찾도록: 지금 위치 기준 → 사이트 맨 위 기준 순서로
+                window.sgTeamUrlP = get('ADMIN-01/team.json').then(u => u || get('/ADMIN-01/team.json'));
             }
             return window.sgTeamUrlP;
         };
@@ -3320,9 +3322,12 @@
             if (host && host === location.hostname.toLowerCase()) host = '';   // 우리 홈페이지 안에서 이동
             var us = (q.utm_source || '').toLowerCase();
             var UTM = { naver: '네이버', naver_blog: '네이버 블로그', blog: '블로그', instagram: '인스타그램', ig: '인스타그램', facebook: '페이스북', fb: '페이스북', kakao: '카카오톡', kakaotalk: '카카오톡', daangn: '당근', karrot: '당근', youtube: '유튜브', google: '구글', band: '밴드' };
-            var gad = q.gclid || q.gbraid || q.wbraid || q.gad_source || q.gad_campaignid;   // 구글 광고를 누르고 들어오면 붙는 표시
-            if (us) out = '광고·링크: ' + (UTM[us] || q.utm_source);
-            else if (gad) out = '구글 광고';
+            var gad = q.gclid || q.gbraid || q.wbraid || q.gad_source || q.gad_campaignid || q.gclsrc || q.dclid || q.gad;   // 구글 광고를 누르고 들어오면 붙는 표시 (자동 태그)
+            var um = (q.utm_medium || '').toLowerCase();
+            if (gad) out = '구글 광고';   // 구글 광고 표시가 있으면 utm보다 먼저 (광고업체가 utm을 다르게 붙여도 구글 광고로)
+            else if (/^(google|googleads|google_ads|adwords|gads|구글)$/.test(us) && /cpc|ppc|paid|ad|광고/.test(um)) out = '구글 광고';
+            else if (us) out = '광고·링크: ' + (UTM[us] || q.utm_source);
+            else if (q.srsltid) out = '구글 검색';   // 구글 검색 결과(쇼핑·업체 정보)에서 누르면 붙는 표시
             else if (host) {
                 if (/(^|\.)search\.naver\.com$/.test(host)) out = '네이버 검색';
                 else if (/(^|\.)blog\.naver\.com$/.test(host)) out = '네이버 블로그';
@@ -3362,7 +3367,9 @@
             try { first = sessionStorage.getItem('sg_visit') !== '1'; sessionStorage.setItem('sg_visit', '1'); } catch (e) { first = true; }
             if (first && !bot) {
                 var so = sourceOf();
-                var vev = { action: 'visit', src: so.src, ref: so.ref, us: so.us, um: so.um, uc: so.uc, dev: isMobile() ? 'm' : 'pc', page: String(location.pathname || '/').slice(0, 80) };
+                var keys = []; try { new URLSearchParams(location.search).forEach(function (v, k) { if (keys.indexOf(k) < 0 && /^[A-Za-z0-9_]{1,20}$/.test(k)) keys.push(k); }); } catch (e) { /* 무시 */ }
+                var inFrame = false; try { inFrame = window.top !== window.self; } catch (e) { inFrame = true; }
+                var vev = { action: 'visit', src: so.src, ref: so.ref, us: so.us, um: so.um, uc: so.uc, dev: isMobile() ? 'm' : 'pc', page: (String(location.pathname || '/') + (keys.length ? '?' + keys.join(',') : '') + (inFrame ? ' [frame]' : '')).slice(0, 80) };   // 들어온 주소의 표시 이름만 (값은 안 남김) → 광고 표시가 붙어 왔는지 확인용
                 if (IB_URL) send(vev); else if (waiting.length < 20) waiting.push(vev);
             }
         } catch (e) { /* 기록 실패는 고객 화면에 영향 없음 */ }
