@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-F670mYLmv8D6tTheh0NkQn98xLpQh4aqQ5aq1Q2TvrQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-K+tgfe6n0fPWSfgUBF9YDlt9EirQsJDZdK0t/v1z5Dk='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1380,11 +1380,28 @@
         var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo', 'addr', 'bank', 'pay', 'fre', 'fee', 'gv', 'gh', 'ga'];
         var REG_LONG = { plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120, addr: 150, bank: 80 };
         var REG_MANUAL = { price: 1, memo: 1 };   // 장부에서만 적는 칸 (확인서를 다시 저장해도 지우지 않음)
-        var REG_COLS = [   // 장부 엑셀 순서 그대로 (한 줄 복사)
-            ['모바일&유선', function (r) { return r.kind === 'mobile' ? '모바일' : '유선'; }], ['담당자', 'seller'], ['거래처', 'dealer'], ['통신사', 'carrier'],
-            ['가입날짜', function (r) { return parseInt(r.date.slice(8), 10) + '일'; }], ['모델', 'model'], ['일련번호', 'serial'], ['번호', 'phone'], ['고객명', 'name'], ['생년월일', 'birth'],
+        var REG_NEGF = function (k) { return function (r) { var d = String(r[k] || '').replace(/\D/g, ''); return +d ? '-' + (+d) : ''; }; };   // 가입고객리스트처럼 -(마이너스)
+        var REG_DAY = function (r) { return parseInt(r.date.slice(8), 10) + '일'; };
+        var REG_COLS = [   // 장부 엑셀 C열(모바일&유선) ~ BG열(액면단가) 순서 그대로 · ''는 직접 적는 칸 (비워서 붙여넣음)
+            ['모바일&유선', function (r) { return r.kind === 'mobile' ? '모바일' : '유선'; }], ['담당자', 'seller'], ['거래처', 'dealer'], ['통신사', 'carrier'], ['가입날짜', REG_DAY], ['모델', 'model'], ['일련번호', 'serial'], ['번호', 'phone'], ['고객명', 'name'], ['생년월일', 'birth'],
             ['공시&선약(프약)', 'disc'], ['공시금액', 'subsidy'], ['할부원금', 'price'], ['할부개월', 'months'], ['요금제', 'plan'], ['부가서비스', 'extra'], ['보험가입여부(종류)', 'ins'],
-            ['결합종류', 'combKind'], ['결합여부', 'comb'], ['요금제유지개월', 'keep'], ['변경요금제', 'plan2'], ['가입후요금', 'bill1'], ['3개월후 요금', 'bill2'], ['이전사업자', 'prev'], ['가입유형', 'type']];
+            ['결합종류', 'combKind'], ['결합여부', 'comb'], ['요금제유지개월', 'keep'], ['변경요금제', 'plan2'], ['가입후요금', 'bill1'], ['3개월후 요금', 'bill2'], ['이전사업자', 'prev'], ['가입유형', 'type'],
+            ['출고가', ''], ['제휴카드사', ''], ['금액', ''], ['검수유무', ''], ['제휴수수료', ''], ['중고폰반납여부', ''], ['중고폰모델', ''], ['중고폰 상태', ''], ['중고폰 금액', ''], ['중고 순마진', ''], ['상품권반납', ''],
+            ['접수일', REG_DAY], ['거래처 (수식 칸)', 'dealer'], ['고객명 (수식 칸)', 'name'], ['생년월일 (수식 칸)', 'birth'], ['설치유무', ''], ['유선정산유무', ''],
+            ['고객약속 및 수납 유형', function (r) { return r.kind === 'wired' ? (r.addr || '') : ''; }], ['추가변수스케줄', ''],
+            ['지원금', REG_NEGF('ga')], ['입금', function (r) { return +String(r.ga || '').replace(/\D/g, '') ? '입금하기' : ''; }], ['수납건', ''], ['선납내용', ''], ['입금계좌', 'bank'],
+            ['유통망지원금', REG_NEGF('pay')], ['프리', REG_NEGF('fre')], ['부가 추가&차감', ''], ['판지&추가히든', ''], ['유선직정산', REG_NEGF('gh')], ['유선상품권', REG_NEGF('gv')], ['유선10%추가', ''], ['액면단가', 'fee']];
+        function regDerive(r0) {   // 장부 규칙: 유선 = 할부 36 · 부가서비스/보험 '유선없음' · 모델 '인(+티)(+전)' / 변경요금제가 없으면 유지개월·변경요금제 '유지' / 미결합이면 결합종류도 '미결합'
+            var r = {}; Object.keys(r0 || {}).forEach(function (k) { r[k] = r0[k]; });
+            if (r.kind === 'wired') {
+                if (!r.model) { var parts = String(r.plan || '').split(/\s*\+\s*/).filter(Boolean); r.model = '인' + (parts.slice(1).some(function (p) { return !/전화/.test(p); }) ? '+티' : '') + (parts.some(function (p) { return /전화/.test(p); }) ? '+전' : ''); }
+                r.months = r.months || '36'; r.extra = '유선없음'; r.ins = '유선없음';
+            }
+            if (!r.plan2 || r.plan2 === '유지') { r.plan2 = '유지'; r.keep = '유지'; }
+            else if (!r.keep) r.keep = /공시/.test(r.disc || '') ? '6' : /선약/.test(r.disc || '') ? '3' : '';
+            if (!r.combKind && r.comb === '미결합') r.combKind = '미결합';
+            return r;
+        }
         var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'policy', t: '상담하기' }, { v: 'idreq', t: '신분증 요청' }, { v: 'forms', t: '가입 확인서' }, { v: 'consult', t: '상담 리스트' }, { v: 'calls', t: '콜 인입' }, { v: 'visits', t: '홈페이지 인입' }, { v: 'gl', t: '가입고객리스트' }, { v: 'off', t: '휴무표' }, { v: 'settings', t: '설정' }];
 
         // 공유 저장소 주소는 반드시 구글 Apps Script 웹 앱 주소여야 합니다 (그 밖의 주소로는 어떤 요청도 보내지 않음)
@@ -1396,7 +1413,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-20.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-20.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -4822,15 +4839,15 @@
                 r.pay = digitsOnly(v('payAmt')).replace(/^0+$/, ''); r.fre = digitsOnly(v('freAmt')).replace(/^0+$/, '');   // PAY → 유통망지원금 · FRE → 프리 (가입고객리스트에는 -로)
             } else {   // 유선: 모바일에만 있는 칸(모델·일련번호·공시/선약·할부·보험 등)은 비워 둠
                 r.type = c('tNew') ? '신규' : c('tTrans') ? '동판' : c('tRenew') ? '재약정' : '';
-                r.plan = [v('netPlan'), v('tvPlan')].filter(Boolean).join(' + ');
-                r.keep = digitsOnly(v('keepW')); r.bill1 = digitsOnly(v('billW'));
-                r.extra = c('addY') ? v('addPlan') : '';
+                r.plan = [v('netPlan'), v('tvPlan'), c('addY') ? v('addPlan') : ''].filter(Boolean).join(' + ');
+                r.model = '인' + (v('tvPlan') ? '+티' : '') + (c('addY') && v('addPlan') ? '+전' : '');   // 장부 모델 칸: 인 / 인+티 / 인+티+전
+                r.bill1 = digitsOnly(v('billW'));
                 var gw = function (n) { var t = digitsOnly(v(n)); return +t ? t : ''; };
                 r.gv = gw('giftV'); r.gh = gw('giftH'); r.ga = gw('giftA');   // 상품권 → 유선상품권 · 본사 → 유선직정산 · 추가지원금 → 지원금(입금하기)
                 if (v('dpNo')) r.bank = [v('dpBank'), v('dpNo')].filter(Boolean).join(' ') + (v('dpOwner') && v('dpOwner') !== r.name ? ' (' + v('dpOwner') + ')' : '');   // 사은품 입금계좌
             }
             Object.keys(r).forEach(function (k) { if (r[k] === '' || r[k] == null) delete r[k]; });
-            return r;
+            return regDerive(r);
         }
         function regAddrFromIntake(r) {   // 같은 고객(휴대폰 번호, 없으면 이름)의 신분증 요청 접수 메모에서 '설치주소'
             var ph = digitsOnly(r.phone), nm = String(r.name || '').trim(), hit = '';
@@ -4854,6 +4871,7 @@
             if (!db.regs) db.regs = [];
             var rec = regFromForm(M.sheet, M.kind, ymd(new Date(y, m - 1, d)));
             if (M.fee && +M.fee) rec.fee = String(+M.fee);   // 상담에서 고른 상품 수수료 (접수 메모로 넘어온 값)
+            if (rec.kind === 'wired' && M.pg && +M.pg) rec.gv = String(+M.pg);   // 유선상품권 = 단가표 상품권 (없으면 확인서 상품권)
             var ex = M.regId ? db.regs.filter(function (x) { return x.id === M.regId; })[0] : null;
             if (!rec.addr && !(ex && ex.addr)) { var ia = regAddrFromIntake(rec); if (ia) rec.addr = ia; }   // 주소: 확인서 → 장부에 적어 둔 값 → 신분증 요청 접수 메모 순서
             if (ex) {
@@ -4867,7 +4885,8 @@
             glQueueReg(ex || rec);   // 사거리가입고객리스트에도 한 줄 (암호화해서)
             return true;
         }
-        function regLine(r, n) {   // 장부 엑셀에 붙여넣을 한 줄 (칸 사이는 Tab)
+        function regLine(r0, n) {   // 장부 엑셀에 붙여넣을 한 줄 (칸 사이는 Tab · C열부터)
+            var r = regDerive(r0);
             return REG_COLS.map(function (c) {
                 var v = c[1] === null ? String(n) : typeof c[1] === 'function' ? c[1](r) : (r[c[1]] || '');
                 return String(v).replace(/[\t\r\n]+/g, ' ');
@@ -4903,7 +4922,7 @@
                     h('span', { class: 'reg-n' }, String(i + 1)),
                     h('div', { class: 'reg-main' }, h('span', { class: 'reg-kind ' + r.kind }, r.kind === 'mobile' ? '모바일' : '유선'), h('b', {}, r.name || '(이름 없음)'), h('span', { class: 'reg-sub' }, sub)),
                     h('div', { class: 'reg-act' },
-                        h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-act': 'reg-copy', onclick: function () { clip(regLine(r, i + 1), (r.name || '') + ' 한 줄을 복사했어요. 장부 엑셀의 첫 칸을 누르고 붙여넣기(Ctrl+V) 하세요.'); } }, '한 줄 복사'),
+                        h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-act': 'reg-copy', onclick: function () { clip(regLine(r, i + 1), (r.name || '') + ' 한 줄을 복사했어요. 장부 엑셀에서 그 줄의 C열(모바일&유선) 칸을 누르고 붙여넣기(Ctrl+V) 하세요. (BG열 액면단가까지 채워지고, 뒤쪽 수식 칸은 그대로)'); } }, '한 줄 복사'),
                         h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editReg(r); } }, '수정'), regDelBtn(r)));
             });
             return h('section', { class: 'reg-box', 'data-ledger': 'all' },
@@ -5919,7 +5938,7 @@
                 lines = INTAKE_TPL.split('\n');
                 vals.forEach(function (kv) { var esc = kv[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), re = new RegExp('^(\\s*' + esc + '\\s*:).*$'); lines = lines.map(function (l) { return re.test(l) ? l.replace(re, '$1') + ' ' + kv[1] : l; }); });
             }
-            var feeLine = '수수료(액면단가) : ' + polFee(p.r).fee.toLocaleString('ko-KR') + '원', fi = -1, si = -1;
+            var feeLine = '수수료(액면단가) : ' + polFee(p.r).fee.toLocaleString('ko-KR') + '원' + (p.r.g > 0 ? ' (단가표 상품권 ' + Math.round(p.r.g * 10000).toLocaleString('ko-KR') + '원)' : ''), fi = -1, si = -1;
             lines.forEach(function (l, i) { if (/^\s*수수료\(액면단가\)\s*:/.test(l)) fi = i; if (si < 0 && /^\s*설치비\s*:/.test(l)) si = i; });
             if (fi >= 0) lines[fi] = feeLine; else if (si >= 0) lines.splice(si + 1, 0, feeLine); else lines.push(feeLine);   // 가입고객리스트 액면단가로 들어감
             U.memo.value = lines.join('\n');
@@ -6984,7 +7003,8 @@
             var acct = v('은행+계좌'), am = /^([^\d]*?)\s*([\d][\d\s-]{5,})\s*$/.exec(acct);   // 고객사은품 입금계좌 → 사은품 입금계좌 칸
             if (am) { S('dpBank', am[1].replace(/[\/+,·]/g, ' ').trim()); S('dpNo', am[2].replace(/\s+/g, '')); } else if (acct) S('dpNo', acct);
             S('dpOwner', v('예금주').replace(/[\d\-\/(),.]+/g, ' ').replace(/\s+/g, ' ').trim());
-            o.fee = dg(v('수수료(액면단가)'));
+            var fl = v('수수료(액면단가)'), fm2 = /^([\d,]+)/.exec(fl), pg2 = /상품권\s*([\d,]+)/.exec(fl);
+            o.fee = fm2 ? dg(fm2[1]) : ''; o.pg = pg2 ? dg(pg2[1]) : '';
             return o;
         }
         function intakeToWired(text, who) {   // [가입확인서로 이동]: 유선 가입 확인서를 열고 접수 메모 내용을 칸에 채움 (채운 뒤에도 직접 고칠 수 있음)
@@ -7000,7 +7020,7 @@
             state.view = 'forms'; state.form = 'wired'; render();
             var M = mforms.wired; if (!M || !M.sheet) { toast('유선 가입 확인서를 열지 못했어요.'); return; }
             var sh = M.sheet, o = intakeWired(text), n = 0;
-            M.fee = o.fee || '';   // 수수료(액면단가): 확인서 화면에는 안 보이고 가입 장부 → 가입고객리스트 액면단가로
+            M.fee = o.fee || ''; M.pg = o.pg || '';   // 수수료(액면단가): 확인서 화면에는 안 보이고 가입 장부 → 가입고객리스트 액면단가로
             Object.keys(o.set).forEach(function (k) {
                 var el = sh.querySelector('[data-mf="' + k + '"]'); if (!el) return;
                 el.value = o.set[k]; el.dispatchEvent(new Event('input', { bubbles: true })); n++;
