@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-l7XJ2WZLODua0S529RiJ9TRXQNW9XzUpN2mZgFMGyhw='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0+fVtLpDOM+BFkMGK4+ghkm1a0mxZYOc5qq07a6TZoA='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -410,6 +410,16 @@
         .cl-rpt-opts input[type=date], .cl-rpt-opts select { padding: 7px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
         .cl-rpt-opts .chk { display: inline-flex; align-items: center; gap: 4px; }
         .cl-rpt-out { width: 100%; box-sizing: border-box; font: 13px/1.55 inherit; font-family: inherit; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #FAFBF4; resize: vertical; white-space: pre-wrap; }
+        .mp-top { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin: 0 0 8px; }
+        .mp-top .mp-mbar { margin-bottom: 0; flex: 1 1 520px; min-width: 0; }
+        .mp-top .mp-mbar .gl-seg { flex-wrap: wrap; max-width: 100%; }
+        .mp-cmp-btn { font-weight: 800; }
+        .mp-cmp-btn[aria-pressed="true"] { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .mp-cmp { margin: 4px 0 16px; padding: 10px 12px 12px; border: 2px solid var(--olive-700); border-radius: 12px; background: #FBFCF6; scroll-margin-top: 70px; }
+        .mp-sec-h { font-size: 17px; margin: 18px 0 4px; letter-spacing: -0.4px; }
+        .mp-tbl td.mp-go { cursor: pointer; color: #2F55B8; text-decoration: underline dotted; text-underline-offset: 3px; }
+        .mp-tbl td.mp-go:hover, .mp-tbl td.mp-go:focus { background: #EEF3DC; outline: none; }
+        .mp-go-i { font-size: 11px; text-decoration: none; }
         .cl-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
         .cl-daybar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: flex-end; margin: -2px 0 8px; }
         .cl-daybar .cl-today[aria-pressed="true"] { background: #3E441E; border-color: #3E441E; color: #fff; }
@@ -1361,8 +1371,8 @@
         var INTAKE_TPL = "이름 : \n주민번호(전체) : \n휴대폰번호 : \n휴대폰통신사 : \n설치주소 : \n이메일주소(필수) : \n인증가능시간(필수) : \n\n■ 납부정보 ■ \n은행 /카드사 : \n계좌/카드번호 : \n카드유효기간 : \n예금주 성함/주민번호 : \n본인이면 \"본인\" \n\n● 접수정보 ● \n인터넷통신사 : \n인터넷상품: \nWIFI 유,무: \nTV상품+셋탑1 : \n전화상품 : X \n월요금 : \n설치비 : \n\n◆ 고객사은품 ◆ \n상품권 : 원 \n현금 : 원 \n상품권종류 : \n은행+계좌 : \n예금주: \n(본인,납부자외 불가)";   // 신분증 요청: 고객 접수 메모 양식 (복사해서 그대로 사용)
         var INTAKE_KEEP_DAYS = 30;   // 접수 메모(주민번호·계좌 등)는 30일 지나면 자동으로 지움
         var DEALERS = ['스카이', '이티', '안모', '성연', '수석', '신창', '에이탑', '반추', '모빙'];
-        var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo', 'addr'];
-        var REG_LONG = { plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120, addr: 150 };
+        var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo', 'addr', 'bank', 'pay', 'fre'];
+        var REG_LONG = { plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120, addr: 150, bank: 80 };
         var REG_MANUAL = { price: 1, memo: 1 };   // 장부에서만 적는 칸 (확인서를 다시 저장해도 지우지 않음)
         var REG_COLS = [   // 장부 엑셀 순서 그대로 (한 줄 복사)
             ['모바일&유선', function (r) { return r.kind === 'mobile' ? '모바일' : '유선'; }], ['담당자', 'seller'], ['거래처', 'dealer'], ['통신사', 'carrier'],
@@ -1380,7 +1390,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-20.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-20.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -3889,7 +3899,8 @@
         var MF_ONE = { type: 1, disc: 1, ins: 1, card: 1, comb: 1, used: 1, add: 1 };   // 하나만 고르는 칸 (다른 칸을 누르면 앞의 체크가 풀림)
         var MF_LINK = {   // '가입자와 동일' 체크: [가입자 정보 칸, 따라 채울 칸]
             cardSame: [['name', 'cardOwner'], ['birth', 'cardBirth'], ['phone', 'cardPhone']],
-            paySame: [['name', 'payOwner'], ['birth', 'payBirth']]
+            paySame: [['name', 'payOwner'], ['birth', 'payBirth']],
+            dpSame: [['payBank', 'dpBank'], ['payNo', 'dpNo'], ['payOwner', 'dpOwner']]   // 유선: 사은품 입금계좌 = 납부 계좌
         };
         var MF_KEEP = { dSel: '3', dSub: '6' };   // 모바일: 선택약정 3개월, 공시지원금 6개월 (직접 고칠 수 있음)
         var MF_PRE = [['선불 U+', '선불 SK', '선불 KT'], ['후불 U+', '후불 SK', '후불 KT']];
@@ -4036,8 +4047,7 @@
                         row(cell(k('가입 요금제'), inp('plan1', '가입 요금제')), tcell(k('유지기간'), inp('keep1', '가입 요금제 유지기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')), cell(k('청구금액'), inp('bill1', '가입 요금제 청구금액(원)', MONEY), k('원'))),
                         row(cell(k('변경 요금제'), inp('plan2', '변경 요금제')), tcell(k('유지기간'), inp('keep2', '변경 요금제 유지기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')), cell(k('청구금액'), inp('bill2', '변경 요금제 청구금액(원)', MONEY), k('원')))),
                     grp('핸드폰 보험',
-                        row(cell(chk('insY', '신청', 'ins'), k('( 보험명'), inp('insName', '핸드폰 보험 이름'), k('/'), inp('insFee', '핸드폰 보험료(원)', { mode: 'numeric', kind: 'money', max: 15, cls: 'amt' }), k('원)')), tcell(chk('insN', '미신청', 'ins'))),
-                        row(wcell(note('*개통일로 부터 30일 내에만 신청이 가능합니다.'))))),
+                        row(cell(chk('insY', '신청', 'ins'), k('( 보험명'), inp('insName', '핸드폰 보험 이름', { cls: 'mid' }), k('/'), inp('insFee', '핸드폰 보험료(원)', { mode: 'numeric', kind: 'money', max: 15, cls: 'amt' }), k('원)')), tcell(chk('insN', '미신청', 'ins')), tcell(note('*개통 30일 내 신청'))))),
 
                 K.cardSec(),
                 K.combSec(),
@@ -4122,7 +4132,8 @@
                     etc),
 
                 sec('고객 사은품', 'beige',
-                    grp('사은품 선택', row(h('div', { class: 'mf-cell wide mf-giftrow' }, k('총'), gift('giftT', '사은품 총액(원)'), k('원 (상품권 :'), gift('giftV', '상품권(원)'), k('원 + 본사 :'), gift('giftH', '본사 지원(원)'), k('원 + 추가지원금 :'), gift('giftA', '추가지원금(원)'), k('원)'))))),
+                    grp('사은품 선택', row(h('div', { class: 'mf-cell wide mf-giftrow' }, k('총'), gift('giftT', '사은품 총액(원)'), k('원 (상품권 :'), gift('giftV', '상품권(원)'), k('원 + 본사 :'), gift('giftH', '본사 지원(원)'), k('원 + 추가지원금 :'), gift('giftA', '추가지원금(원)'), k('원)')))),
+                    grp('사은품 입금계좌', row(cell(k('은행'), inp('dpBank', '사은품 입금 은행', { max: 20 })), cell(k('계좌번호'), inp('dpNo', '사은품 입금 계좌번호', { mode: 'numeric', max: 30 })), scell(k('예금주'), inp('dpOwner', '사은품 입금 예금주', { max: 20 })), tcell(chk('dpSame', '납부 계좌와 동일'))))),
 
                 h('ol', { class: 'mf-terms' },
                     h('li', {}, '요금제 변경은 변경 자동변경 및 임의 변경이 불가능하며, 변경날짜이전에 변경하실 경우 위약금이 청구 될 수 있습니다.'),
@@ -4802,11 +4813,13 @@
                 r.plan = v('plan1'); r.keep = digitsOnly(v('keep1')); r.plan2 = v('plan2'); r.bill1 = digitsOnly(v('bill1')); r.bill2 = digitsOnly(v('bill2'));
                 r.extra = v('extra');
                 r.ins = c('insY') ? (v('insName') || '가입') : c('insN') ? '없음' : '';
+                r.pay = digitsOnly(v('payAmt')).replace(/^0+$/, ''); r.fre = digitsOnly(v('freAmt')).replace(/^0+$/, '');   // PAY → 유통망지원금 · FRE → 프리 (가입고객리스트에는 -로)
             } else {   // 유선: 모바일에만 있는 칸(모델·일련번호·공시/선약·할부·보험 등)은 비워 둠
                 r.type = c('tNew') ? '신규' : c('tTrans') ? '동판' : c('tRenew') ? '재약정' : '';
                 r.plan = [v('netPlan'), v('tvPlan')].filter(Boolean).join(' + ');
                 r.keep = digitsOnly(v('keepW')); r.bill1 = digitsOnly(v('billW'));
                 r.extra = c('addY') ? v('addPlan') : '';
+                if (v('dpNo')) r.bank = [v('dpBank'), v('dpNo')].filter(Boolean).join(' ') + (v('dpOwner') && v('dpOwner') !== r.name ? ' (' + v('dpOwner') + ')' : '');   // 사은품 입금계좌
             }
             Object.keys(r).forEach(function (k) { if (r[k] === '' || r[k] == null) delete r[k]; });
             return r;
@@ -4835,7 +4848,7 @@
             var ex = M.regId ? db.regs.filter(function (x) { return x.id === M.regId; })[0] : null;
             if (!rec.addr && !(ex && ex.addr)) { var ia = regAddrFromIntake(rec); if (ia) rec.addr = ia; }   // 주소: 확인서 → 장부에 적어 둔 값 → 신분증 요청 접수 메모 순서
             if (ex) {
-                REG_FIELDS.forEach(function (f) { if (REG_MANUAL[f]) return; if (rec[f]) ex[f] = rec[f]; else if (f !== 'addr') delete ex[f]; });   // 주소는 확인서에 비어 있으면 장부에 적어 둔 값을 지우지 않음
+                REG_FIELDS.forEach(function (f) { if (REG_MANUAL[f]) return; if (rec[f]) ex[f] = rec[f]; else if (!/^(addr|bank|pay|fre)$/.test(f)) delete ex[f]; });   // 주소·입금계좌·지원금은 확인서에 비어 있으면 장부에 적어 둔 값을 지우지 않음   // 주소는 확인서에 비어 있으면 장부에 적어 둔 값을 지우지 않음
                 ex.kind = rec.kind; ex.date = rec.date; stamp(ex);
             } else {
                 rec.id = uid(); rec.u = 0; db.regs.push(stamp(rec)); M.regId = rec.id;
@@ -4981,6 +4994,9 @@
                 t('model', '모델'), t('serial', '일련번호'), t('disc', '공시&선약(프약)'), t('subsidy', '공시금액'), t('price', '할부원금'), t('months', '할부개월'),
                 t('plan', '요금제'), t('extra', '부가서비스'), t('ins', '보험가입여부(종류)'), t('combKind', '결합종류'), t('comb', '결합여부'), t('keep', '요금제유지개월'),
                 t('plan2', '변경요금제'), t('bill1', '가입후요금'), t('bill2', '3개월후 요금'), t('prev', '이전사업자'), t('type', '가입유형'),
+                { key: 'bank', label: '입금계좌 (사은품)', value: r.bank || '', half: true, max: 80, hint: '예: 국민 123456789012 (예금주가 다르면 괄호)' },
+                { key: 'pay', label: '유통망지원금 (PAY)', value: r.pay || '', half: true, max: 12, hint: '숫자만 · 가입고객리스트에는 -로 들어가요' },
+                { key: 'fre', label: '프리 (FRE)', value: r.fre || '', half: true, max: 12, hint: '숫자만 · 가입고객리스트에는 -로 들어가요' },
                 { key: 'instDate', label: '설치일 · 개통일', type: 'date', value: r.instDate || '', half: true },
                 { key: 'memo', label: '진행상태 메모', value: r.memo || '', max: 300, half: true },
                 { key: 'addr', label: '주소', value: r.addr || regAddrFromIntake(r) || '', half: true, max: 150, hint: !r.addr && regAddrFromIntake(r) ? '신분증 요청 접수 메모의 설치주소를 가져왔어요. [변경 저장]을 누르면 저장돼요.' : '' }
@@ -4989,8 +5005,12 @@
                 title: '가입 장부 고치기', saveText: '변경 저장', cls: 'wide wide3', fields: fields,
                 validate: function (v) { return isYmd(v.date) ? (v.instDate && !isYmd(v.instDate) ? '설치일을 올바르게 입력해 주세요.' : null) : '가입날짜를 올바르게 입력해 주세요.'; },
                 onSave: function (v) {
+                    var before = JSON.parse(JSON.stringify(r));
+                    if (v.hasOwnProperty('pay')) v.pay = digitsOnly(v.pay).replace(/^0+$/, ''); if (v.hasOwnProperty('fre')) v.fre = digitsOnly(v.fre).replace(/^0+$/, '');
                     r.kind = v.kind === 'wired' ? 'wired' : 'mobile'; r.date = v.date;
                     REG_FIELDS.forEach(function (f) { if (!v.hasOwnProperty(f)) return; var x = String(v[f] || '').trim().slice(0, REG_LONG[f] || 60); if (x) r[f] = x; else delete r[f]; });
+                    var ch = Object.keys(GL_REG_COL).concat(['addr']).filter(function (f) { return f !== 'kind' && (r[f] || '') !== (before[f] || '') && r[f]; });
+                    if (ch.length && before.name) glQueueReg(r, { only: ch, match: { name: before.name, phone: before.phone || '', kind: before.kind } });   // 고친 칸만 가입고객리스트 같은 고객 줄에도
                     if (v.instDate) { r.instDate = v.instDate; r.inst = true; } else { delete r.instDate; }
                     delete regDraft[r.id]; stamp(r);
                     commit('가입 장부를 고쳤어요.');
@@ -6246,7 +6266,64 @@
            대표님이 거래처별 단가표 사진을 Claude에게 보내면 변환 파일(.json, kind: sageori-mobile)을 받아 [모바일 단가표 불러오기]로 넣어요.
            팀 키로 암호화해서 서버(mobile-price.json)에 보관 · 모든 직원이 보고 · 바꾸기는 대표님만 · 파일에 없는 거래처는 그대로 둠 */
         var MP_AAD = 'mp-v1';
-        var mp = { data: null, rev: -1, busy: false, err: '', dealer: '', q: '', at: 0, view: 'model', band: 'top', ty: 'MNP', cls: 'all', sort: 'v', open: {}, idx: null };
+        var mp = { data: null, rev: -1, busy: false, err: '', dealer: '', q: '', at: 0, cmp: false, band: 'top', ty: 'MNP', cls: 'all', sort: 'v', open: {}, idx: null };
+        /* 모델별 비교 정보(cm·mk)가 없는 단가표(예전 변환 파일)도 열 이름·모델 코드로 자동으로 채움 — 변환 파일 양식이 조금 달라도 같은 방식으로 비교돼요 */
+        var MP_FAM = [   // 모델 코드 → [이름, 모델군]  (앞에서부터 먼저 맞는 것)
+            [/IPD/, 'iPhone Duo', '고가'], [/IP18PM/, 'iPhone 18 Pro Max', '고가'], [/IP18P/, 'iPhone 18 Pro', '고가'],
+            [/IP17PM/, 'iPhone 17 Pro Max', '고가'], [/IP17PR|IP17P[-_]/, 'iPhone 17 Pro', '고가'], [/IPA/, 'iPhone 17 Air', '고가'],
+            [/IP17E/, 'iPhone 17e', '중저가'], [/IP17/, 'iPhone 17', '고가'], [/IP16E/, 'iPhone 16e', '중저가'], [/IP16PR/, 'iPhone 16 Pro', '고가'], [/IP16/, 'iPhone 16', '고가'],
+            [/F976/, 'Z Fold8 Ultra', '고가'], [/F971/, 'Z Fold8', '고가'], [/F776/, 'Z Flip8', '고가'], [/F966/, 'Z Fold7', '고가'], [/F766/, 'Z Flip7', '고가'], [/F956/, 'Z Fold6 (DP 진열)', '고가'],
+            [/S948/, 'S26 Ultra', '고가'], [/S947/, 'S26+', '고가'], [/S942/, 'S26', '고가'], [/S741/, 'S26 FE', '중저가'],
+            [/S938/, 'S25 Ultra', '고가'], [/S937/, 'S25 Edge', '고가'], [/S936/, 'S25+', '고가'], [/S931/, 'S25', '고가'], [/S731/, 'S25 FE', '중저가'],
+            [/A576/, 'A57', '중저가'], [/A566/, 'A56', '중저가'], [/A376/, 'A37 5G', '중저가'], [/A366/, 'A36 5G', '중저가'], [/A276/, 'Jump5', '중저가'], [/M366/, 'Jump4', '중저가'], [/M176/, 'M17 (SM-M176)', '중저가'],
+            [/A176/, '갤럭시 버디5', '중저가'], [/XT2621/, 'moto G77', '중저가'], [/XT2601/, 'moto Edge70', '중저가'], [/XT2529/, 'moto g56 5G', '중저가'],
+            [/A175N-?M2/, 'A17 키즈폰 무너2', '저가'], [/A175NK-KP/, '플립투인 키즈폰', '저가'], [/A175/, '갤럭시 A17', '저가'], [/A165/, '무너폰 (A16 키즈)', '저가'],
+            [/RM14C/, '레드미 14C', '저가'], [/AT-M130/, '시니어폰 키즈폰 (AT-M130)', '저가'], [/AT-M140/, 'AT-M140 폴더', '저가'], [/AT-M150/, 'AT-M150 폴더', '저가'],
+            [/Z2339/, 'ZTE 클래식 폴더', '저가'], [/M140L/, '스타일 폴더2', '저가']];
+        var MP_NOCAP = ['S26 FE', 'S25 FE', 'A57', 'A56', 'A37 5G', 'A36 5G', 'Jump5', 'Jump4', 'M17 (SM-M176)', '갤럭시 버디5'];
+        function mpCanon(code, pet) {   // → [모델 이름, 용량('*' = 용량 상관없이 같은 단가), 모델군] 또는 null
+            var c = String(code || '').toUpperCase().replace(/\s/g, ''), dp = /DP/i.test(String(pet || '')) && c.indexOf('DP') < 0;
+            for (var i = 0; i < MP_FAM.length; i++) {
+                if (!MP_FAM[i][0].test(c)) continue;
+                var name = MP_FAM[i][1], cls = MP_FAM[i][2];
+                if (dp && name.indexOf('DP') < 0) name += ' (DP 진열)';
+                var m = /(2T|1T|512|256|128)/.exec(c.replace('2TG', '2T')), cap = m ? { '2T': '2TB', '1T': '1TB', '512': '512G', '256': '256G', '128': '128G' }[m[1]] : null;
+                if (!cap) cap = /BB$/.test(c) || /UIP1[78](BB|-NPBB|PRBB|PMBB)$/.test(c) ? '*' : /^(S2|Z )/.test(name) ? '256G' : '*';
+                if (MP_NOCAP.indexOf(name) >= 0 || cls === '저가' || /^moto/.test(name)) cap = '*';
+                return [name, cap, cls];
+            }
+            return null;
+        }
+        function mpTierNum(s) { var best = 0; (String(s).match(/\d+(\.\d+)?/g) || []).forEach(function (x) { var n = parseFloat(x); if (n >= 20 && n <= 400 && n > best) best = n; }); return best; }
+        function mpAutoMeta(dl) {   // 거래처 하나: cm·mk가 없는 표에 채움 (단가 열 = 010·MNP·기변 열 중 숫자가 작은 열)
+            var made = [];
+            dl.tables.forEach(function (t) {
+                if (t.cm && t.mk) return;
+                if (/원/.test(t.unit || '') && !/만/.test(t.unit || '')) return;   // 천원·원 단위 표(지원금·할부원금)는 단가가 아님
+                var ci = t.cols.indexOf('모델'); if (ci < 0) ci = t.cols[0] === '구분' ? 1 : 0;
+                var pi = t.cols.indexOf('펫네임');
+                var mk = t.rows.map(function (r) { return mpCanon(r[ci], pi >= 0 ? r[pi] : ''); });
+                if (!mk.some(Boolean)) return;
+                var tname = String(t.name || '').replace(/\s*\(.*$/, '').trim(), tdisc = /공시$/.test(t.name) ? '공시' : /선택약정$|선약$/.test(t.name) ? '선약' : '';
+                var cm = t.cols.map(function (h, i) {
+                    var x = String(h || ''); if (i === ci || /모델|펫네임|출고가|추가|모델군|할부|할원|구분|공통|지원금/.test(x)) return null;
+                    var ty = /MNP|번호이동|번이/i.test(x) ? 'MNP' : /010|신규/.test(x) ? '010' : /기변|재가입|보상/.test(x) ? '기변' : '';
+                    if (!ty) return null;
+                    var nums = t.rows.map(function (r) { return parseFloat(String(r[i]).replace(/,/g, '')); }).filter(isFinite);
+                    if (!nums.length || nums.some(function (n) { return Math.abs(n) >= 1000; })) return null;   // 공시지원금 같은 원 단위 금액 열은 빼고
+                    var disc = /공시/.test(x) ? '공시' : /선약|선택약정|요금할인/.test(x) ? '선약' : tdisc;
+                    var lab = x.replace(/MNP|번호이동|번이|010신규|010|신규|기변|재가입|보상|공시약정|공시|선택약정|선약|요금할인/g, ' ').replace(/\s+/g, ' ').trim() || tname;
+                    return [lab, mpTierNum(lab) || mpTierNum(tname), '', ty, disc];
+                });
+                if (!cm.some(Boolean)) return;
+                t.cm = cm; t.mk = mk.map(function (m) { return m || null; }); made.push(t);
+            });
+            if (!made.length) return;
+            var vals = [];   // 거래처 안에서 구간 순위 (요금 높은 구간 = 0)
+            dl.tables.forEach(function (t) { if (t.cm) t.cm.forEach(function (m) { if (m && typeof m[1] === 'number' && m[2] === '' && vals.indexOf(m[1]) < 0) vals.push(m[1]); }); });
+            vals.sort(function (a, b) { return b - a; });
+            made.forEach(function (t) { t.cm = t.cm.map(function (m) { if (!m) return null; var rk = vals.indexOf(m[1]); return [m[0], Math.max(0, rk), rk <= 0 ? 'top' : m[1] >= 80 ? 'hi' : m[1] >= 44 ? 'mid' : 'low', m[3], m[4]]; }); });
+        }
         function mpStr(v, n) { return v == null ? '' : String(v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n); }
         function mpNorm(d) {   // 받은 내용은 항상 걸러서 (거래처 30 · 표 40 · 열 30 · 줄 400)
             var out = { v: 1, dealers: [] };
@@ -6262,6 +6339,7 @@
                     var mk = cm && Array.isArray(t.mk) && t.mk.length === t.rows.length ? t.mk.slice(0, 400).map(function (m) { return Array.isArray(m) && m.length === 3 && /^(고가|중저가|저가)$/.test(m[2]) ? [mpStr(m[0], 40), mpStr(m[1], 10) || '*', m[2]] : null; }) : null;
                     if (cols.length && rows.length) dd.tables.push({ cm: mk ? cm : null, mk: mk, name: mpStr(t.name, 80) || '단가표', unit: mpStr(t.unit, 20), cols: cols, rows: rows, notes: (Array.isArray(t.notes) ? t.notes : []).slice(0, 20).map(function (n) { return mpStr(n, 700); }).filter(Boolean) });
                 });
+                mpAutoMeta(dd);   // 예전 변환 파일처럼 비교 정보가 없는 표도 열 이름·모델 코드로 채움
                 if (dd.tables.length) out.dealers.push(dd);
             });
             return out;
@@ -6542,7 +6620,7 @@
             mp.data.dealers.forEach(function (dl, di) {
                 dl.tables.forEach(function (t) {
                     if (!t.cm || !t.mk) return;
-                    var pi = t.cols.indexOf('출고가');
+                    var pi = t.cols.indexOf('출고가'), ci = t.cols.indexOf('모델'), ni = t.cols.indexOf('펫네임'); if (ci < 0) ci = t.cols[0] === '구분' ? 1 : 0;
                     t.rows.forEach(function (r, ri) {
                         var m = t.mk[ri]; if (!m) return;
                         var base = m[0], cap = m[1];
@@ -6551,7 +6629,7 @@
                         if (pi >= 0 && r[pi] && /\d/.test(r[pi])) { var pv = +String(r[pi]).replace(/,/g, ''); if (pv) by[base].price[cap] = pv < 10000 ? pv * 1000 : pv; }
                         t.cm.forEach(function (c, ci) {
                             if (!c) return; var v = parseFloat(String(r[ci]).replace(/,/g, '')); if (!isFinite(v)) return;
-                            by[base].cells.push({ d: dl.name, di: di, cap: cap, tier: c[0], rk: c[1], band: c[2], ty: c[3], disc: c[4], v: v, code: r[t.cols[0] === '구분' ? 1 : 0] });
+                            by[base].cells.push({ d: dl.name, di: di, cap: cap, tier: c[0], rk: c[1], band: c[2], ty: c[3], disc: c[4], v: v, code: r[ci] + (ni >= 0 ? ' ' + r[ni] : '') });
                         });
                     });
                 });
@@ -6577,32 +6655,44 @@
             var same = cs.filter(function (x) { return x.v === best.v; }).map(function (x) { return x.disc; });
             return { v: best.v, tier: best.tier, disc: same.indexOf('') >= 0 || (same.indexOf('공시') >= 0 && same.indexOf('선약') >= 0) ? '' : best.disc };
         }
-        function mpModelView() {
+        function mpWords(q) {   // 찾는 말: 한글로 적어도 영어 모델명과 맞게 (플립8 → flip8, 아이폰17 → iphone17)
+            return String(q || '').trim().toLowerCase().split(/\s+/).filter(Boolean).map(function (w) {
+                var n = w.replace(/갤럭시/g, '').replace(/플립/g, 'flip').replace(/폴드/g, 'fold').replace(/아이폰/g, 'iphone').replace(/울트라/g, 'ultra').replace(/프로/g, 'pro').replace(/맥스/g, 'max').replace(/플러스/g, '+').replace(/엣지/g, 'edge').replace(/에어/g, 'air').replace(/점프/g, 'jump').replace(/버디/g, '버디').replace(/모토/g, 'moto');
+                return [w, n];
+            });
+        }
+        function mpMatch(text, words) {
+            if (!words.length) return true;
+            var t = String(text || '').toLowerCase().replace(/\s+/g, '');
+            return words.every(function (p) { return t.indexOf(p[0]) >= 0 || (!!p[1] && t.indexOf(p[1]) >= 0); });
+        }
+        function mpCmpRows(words) {   // 모델별 비교 줄 (찾기 · 모델군 · 가입유형 · 구간 반영)
             var I = mpIndex(), dl = I.dealers;
-            var seg = function (key, opts, label) { return h('div', { class: 'gl-seg mp-seg', role: 'group', 'aria-label': label }, opts.map(function (o) { return h('button', { type: 'button', 'data-mp': key + ':' + o[0], 'aria-pressed': mp[key] === o[0] ? 'true' : 'false', onclick: function () { mp[key] = o[0]; render(); } }, o[1]); })); };
-            var q = h('input', { type: 'search', 'data-fk': 'mp-mq', placeholder: '모델 찾기 (예: 플립8, S26, 아이폰17, A17)', 'aria-label': '모델 찾기', value: mp.q });
-            q.addEventListener('input', function () { mp.q = this.value; clearTimeout(mpModelView.t); mpModelView.t = setTimeout(render, 180); });
-            var words = mp.q.trim().toLowerCase().replace(/플립/g, 'flip').replace(/폴드/g, 'fold').replace(/아이폰/g, 'iphone').replace(/울트라/g, 'ultra').replace(/갤럭시\s*/g, '').split(/\s+/).filter(Boolean);
             var rows = I.rows.filter(function (r) {
                 if (mp.cls === 'cheap' ? r.cls === '고가' : mp.cls !== 'all' && r.cls !== mp.cls) return false;
-                if (!words.length) return true;
-                var t = (r.base + ' ' + r.cap + ' ' + r.cells.map(function (x) { return x.code; }).join(' ')).toLowerCase().replace(/\s+/g, '');
-                return words.every(function (w) { return t.indexOf(w) >= 0; });
+                return mpMatch(r.base + ' ' + r.cap + ' ' + r.cells.map(function (x) { return x.code; }).join(' '), words);
             }).map(function (r) {
                 var picks = dl.map(function (d, di) { return mpPick(r, di, mp.ty, mp.band); });
                 var best = null; picks.forEach(function (p) { if (p && (best === null || p.v > best)) best = p.v; });
                 return { r: r, picks: picks, best: best };
             }).filter(function (x) { return x.best !== null; });
-            if (mp.sort === 'v') rows.sort(function (a, b) { return b.best - a.best; });
             var GO = { '고가': 0, '중저가': 1, '저가': 2 };
+            if (mp.sort === 'v') rows.sort(function (a, b) { return b.best - a.best; });
             if (mp.sort === 'm') rows.sort(function (a, b) { return (GO[a.r.cls] - GO[b.r.cls]) || (I.rows.indexOf(a.r) - I.rows.indexOf(b.r)); });
-            var tyName = { MNP: 'MNP', '기변': '기변·재가입·보상', '010': '010 신규' }[mp.ty];
-            var bar = h('div', { class: 'mp-mbar' },
+            return rows;
+        }
+        function mpCmpBar() {   // 가입 유형 · 요금제 구간 · 모델군 · 정렬 · 저가형 추천 (누르면 모델별 비교가 바로 열림)
+            var seg = function (key, opts, label) { return h('div', { class: 'gl-seg mp-seg', role: 'group', 'aria-label': label }, opts.map(function (o) { return h('button', { type: 'button', 'data-mp': key + ':' + o[0], 'aria-pressed': mp[key] === o[0] ? 'true' : 'false', onclick: function () { mp[key] = o[0]; mp.cmp = true; render(); } }, o[1]); })); };
+            return h('div', { class: 'mp-mbar' },
                 seg('ty', [['MNP', 'MNP'], ['기변', '기변'], ['010', '010 신규']], '가입 유형'),
                 seg('band', MP_BANDS, '요금제 구간'),
                 seg('cls', [['all', '전체'], ['고가', '고가'], ['cheap', '중저가·저가'], ['저가', '저가']], '모델군'),
                 seg('sort', [['v', '단가 높은 순'], ['m', '모델 순']], '정렬'),
-                h('button', { type: 'button', class: 'btn btn-sm mp-reco', 'data-act': 'mp-reco', onclick: function () { mp.cls = 'cheap'; mp.sort = 'v'; mp.q = ''; render(); } }, '💡 저가형 추천'));
+                h('button', { type: 'button', class: 'btn btn-sm mp-reco', 'data-act': 'mp-reco', onclick: function () { mp.cls = 'cheap'; mp.sort = 'v'; mp.q = ''; mp.cmp = true; render(); } }, '💡 저가형 추천'));
+        }
+        function mpCmpTable(rows) {
+            var dl = mpIndex().dealers, GO = { '고가': 0, '중저가': 1, '저가': 2 };
+            if (!rows.length) return h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, mpIndex().rows.length ? '맞는 모델이 없어요. 찾는 말이나 모델군을 바꿔 보세요.' : '모델별로 비교할 단가표가 없어요. 대표님이 모바일 단가표를 넣으면 보여요.'));
             var thead = h('thead', {}, h('tr', {}, h('th', { class: 'mp-mn' }, '모델'), h('th', {}, '출고가'), dl.map(function (d) { return h('th', {}, d.name, d.carrier ? h('small', {}, d.carrier) : null); }), h('th', { class: 'mp-best' }, '최고')));
             var body = h('tbody', {}, rows.map(function (x, n) {
                 var r = x.r, open = !!mp.open[r.key];
@@ -6615,14 +6705,16 @@
                     }),
                     h('td', { class: 'mp-best' }, String(x.best)));
                 if (!open) return tr;
-                var det = h('tr', { class: 'mp-det' }, h('td', { colspan: String(dl.length + 3) }, mpDetail(r, dl)));
-                return [tr, det];
+                return [tr, h('tr', { class: 'mp-det' }, h('td', { colspan: String(dl.length + 3) }, mpDetail(r, dl)))];
             }));
-            return h('div', {},
-                bar,
-                h('div', { class: 'mp-tools' }, q, h('span', { class: 'mp-count' }, '모델 ' + rows.length + '개 · ' + tyName + ' · ' + MP_BANDS.filter(function (b) { return b[0] === mp.band; })[0][1] + ' · 단위 만원 (초록 = 가장 높은 거래처)')),
-                h('p', { class: 'ph-tip' }, '줄을 누르면 그 모델의 거래처별 전체 구간 단가가 펼쳐져요. 거래처마다 통신사가 달라요(에이탑·반추 KT / 신창 SKT / 성연·수석 U+). 최고 요금제 = 거래처 표의 가장 높은 구간. 추가·차감 정책은 [거래처별]에서 확인하세요.'),
-                rows.length ? h('div', { class: 'pol-scroll mp-mwrap' }, h('table', { class: 'mp-tbl mp-mtbl' }, thead, body)) : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '맞는 모델이 없어요.')));
+            return h('div', { class: 'pol-scroll mp-mwrap' }, h('table', { class: 'mp-tbl mp-mtbl' }, thead, body));
+        }
+        function mpGoModel(m) {   // 거래처 단가표의 모델 이름을 누르면: 그 모델로 찾고 모델별 비교를 펼쳐서 보여줌
+            if (!m) return;
+            mp.q = m[0]; mp.cmp = true; mp.cls = 'all'; mp.open = {};
+            mpIndex().rows.forEach(function (r) { if (r.base === m[0] && (m[1] === '*' || r.cap === m[1] || r.cap === '*')) mp.open[r.key] = 1; });
+            render();
+            setTimeout(function () { var el = document.getElementById('mp-cmp'); if (el) window.scrollTo(0, Math.max(0, el.getBoundingClientRect().top + window.scrollY - 70)); }, 30);
         }
         function mpDetail(r, dl) {   // 모델 한 줄 펼치기: 거래처별 구간 × (010 · MNP · 기변)
             return h('div', { class: 'mp-detail' }, dl.map(function (d, di) {
@@ -6666,7 +6758,7 @@
                 h('button', { type: 'button', 'data-act': 'pol-mode-net', 'aria-pressed': state.pol.mob ? 'false' : 'true', onclick: function () { state.pol.mob = false; render(); } }, '🌐 유선 단가표'),
                 h('button', { type: 'button', 'data-act': 'pol-mode-mob', 'aria-pressed': state.pol.mob ? 'true' : 'false', onclick: function () { state.pol.mob = true; mpLoad(false); render(); } }, '📱 모바일 단가표'));
         }
-        function renderMobPol() {
+        function renderMobPol() {   // 모바일 단가표: 위에 모델별 비교(누르면 바로 펼침) · 아래에 거래처별 단가표·정책 — 한 화면
             var boss = isBoss();
             var file = h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: function () { mpImport(this.files && this.files[0]); this.value = ''; } });
             var head = h('div', { class: 'page-head' }, h('h1', {}, '상담하기'),
@@ -6677,32 +6769,41 @@
             if (!mp.data) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, mp.err || '불러오는 중이에요...')));
             var list = mp.data.dealers;
             if (!list.length) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, boss ? '아직 모바일 단가표가 없어요. 거래처별 단가표 사진을 Claude에게 보내 변환 파일을 받은 뒤 [모바일 단가표 불러오기]로 넣어 주세요.' : '아직 모바일 단가표가 없어요. 대표님이 넣으면 여기에 보여요.')));
-            var vseg = h('div', { class: 'gl-seg mp-vseg', role: 'group', 'aria-label': '보기' },
-                h('button', { type: 'button', 'data-act': 'mp-v-model', 'aria-pressed': mp.view === 'model' ? 'true' : 'false', onclick: function () { mp.view = 'model'; mp.q = ''; render(); } }, '📊 모델별 비교'),
-                h('button', { type: 'button', 'data-act': 'mp-v-dealer', 'aria-pressed': mp.view === 'dealer' ? 'true' : 'false', onclick: function () { mp.view = 'dealer'; mp.q = ''; render(); } }, '🏢 거래처별 단가표·정책'));
-            if (mp.view === 'model') return h('div', {}, head, vseg, mpModelView());
-            if (mp.dealer !== '*' && !list.some(function (x) { return x.name === mp.dealer; })) mp.dealer = list[0].name;
+            var words = mpWords(mp.q);
+            // ① 찾기 · 모델별 비교 버튼 · 비교 조건 (7번째 사진 부분 그대로)
+            var q = h('input', { type: 'search', 'data-fk': 'mp-q', placeholder: '모델 찾기 (예: 플립8, S26, 아이폰17, A17)', 'aria-label': '모델 찾기', value: mp.q });
+            q.addEventListener('input', function () { mp.q = this.value; if (mp.q.trim()) mp.cmp = true; clearTimeout(renderMobPol.t); renderMobPol.t = setTimeout(render, 170); });
+            var cmpBtn = h('button', { type: 'button', class: 'btn mp-cmp-btn', 'data-act': 'mp-v-model', 'aria-pressed': mp.cmp ? 'true' : 'false', 'aria-expanded': mp.cmp ? 'true' : 'false', onclick: function () { mp.cmp = !mp.cmp; render(); } }, mp.cmp ? '📊 모델별 비교 접기' : '📊 모델별 비교');
+            var cmpRows = mp.cmp ? mpCmpRows(words) : null;
+            var tyName = { MNP: 'MNP', '기변': '기변·재가입·보상', '010': '010 신규' }[mp.ty];
+            // ② 거래처별 단가표 (모델 이름을 누르면 그 모델의 거래처 비교로)
+            if (mp.dealer !== '*' && !list.some(function (x) { return x.name === mp.dealer; })) mp.dealer = words.length ? '*' : list[0].name;
             var tabs = h('div', { class: 'pol-cars mp-dealers', role: 'group', 'aria-label': '거래처' },
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-dealer': '*', 'aria-pressed': mp.dealer === '*' ? 'true' : 'false', onclick: function () { mp.dealer = '*'; render(); } }, '전체 거래처'),
                 list.map(function (x) { return h('button', { type: 'button', class: 'btn btn-sm', 'data-dealer': x.name, 'aria-pressed': mp.dealer === x.name ? 'true' : 'false', onclick: function () { mp.dealer = x.name; render(); } }, x.name); }));
-            var q = h('input', { type: 'search', 'data-fk': 'mp-q', placeholder: '모델 찾기 (예: S25, 아이폰16 128)', 'aria-label': '모델 찾기', value: mp.q });
-            q.addEventListener('input', function () { mp.q = this.value; clearTimeout(renderMobPol.t); renderMobPol.t = setTimeout(render, 150); });
-            var words = mp.q.trim().toLowerCase().split(/\s+/).filter(Boolean);
-            var hit = function (r) { if (!words.length) return true; var t = r.join(' ').replace(/\s+/g, '').toLowerCase(); return words.every(function (w) { return t.indexOf(w) >= 0; }); };
-            var shownDealers = mp.dealer === '*' ? list : list.filter(function (x) { return x.name === mp.dealer; });
+            var shownDealers = mp.dealer === '*' || words.length ? list : list.filter(function (x) { return x.name === mp.dealer; });   // 찾을 때는 모든 거래처에서
             var total = 0;
             var cards = shownDealers.map(function (dl) {
                 var tbls = dl.tables.map(function (t) {
-                    var rows = t.rows.filter(hit); if (!rows.length) return null;
-                    total += rows.length;
+                    var idx = []; t.rows.forEach(function (r, ri) { if (mpMatch(r.join(' ') + (t.mk && t.mk[ri] ? ' ' + t.mk[ri][0] : ''), words)) idx.push(ri); });
+                    if (!idx.length) return null;
+                    total += idx.length;
+                    var tc = mpTierCls(t);
                     return h('div', { class: 'mp-tbl-box' }, h('div', { class: 'mp-tbl-title' }, t.name, t.unit ? h('small', {}, ' (' + t.unit + ')') : null),
                         h('div', { class: 'pol-scroll' }, h('table', { class: 'mp-tbl' + (t.cm ? ' mp-tiered' : '') }, mpHead(t),
-                            h('tbody', {}, rows.map(function (r) { var tc = mpTierCls(t); return h('tr', {}, r.map(function (v, i) { return h('td', { class: (i === 0 ? 'mp-model' : /^[-+]?[\d,.]+$|^-$/.test(v) ? '' : 'mp-txt') + (tc[i] ? ' ' + tc[i] : '') }, v); })); })))),
+                            h('tbody', {}, idx.map(function (ri) {
+                                var r = t.rows[ri], m = t.mk ? t.mk[ri] : null;
+                                return h('tr', {}, r.map(function (v, i) {
+                                    var cls = (i === 0 ? 'mp-model' : /^[-+]?[\d,.]+$|^-$/.test(v) ? '' : 'mp-txt') + (tc[i] ? ' ' + tc[i] : '');
+                                    if (i === 0 && m) return h('td', { class: cls + ' mp-go', 'data-act': 'mp-go', tabindex: '0', title: m[0] + (m[1] !== '*' ? ' ' + m[1] : '') + ' — 누르면 거래처별 단가 비교', onclick: function () { mpGoModel(m); }, onkeydown: function (e) { if (e.key === 'Enter') mpGoModel(m); } }, v, h('span', { class: 'mp-go-i', 'aria-hidden': 'true' }, ' 📊'));
+                                    return h('td', { class: cls }, v);
+                                }));
+                            })))),
                         t.notes.length ? h('ul', { class: 'mp-notes' }, t.notes.map(function (n) { return h('li', {}, n); })) : null);
                 }).filter(Boolean);
                 if (!tbls.length && words.length) return null;
-                var pol = function (title, list, cols, keys) { return list.length ? h('details', { class: 'mp-pol', open: !words.length }, h('summary', {}, title + ' (' + list.length + ')'),
-                    h('div', { class: 'pol-scroll' }, h('table', { class: 'mp-tbl mp-ptbl' }, h('thead', {}, h('tr', {}, cols.map(function (c) { return h('th', {}, c); }))), h('tbody', {}, list.map(function (o) { return h('tr', {}, keys.map(function (k) { return h('td', {}, o[k] || ''); })); }))))) : null; };
+                var pol = function (title, arr, cols, keys) { return arr.length ? h('details', { class: 'mp-pol', open: !words.length }, h('summary', {}, title + ' (' + arr.length + ')'),
+                    h('div', { class: 'pol-scroll' }, h('table', { class: 'mp-tbl mp-ptbl' }, h('thead', {}, h('tr', {}, cols.map(function (c) { return h('th', {}, c); }))), h('tbody', {}, arr.map(function (o) { return h('tr', {}, keys.map(function (k) { return h('td', {}, o[k] || ''); })); }))))) : null; };
                 return h('section', { class: 'pol-card mp-card', style: '--c:#3E441E', 'data-dealer': dl.name },
                     h('div', { class: 'pol-head' }, h('h2', {}, dl.name + (dl.carrier ? ' · ' + dl.carrier : '')), h('span', {}, (dl.date ? dl.date + ' 기준' : '') + (dl.at ? ' · 넣은 시각 ' + koDate(ymd(new Date(dl.at))) + (dl.by ? ' · ' + dl.by : '') : '')),
                         boss ? h('button', { type: 'button', class: 'btn btn-sm mp-del', onclick: function () { mpRemove(dl.name); } }, '지우기') : null),
@@ -6711,13 +6812,20 @@
                         pol('➕ 부가서비스', dl.addons, ['상품', '유치 시', '미유치', '유지', '비고'], ['name', 'add', 'miss', 'keep', 'note']),
                         pol('💰 추가 정책', dl.adds, ['정책', '조건', '금액'], ['name', 'cond', 'amount']),
                         pol('➖ 차감 · 미지급', dl.deducts, ['항목', '조건', '금액'], ['name', 'cond', 'amount'])),
-                    dl.notes.length && !words.length ? h('ul', { class: 'mp-notes' }, dl.notes.map(function (n) { return h('li', {}, n); })) : null,
+                    dl.notes.length && !words.length ? h('details', { class: 'mp-pol', open: true }, h('summary', {}, '📝 안내 (' + dl.notes.length + ')'), h('ul', { class: 'mp-notes' }, dl.notes.map(function (n) { return h('li', {}, n); }))) : null,
                     tbls.length ? tbls : h('div', { class: 'p-none', style: 'padding:12px' }, '표가 없어요.'));
             }).filter(Boolean);
-            return h('div', {}, head, vseg,
-                h('p', { class: 'ph-tip' }, '거래처를 고르거나 [전체 거래처]에서 모델을 찾으면 거래처마다 같은 모델 단가를 한눈에 비교할 수 있어요. (팀 키로 암호화해서 보관 · 바꾸기는 대표님만)'),
-                tabs, h('div', { class: 'mp-tools' }, q, words.length ? h('span', { class: 'mp-count' }, '찾은 줄 ' + total + '개') : null),
-                cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '"' + mp.q + '"에 맞는 모델이 없어요.')));
+            var countTxt = (mp.cmp ? '모델 ' + cmpRows.length + '개 · ' + tyName + ' · ' + MP_BANDS.filter(function (b) { return b[0] === mp.band; })[0][1] + ' · 단위 만원' : '') + (words.length ? (mp.cmp ? ' · ' : '') + '거래처 표에서 찾은 줄 ' + total + '개' : '');
+            return h('div', {}, head,
+                h('div', { class: 'mp-top' }, cmpBtn, mpCmpBar()),
+                h('div', { class: 'mp-tools' }, q, countTxt ? h('span', { class: 'mp-count' }, countTxt) : null),
+                mp.cmp ? h('section', { class: 'mp-cmp', id: 'mp-cmp', 'aria-label': '모델별 비교' },
+                    h('p', { class: 'ph-tip' }, '줄을 누르면 그 모델의 거래처별 전체 구간 단가가 펼쳐져요 (초록 = 가장 높은 거래처). 거래처마다 통신사가 달라요. 최고 요금제 = 거래처 표의 가장 높은 구간.'),
+                    mpCmpTable(cmpRows)) : null,
+                h('h2', { class: 'mp-sec-h' }, '🏢 거래처별 단가표 · 정책'),
+                h('p', { class: 'ph-tip' }, '단가표의 모델 이름(📊)을 누르면 그 모델을 모든 거래처와 바로 비교해요. 위 [모델 찾기]로 찾으면 모든 거래처 표에서 그 모델만 보여요. (팀 키로 암호화해서 보관 · 바꾸기는 대표님만)'),
+                words.length ? null : tabs,
+                cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '"' + mp.q + '"에 맞는 모델이 거래처 단가표에 없어요.')));
         }
         function renderPolicy() {
             if (state.pol.mob) return renderMobPol();
@@ -9324,11 +9432,12 @@
         }
 
         /* ---------- 가입 확인서 → 가입고객리스트 한 줄 (권한이 없어도 넣기만 가능 · 암호화해서 받은 편지함으로) ---------- */
-        function glQueueReg(rec) {
+        function glQueueReg(rec, upd) {   // upd: { only: [고친 칸], match: { name, phone, kind } } → 같은 고객 줄의 그 칸만 고침 (줄이 없으면 넣지 않음)
             if (!rec || !rec.date || !db || !driveOn()) return;
             var d = parseYmd(rec.date), ymName = (d.getFullYear() % 100) + '년 ' + (d.getMonth() + 1) + '월';
             var body = { v: 1, ym: ymName, day: d.getDate(), reg: {} };
-            REG_FIELDS.concat(['kind']).forEach(function (f) { if (rec[f]) body.reg[f] = String(rec[f]).slice(0, 300); });
+            REG_FIELDS.concat(['kind']).forEach(function (f) { if (rec[f] && (!upd || f === 'kind' || upd.only.indexOf(f) >= 0)) body.reg[f] = String(rec[f]).slice(0, 300); });
+            if (upd) { body.only = upd.only.slice(0, 40); body.match = { name: String(upd.match.name || '').slice(0, 40), phone: String(upd.match.phone || '').slice(0, 20), kind: upd.match.kind === 'wired' ? 'wired' : 'mobile' }; }
             glEnc(body, GL_IN_AAD).then(function (blob) { return glCall('glAdd', { blob: blob, key: String(rec.id + '-' + (rec.u || 0)).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) }); })
                 .then(function () { if (glCan() && gl.idx) glInboxPull(); }, function () { /* 가입 장부에는 이미 저장됨 — 가입고객리스트는 다음 저장 때 */ });
         }
@@ -9351,20 +9460,22 @@
                 return Promise.all(jobs);
             }).then(function () { gl.inboxBusy = false; gl.inbox = 0; if (state.view === 'gl') render(); }, function () { gl.inboxBusy = false; });
         }
-        var GL_REG_COL = { kind: '모바일&유선', seller: '담당자', dealer: '거래처', carrier: '통신사', model: '모델', serial: '일련번호', phone: '번호', name: '고객명', birth: '생년월일', disc: '공시&선약(프약)', subsidy: '공시금액', price: '할부원금', months: '할부개월', plan: '요금제', extra: '부가서비스', ins: '보험가입여부(종류)', combKind: '결합종류', comb: '결합여부', keep: '요금제유지개월', plan2: '변경요금제', bill1: '가입후요금', bill2: '3개월후 요금', prev: '이전사업자', type: '가입유형' };
+        var GL_REG_NEG = { pay: 1, fre: 1 };   // 가입고객리스트에 -(마이너스) 숫자로 적는 칸
+        var GL_REG_COL = { kind: '모바일&유선', seller: '담당자', dealer: '거래처', carrier: '통신사', model: '모델', serial: '일련번호', phone: '번호', name: '고객명', birth: '생년월일', disc: '공시&선약(프약)', subsidy: '공시금액', price: '할부원금', months: '할부개월', plan: '요금제', extra: '부가서비스', ins: '보험가입여부(종류)', combKind: '결합종류', comb: '결합여부', keep: '요금제유지개월', plan2: '변경요금제', bill1: '가입후요금', bill2: '3개월후 요금', prev: '이전사업자', type: '가입유형', bank: '입금계좌', pay: '유통망지원금', fre: '프리' };
         function glPutReg(E, x) {   // 장부의 다음 빈 줄(모바일&유선·고객명이 빈 줄)에 가입 확인서 내용 쓰기 → 쓴 줄 번호
             var S = E.S, H = glHead(S), reg = x && x.reg; if (!H || !reg) return 0;
             var lab = {}, hr = S.cv[H.r] || {};
             Object.keys(hr).forEach(function (c) { var t = String(hr[c]).replace(/\s/g, ''); if (!lab[t]) lab[t] = +c; });
             var colOf = function (l) { return lab[String(l).replace(/\s/g, '')] || 0; };
-            var nameC = colOf('고객명'), phoneC = colOf('번호'), target = 0, maxNo = 0, r;
+            var nameC = colOf('고객명'), phoneC = colOf('번호'), target = 0, maxNo = 0, r, mt = x.match || reg, only = Array.isArray(x.only) ? x.only : null;
             for (r = H.r + 1; r <= Math.max(S.nr, H.r + 1); r++) {
                 var row = S.cv[r] || {};
                 if (H.no && typeof row[H.no] === 'number') maxNo = Math.max(maxNo, row[H.no]);
                 if (H.no && String(row[H.no] || '').toLowerCase() === 'ex') continue;
-                var same = reg.name && nameC && String(row[nameC] || '') === reg.name && phoneC && String(row[phoneC] || '') === String(reg.phone || '') && String(row[H.kind] || '').indexOf(reg.kind === 'wired' ? '유선' : '모바일') === 0;
+                var same = mt.name && nameC && String(row[nameC] || '') === mt.name && phoneC && String(row[phoneC] || '') === String(mt.phone || '') && String(row[H.kind] || '').indexOf(mt.kind === 'wired' ? '유선' : '모바일') === 0;
                 if (same) { target = r; break; }   // 같은 고객·같은 구분 줄이 이미 있으면 그 줄을 고침
             }
+            if (!target && only) return -1;   // 장부에서 고친 칸만 보낸 경우: 같은 고객 줄이 없으면 새 줄을 만들지 않음 (받은 편지함에서는 지움)
             if (!target) for (r = H.r + 1; r <= S.nr + 1; r++) {
                 var rw = S.cv[r] || {};
                 if (H.no && String(rw[H.no] || '').toLowerCase() === 'ex') continue;
@@ -9374,12 +9485,17 @@
             if (!S.cv[target]) S.cv[target] = {};
             var row2 = S.cv[target], prevRow = S.cv[target - 1] || {};
             Object.keys(prevRow).forEach(function (c) { var v = prevRow[c]; if (row2[c] == null && typeof v === 'string' && v.charAt(0) === '=' && !/^=자동_/.test(v)) row2[c] = '=' + glShift(v.slice(1), 1, 0); });   // 수식이 없는 줄이면 윗줄 수식을 내려 씀
-            function put(c, v) { if (!c || v == null || v === '') return; var s = String(v); row2[c] = /^\d{1,3}(,\d{3})+$|^\d+$/.test(s) && !/^0\d/.test(s) && s.length < 13 ? +s.replace(/,/g, '') : s; E.edits.set(target + ',' + c, row2[c]); }
-            Object.keys(GL_REG_COL).forEach(function (f) { var v = f === 'kind' ? (reg.kind === 'wired' ? '유선' : '모바일') : reg[f]; if (f === 'birth' && /^\d{6}$/.test(String(v || ''))) v = String(v); put(colOf(GL_REG_COL[f]), v); });
-            if (H.date) put(H.date, (x.day || '') + '일');
-            if (H.no && (row2[H.no] == null || row2[H.no] === '')) put(H.no, maxNo + 1);
-            if (reg.kind === 'wired' && reg.addr) put(colOf('고객약속및수납유형'), reg.addr);   // 유선: 설치 주소 (엑셀에서 쓰던 자리)
-            if (reg.kind === 'wired' && H.tax && typeof row2[H.tax] === 'string' && row2[H.tax].charAt(0) === '=') { delete row2[H.tax]; E.edits.set(target + ',' + H.tax, null); }   // 유선은 세금 15% 없음 (엑셀과 같게)
+            function put(c, v) { if (!c || v == null || v === '') return; var s = String(v); row2[c] = /^-?\d{1,3}(,\d{3})+$|^-?\d+$/.test(s) && !/^-?0\d/.test(s) && s.length < 13 ? +s.replace(/,/g, '') : s; E.edits.set(target + ',' + c, row2[c]); }
+            Object.keys(GL_REG_COL).forEach(function (f) {
+                if (only && only.indexOf(f) < 0) return;
+                var v = f === 'kind' ? (reg.kind === 'wired' ? '유선' : '모바일') : reg[f]; if (f === 'birth' && /^\d{6}$/.test(String(v || ''))) v = String(v);
+                if (GL_REG_NEG[f] && v) { var dn = String(v).replace(/\D/g, ''); v = +dn ? '-' + (+dn) : ''; }   // 유통망지원금·프리: -280000 처럼
+                put(colOf(GL_REG_COL[f]), v);
+            });
+            if (H.date && !only) put(H.date, (x.day || '') + '일');
+            if (H.no && !only && (row2[H.no] == null || row2[H.no] === '')) put(H.no, maxNo + 1);
+            if (reg.kind === 'wired' && reg.addr && (!only || only.indexOf('addr') >= 0)) put(colOf('고객약속및수납유형'), reg.addr);   // 유선: 설치 주소 (엑셀에서 쓰던 자리)
+            if (reg.kind === 'wired' && !only && H.tax && typeof row2[H.tax] === 'string' && row2[H.tax].charAt(0) === '=') { delete row2[H.tax]; E.edits.set(target + ',' + H.tax, null); }   // 유선은 세금 15% 없음 (엑셀과 같게)
             if (target > S.nr) S.nr = target;
             return target;
         }
