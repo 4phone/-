@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Ls+RdhfL/4eI4Qs6/Ik5RWNh3zYN2mhpaSve+hz/Oxg='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lRU45UwKfWf5BLjqAt0d2TcMDaUJ7lIo4IshTbMaSOM='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1454,7 +1454,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-21.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-21.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2366,10 +2366,25 @@
             var k = actUi.pick === '기타' ? actUi.etc.replace(/\s+/g, ' ').trim().slice(0, 20) : actUi.pick;
             if (!k) { toast(actUi.pick === '기타' ? '기타 칸에 할 일을 적어 주세요.' : '먼저 할 일을 골라 주세요.'); var el = document.querySelector('[data-fk="act-etc"]'); if (el) el.focus(); return; }
             if (!db.acts) db.acts = [];
-            db.acts.push(stamp({ id: uid(), sid: me, k: k, s: Date.now(), e: 0, u: 0 }));
-            commit('');
+            var now = Date.now(), held = db.tasks.filter(function (t) { return t.staffId === me && t.status === 'doing' && !t.ps && !t.ext; });   // 지금 하는 일은 즉시 하는 일 → 진행 중이던 내 업무는 중지
+            held.forEach(function (t) { t.ps = now; stamp(t); });
+            db.acts.push(stamp({ id: uid(), sid: me, k: k, s: now, e: 0, u: 0 }));
+            commit(held.length ? '진행 중이던 업무 ' + held.length + '건을 중지했어요. (' + held.map(function (t) { return t.title; }).join(', ').slice(0, 60) + ')' : '');
         }
-        function actStop(a) { if (!a || a.e) return; a.e = Math.max(Date.now(), a.s + 1); stamp(a); actUi.pick = ''; actUi.etc = ''; commit(a.k + ' ' + actDur(a.e - a.s) + ' 기록했어요.'); }
+        function actStop(a) {
+            if (!a || a.e) return; a.e = Math.max(Date.now(), a.s + 1); stamp(a); actUi.pick = ''; actUi.etc = '';
+            var paused = db.tasks.some(function (t) { return t.staffId === me && t.status === 'doing' && t.ps && !t.ext; });
+            commit(a.k + ' ' + actDur(a.e - a.s) + ' 기록했어요.' + (paused ? ' 중지된 업무는 [재시작]으로 이어서 하세요.' : ''));
+        }
+        function actForReport() {   // 진행중보고: 지금 하는 일 (진행 중) + 오늘 기록 (담당 필터 기준)
+            var day = state.date || ymd(new Date());
+            var whoOk = function (a) { return state.who === 'all' ? true : state.who === 'me' || state.who === 'none' ? a.sid === me : a.sid === state.who; };
+            var all = (db.acts || []).filter(whoOk);
+            var run = all.filter(function (a) { return !a.e; }).sort(function (a, b) { return a.s - b.s; });
+            var logs = all.filter(function (a) { return a.e && ymd(new Date(a.s)) === day; }).sort(function (a, b) { return a.s - b.s; });
+            var many = run.concat(logs).some(function (a, i, arr) { return a.sid !== arr[0].sid; });
+            return { run: run, logs: logs, many: many };
+        }
         function actCleanup() {   // 62일 지난 근무 기록만 정리
             var cut = Date.now() - ACT_KEEP_DAYS * 86400000, old = (db.acts || []).filter(function (a) { return a.e && a.s < cut; });
             if (!old.length) return;
@@ -2781,7 +2796,9 @@
                 var tl = t.ext ? [(+t.ext.slice(5, 7)) + '/' + (+t.ext.slice(8, 10)) + ' 업무로 이동'] : taskTimeLines(t, true).slice(0, 3);
                 return { t: t, n: closed(t) ? '' : String(++seq), lines: lines, memo: memo, tl: tl, h: Math.max(58, 20 + lines.length * 28 + memo.length * 22 + (memo.length ? 4 : 0), tl.length ? 56 + tl.length * 21 : 0) };
             });
-            var headH = meta.filters ? 140 : 124, sumH = 70, thH = 46, rowsH = rows.length ? rows.reduce(function (a, r) { return a + r.h; }, 0) : 80, footH = extra ? 100 : 66, H = headH + sumH + thH + rowsH + footH;
+            var AR = isDoing ? actForReport() : { run: [], logs: [] }, actLogs = AR.logs.slice(-14), actMore = AR.logs.length - actLogs.length;
+            var actH = AR.run.length || actLogs.length ? 62 + (AR.run.length || 1) * 32 + (actLogs.length ? 10 + actLogs.length * 26 : 0) + (actMore ? 24 : 0) + 18 : 0;
+            var headH = meta.filters ? 140 : 124, sumH = 70 + actH, thH = 46, rowsH = rows.length ? rows.reduce(function (a, r) { return a + r.h; }, 0) : 80, footH = extra ? 100 : 66, H = headH + sumH + thH + rowsH + footH;
             var scale = 2; while (W * scale * H * scale > 14000000 && scale > 1) scale -= 0.25;
             var c = document.createElement('canvas'); c.width = Math.round(W * scale); c.height = Math.round(H * scale);
             var g = c.getContext('2d'); g.scale(scale, scale); g.textBaseline = 'alphabetic';
@@ -2800,6 +2817,27 @@
             function pill(text, bg, fg) { g.font = '700 19px ' + F; var w = g.measureText(text).width + 30; rrect(g, px, headH + 18, w, 38, 19, bg); g.fillStyle = fg; g.fillText(text, px + 15, headH + 44); px += w + 10; }
             pill('진행 ' + openN + '건', '#FFF3BF', '#7A5B00'); pill('완료 ' + doneN + '건', '#DDF0DD', '#1F6B2A'); if (extN) pill('내일로 연장 ' + extN + '건', '#E6EEFF', '#2F55B8');
             if (lateN) pill('마감 지남 ' + lateN + '건', '#FDECEA', '#A33226');
+            if (actH) {   // ⏱ 지금 하는 일 (진행중보고)
+                var ay = headH + 70, nm = function (a) { return AR.many ? staffName(a.sid) + ' · ' : ''; };
+                rrect(g, PAD, ay, 928, actH - 18, 14, '#F4F8EC'); g.strokeStyle = '#CFDAB6'; g.lineWidth = 1; g.strokeRect(PAD + 0.5, ay + 0.5, 927, actH - 19);
+                g.fillStyle = '#3E441E'; g.font = '800 20px ' + F; g.fillText('⏱ 지금 하는 일', PAD + 20, ay + 36);
+                var ly = ay + 72;
+                if (AR.run.length) AR.run.forEach(function (a) {
+                    g.beginPath(); g.arc(PAD + 28, ly - 7, 7, 0, Math.PI * 2); g.closePath(); g.fillStyle = '#2F7D32'; g.fill();
+                    g.fillStyle = '#1E2310'; g.font = '800 21px ' + F; var t1 = nm(a) + a.k; g.fillText(t1, PAD + 46, ly);
+                    var w1 = g.measureText(t1).width; g.font = '600 18px ' + F; g.fillStyle = '#2F7D32'; g.fillText(actHm(a.s) + ' 시작 · ' + actDur(Date.now() - a.s) + ' 진행 중', PAD + 58 + w1, ly);
+                    ly += 32;
+                });
+                else { g.fillStyle = '#7B8568'; g.font = '600 18px ' + F; g.fillText('지금 하는 일 없음', PAD + 24, ly); ly += 32; }
+                if (actLogs.length) { ly += 10; actLogs.forEach(function (a, i) {
+                    g.font = '500 16px ' + F; g.fillStyle = '#66705A'; var pre = (actMore + i + 1) + '. ' + nm(a); g.fillText(pre, PAD + 28, ly);
+                    var x2 = PAD + 28 + g.measureText(pre).width; g.font = '700 16px ' + F; g.fillStyle = '#3E441E'; g.fillText(a.k, x2, ly); x2 += g.measureText(a.k).width + 12;
+                    g.font = '500 16px ' + F; g.fillStyle = '#66705A'; var tt = actHm(a.s) + ' ~ ' + actHm(a.e); g.fillText(tt, x2, ly); x2 += g.measureText(tt).width + 12;
+                    g.font = '700 16px ' + F; g.fillStyle = '#2F7D32'; g.fillText(actDur(a.e - a.s), x2, ly);
+                    ly += 26;
+                }); }
+                if (actMore) { g.font = '500 14px ' + F; g.fillStyle = '#8A937A'; g.fillText('앞의 ' + actMore + '건은 줄였어요 (최근 14건)', PAD + 28, ly); }
+            }
 
             // 표 머리
             var top = headH + sumH, y = top;
