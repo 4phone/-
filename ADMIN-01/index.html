@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-q5a5eLeeFCiO1h7pfPGzSz+SuxcO++hrhrBkmUpysv4='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gbXQb7UeVC1gGocHl+xsRqXPkJn1oja3Hb8X0uu62GM='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -429,6 +429,14 @@
         .mf-sheet .mf-in.amt2 { flex: 0 1 108px; min-width: 64px; text-align: right; }
         .mf-sheet .mf-in.bank { flex: 0 1 96px; min-width: 64px; }
         .mf-sheet .mf-in.acct { flex: 1 1 210px; min-width: 150px; letter-spacing: .3px; }
+        .cl-draft-btn { border-color: #7A8B3A; }
+        .cl-memo-draft { margin: 4px 0 6px; padding: 6px 9px; border-radius: 8px; background: #FFF3BF; font-size: 12.5px; font-weight: 700; color: #6B5300; }
+        .cl-draft-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow: auto; }
+        .cl-draft { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; background: #fff; }
+        .cl-draft.now { border-color: var(--gold); background: #FFFBEA; }
+        .cl-draft-t { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .cl-draft-s { margin: 4px 0 6px; font-size: 14px; }
+        .cl-draft-a { display: flex; gap: 6px; justify-content: flex-end; }
         .cl-tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
         .cl-daybar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: flex-end; margin: -2px 0 8px; }
         .cl-daybar .cl-today[aria-pressed="true"] { background: #3E441E; border-color: #3E441E; color: #fff; }
@@ -1423,7 +1431,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-21.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-21.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -7482,6 +7490,13 @@
                 ids[id] = 1;
                 out.xr.push({ id: id, by: str(x.by, 20), at: num(x.at), st: x.st, ob: str(x.ob, 20), oa: num(x.oa), ua: num(x.ua), u: num(x.u) });
             });
+            out.drafts = [];
+            (Array.isArray(d.drafts) ? d.drafts.slice(-80) : []).forEach(function (x) {   // 상담 메모 임시 저장 (적다 만 상담)
+                var id = x && str(x.id, 40); if (!id || ids[id] || num(x.at) < Date.now() - 14 * 86400000) return;
+                ids[id] = 1;
+                var v = {}; if (x.v && typeof x.v === 'object') Object.keys(x.v).slice(0, 40).forEach(function (k) { if (CL_KEY.test(k) && typeof x.v[k] === 'string' && x.v[k] !== '') v[k] = x.v[k].slice(0, 3000); });
+                out.drafts.push({ id: id, sh: str(x.sh, 40), st: okSt[x.st] ? x.st : 'n', v: v, raw: str(x.raw, 6000), by: str(x.by, 20), at: num(x.at), u: num(x.u) });
+            });
             var dd = d.del && typeof d.del === 'object' ? d.del : {};
             Object.keys(dd).slice(0, 40000).forEach(function (id) { var t = num(dd[id]); if (id.length <= 40 && t > 0) out.del[id] = t; });
             return out;
@@ -7499,7 +7514,7 @@
             }
             var sheets = pick(a.sheets, b.sheets), ok = Object.create(null);
             sheets.forEach(function (s) { ok[s.id] = 1; });
-            return { sheets: sheets, rows: pick(a.rows, b.rows).filter(function (r) { return ok[r.sh]; }), xr: pick(a.xr || [], b.xr || []), del: del };
+            return { sheets: sheets, rows: pick(a.rows, b.rows).filter(function (r) { return ok[r.sh]; }), xr: pick(a.xr || [], b.xr || []), drafts: pick(a.drafts || [], b.drafts || []), del: del };
         }
         function clRowsOf(shId) { return cl.data.rows.filter(function (r) { return r.sh === shId; }).sort(function (p, q) { return (p.o - q.o) || (p.id < q.id ? -1 : 1); }); }
         function clDataRows() { return cl.data ? cl.data.rows.filter(function (r) { return r.ty === 'row'; }).length : 0; }
@@ -7543,7 +7558,7 @@
                 cl.err = '상담 줄이 갑자기 많이 줄어서(' + cl.base + ' → ' + n + '줄) 저장을 멈췄어요. 새로고침 후 다시 확인해 주세요.'; render(); return;
             }
             cl.saving = true;
-            var mine = cl, at = cl.editAt, plain = JSON.stringify({ v: 1, sheets: cl.data.sheets, rows: cl.data.rows, xr: (cl.data.xr || []).filter(function (x) { return x.at > Date.now() - 30 * 86400000; }), del: cl.data.del });
+            var mine = cl, at = cl.editAt, plain = JSON.stringify({ v: 1, sheets: cl.data.sheets, rows: cl.data.rows, xr: (cl.data.xr || []).filter(function (x) { return x.at > Date.now() - 30 * 86400000; }), drafts: (cl.data.drafts || []).filter(function (x) { return x.at > Date.now() - 14 * 86400000; }), del: cl.data.del });
             clStatusPaint();
             ensureTeam().then(function (t) {
                 return encryptText(t.encKey, plain, CL_AAD).then(function (blob) { return ibCall('clPut', { baseRev: Math.max(0, cl.rev), blob: blob }); });
@@ -8154,7 +8169,56 @@
             toast(pk.c.name + ' · ' + pk.r.n + ' 을(를) 상담 메모에 넣었어요.');
         }
         function clMemoStash() { var M = cl.memo; if (M && M.P) { M.vals = M.P.values(); M.st = M.P.st; if (M.P.memoEl) M.raw = M.P.memoEl.value; } }
-        function clMemoBlank(M) { M.P = null; M.built = ''; M.vals = null; M.st = 'n'; M.raw = null; M.sig = null; }
+        function clMemoBlank(M) { M.P = null; M.built = ''; M.vals = null; M.st = 'n'; M.raw = null; M.sig = null; M.draftId = ''; }
+        function clDraftHas(s, v, raw) {   // 새 메모 기본값(순번·날짜·청약일·담당자 등)만 있으면 '내용 없음'
+            var base = clNewRowVals(s);
+            var any = Object.keys(v).some(function (k) { var c = s.cols.filter(function (x) { return x.k === k; })[0], kd = c ? clColKind(c) : 'no'; return kd !== 'no' && kd !== 'date' && kd !== 'time' && kd !== 'staff' && String(v[k] || '').trim() !== String(base[k] || '').trim() && !(c && /상담내용/.test(c.l.replace(/\s/g, ''))); });
+            return any || clTplClean(raw).trim() !== '';
+        }
+        function clDrafts() { return cl.data && cl.data.drafts ? cl.data.drafts.slice().sort(function (a, b) { var ma = a.by === staffName(me) ? 0 : 1, mb = b.by === staffName(me) ? 0 : 1; return (ma - mb) || (b.at - a.at); }) : []; }
+        function clDraftSave(quiet) {   // 💾 임시 저장: 적던 상담 메모를 그대로 보관 (불러오면 이어서 쓰기) → 저장했으면 true
+            var M = cl.memo, s = clMemoSheet(); if (!M || !M.P || !s || !cl.data) return false;
+            var v = M.P.values(), raw = M.P.memoEl ? M.P.memoEl.value : '';
+            if (!clDraftHas(s, v, raw)) { if (!quiet) toast('임시 저장할 내용이 없어요.'); return false; }
+            if (!cl.data.drafts) cl.data.drafts = [];
+            var d = M.draftId ? cl.data.drafts.filter(function (x) { return x.id === M.draftId; })[0] : null;
+            if (!d) { d = { id: uid(), at: Date.now() }; cl.data.drafts.push(d); M.draftId = d.id; }
+            d.sh = s.id; d.st = M.P.st || 'n'; d.v = v; d.raw = String(raw).slice(0, 6000); d.at = Date.now(); clStamp(d);
+            clQueue();
+            return true;
+        }
+        function clDraftDrop(id) { if (!cl.data || !cl.data.drafts || !id) return; cl.data.drafts = cl.data.drafts.filter(function (x) { return x.id !== id; }); cl.data.del[id] = Date.now(); clQueue(); }
+        function clDraftLoad(d) {   // 📂 불러오기: 적던 메모가 있으면 먼저 임시 저장
+            var M = cl.memo; if (!M || !d) return;
+            if (M.P && M.draftId !== d.id) { var s0 = clMemoSheet(); if (s0 && clDraftHas(s0, M.P.values(), M.P.memoEl ? M.P.memoEl.value : '')) { clDraftSave(true); toast('적던 메모는 임시 저장해 뒀어요.'); } }
+            if (d.sh && cl.data.sheets.some(function (x) { return x.id === d.sh; })) M.sheet = d.sh;
+            M.P = null; M.built = ''; M.vals = JSON.parse(JSON.stringify(d.v || {})); M.st = d.st || 'n'; M.raw = d.raw || null; M.sig = clPkSig(); M.draftId = d.id; M.min = false;
+            clMemoPaint();
+            setTimeout(function () { toast('임시 저장한 메모를 불러왔어요. 이어서 적고 [상담 완료]를 누르면 리스트에 저장되고 임시 저장본은 지워져요.'); }, 30);
+        }
+        function clDraftList() {
+            var list = clDrafts(), dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'cl-dlg cl-draft-dlg';
+            var sh = function (id) { var x = cl.data.sheets.filter(function (q) { return q.id === id; })[0]; return x || null; };
+            var line = function (d) {
+                var s = sh(d.sh), col = function (kind, re) { return s ? clColBy(s, kind, re) : null; }, vv = function (c) { return c ? String(d.v[c.k] || '').trim() : ''; };
+                var ph = vv(col('ph')), loc = vv(col('', /위치/)), tel = vv(col('', /현통신사/)), prod = (/^■ 상담 상품 :[ \t]*(\S.*)$/m.exec(d.raw || '') || [])[1] || '';
+                return [ph ? clMask(ph) : '', loc, tel, prod].filter(Boolean).join(' · ') || '(연락처·내용 없음)';
+            };
+            dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '📂 임시 저장한 상담 메모 (' + list.length + ')'),
+                h('div', { class: 'dlg-body' },
+                    list.length ? h('div', { class: 'cl-draft-list' }, list.map(function (d) {
+                        var si = clStInfo(d.st);
+                        return h('div', { class: 'cl-draft' + (d.id === (cl.memo && cl.memo.draftId) ? ' now' : ''), 'data-draft': d.id },
+                            h('div', { class: 'cl-draft-t' }, h('b', {}, ibTime(d.at)), ' · ', d.by || '', si && d.st !== 'n' ? h('span', { class: 'cl-st', style: '--sb:#' + (si[2] || '9AA088') }, si[1]) : null),
+                            h('div', { class: 'cl-draft-s' }, line(d)),
+                            h('div', { class: 'cl-draft-a' },
+                                h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'cl-draft-load', onclick: function () { closeDlg(); clDraftLoad(d); } }, '불러오기'),
+                                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-draft-del', onclick: function () { if (!confirm('이 임시 저장 메모를 지울까요?')) return; clDraftDrop(d.id); if (cl.memo && cl.memo.draftId === d.id) cl.memo.draftId = ''; clDraftList(); clMemoPaint(); } }, '지우기')));
+                    })) : h('p', { class: 'cl-empty' }, '임시 저장한 메모가 없어요. 상담 메모에서 [💾 임시 저장]을 누르면 여기에 모여요.'),
+                    h('p', { class: 'hd-help' }, '🔒 팀 키로 암호화해서 상담 리스트와 함께 보관해요 (기기에는 저장 안 함) · 14일 지나면 자동으로 지워져요.')),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'))));
+            showDlg(dlg);
+        }
         function clMan(t) { var n = +String(t).replace(/,/g, ''); if (!isFinite(n)) return String(t); return n >= 10000 ? (Math.round(n / 1000) / 10) + '만' : n.toLocaleString('ko-KR') + '원'; }
         function clProspectInfo(r, s) {   // '가망 261017 U+→SK 500M+스탠다드 월39,600원 2차 39만 광주 송정동' + 메모
             var dc = clColBy(s, 'date'), dm = /^(\d{4})-(\d{2})-(\d{2})/.exec(dc ? String(r.v[dc.k] || '') : ''), now = new Date();
@@ -8202,7 +8266,9 @@
             var row = { id: uid(), sh: s.id, ty: 'row', o: 0, v: v, st: M.P.st || 'n' };
             var mo = 0; clRowsOf(s.id).forEach(function (x) { mo = Math.max(mo, x.o); }); row.o = mo + 1;
             var rcMsg = clRecare(row, s);
-            clStamp(row); cl.data.rows.push(row); clQueue();
+            clStamp(row); cl.data.rows.push(row);
+            if (M.draftId) { clDraftDrop(M.draftId); M.draftId = ''; }   // 이어 쓰던 임시 저장본은 완료했으니 지움
+            clQueue();
             if (row.st === 'sale') {   // 판매성공: 번호 저장 없이 신분증 요청으로 (번호는 가입 확인서 [드라이브/연락처 저장] 때)
                 var pc = clColBy(s, 'ph'), dig = pc ? digitsOnly(row.v[pc.k] || '') : '', U = idrUI();
                 if (/^01\d{8,9}$/.test(dig)) {
@@ -8296,7 +8362,14 @@
             M.el.appendChild(h('div', { class: 'cl-memo-h' }, h('b', {}, '📝 상담 메모'), sel, h('span', { class: 'cl-memo-sp' }), minBtn, closeBtn));
             M.el.appendChild(h('div', { class: 'cl-memo-b' },
                 h('div', { class: 'cl-memo-tools' }, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-memo-pick', onclick: clMemoPick, title: '인터넷상담 표에서 상품 줄·1·2·3차·가이드 금액을 누르면 자동으로 들어가요. 직접 고친 줄을 표 내용으로 되돌릴 때 눌러요.' }, '↘ 짚어 둔 상품 다시 넣기'),
-                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-memo-reset', onclick: function () { if (!confirm('적던 메모를 지우고 새로 쓸까요?')) return; clMemoBlank(M); M.sig = clPkSig(); clMemoPaint(); } }, '새로 쓰기')),
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-memo-reset', onclick: function () { if (!confirm('적던 메모를 지우고 새로 쓸까요?')) return; clMemoBlank(M); M.sig = clPkSig(); clMemoPaint(); } }, '새로 쓰기'),
+                    h('button', { type: 'button', class: 'btn btn-sm cl-draft-btn', 'data-act': 'cl-draft-save', onclick: function () {
+                        if (!clDraftSave(false)) return;
+                        if (confirm('임시 저장했어요.\n메모를 비우고 다음 상담을 바로 쓸까요?\n(나중에 [📂 불러오기]로 이어서 쓸 수 있어요)')) { clMemoBlank(M); M.sig = clPkSig(); clMemoPaint(); toast('임시 저장하고 새 메모를 열었어요.'); }
+                        else { M.built = ''; clMemoStash(); clMemoPaint(); toast('임시 저장했어요.'); }
+                    } }, '💾 임시 저장'),
+                    h('button', { type: 'button', class: 'btn btn-sm cl-draft-btn', 'data-act': 'cl-draft-open', onclick: clDraftList }, '📂 불러오기' + (cl.data && cl.data.drafts && cl.data.drafts.length ? ' (' + cl.data.drafts.length + ')' : ''))),
+                M.draftId ? h('p', { class: 'cl-memo-draft' }, '📂 임시 저장본을 이어서 쓰는 중 — [상담 완료]를 누르면 임시 저장본은 지워져요.') : null,
                 h('p', { class: 'cl-memo-live' }, '⚡ 인터넷상담 표에서 상품 줄이나 1·2·3차·가이드 금액을 누르면 상담 통신사 · 상품 · 안내 요금 · 오퍼 · 설치비가 바로 바뀌어요.'),
                 h('div', { class: 'cl-form' }, h('div', { class: 'cl-meta' }, '상태 (줄 색)'), P.pick, P.fields)));
             M.el.appendChild(h('div', { class: 'cl-memo-f' }, h('small', {}, '🔒 저장하면 팀 키로 암호화돼요'), h('button', { type: 'button', class: 'btn btn-step', 'data-step': '2', 'data-act': 'cl-memo-save', onclick: clMemoSave }, '상담 완료 · 리스트에 저장')));
