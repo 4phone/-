@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>사거리인터넷 THE LOUNGE - 사장님 전용 프라이빗 단가표</title>
+    <title>사거리인터넷 THE LOUNGE - 사장님 전용 프라이빗 비즈니스 라운지</title>
     <link class="favicon-target" rel="icon" href="사거리로고_투명.png" type="image/png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
     <!-- 🔐 [추가] 입장 화면 글꼴 -->
@@ -384,6 +384,33 @@
         .lg-foot a { color: rgba(237,230,214,0.6); text-decoration: none; }
         .lg-foot a:hover { color: #F3E5AB; }
         #lounge-gate.lg-leave { animation: lgOut .7s ease forwards; }
+        /* 바로 입장: 초대장(티켓) 한 장 · 버튼에 은은한 빛 */
+        .lg-invite { margin: 4px 0 2px 0; animation: lgRise 1s cubic-bezier(.2,.7,.2,1) .5s both; }
+        .lg-ticket { position: relative; display: flex; align-items: stretch; border-radius: 16px; border: 1px solid rgba(212,175,55,0.38); background: linear-gradient(135deg, rgba(212,175,55,0.10) 0%, rgba(212,175,55,0.02) 60%, rgba(255,255,255,0.02) 100%); overflow: hidden; }
+        .lg-ticket::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,240,200,0.10) 50%, transparent 65%); transform: translateX(-100%); animation: lgSweep 5.5s ease-in-out 1.6s infinite; pointer-events: none; }
+        .lg-tk-l { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 18px 20px; }
+        .lg-tk-l .lg-serif { font-size: 15px; letter-spacing: 2px; color: #D4AF37; }
+        .lg-tk-l b { font-family: 'Cormorant Garamond', 'Noto Serif KR', serif; font-size: 26px; font-weight: 600; letter-spacing: 3px; color: #F6F1E6; line-height: 1.1; }
+        .lg-tk-l small { font-size: 12.5px; color: rgba(237,230,214,0.6); letter-spacing: 0.3px; }
+        .lg-tk-r { position: relative; flex: none; width: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; border-left: 1px dashed rgba(212,175,55,0.45); font-size: 11.5px; font-weight: 700; letter-spacing: 3px; color: #E9D48A; }
+        .lg-tk-r::before, .lg-tk-r::after { content: ''; position: absolute; left: -9px; width: 18px; height: 18px; border-radius: 50%; background: #17140F; border: 1px solid rgba(212,175,55,0.38); }
+        .lg-tk-r::before { top: -10px; } .lg-tk-r::after { bottom: -10px; }
+        .lg-tk-dot { width: 8px; height: 8px; border-radius: 50%; background: #E9D48A; box-shadow: 0 0 0 0 rgba(233,212,138,0.55); animation: lgPulse 2.4s ease-out infinite; }
+        .lg-note { margin: 12px 0 0 0; font-size: 12.5px; color: rgba(237,230,214,0.5); word-break: keep-all; }
+        .lg-btn { position: relative; overflow: hidden; }
+        .lg-btn::before { content: ''; position: absolute; top: 0; bottom: 0; left: -60%; width: 45%; background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%); transform: skewX(-18deg); animation: lgBtnSheen 4.8s ease-in-out 2s infinite; pointer-events: none; }
+        .lg-btn > span, .lg-btn > svg { position: relative; }
+        .lg-btn svg { transition: transform .35s cubic-bezier(.2,.7,.2,1); }
+        .lg-btn:hover svg, .lg-btn:focus-visible svg { transform: translateX(4px); }
+        .lg-btn:focus-visible { outline: 1px solid rgba(243,229,171,0.75); outline-offset: 4px; }
+        #lounge-gate .lg-card-head h2 { word-break: keep-all; }
+        .lg-btn.lg-go { cursor: default; filter: none; }
+        .lg-btn.lg-go svg { transform: translateX(10px); opacity: 0; transition: transform .45s ease, opacity .45s ease; }
+        @keyframes lgSweep { 0% { transform: translateX(-100%); } 40%, 100% { transform: translateX(100%); } }
+        @keyframes lgBtnSheen { 0% { left: -60%; } 30%, 100% { left: 130%; } }
+        @keyframes lgPulse { 0% { box-shadow: 0 0 0 0 rgba(233,212,138,0.55); } 70%, 100% { box-shadow: 0 0 0 10px rgba(233,212,138,0); } }
+        @media (max-width: 480px) { .lg-tk-l { padding: 16px 16px; } .lg-tk-l b { font-size: 21px; letter-spacing: 2px; white-space: nowrap; } .lg-tk-r { width: 74px; letter-spacing: 2px; } }
+        @media (prefers-reduced-motion: reduce) { .lg-ticket::after, .lg-btn::before, .lg-tk-dot { animation: none !important; } }
         @keyframes lgRise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
         @keyframes lgFade { from { opacity: 0; } to { opacity: 1; } }
         @keyframes lgShine { 0% { background-position: 130% 0; } 55%, 100% { background-position: -130% 0; } }
@@ -714,46 +741,73 @@
     </style>
 </head>
 <body>
-    <!-- 🔐 [추가] THE LOUNGE 입장 확인: 국세청 등록 정보와 일치하는 사업자만 입장 -->
+    <!-- 🔐 THE LOUNGE 입장 화면: 지금은 누구나 [바로 입장하기] · 국세청 사업자 확인 입장은 아래 스크립트의 VERIFY = true 로 다시 켜요 -->
     <div id="lounge-gate" role="dialog" aria-modal="true" aria-labelledby="lg-title">
         <div class="lg-bg" aria-hidden="true"><span class="lg-glow g1"></span><span class="lg-glow g2"></span><span class="lg-mark">LOUNGE</span></div>
         <div class="lg-wrap">
             <div class="lg-copy">
-                <div class="lg-eyebrow"><span class="lg-rule"></span><span class="lg-serif">Sageori Internet</span><span class="lg-eyebrow-sub">PRIVATE · BUSINESS ONLY</span></div>
-                <h1 id="lg-title" class="lg-title">사거리인터넷 <em class="lg-serif">THE LOUNGE</em><br>사장님 전용 프라이빗 단가표</h1>
-                <p class="lg-desc">본 창구는 <b>실제 사업자등록증 소지 사장님</b>만 입장 가능한 비즈니스 전용 특별 우대 구역입니다.<br>(오직 대표님의 비즈니스 환경에 맞춘 1:1 프라이빗 통신 설계)</p>
-                <ul class="lg-points">
-                    <li><span>01</span>국세청 조회로 영업 중인 실제 사업자만 입장</li>
-                    <li><span>02</span>사장님 전용 프라이빗 단가와 우대 혜택</li>
-                    <li><span>03</span>입력하신 정보는 확인과 상담 자동 입력에만 쓰고 서버에 저장하지 않아요</li>
+                <div class="lg-eyebrow"><span class="lg-rule"></span><span class="lg-serif">Sageori Internet</span><span class="lg-eyebrow-sub" id="lg-sub">PRIVATE · BUSINESS LOUNGE</span></div>
+                <h1 id="lg-title" class="lg-title">사거리인터넷 <em class="lg-serif">THE LOUNGE</em><br><span id="lg-title2">사장님 전용 프라이빗 라운지</span></h1>
+                <p class="lg-desc" id="lg-desc">매장과 사무실, 다회선까지. 사업장의 결에 꼭 맞는 통신을 <b>한 자리에서 정성껏 설계</b>해 드리는 사장님만의 공간입니다.<br>지금 THE LOUNGE의 문은 모든 사장님께 열려 있습니다.</p>
+                <ul class="lg-points" id="lg-points">
+                    <li><span>01</span>업종과 규모에 맞춘 1:1 맞춤 설계</li>
+                    <li><span>02</span>SK · KT · U+ 전 통신사를 한눈에 비교한 합리적인 구성</li>
+                    <li><span>03</span>설치부터 사후 관리까지 전담 매니저가 함께합니다</li>
                 </ul>
             </div>
             <form class="lg-card" id="lg-form" novalidate>
                 <div class="lg-card-head">
-                    <span class="lg-serif lg-card-eyebrow">Members Entrance</span>
-                    <h2>사업자 확인 후 입장</h2>
-                    <p>사업자등록증에 적힌 그대로 입력해 주세요.</p>
+                    <span class="lg-serif lg-card-eyebrow" id="lg-card-eyebrow">An Open Invitation</span>
+                    <h2 id="lg-card-title">라운지의 문이 열려 있습니다</h2>
+                    <p id="lg-card-sub">번거로운 절차 없이 지금 바로 모시겠습니다.</p>
                 </div>
-                <label class="lg-field"><span>사업자명 (상호)</span><input id="lg-bnm" type="text" autocomplete="organization" maxlength="60" placeholder="예) 사거리인터넷"></label>
-                <label class="lg-field"><span>사업자등록번호</span><input id="lg-bno" type="text" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="000-00-00000"></label>
-                <p class="lg-why">사업자등록번호는 국세청에서 영업 중인 사업자인지 확인해요.</p>
+                <div class="lg-invite" id="lg-invite">
+                    <div class="lg-ticket" aria-hidden="true">
+                        <div class="lg-tk-l"><span class="lg-serif">Admission</span><b>THE LOUNGE</b><small>사장님 전용 · 상시 입장</small></div>
+                        <div class="lg-tk-r"><i class="lg-tk-dot"></i><span>OPEN</span></div>
+                    </div>
+                    <p class="lg-note">입장하실 때 어떤 정보도 여쭙거나 저장하지 않습니다.</p>
+                </div>
+                <div class="lg-verify" id="lg-verify" hidden>   <!-- 국세청 사업자 확인 입장 (VERIFY = true 일 때만 보임) -->
+                    <label class="lg-field"><span>사업자명 (상호)</span><input id="lg-bnm" type="text" autocomplete="organization" maxlength="60" placeholder="예) 사거리인터넷"></label>
+                    <label class="lg-field"><span>사업자등록번호</span><input id="lg-bno" type="text" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="000-00-00000"></label>
+                    <p class="lg-why">사업자등록번호는 국세청에서 영업 중인 사업자인지 확인해요.</p>
+                </div>
                 <p class="lg-msg" id="lg-msg" role="alert" aria-live="assertive"></p>
-                <button type="submit" class="lg-btn" id="lg-btn"><span>입장하기</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+                <button type="submit" class="lg-btn" id="lg-btn"><span>바로 입장하기</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
                 <div class="lg-foot"><a href="index.html">홈페이지로 돌아가기</a><a href="tel:18332440">VIP 센터 1833-2440</a></div>
             </form>
         </div>
     </div>
     <script>
-    /* 🔐 [추가] THE LOUNGE 입장 확인 — 국세청 사업자등록 상태조회(서버 경유)로 영업 중인 사업자만 입장 */
+    /* 🔐 THE LOUNGE 입장 — 지금은 누구나 [바로 입장하기] (VERIFY = false)
+       나중에 국세청 사업자 확인 입장을 다시 쓰려면 VERIFY 를 true 로만 바꾸면 돼요: 입력 칸·확인 과정·확인용 문구가 그대로 돌아와요 */
+    var SG_LOUNGE_VERIFY = false;
+    var SG_LOUNGE_COPY = {   // VERIFY = true 일 때 쓰는 문구 (확인 입장용)
+        'lg-sub': 'PRIVATE · BUSINESS ONLY',
+        'lg-title2': '사장님 전용 프라이빗 라운지',
+        'lg-desc': '본 창구는 <b>실제 사업자등록증 소지 사장님</b>만 입장 가능한 비즈니스 전용 특별 우대 구역입니다.<br>(오직 대표님의 비즈니스 환경에 맞춘 1:1 프라이빗 통신 설계)',
+        'lg-points': '<li><span>01</span>국세청 조회로 영업 중인 실제 사업자만 입장</li><li><span>02</span>사장님 전용 프라이빗 혜택과 1:1 맞춤 설계</li><li><span>03</span>입력하신 정보는 확인과 상담 자동 입력에만 쓰고 서버에 저장하지 않아요</li>',
+        'lg-card-eyebrow': 'Members Entrance', 'lg-card-title': '사업자 확인 후 입장', 'lg-card-sub': '사업자등록증에 적힌 그대로 입력해 주세요.',
+        'lh-member-t': '사업자 인증 회원', 'lh-trust-1': '사업자 인증 회원 전용',
+        'lh-lead': 'THE LOUNGE는 사업자 인증을 마친 대표님만을 위한 프라이빗 통신 설계 공간입니다. <br class="lh-br">사업장의 규모와 환경에 맞춰, 가장 합리적인 구성을 1:1로 정성껏 제안해 드립니다.'
+    };
+    function sgLoungeCopy(ids) { if (!SG_LOUNGE_VERIFY) return; ids.forEach(function (id) { var el = document.getElementById(id); if (el && SG_LOUNGE_COPY[id] != null) el.innerHTML = SG_LOUNGE_COPY[id]; }); }
     (function () {
         var OK_KEY = 'sg_lounge_ok', FAIL_KEY = 'sg_lounge_fail';
         var body = document.body, gate = document.getElementById('lounge-gate');
+        var VERIFY = SG_LOUNGE_VERIFY;
         function ss(k, v) { try { if (v === undefined) return sessionStorage.getItem(k); if (v === null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) { return null; } }
         if (ss(OK_KEY) === '1') { body.classList.remove('lg-locked'); return; }   // 이 창에서 이미 확인함
         body.classList.add('lg-locked');
         var $ = function (id) { return document.getElementById(id); };
         var bnm = $('lg-bnm'), bno = $('lg-bno'), msg = $('lg-msg'), btn = $('lg-btn');
-        setTimeout(function () { try { bnm.focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }, 600);
+        if (VERIFY) {   // 확인 입장: 입력 칸과 확인용 문구로
+            $('lg-verify').hidden = false; $('lg-invite').hidden = true; btn.firstChild.textContent = '입장하기';
+            sgLoungeCopy(['lg-sub', 'lg-title2', 'lg-desc', 'lg-points', 'lg-card-eyebrow', 'lg-card-title', 'lg-card-sub']);
+        }
+        var touch = false; try { touch = window.matchMedia('(hover: none)').matches; } catch (e) { touch = false; }
+        if (VERIFY || !touch) setTimeout(function () { try { (VERIFY ? bnm : btn).focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }, 600);   // PC: 엔터만 눌러도 입장 · 휴대폰은 키보드가 안 뜨게 그대로
         // 자동 하이픈
         bno.addEventListener('input', function () {
             var d = this.value.replace(/[^0-9]/g, '').slice(0, 10);
@@ -783,12 +837,20 @@
         function enter(nm, no) {
             ss(OK_KEY, '1'); ss(FAIL_KEY, null);
             try { ss('sg_lounge_biz', JSON.stringify({ bnm: nm, bno: no.slice(0, 3) + '-' + no.slice(3, 5) + '-' + no.slice(5) })); } catch (e) { /* 무시 */ }   // 상담 신청 칸 자동 입력용 (이 창에만, 서버 저장 없음)
-            msg.className = 'lg-msg ok'; msg.textContent = '확인되었어요. 사장님, 환영합니다.';
+            msg.className = 'lg-msg ok'; msg.textContent = '확인되었어요. 사장님, THE LOUNGE에 오신 것을 환영합니다.';
             gate.classList.add('lg-leave');
             setTimeout(function () { body.classList.remove('lg-locked'); gate.classList.remove('lg-leave'); }, 700);
         }
+        function enterOpen() {   // 바로 입장 (아무 정보도 묻지 않음)
+            if (btn.disabled) return;
+            btn.disabled = true; btn.classList.add('lg-go'); ss(OK_KEY, '1');
+            msg.className = 'lg-msg ok'; msg.textContent = '사장님, THE LOUNGE에 오신 것을 환영합니다.';
+            setTimeout(function () { gate.classList.add('lg-leave'); }, 380);
+            setTimeout(function () { body.classList.remove('lg-locked'); gate.classList.remove('lg-leave'); btn.disabled = false; btn.classList.remove('lg-go'); }, 1080);
+        }
         $('lg-form').addEventListener('submit', function (e) {
             e.preventDefault();
+            if (!VERIFY) return enterOpen();
             var vNm = bnm.value.trim(), vNo = bno.value.replace(/[^0-9]/g, '');
             if (!vNm) return show('사업자명(상호)을 입력해 주세요.', bnm);
             if (!bizNoOk(vNo)) return show('사업자등록번호 10자리를 다시 확인해 주세요.', bno);
@@ -820,6 +882,7 @@
     })();
     </script>
 
+    <script>document.addEventListener('DOMContentLoaded', function () { sgLoungeCopy(['lh-member-t', 'lh-trust-1', 'lh-lead']); });</script>
     <!-- 👑 [새 디자인] THE LOUNGE 입장 후 첫 화면: 사업장 선택 -->
     <div id="lounge-home">
         <div class="lh-bg" aria-hidden="true"><span class="lh-glow g1"></span><span class="lh-glow g2"></span><span class="lh-mark">THE LOUNGE</span></div>
@@ -830,7 +893,7 @@
                 <span class="lh-badge lh-serif-en">The Lounge</span>
             </a>
             <div class="lh-head-right">
-                <span class="lh-member"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"></path><path d="M9 12l2 2 4-4"></path></svg>사업자 인증 회원</span>
+                <span class="lh-member"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.6 5.6L20 9.5l-4 4 1 5.5-5-2.7-5 2.7 1-5.5-4-4 5.4-.9z"></path></svg><span id="lh-member-t">Private Lounge</span></span>
                 <a href="tel:18332440" class="lh-vip" onclick="if (window.innerWidth > 900 && typeof openVipPhonePopup === 'function') { openVipPhonePopup(event); }"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg><span>VIP 센터 1833-2440</span></a>
             </div>
         </header>
@@ -838,7 +901,7 @@
             <section class="lh-hero">
                 <div class="lh-eyebrow"><span class="lh-rule"></span><span class="lh-serif-en">Welcome to The Lounge</span></div>
                 <h1 class="lh-title">대표님의 비즈니스에<br><span class="lh-gold">품격 있는 통신</span>을 더합니다</h1>
-                <p class="lh-lead">THE LOUNGE는 사업자 인증을 마친 대표님만을 위한 프라이빗 통신 설계 공간입니다. <br class="lh-br">사업장의 규모와 환경에 맞춰, 가장 합리적인 구성을 1:1로 정성껏 제안해 드립니다.</p>
+                <p class="lh-lead" id="lh-lead">THE LOUNGE는 대표님의 비즈니스를 위해 마련된 프라이빗 통신 설계 공간입니다. <br class="lh-br">사업장의 규모와 환경에 맞춰, 가장 합리적인 구성을 1:1로 정성껏 제안해 드립니다.</p>
             </section>
             <section class="lh-select" aria-labelledby="lh-select-title">
                 <div class="lh-select-head">
@@ -846,7 +909,7 @@
                         <div class="lh-serif-en lh-select-en">Select Your Business</div>
                         <h2 id="lh-select-title">운영 중이신 사업장을 선택해 주십시오</h2>
                     </div>
-                    <p>선택하신 사업장에 꼭 맞는 단가와 혜택을 안내해 드립니다.</p>
+                    <p>선택하신 사업장에 꼭 맞는 구성과 혜택을 안내해 드립니다.</p>
                 </div>
                 <div class="lh-cards" role="group" aria-label="사업장 종류">
                 <button type="button" class="lh-card" data-biz="사무실" aria-pressed="false">
@@ -891,7 +954,7 @@
                 </button>
                 </div>
                 <div class="lh-foot">
-                    <div class="lh-trust"><span>사업자 인증 회원 전용</span><i></i><span>1:1 전담 설계</span><i></i><span>SK · KT · LG U+ 전 통신사 비교</span></div>
+                    <div class="lh-trust"><span id="lh-trust-1">사장님 전용 라운지</span><i></i><span>1:1 전담 설계</span><i></i><span>SK · KT · LG U+ 전 통신사 비교</span></div>
                     <button type="button" class="lh-cta" id="lh-cta" disabled><span id="lh-cta-text">사업장을 선택하시면 다음 단계로 안내해 드립니다</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
                 </div>
             </section>
@@ -1167,7 +1230,7 @@
     <!-- 3. 메인 히어로 섹션 -->
     <div class="hero-section">
         <div class="title-zone">
-            <h1 class="main-title">사거리인터넷 <span>THE LOUNGE</span><br>사장님 전용 프라이빗 단가표</h1>
+            <h1 class="main-title">사거리인터넷 <span>THE LOUNGE</span><br>사장님 전용 프라이빗 비즈니스 라운지</h1>
             <p class="sub-title">본 창구는 <b>실제 사업자등록증 소지 사장님</b>만 입장 가능한 비즈니스 전용 특별 우대 구역입니다.<br>(오직 대표님의 비즈니스 환경에 맞춘 1:1 프라이빗 통신 설계)</p>
         </div>
 
