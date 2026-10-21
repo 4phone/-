@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-cZgCrl2hcDHXhCwMSlqjw4cBgb6b1Gp7QPoZLf84jRQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Ls+RdhfL/4eI4Qs6/Ik5RWNh3zYN2mhpaSve+hz/Oxg='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -250,6 +250,29 @@
         .filters select { width: auto; min-width: 120px; padding: 8px 10px; }
         .t-head, .t-row { display: grid; grid-template-columns: 46px minmax(0, 1fr) 88px 108px 54px 200px 206px; gap: 10px; align-items: center; padding: 11px 16px 11px 13px; border-left: 5px solid transparent; }
         .t-head { background: #F7F9F0; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 700; color: var(--muted); }
+        .act-bar { padding: 10px 16px 10px 18px; border-bottom: 1px solid var(--line); background: #FBFCF6; }
+        .act-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+        .act-ttl { font-size: 13px; font-weight: 800; color: #3E441E; margin-right: 2px; }
+        .act-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .act-chip { font: inherit; font-size: 13px; font-weight: 700; padding: 5px 12px; border-radius: 999px; border: 1px solid #CDD3B4; background: #fff; color: #3E441E; cursor: pointer; }
+        .act-chip:hover { background: #F1F4E4; }
+        .act-chip[aria-pressed="true"] { background: #3E441E; border-color: #3E441E; color: #fff; }
+        .act-etc { width: 170px; max-width: 100%; height: 32px; padding: 0 10px; border: 1px solid #CDD3B4; border-radius: 8px; font: inherit; font-size: 13px; }
+        .act-go { background: #2F7D32; border-color: #2F7D32; color: #fff; }
+        .act-go:disabled { background: #fff; border-color: var(--line); color: var(--muted); cursor: default; }
+        .act-stop { background: #C62828; border-color: #C62828; color: #fff; }
+        .act-now { font-size: 13.5px; color: #1F2A10; display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .act-now b { font-weight: 800; }
+        .act-el { font-weight: 700; color: #2F7D32; }
+        .act-dot { width: 8px; height: 8px; border-radius: 50%; background: #2F7D32; margin-right: 3px; animation: actBlink 1.6s ease-in-out infinite; }
+        @keyframes actBlink { 50% { opacity: .3; } }
+        .act-log { margin: 8px 0 0 0; padding: 0 0 0 20px; display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--muted); }
+        .act-log li { line-height: 1.5; }
+        .act-log li > * { margin-right: 8px; }
+        .act-log b { color: #3E441E; font-weight: 700; }
+        .act-log em { font-style: normal; font-weight: 700; color: #2F7D32; }
+        .act-who { font-weight: 700; color: #5B6236; }
+        @media (prefers-reduced-motion: reduce) { .act-dot { animation: none; } }
         .t-row { border-bottom: 1px solid var(--line); }
         .t-row:last-child { border-bottom: none; }
         .t-row.hi { border-left-color: var(--orange); }
@@ -1431,7 +1454,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-21.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-21.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1518,7 +1541,7 @@
                     { id: 's2', name: '직원 1', role: '', u: 0, o: 2, adm: false },
                     { id: 's3', name: '직원 2', role: '', u: 0, o: 3, adm: false }
                 ],
-                events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [],
+                events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [],
                 del: Object.create(null),                  // 지워진 항목 기록(다른 직원 화면에서도 지워지도록)
                 drive: { url: '', k: '', rev: 0, pk: '', acc: false },  // 공유 저장소 연결 정보 (암호화된 데이터 안에만 보관)
                 account: null    // 이 기기에서 로그인한 계정 (이 기기 안에만 보관하고 드라이브로는 보내지 않음)
@@ -1542,7 +1565,7 @@
         // 저장소·백업·드라이브에서 읽은 내용은 항상 이 함수로 걸러서(글자 수·개수 제한, 형식 검사) 사용합니다
         function normalizeDb(d) {
             if (!d || typeof d !== 'object') return null;
-            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
+            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
             function list(v, max) { return Array.isArray(v) ? v.slice(0, max) : []; }
             list(d.staff, 200).forEach(function (s, i) {
                 if (!s || !str(s.name, 30).trim()) return;
@@ -1592,6 +1615,10 @@
                 var pp = { id: str(x.id, 40), at: num(x.at), by: str(x.by, 20), data: data, u: num(x.u), b: num(x.b) };
                 if (num(x.act) > 0) { pp.act = num(x.act); pp.actBy = str(x.actBy, 20); }   // 이전 단가표로 바꾼 시각·사람
                 out.policies.push(pp);
+            });
+            list(d.acts, 4000).forEach(function (x) {   // 근무 기록: 내방응대·콜상담·식사 등 시작~종료 시각
+                if (!x || !str(x.id, 40) || !str(x.k, 20).trim() || !(num(x.s) > 0)) return;
+                out.acts.push({ id: str(x.id, 40), sid: str(x.sid, 40), k: str(x.k, 20).trim(), s: num(x.s), e: num(x.e) > num(x.s) ? num(x.e) : 0, u: num(x.u), b: num(x.b) });
             });
             list(d.intakes, 5000).forEach(function (x) {   // 신분증 요청 접수 메모 (팀 키로 암호화된 공유 저장소에만 보관)
                 if (!x || !str(x.code, 80) || !str(x.text, 4000)) return;
@@ -2328,8 +2355,55 @@
             db.tasks = db.tasks.filter(function (it) { return !ids[it.id]; });
             commit('[충돌본] ' + list.length + '건을 지웠어요.');
         }
+        /* ---------- 근무 기록: 업무 1번 위에 고정 · 고르고 [시작] → [종료] · 아래에 시작~종료·소요시간 (팀 키로 암호화된 공유 저장소) ---------- */
+        var ACT_KINDS = ['내방응대', '내방상담', '콜상담', '식사', 'W.C'], ACT_KEEP_DAYS = 62;
+        var actUi = { pick: '', etc: '' };   // 고른 항목 (화면을 다시 그려도 유지)
+        function actRunning(sid) { return (db.acts || []).filter(function (a) { return a.sid === sid && !a.e; }).sort(function (a, b) { return b.s - a.s; })[0] || null; }
+        function actHm(ms) { var d = new Date(ms); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+        function actDur(ms) { var m = Math.floor(Math.max(0, ms) / 60000); if (m < 1) return '1분 미만'; return m >= 60 ? Math.floor(m / 60) + '시간' + (m % 60 ? ' ' + (m % 60) + '분' : '') : m + '분'; }
+        function actStart() {
+            if (actRunning(me)) return;
+            var k = actUi.pick === '기타' ? actUi.etc.replace(/\s+/g, ' ').trim().slice(0, 20) : actUi.pick;
+            if (!k) { toast(actUi.pick === '기타' ? '기타 칸에 할 일을 적어 주세요.' : '먼저 할 일을 골라 주세요.'); var el = document.querySelector('[data-fk="act-etc"]'); if (el) el.focus(); return; }
+            if (!db.acts) db.acts = [];
+            db.acts.push(stamp({ id: uid(), sid: me, k: k, s: Date.now(), e: 0, u: 0 }));
+            commit('');
+        }
+        function actStop(a) { if (!a || a.e) return; a.e = Math.max(Date.now(), a.s + 1); stamp(a); actUi.pick = ''; actUi.etc = ''; commit(a.k + ' ' + actDur(a.e - a.s) + ' 기록했어요.'); }
+        function actCleanup() {   // 62일 지난 근무 기록만 정리
+            var cut = Date.now() - ACT_KEEP_DAYS * 86400000, old = (db.acts || []).filter(function (a) { return a.e && a.s < cut; });
+            if (!old.length) return;
+            db.acts = db.acts.filter(function (a) { return !(a.e && a.s < cut); }); old.forEach(function (a) { tomb(a.id); }); saveDb(); requestSync(DRIVE_PUSH_DELAY_MS);
+        }
+        function actBar() {
+            var run = actRunning(me), day = state.date || ymd(new Date());
+            var whoOk = function (a) { return state.who === 'all' ? true : state.who === 'me' || state.who === 'none' ? a.sid === me : a.sid === state.who; };
+            var logs = (db.acts || []).filter(function (a) { return a.e && ymd(new Date(a.s)) === day && whoOk(a); }).sort(function (a, b) { return a.s - b.s; });
+            var many = logs.some(function (a) { return a.sid !== logs[0].sid; });
+            var top;
+            if (run) top = h('div', { class: 'act-top run' },
+                h('span', { class: 'act-ttl' }, '⏱ 지금 하는 일'),
+                h('span', { class: 'act-now' }, h('i', { class: 'act-dot', 'aria-hidden': 'true' }), h('b', {}, run.k), ' ' + actHm(run.s) + ' 시작 · ', h('span', { class: 'act-el', 'data-s': String(run.s) }, actDur(Date.now() - run.s)), ' 진행 중'),
+                h('button', { type: 'button', class: 'btn btn-sm act-stop', 'data-act': 'act-stop', 'data-fk': 'act-stop', onclick: function () { actStop(actRunning(me)); } }, '■ 종료'));
+            else {
+                var etc = actUi.pick === '기타' ? h('input', { type: 'text', class: 'act-etc', 'data-fk': 'act-etc', maxlength: 20, placeholder: '직접 적기 (예: 택배 수령)', 'aria-label': '기타 할 일 직접 적기', value: actUi.etc,
+                    oninput: function () { actUi.etc = this.value; }, onkeydown: function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); actStart(); } } }) : null;
+                top = h('div', { class: 'act-top' },
+                    h('span', { class: 'act-ttl' }, '⏱ 지금 하는 일'),
+                    h('div', { class: 'act-chips', role: 'group', 'aria-label': '할 일 고르기' }, ACT_KINDS.concat(['기타']).map(function (k) {
+                        return h('button', { type: 'button', class: 'act-chip', 'data-k': k, 'aria-pressed': actUi.pick === k ? 'true' : 'false', onclick: function () { actUi.pick = actUi.pick === k ? '' : k; render(); if (actUi.pick === '기타') setTimeout(function () { var el = document.querySelector('[data-fk="act-etc"]'); if (el) el.focus(); }, 0); } }, k);
+                    })), etc,
+                    h('button', { type: 'button', class: 'btn btn-sm act-go', 'data-act': 'act-start', 'data-fk': 'act-start', disabled: !actUi.pick, title: actUi.pick ? '' : '먼저 할 일을 골라 주세요', onclick: actStart }, '▶ 시작'));
+            }
+            return h('div', { class: 'act-bar', 'data-act-bar': '1' }, top,
+                logs.length ? h('ol', { class: 'act-log', 'aria-label': (day === ymd(new Date()) ? '오늘' : koDate(day)) + ' 근무 기록' }, logs.map(function (a) {
+                    return h('li', {}, many ? h('span', { class: 'act-who' }, staffName(a.sid)) : null, h('b', {}, a.k), h('span', {}, actHm(a.s) + ' ~ ' + actHm(a.e)), h('em', {}, actDur(a.e - a.s)));
+                })) : null);
+        }
+        setInterval(function () { [].forEach.call(document.querySelectorAll('.act-el'), function (el) { el.textContent = actDur(Date.now() - (+el.getAttribute('data-s') || Date.now())); }); }, 15000);
         function renderTasks() {
             var today = ymd(new Date());
+            if (db.acts && db.acts.some(function (a) { return a.e && a.s < Date.now() - ACT_KEEP_DAYS * 86400000; })) setTimeout(actCleanup, 0);
             var list = db.tasks.filter(function (t) {
                 var okWho = state.who === 'all' || (state.who === 'me' ? t.staffId === me : state.who === 'none' ? !t.staffId : t.staffId === state.who);
                 return okWho && (state.status === 'all' || t.status === state.status) && (!state.date || t.due === state.date);
@@ -2395,7 +2469,7 @@
                     h('div', { class: 'actions' },
                         h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-fk': 'report-doing', onclick: function () { captureReport(list, 'doing'); } }, '진행중보고'),
                         h('button', { type: 'button', class: 'btn btn-sm btn-close', 'data-fk': 'report', title: '하루 마감 순서: 마감1 상담리스트 → 마감2 실적장표 → 마감3 업무 마감보고', onclick: function () { openCloseReport(); } }, h('span', { class: 'rpt-step' }, '마감3'), '업무 마감보고'))),
-                h('div', { class: 'panel' },
+                h('div', { class: 'panel' }, actBar(),
                     rows.length ? [h('div', { class: 't-head' }, h('div', {}, '번호'), h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows]
                         : h('div', { class: 'empty' }, state.date ? '이 날(' + koDate(state.date) + ') 마감인 업무가 없어요. 담당·상태 필터를 걸어 두었다면 함께 확인해 보세요.' : (db.tasks.length ? '조건에 맞는 업무가 없어요. 필터를 바꿔 보세요.' : '아직 등록된 업무가 없어요. 오른쪽 위 [업무 추가]로 시작해 보세요.'))));
         }
@@ -2901,8 +2975,8 @@
         }
 
         /* --- 내용 합치기: 항목마다 수정 시각(u)이 더 늦은 쪽을 남기고, 지운 항목은 삭제 기록으로 처리 --- */
-        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, del: db.del }; }
-        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, del: db.del })); }
+        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], del: db.del }; }
+        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], del: db.del })); }
         function canon(d) {   // 같은 내용이면 항상 같은 글자가 되도록 정렬한 비교용 문자열
             function byId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
             return JSON.stringify([
@@ -2913,6 +2987,7 @@
                 Object.keys(d.del).sort().map(function (k) { return [k, d.del[k]]; }),
                 (d.regs || []).slice().sort(byId).map(function (x) { return Object.keys(x).filter(function (k) { return k !== 'b'; }).sort().map(function (k) { return [k, x[k]]; }); }),
                 (d.intakes || []).slice().sort(byId).map(function (x) { return [x.id, x.code, x.name, x.text, x.t, x.u]; }),
+                (d.acts || []).slice().sort(byId).map(function (x) { return [x.id, x.sid, x.k, x.s, x.e, x.u]; }),
                 (d.policies || []).slice().sort(byId).map(function (x) { return [x.id, x.at, x.by, x.u, x.act || 0, x.actBy || '']; })
             ]);
         }
@@ -2981,12 +3056,13 @@
                 tasks: mergeList(a.tasks, b.tasks, true).filter(alive).sort(byId),
                 regs: mergeList(a.regs || [], b.regs || [], false).filter(alive).sort(byId),
                 intakes: mergeList(a.intakes || [], b.intakes || [], false).filter(alive).sort(byId),
+                acts: mergeList(a.acts || [], b.acts || [], false).filter(alive).sort(byId),
                 policies: mergeList(a.policies || [], b.policies || [], false).filter(alive).sort(byId),   // 가입 장부: 나중에 고친 쪽으로 (충돌본 만들지 않음)
                 del: del, conflicts: conflicts
             };
         }
                 function applyMerged(m) {
-            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.policies = m.policies || []; db.del = m.del;
+            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.acts = m.acts || []; db.policies = m.policies || []; db.del = m.del;
             var ok = Object.create(null); db.staff.forEach(function (x) { ok[x.id] = 1; });
             [db.events, db.notices, db.tasks].forEach(function (list) { list.forEach(function (it) { if (it.staffId && !ok[it.staffId]) it.staffId = ''; }); });
             if (!staffById(me)) { me = db.staff[0].id; lsSet(ME_KEY, me); }
@@ -2994,10 +3070,10 @@
         }
 
         /* --- 동기화: 드라이브의 최신 내용을 받아 합치고, 내 변경분이 있으면 올림 --- */
-        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || []].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
+        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || []].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
         function markSynced(snap) {   // 드라이브에 올라간(또는 드라이브와 같아진) 버전을 '기준 시각(b)'으로 기록
             var changed = false;
-            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || []].forEach(function (l) { l.forEach(function (it) {
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || []].forEach(function (l) { l.forEach(function (it) {
                 var nb = !snap ? it.u : snap[it.id];            // snap: 드라이브에 올라간 시점의 수정 시각
                 if (nb === undefined) return;                     // 올릴 때 없던 항목(그 뒤에 새로 만든 것)은 다음 저장 때
                 if (nb > it.u) nb = it.u;
@@ -3007,8 +3083,8 @@
         }
         function markSeen(remote) {   // 받아 온 드라이브 버전과 같은 항목은 '본 적 있음'으로 기록 (다른 기기 기준 시각이 섞이지 않게)
             var ru = Object.create(null);
-            [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || [], remote.policies || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
-            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || []].forEach(function (l) { l.forEach(function (it) {
+            [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || [], remote.policies || [], remote.acts || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || []].forEach(function (l) { l.forEach(function (it) {
                 var r = ru[it.id];
                 if (r !== undefined && r === it.u && it.b !== it.u) it.b = it.u;   // 드라이브 버전과 같음
             }); });
@@ -9323,17 +9399,135 @@
         window.addEventListener('beforeunload', function (e) { if (glDirty()) { e.preventDefault(); e.returnValue = ''; } });
 
         /* ---------- 엑셀 불러오기 (대표님) ---------- */
-        function glImport(file) {   // 엑셀의 시트 중 '아직 없는 이름'만 더해요 — 이미 있는 장부는 절대 바꾸거나 지우지 않음
+        function glMergeIn(appS, xS) {   // 엑셀 내용을 지금 장부에 얹기 → { S, cells, rows, names, chg }
+            // 규칙: 수식 칸은 그대로 · 엑셀에서 빈칸이면 지우지 않음 · 같은 고객 줄은 엑셀 값으로 · 새 고객은 장부 아래 빈 줄에 추가 (다른 고객 줄을 덮지 않음)
+            var S = glNormSheet(JSON.parse(JSON.stringify(glPack(appS)))), out = { S: S, cells: 0, rows: 0, names: [], chg: [] };
+            if (appS.rep) S.rep = appS.rep;
+            var isF = function (v) { return typeof v === 'string' && v.charAt(0) === '='; };
+            var nm = function (v) { return v == null || isF(v) ? '' : String(v).replace(/\s/g, ''); };
+            var dg = function (v) { return v == null || isF(v) ? '' : String(v).replace(/\D/g, ''); };
+            function put(r, c, v, dr, dc) {
+                if (v == null || v === '') return 0;
+                var row = S.cv[r] || (S.cv[r] = {}), av = row[c];
+                if (isF(v)) { if (av != null && av !== '') return 0; row[c] = '=' + glShift(v.slice(1), dr, dc); }   // 엑셀 수식은 빈칸에만
+                else { if (isF(av) || (av != null && String(av) === String(v))) return 0; row[c] = v; }               // 지금 장부의 수식은 그대로
+                if (r > S.nr) S.nr = r; if (c > S.nc) S.nc = c;
+                return 1;
+            }
+            var A = glKeyRows(S), B = glKeyRows(xS), led = !!(A && B), cmap = {};
+            if (led) {   // 엑셀 칸 → 장부 칸 (머리글 이름으로 · 같은 이름이 두 번 있으면 같은 자리끼리)
+                var bh = xS.cv[B.H.r] || {}, ah = S.cv[A.H.r] || {};
+                Object.keys(bh).forEach(function (c) {
+                    var t = nm(bh[c]); c = +c; if (!t || c > B.lim) return;
+                    if (nm(ah[c]) === t && c <= A.lim) cmap[c] = c;
+                    else if (B.lab[t] === c && A.lab[t] && A.lab[t] <= A.lim) cmap[c] = A.lab[t];
+                });
+            }
+            Object.keys(xS.cv).forEach(function (r) {   // 장부 줄 밖 (머리글 위 · 오른쪽 실적장표 등): 같은 자리끼리
+                r = +r; Object.keys(xS.cv[r]).forEach(function (c) { c = +c; if (led && r > B.H.r && c <= B.lim) return; out.cells += put(r, c, xS.cv[r][c], 0, 0); });
+            });
+            if (led) {
+                var nC = A.lab['고객명'], pC = A.lab['번호'], kC = A.H.kind, used = {}, byKey = {}, last = A.H.r;
+                A.rows.forEach(function (x) { (byKey[x.key] = byKey[x.key] || []).push(x.r); last = Math.max(last, x.r); });
+                var at = function (r, c) { return (S.cv[r] || {})[c]; };
+                var empty = function (r) { return !nm(at(r, nC)) && (at(r, kC) == null || at(r, kC) === '') && !(A.H.no && String(at(r, A.H.no) || '').toLowerCase() === 'ex'); };
+                var nx = last + 1, dr0 = A.H.r - B.H.r;
+                for (var rb = B.H.r + 1; rb <= xS.nr; rb++) {
+                    var rowB = xS.cv[rb]; if (!rowB || !Object.keys(rowB).some(function (c) { return cmap[c]; })) continue;
+                    var nB = nm(rowB[B.lab['고객명']]), pB = dg(B.lab['번호'] ? rowB[B.lab['번호']] : ''), ra0 = rb + dr0, ra = 0, fresh = false;
+                    if (nB) {
+                        if (!used[ra0] && nm(at(ra0, nC)) === nB) ra = ra0;                                                    // 같은 자리 같은 고객
+                        if (!ra) ra = (byKey[nB + '|' + pB] || []).filter(function (r) { return !used[r]; })[0] || 0;           // 자리가 바뀐 같은 고객
+                        if (!ra && pB && !used[ra0] && nm(at(ra0, nC)) && dg(at(ra0, pC)) === pB) ra = ra0;                     // 같은 자리 · 번호 같음 (이름만 고침)
+                        if (!ra && !used[ra0] && ra0 > A.H.r && !nm(at(ra0, nC))) { fresh = empty(ra0); ra = ra0; }             // 같은 자리에 이름이 아직 없음 (엑셀에서 마저 적은 줄)
+                        if (!ra) { while (used[nx] || !empty(nx)) nx++; ra = nx++; fresh = true; }                             // 새 고객: 아래 빈 줄에
+                    } else {
+                        if (used[ra0] || ra0 <= A.H.r || nm(at(ra0, nC))) continue;                                              // 이름 없는 줄은 같은 자리의 빈 줄에만
+                        ra = ra0;
+                    }
+                    used[ra] = 1;
+                    var wasC = glIsCancel(at(ra, kC)), n = 0;
+                    Object.keys(rowB).forEach(function (c) { var ac = cmap[c]; if (!ac || (ra !== ra0 && ac === A.H.no)) return; n += put(ra, ac, rowB[c], ra - rb, ac - c); });   // 다른 줄로 옮겨 넣으면 순번은 장부 것 그대로
+                    if (fresh && nB) {
+                        var prev = S.cv[ra - 1] || {}, dst = S.cv[ra] || (S.cv[ra] = {});
+                        Object.keys(prev).forEach(function (c) { var v = prev[c]; if (+c <= A.lim && (dst[c] == null || dst[c] === '') && isF(v) && !/^=자동_/.test(v)) dst[c] = '=' + glShift(v.slice(1), 1, 0); });   // 윗줄 수식을 내려 씀
+                        if (!S.rs[ra] && S.rs[ra - 1]) S.rs[ra] = JSON.parse(JSON.stringify(S.rs[ra - 1]));
+                        if (ra > S.nr) S.nr = ra;
+                    }
+                    if (!n) continue;
+                    out.cells += n;
+                    if (fresh && nB) { out.rows++; out.names.push(String(rowB[B.lab['고객명']]).trim()); } else if (nB) out.chg.push(String(rowB[B.lab['고객명']]).trim());
+                    var isC = glIsCancel(at(ra, kC)); if (isC !== wasC) glCancelPaint(S, ra, isC);
+                }
+            }
+            S._head = undefined; S._reg = undefined;
+            return out;
+        }
+        function glImport(file) {   // 엑셀 불러오기: 새 시트는 더하고, 같은 이름의 시트는 엑셀 '내용'을 반영 (수식 칸은 그대로 · 지우지는 않음 · 반영 직전 내용은 보관본)
             if (!file || !isBoss()) return;
             if (!/\.xlsx$/i.test(file.name)) { toast('.xlsx 엑셀 파일을 골라 주세요.'); return; }
             if (file.size > 60 * 1024 * 1024) { toast('파일이 너무 커요 (60MB까지).'); return; }
+            if (glDirty() || gl.job) { toast('아직 저장 중인 칸이 있어요. 상태줄이 "저장됨"이 된 뒤 다시 해 주세요.'); return; }
+            var mineG = gl, haveS = {};
             gl.job = '엑셀을 이 기기에서 읽는 중이에요... (서버로 보내지 않아요)'; render();
             glReadXlsx(file).then(function (all) {
+                glIdxList().forEach(function (s) { haveS[s.name] = s; });
+                var olds = all.filter(function (s) { return haveS[s.name]; }), k = 0;
+                function next() {
+                    if (mineG !== gl || k >= olds.length) return Promise.resolve(all);
+                    var s = olds[k++]; gl.job = '지금 장부와 비교하는 중... ' + k + ' / ' + olds.length + ' (' + s.name + ')'; glStatusPaint();
+                    return glOpenSheet(haveS[s.name].id, true).then(next);
+                }
+                return next();
+            }).then(function (all) {
+                if (mineG !== gl) return;
                 gl.job = ''; render();
-                var have = {}; glIdxList().forEach(function (s) { have[s.name] = 1; });
-                var sheets = all.filter(function (s) { return !have[s.name]; }), skipped = all.length - sheets.length;
-                if (!sheets.length) { toast('새로 더할 시트가 없어요. 이미 있는 시트 ' + skipped + '개는 그대로 뒀어요.'); return; }
-                if (!confirm('새 시트 ' + sheets.length + '개를 가입고객리스트에 더할까요?\n' + sheets.slice(0, 8).map(function (s) { return s.name; }).join(', ') + (sheets.length > 8 ? ' 외 ' + (sheets.length - 8) + '개' : '') + (skipped ? '\n(이름이 같은 ' + skipped + '개는 지금 장부를 지키려고 건너뛰어요)' : '') + '\n모든 시트는 팀 키로 암호화해서 저장해요.')) return;
+                var merges = [], same = 0;
+                all.forEach(function (raw) {
+                    var ex = haveS[raw.name]; if (!ex) return;
+                    var E = gl.sh[ex.id]; if (!E || !E.S) throw new Error('load');
+                    var m = glMergeIn(E.S, glNormSheet(raw));
+                    if (!m.cells) { same++; return; }
+                    merges.push({ id: ex.id, name: raw.name, E: E, m: m });
+                });
+                var sheets = all.filter(function (s) { return !haveS[s.name]; });
+                if (!sheets.length && !merges.length) { toast('엑셀과 지금 장부 내용이 같아요. 반영할 내용이 없어요.'); return; }
+                var who = function (a) { return a.slice(0, 10).join(', ') + (a.length > 10 ? ' 외 ' + (a.length - 10) + '명' : ''); };
+                var msg = '엑셀 내용을 가입고객리스트에 반영할까요?\n'
+                    + merges.map(function (x) { return '\n• ' + x.name + ': 바뀐 칸 ' + x.m.cells + '개' + (x.m.rows ? ' · 새 고객 ' + x.m.rows + '줄 추가 (' + who(x.m.names) + ')' : '') + (x.m.chg.length ? '\n   내용이 바뀐 고객: ' + who(x.m.chg) : ''); }).join('')
+                    + (sheets.length ? '\n• 새로 더할 시트 ' + sheets.length + '개: ' + sheets.slice(0, 6).map(function (s) { return s.name; }).join(', ') + (sheets.length > 6 ? ' 외' : '') : '')
+                    + (same ? '\n• 내용이 같아 그대로 둘 시트 ' + same + '개' : '')
+                    + '\n\n수식 칸은 그대로 두고, 엑셀에서 비어 있는 칸은 지우지 않아요. 앱에서 들어간 고객 줄도 그대로 남아요.'
+                    + (merges.length ? '\n반영 직전 내용은 [보관본]에 120일 남아서 언제든 되돌릴 수 있어요.' : '');
+                if (!confirm(msg)) return;
+                var mi = 0, cells = 0, rowsN = 0;
+                function stepMerge() {
+                    if (mineG !== gl || mi >= merges.length) return Promise.resolve();
+                    var it = merges[mi++];
+                    gl.job = '엑셀 내용을 반영하는 중... ' + mi + ' / ' + merges.length + ' (' + it.name + ')'; glStatusPaint();
+                    return glEnc(glPack(it.m.S), GL_AAD + it.id).then(function (blob) { return glCall('glPut', { id: it.id, baseRev: it.E.rev, blob: blob, snap: true }, 120000); }).then(function (res) {
+                        var E = it.E; E.S = it.m.S; E.rev = res.rev; if (gl.meta) gl.meta[it.id] = res.rev; E.base = glCount(it.m.S); E.dom = {}; E.calc = null; E.edits.clear(); E.undo = []; E.rsMem = {}; E.sel2 = null; E.okShrink = false;
+                        cells += it.m.cells; rowsN += it.m.rows;
+                        return stepMerge();
+                    });
+                }
+                stepMerge().then(function () {
+                    if (mineG !== gl) return;
+                    if (!sheets.length) { gl.job = ''; gl.tabX = null; render(); glMirrorSoon(3000); toast('엑셀 내용을 반영했어요. 바뀐 칸 ' + cells + '개' + (rowsN ? ' · 새 고객 ' + rowsN + '줄' : '') + '. (반영 전 내용은 [보관본]에 있어요)'); return; }
+                    glImportAdd(sheets, all, merges.length ? '엑셀 내용 반영 (바뀐 칸 ' + cells + '개' + (rowsN ? ' · 새 고객 ' + rowsN + '줄' : '') + ') · ' : '');
+                }).catch(function (e) {
+                    gl.job = ''; render();
+                    if (e && e.code === 'conflict') { toast('그 사이에 다른 직원이 장부를 고쳤어요. 새로고침 뒤 다시 해 주세요. (이미 반영한 시트는 보관본에 이전 내용이 있어요)'); return; }
+                    toast('반영하다가 멈췄어요. ' + driveErrText(e) + ' (이미 반영한 시트는 [보관본]에 이전 내용이 있어요)');
+                });
+            }).catch(function (e) {
+                gl.job = ''; render();
+                if (e && e.message === 'load') { toast('지금 장부를 다 불러오지 못했어요. 새로고침 뒤 다시 해 주세요.'); return; }
+                toast(e && e.message && /엑셀|브라우저/.test(e.message) ? e.message : '엑셀 파일을 읽지 못했어요.');
+            });
+        }
+        function glImportAdd(sheets, all, pre) {   // 새 시트 더하기 (이름이 같은 시트는 위에서 내용 반영)
+            {
                 var latestAll = null;
                 all.concat(glIdxList().map(function (s) { return { name: s.name, _old: 1 }; })).forEach(function (s) { var y = glYm(s.name); if (y && /장부/.test(s.name) && (!latestAll || y.y * 12 + y.m >= latestAll.k)) latestAll = { s: s, k: y.y * 12 + y.m }; });
                 var autoN = latestAll && !latestAll.s._old ? glAutoApply(latestAll.s) : 0;
@@ -9357,10 +9551,10 @@
                         if (latestAll && !latestAll.s._old) { var hit = list.filter(function (x) { return x.name === latestAll.s.name; })[0]; if (hit) gl.cur = hit.id; } else if (!gl.cur) gl.cur = list[list.length - 1].id;
                         gl.view = 'book'; gl.tabX = null;
                         render(); glMirrorSoon(3000);
-                        toast('시트 ' + list.length + '개를 더했어요.' + (skipped ? ' (같은 이름 ' + skipped + '개는 그대로 둠)' : '') + (autoN ? ' 이번 달 실적장표 자동 칸 ' + autoN + '개를 켰어요.' : ''));
+                        toast((pre || '') + '새 시트 ' + list.length + '개를 더했어요.' + (autoN ? ' 이번 달 실적장표 자동 칸 ' + autoN + '개를 켰어요.' : ''));
                     });
                 }).catch(function (e) { gl.job = ''; render(); toast('옮기다가 멈췄어요. ' + driveErrText(e) + ' 다시 시도해 주세요. (이미 옮긴 시트는 그대로 있어요)'); });
-            }, function (e) { gl.job = ''; render(); toast(e && e.message && /엑셀|브라우저/.test(e.message) ? e.message : '엑셀 파일을 읽지 못했어요.'); });
+            }
         }
 
         /* ---------- 모바일&유선 칸에 '취소'가 들어가면 그 줄을 엑셀처럼 빨간색으로 (지우면 원래 색) ----------
@@ -10155,7 +10349,7 @@
                 gl.idx && glLatest() ? h('button', { type: 'button', class: 'btn btn-close', 'data-act': 'gl-report', onclick: glReport, title: '하루 마감 순서: 마감1 상담리스트 → 마감2 실적장표 → 마감3 업무 마감보고 (그날 첫 보고는 시각 칸에 "목표", 그 뒤로는 보고한 시각이 적혀요)' }, h('span', { class: 'rpt-step' }, '마감2'), '실적장표 보고') : null,
                 gl.idx && glIdxList().length && glCanXlsx() ? h('button', { type: 'button', class: 'btn', 'data-act': 'gl-xlsx', onclick: glDownload }, '📥 엑셀 다운로드') : null,
                 boss && gl.idx && glLatest() ? h('button', { type: 'button', class: 'btn', 'data-act': 'gl-new', onclick: glNewMonth }, '+ ' + glNextName()) : null,
-                boss ? h('label', { class: 'btn', 'data-act': 'gl-import', title: '새 시트만 더해요. 이미 있는 장부는 절대 바꾸거나 지우지 않아요.' }, '엑셀 불러오기', h('input', { type: 'file', accept: '.xlsx', hidden: true, onchange: function () { glImport(this.files && this.files[0]); this.value = ''; } })) : null,
+                boss ? h('label', { class: 'btn', 'data-act': 'gl-import', title: '엑셀에서 고친 내용과 새 고객 줄을 반영해요 (수식 칸은 그대로 · 지우지는 않음 · 반영 전 내용은 보관본) · 새 시트는 더해요' }, '엑셀 불러오기', h('input', { type: 'file', accept: '.xlsx', hidden: true, onchange: function () { glImport(this.files && this.files[0]); this.value = ''; } })) : null,
                 boss && gl.idx && glIdxList().length ? h('label', { class: 'btn', 'data-act': 'gl-update', title: '그동안 엑셀로 일한 완성 파일을 올리면 같은 이름의 시트를 엑셀 내용으로 바꿔요 (바꾸기 전 내용은 보관본으로 남음)' }, '📤 완성 엑셀로 갱신', h('input', { type: 'file', accept: '.xlsx', hidden: true, onchange: function () { glUpdate(this.files && this.files[0]); this.value = ''; } })) : null,
                 boss && gl.idx ? h('button', { type: 'button', class: 'btn', 'data-act': 'gl-snaps', onclick: glSnapsOpen, title: '엑셀로 갱신하기 직전 내용 (120일)' }, '🕘 보관본') : null));
             if (!glCan()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '가입고객리스트는 대표님과 대표님이 권한을 준 직원만 볼 수 있어요.')));
