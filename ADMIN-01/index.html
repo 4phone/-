@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gbXQb7UeVC1gGocHl+xsRqXPkJn1oja3Hb8X0uu62GM='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-cZgCrl2hcDHXhCwMSlqjw4cBgb6b1Gp7QPoZLf84jRQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1431,7 +1431,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-21.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-21.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -4129,7 +4129,7 @@
                 K.agree(),
                 K.foot('사거리핸드폰', [k('연락처'), inp('shopPhone', '연락처 (로그인한 판매자 번호)', TEL), k('판매자'), inp('seller', '판매자')]),
                 h('p', { class: 'mf-copy' }, '본 신청서는 사거리핸드폰 업무용으로 제작된 것으로 사거리핸드폰의 사전 허락 없이 사용하거나 임의로 수정할 수 없습니다.'));
-            return mfFinish(M, sheet, { keep: true, file: '사거리핸드폰-모바일가입확인서' });
+            return mfFinish(M, sheet, { keep: true, file: '사거리핸드폰-모바일가입확인서', gate: true });
         }
 
         function buildWiredForm() {
@@ -4354,7 +4354,7 @@
                     } }, '인쇄'))));
             M.sheet = sheet;
             M.el = h('div', { class: 'mf-wrap' }, sheet, tools);
-            if (opt.gate) {   // 유선: 빈칸이 있으면 버튼을 끔
+            if (opt.gate) {   // 모바일·유선: 빈칸이 있으면 버튼을 끔
                 M.gateOn = true;
                 tools.appendChild(h('div', { class: 'mf-miss', role: 'status', 'aria-live': 'polite' }));
                 var g = function () { mfGate(M); };
@@ -4523,11 +4523,38 @@
             ['@comb', '결합 정보', ['cOld', 'cNew', 'cNone']], ['cOldN', '기존 결합 내용', null, 'cOld'], ['cNewN', '결합 내용', null, 'cNew'],
             ['@imp', '기타 정보 [확인] 체크', ['impOk']], ['etc1', '기타 정보 첫 줄(설치비)'],
             ['giftT', '사은품 총액'], ['giftV', '상품권'], ['giftH', '본사 지원금'], ['giftA', '추가지원금'],
+            ['dpBank', '사은품 입금 은행', null, '$giftT'], ['dpNo', '사은품 입금 계좌번호', null, '$giftT'], ['dpOwner', '사은품 입금 예금주', null, '$giftT'],
             ['y', '작성 연도'], ['m', '작성 월'], ['d', '작성 일'], ['seller', '판매자'], ['sellerPhone', '판매자 연락처']];
-        function mfMissing(sheet) {   // 아직 안 쓴 칸 [{ t: 이름, el: 옮겨 갈 칸 }]
+        var MF_REQ_MOBILE = [   // 모바일 가입 확인서: 다 써야 저장·복사·파일 받기·인쇄가 켜짐 (추가 서비스·기타 메모·케이스 주문은 선택 · 변경 요금제·잔여 할부금·위약금·지원금 계좌·법정대리인은 하나라도 적으면 그 줄 전부)
+            ['custNo', '고객등록번호'], ['netUse', '접수처'], ['@type', '유형 선택', ['tNew', 'tPort', 'tRe']],
+            ['carrier', '가입 통신사'], ['prevCarrier', '이전 통신사'], ['name', '가입자명'], ['birth', '생년월일'], ['phone', '휴대폰 번호'], ['addr', '주소'],
+            ['model', '모델명', null, '!noBuy'], ['serial', '일련번호', null, '!noBuy'], ['months', '할부 개월', null, '!noBuy'],
+            ['@disc', '선택약정/공시지원금', ['dSel', 'dSub']], ['subsidy', '공시지원금 금액', null, 'dSub'],
+            ['plan1', '가입 요금제'], ['keep1', '가입 요금제 유지기간'], ['bill1', '가입 요금제 청구금액'],
+            ['plan2', '변경 요금제', null, '?keep2,bill2'], ['keep2', '변경 요금제 유지기간', null, '?plan2,bill2'], ['bill2', '변경 요금제 청구금액', null, '?plan2,keep2'],
+            ['@ins', '핸드폰 보험 신청/미신청', ['insY', 'insN']], ['insName', '보험명', null, 'insY'], ['insFee', '보험료', null, 'insY'],
+            ['@card', '제휴 카드 신청/미신청', ['cardY', 'cardN']], ['cardDisc', '제휴카드 할인금액', null, 'cardY'], ['cardOwner', '제휴카드 명의자', null, 'cardY'], ['cardBirth', '제휴카드 생년월일', null, 'cardY'], ['cardPhone', '제휴카드 휴대폰', null, 'cardY'], ['cardCo', '카드사명', null, 'cardY'],
+            ['@comb', '결합 정보', ['cOld', 'cNew', 'cNone']], ['cOldN', '기존 결합 내용', null, 'cOld'], ['cNewN', '결합 내용', null, 'cNew'],
+            ['@imp', '기타 정보 [확인] 체크', ['impOk']],
+            ['@used', '중고폰 보상 신청/미신청', ['usedY', 'usedN']], ['usedModel', '중고폰 모델명', null, 'usedY'],
+            ['remain', '잔여 할부금 금액', null, '?rPay,rSup,rDbl'], ['@rem', '잔여 할부금 [수납지원·입금지원·지속청구]', ['rPay', 'rSup', 'rDbl'], '?remain'],
+            ['penalty', '할인 위약금 금액', null, '?pPay,pSup,pFree'], ['@pen', '할인 위약금 [납부지원·입금지원·청구면제]', ['pPay', 'pSup', 'pFree'], '?penalty'],
+            ['spBank', '지원금 입금 은행', null, '?spBank,spNo,spOwner'], ['spNo', '지원금 입금 계좌번호', null, '?spBank,spNo,spOwner'], ['spOwner', '지원금 입금 예금주', null, '?spBank,spNo,spOwner'],
+            ['gRel', '법정대리인 관계', null, '?gRel,gBirth,gPhone,gName'], ['gBirth', '법정대리인 생년월일', null, '?gRel,gBirth,gPhone,gName'], ['gPhone', '법정대리인 휴대폰', null, '?gRel,gBirth,gPhone,gName'], ['gName', '법정대리인 성명', null, '?gRel,gBirth,gPhone,gName'], ['#guard', '법정대리인 서명', null, '?gRel,gBirth,gPhone,gName'],
+            ['#agree', '"동의합니다." 따라 쓰기'], ['appName', '신청인/가입자 성함'], ['#apply', '신청인/가입자 서명'],
+            ['y', '작성 연도'], ['m', '작성 월'], ['d', '작성 일'], ['shopPhone', '판매점 연락처'], ['seller', '판매자']];
+        function mfMissing(sheet, M) {   // 아직 안 쓴 칸 [{ t: 이름, el: 옮겨 갈 칸 }]
             var q = function (n) { return sheet.querySelector('[data-mf="' + n + '"]'); }, out = [];
-            MF_REQ_WIRED.forEach(function (r) {
-                if (r[3]) { var on = q(r[3]); if (!on || !on.checked) return; }   // 조건부: 해당 체크를 했을 때만
+            var has = function (n) { var x = q(n); return !!x && (x.type === 'checkbox' ? x.checked : !!String(x.value || '').trim()); };
+            var cond = function (c) {   // 체크 이름 = 체크했을 때 · !이름 = 체크 안 했을 때 · ?a,b = 하나라도 적었을 때 · $이름 = 값이 있고 '없음'이 아닐 때
+                if (c.charAt(0) === '!') { var x = q(c.slice(1)); return !x || !x.checked; }
+                if (c.charAt(0) === '?') return c.slice(1).split(',').some(has);
+                if (c.charAt(0) === '$') { var v = q(c.slice(1)); v = v ? String(v.value || '').trim() : ''; return !!v && v !== '없음'; }
+                var on = q(c); return !!on && on.checked;
+            };
+            (M && M.kind === 'mobile' ? MF_REQ_MOBILE : MF_REQ_WIRED).forEach(function (r) {
+                if (r[3] && !cond(r[3])) return;   // 조건부: 해당될 때만
+                if (r[0].charAt(0) === '#') { var k = r[0].slice(1); if (!(M && M.sig[k])) out.push({ t: r[1], el: M ? M.box[k] : null }); return; }   // 서명
                 if (r[0].charAt(0) === '@') { var any = r[2].some(function (n) { var x = q(n); return x && x.checked; }); if (!any) out.push({ t: r[1], el: q(r[2][0]) }); return; }
                 var el = q(r[0]); if (el && !String(el.value || '').trim()) out.push({ t: r[1], el: el });
             });
@@ -4535,7 +4562,7 @@
         }
         function mfGate(M) {   // 빈칸이 있으면 [드라이브/연락처 저장]·[복사보고]·[PDF 파일 받기]·[인쇄]를 끄고, 빠진 칸을 눌러 바로 갈 수 있게
             if (!M.gateOn || !M.el || !M.sheet) return;
-            var miss = mfMissing(M.sheet), box = M.el.querySelector('.mf-miss');
+            var miss = mfMissing(M.sheet, M), box = M.el.querySelector('.mf-miss');
             ['mf-drive', 'mf-copy', 'mf-pdf', 'mf-print'].forEach(function (a) {
                 var b = M.el.querySelector('[data-act="' + a + '"]'); if (!b) return;
                 b.disabled = !!miss.length || b.getAttribute('data-busy') === '1';
@@ -4769,6 +4796,7 @@
             if (M.sig[key]) { b.classList.add('signed'); b.appendChild(h('img', { src: M.sig[key], alt: '서명' })); }
             else if (key === 'agree') { b.classList.remove('signed'); b.appendChild(h('span', {}, '동의합니다.')); b.appendChild(h('small', {}, '눌러서 따라 쓰기')); }
             else { b.classList.remove('signed'); b.appendChild(h('span', {}, '서명 / 인')); b.appendChild(h('small', {}, '눌러서 서명')); }
+            mfGate(M);
         }
         function trimSig(cv) {   // 서명한 부분만 잘라서 이미지로
             var w = cv.width, hh = cv.height, d = cv.getContext('2d').getImageData(0, 0, w, hh).data, x0 = w, y0 = hh, x1 = -1, y1 = -1, x, y;
