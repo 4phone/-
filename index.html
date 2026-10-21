@@ -851,7 +851,34 @@
         .sg-js .sg-reveal { opacity: 0; transform: translateY(26px); transition: opacity .8s cubic-bezier(.2,.7,.2,1), transform .8s cubic-bezier(.2,.7,.2,1); }
         .sg-js .sg-reveal.sg-in { opacity: 1; transform: none; }
 
+        /* 베스트 추천 요금: 스크롤로 들어올 때 통신사마다 조금씩 다른 등장 → 그 자리에 고정
+           (투명도·변형·가리개만 움직여서 자리 밀림 없음 · 한 번 나타나면 다시 안 움직임) */
+        .prov-section.sg-pv { --sgE: cubic-bezier(.2,.7,.2,1); opacity: 0; transition: opacity .8s var(--sgE); }
+        .prov-section.sg-pv.sg-on { opacity: 1; }
+        .sg-pv .prov-title { position: relative; opacity: 0; transform: translateY(10px); transition: opacity .8s ease .08s, transform .9s var(--sgE) .08s; }
+        .sg-pv .prov-title::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: linear-gradient(90deg, #C9A24A 0%, rgba(201,162,74,0.35) 55%, rgba(201,162,74,0) 100%); transform: scaleX(0); transform-origin: 0 50%; transition: transform 1.3s var(--sgE) .3s; }
+        .sg-pv.sg-on .prov-title { opacity: 1; transform: none; }
+        .sg-pv.sg-on .prov-title::after { transform: scaleX(1); }
+        .sg-pv .plan-card { --d: calc(.24s + var(--i, 0) * .15s); transition: opacity 1s var(--sgE) var(--d), transform 1.15s var(--sgE) var(--d), filter 1s var(--sgE) var(--d), clip-path 1.25s var(--sgE) var(--d); }
+        .sg-pv .plan-row { opacity: 0; transform: translateY(10px); transition: opacity .7s ease calc(var(--d) + .38s + var(--j, 0) * .09s), transform .85s var(--sgE) calc(var(--d) + .38s + var(--j, 0) * .09s); }
+        .sg-pv.sg-on .plan-row { opacity: 1; transform: none; }
+        .sg-pv[data-mv="rise"] .plan-card { opacity: 0; transform: translateY(30px); filter: blur(6px); }                     /* U+ : 아래에서 맑게 떠오름 */
+        .sg-pv[data-mv="curtain"] .plan-card { opacity: 0; clip-path: inset(-90px 100% -90px -90px round 20px); }               /* KT : 가운데로 걷히는 커튼 */
+        .sg-pv[data-mv="curtain"] .plan-card:nth-child(2) { clip-path: inset(-90px -90px -90px 100% round 20px); }
+        .sg-pv[data-mv="settle"] .plan-card { opacity: 0; transform: scale(.955); }                                           /* SK : 살짝 다가와 자리 잡음 */
+        .sg-pv[data-mv="unveil"] .plan-card { opacity: 0; clip-path: inset(-90px -90px 100% -90px round 20px); }              /* 알뜰형 : 위에서부터 펼쳐짐 */
+        .sg-pv[data-mv="tilt"] .plan-card { opacity: 0; transform: perspective(1200px) rotateX(9deg) scale(.965); transform-origin: 50% 0; }   /* 스카이라이프 : 기울어진 카드가 바로 섬 */
+        .sg-pv[data-mv="glow"] .plan-card { opacity: 0; transform: translateY(18px); }                                        /* 헬로비전 : 떠오른 뒤 빛이 한 번 스침 */
+        .sg-pv[data-mv="glow"] .plan-card::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 55%; pointer-events: none; background: linear-gradient(105deg, rgba(255,255,255,0) 0%, rgba(255,246,220,0.55) 50%, rgba(255,255,255,0) 100%); transform: translateX(-130%) skewX(-14deg); opacity: 0; }
+        .sg-pv.sg-on[data-mv="glow"] .plan-card::after { animation: sgCardSweep 1.5s ease calc(var(--d) + .55s) 1 both; }
+        .prov-section.sg-pv.sg-on[data-mv] .plan-card:nth-child(n) { opacity: 1; transform: none; filter: none; clip-path: inset(-90px round 20px); }   /* 나타난 뒤 (위 시작 모양보다 우선) */
+        @keyframes sgCardSweep { 0% { opacity: 0; transform: translateX(-130%) skewX(-14deg); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateX(260%) skewX(-14deg); } }
+        .sg-pv.sg-done, .sg-pv.sg-done .prov-title, .sg-pv.sg-done .prov-title::after, .sg-pv.sg-done .plan-card, .sg-pv.sg-done .plan-row { transition: none !important; }
+        .prov-section.sg-pv.sg-done[data-mv] .plan-card:nth-child(n) { clip-path: none; }
+
         @media (prefers-reduced-motion: reduce) {
+            .sg-pv, .sg-pv .prov-title, .sg-pv .plan-card, .sg-pv .plan-row { opacity: 1 !important; transform: none !important; filter: none !important; clip-path: none !important; transition: none !important; }
+            .sg-pv .plan-card::after { display: none; }
             .sg-hero *, .sg-hero *::before, .sg-hero *::after, .sg-cue b, .sg-band-blob { animation: none !important; transition: none !important; }
             .sg-js .sg-reveal { opacity: 1; transform: none; transition: none; }
         }
@@ -867,14 +894,13 @@
         
        <!-- PC 전용 8구 풀 네비게이션 -->
         <div class="nav-menu pc-only-menu" id="pc-nav-menu" style="flex: 1; justify-content: center;">
-            <a href="#prov-section-LG" onclick="scrollToProv(event, 'LG')">LG U+</a>
+            <a href="#prov-section-LG" onclick="scrollToProv(event, 'LG')">U+인터넷</a>
             <a href="#prov-section-KT" onclick="scrollToProv(event, 'KT')">KT인터넷</a>
             <a href="#prov-section-SK" onclick="scrollToProv(event, 'SK')">SK인터넷</a>
             <a href="#prov-section-알뜰" onclick="scrollToProv(event, '알뜰')">알뜰형</a>
             <a href="#prov-section-스카이" onclick="scrollToProv(event, '스카이')">KT스카이라이프</a>
             <a href="#prov-section-헬로" onclick="scrollToProv(event, '헬로')">LG헬로비전</a>
             <span class="nav-divider">|</span>
-            <a href="boss.html" target="_blank" class="boss-highlight-btn">사장님전용</a>
             <div class="nav-rental" id="navRental">
                 <button type="button" class="nav-rental-btn" aria-haspopup="true" aria-expanded="false" aria-controls="navRentalMenu" onclick="sgRentalToggle(event)">렌탈<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
                 <div class="nav-rental-menu" id="navRentalMenu">
@@ -884,24 +910,25 @@
                 </div>
             </div>
             <a href="#" onclick="openGiftPopup(event)">사은품 라인업</a>
+            <a href="boss.html" target="_blank" class="boss-highlight-btn">사장님전용</a>
         </div>
         <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
 
         <div class="nav-menu" id="mobile-nav-menu">
-            <a href="#prov-section-LG" onclick="scrollToProv(event, 'LG'); closeMobileMenu();">LG U+ 요금표</a>
+            <a href="#prov-section-LG" onclick="scrollToProv(event, 'LG'); closeMobileMenu();">U+인터넷 요금표</a>
             <a href="#prov-section-KT" onclick="scrollToProv(event, 'KT'); closeMobileMenu();">KT 요금표</a>
             <a href="#prov-section-SK" onclick="scrollToProv(event, 'SK'); closeMobileMenu();">SK 요금표</a>
             <a href="#prov-section-알뜰" onclick="scrollToProv(event, '알뜰'); closeMobileMenu();">알뜰형 요금표</a>
             <a href="#prov-section-스카이" onclick="scrollToProv(event, '스카이'); closeMobileMenu();">스카이라이프 요금표</a>
             <a href="#prov-section-헬로" onclick="scrollToProv(event, '헬로'); closeMobileMenu();">LG헬로비전 요금표</a>
             <hr style="border-color:#E2E8F0; margin:5px 0;">
-            <a href="boss.html" target="_blank" class="boss-highlight-btn" onclick="closeMobileMenu();">사장님전용</a>
             <div class="m-rental">
                 <span class="m-rental-cap">렌탈</span>
                 <a href="#" onclick="sgSoon(event, '정수기 렌탈'); closeMobileMenu();"><span>정수기</span><em>준비중</em></a>
                 <a href="#" onclick="sgSoon(event, '가전가구 렌탈'); closeMobileMenu();"><span>가전가구</span><em>준비중</em></a>
             </div>
             <a href="#" onclick="openGiftPopup(event); closeMobileMenu();">사은품 라인업</a>
+            <a href="boss.html" target="_blank" class="boss-highlight-btn" onclick="closeMobileMenu();">사장님전용</a>
         </div>
 
         <div class="nav-phone-call-zone">
@@ -911,7 +938,7 @@
 
     <!-- 모바일 전용 통신사 스와이프 탭 -->
     <div class="mobile-swipe-tabs">
-        <a href="#prov-section-LG" class="m-tab-link" onclick="scrollToProv(event, 'LG')">LG U+</a>
+        <a href="#prov-section-LG" class="m-tab-link" onclick="scrollToProv(event, 'LG')">U+인터넷</a>
         <a href="#prov-section-KT" class="m-tab-link" onclick="scrollToProv(event, 'KT')">KT</a>
         <a href="#prov-section-SK" class="m-tab-link" onclick="scrollToProv(event, 'SK')">SK</a>
         <a href="#prov-section-알뜰" class="m-tab-link" onclick="scrollToProv(event, '알뜰')">알뜰형</a>
@@ -2328,6 +2355,7 @@
                 provHtml += `</div></div>`; container.innerHTML += provHtml;
                 if (prov === 'SK') container.innerHTML += discountHtml;   // 알뜰형은 SK 다음
             });
+            if (window.sgPlanMotion) window.sgPlanMotion();   // 스크롤로 들어올 때 등장
         }
 
         function openDirectFromBest(prov, prod, speed, tv, price, gift) {
@@ -3204,6 +3232,31 @@
             if (box) { box.classList.add('sg-flash'); setTimeout(function () { box.classList.remove('sg-flash'); }, 1600); }
             if (name) setTimeout(function () { try { name.focus({ preventScroll: true }); } catch (x) { name.focus(); } }, reduce ? 0 : 550);
         };
+        // 베스트 추천 요금: 통신사마다 조금씩 다른 등장 (한 번 나타나면 그 자리에 고정 · 다시 그려도 반복하지 않음)
+        var MV = { LG: 'rise', KT: 'curtain', SK: 'settle', '알뜰': 'unveil', '스카이': 'tilt', '헬로': 'glow' }, mvSeen = {}, mvIo = null;
+        window.sgPlanMotion = function () {
+            if (reduce || !('IntersectionObserver' in window)) return;
+            if (mvIo) mvIo.disconnect();
+            mvIo = new IntersectionObserver(function (list) {
+                list.forEach(function (en) {
+                    if (!en.isIntersecting) return;
+                    var sec = en.target; mvIo.unobserve(sec); mvSeen[sec.id] = 1;
+                    requestAnimationFrame(function () { sec.classList.add('sg-on'); });
+                    setTimeout(function () { sec.classList.add('sg-done'); }, 3200);   // 다 나타난 뒤에는 움직임 설정을 걷어 냄
+                });
+            }, { rootMargin: '0px 0px -12% 0px', threshold: 0 });
+            document.querySelectorAll('#best-plan-container .prov-section').forEach(function (sec) {
+                var k = sec.id.replace('prov-section-', '');
+                sec.setAttribute('data-mv', MV[k] || 'rise');
+                [].forEach.call(sec.querySelectorAll('.plan-card'), function (c, i) {
+                    c.style.setProperty('--i', i);
+                    [].forEach.call(c.querySelectorAll('.plan-row'), function (r, j) { r.style.setProperty('--j', j); });
+                });
+                if (mvSeen[sec.id]) { sec.classList.add('sg-pv', 'sg-on', 'sg-done'); return; }   // 이미 본 곳은 바로 그대로
+                sec.classList.add('sg-pv'); mvIo.observe(sec);
+            });
+        };
+        if (document.querySelector('#best-plan-container .prov-section')) window.sgPlanMotion();
         // 스크롤하면 부드럽게 나타나기
         if (!reduce && 'IntersectionObserver' in window) {
             document.documentElement.classList.add('sg-js');
