@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-q060ERnQcFwR0nCUbY0FQkezwPpi66RXasr6/r55NAA='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hO0xtC8bRH0lTgA9gMlAGPQ2oHd8ataiIcrYr+ayIdY='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -10629,7 +10629,7 @@
                     })).then(function (lists) {
                         var all = [].concat.apply([], lists);
                         all.sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : b.k - a.k; });
-                        return all.slice(0, LV_MAX).map(function (x) { return { m: x.d.slice(0, 7), nm: x.nm, car: x.car, st: x.st, pay: x.pay, amt: x.amt }; });   // 날짜(일)·상품명은 보내지 않고 월만
+                        return all.slice(0, LV_MAX).map(function (x) { return { m: x.d.slice(0, 7), d: x.d, pr: x.pr || '인터넷', nm: x.nm, car: x.car, st: x.st, pay: x.pay, amt: x.amt }; });   // 홈페이지에는 월만 보임 (d·pr은 예전 서버 버전과 맞추려고 같이 보냄 · 새 서버는 받지 않고 버림)
                     });
                 });
             });
@@ -10647,13 +10647,18 @@
             if (force) toast('장부에서 접수 현황을 만들고 있어요…');
             (force ? Promise.resolve(0) : lvAge()).then(function (at) {
                 if (!force && at && Date.now() - at < LV_EVERY - 5 * 60000) return null;
-                return lvBuild().then(function (items) { return ibCall('liveSet', { items: items }).then(function () { return items; }); });
+                return lvBuild().then(function (items) {
+                    return ibCall('liveSet', { items: items }).then(function () { return items; }, function (e) {   // 예전 서버(25건까지)면 25건으로 다시
+                        if (e && e.code === 'invalid' && items.length > 25) { var few = items.slice(0, 25); return ibCall('liveSet', { items: few }).then(function () { return few; }); }
+                        throw e;
+                    });
+                });
             }).then(function (items) {
                 lv.busy = false;
                 if (force && items) toast('홈페이지 [실시간 접수 현황]에 ' + items.length + '건을 반영했어요. (성함은 가려서 · 3시간마다 자동으로 다시 반영)');
             }, function (e) {
                 lv.busy = false;
-                if (force) toast('접수 현황을 반영하지 못했어요. ' + (e && e.message ? e.message : '잠시 뒤 다시 눌러 주세요.'));
+                if (force) toast('접수 현황을 반영하지 못했어요. ' + (e && e.serverMessage ? e.serverMessage : e && e.code === 'bad_action' ? '서버(Apps Script)를 새 버전으로 배포해 주세요.' : '잠시 뒤 다시 눌러 주세요.'));
             });
         }
 
