@@ -205,6 +205,49 @@
         .story-flow-on .story-card { flex: 0 0 var(--story-card-w, 300px); min-width: 0; }
         .story-flow-on .story-arrow { display: none !important; }
         .story-viewport:hover .story-slider-container, .story-viewport.is-paused .story-slider-container { animation-play-state: paused; }
+        /* 실시간 가입 현황 (설치 사업장 카드와 같은 비율을 작게) */
+        .hl-sec { padding: 34px 0 10px; max-width: 1600px; margin: 0 auto; text-align: center; }
+        .hl-sec[hidden] { display: none; }
+        .hl-title { margin-bottom: 8px !important; }
+        .hl-sub { margin: 0 18px; font-size: 14px; color: var(--muted-ink); font-weight: 600; word-break: keep-all; }
+        .hl-meta { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; padding: 5px 12px; border-radius: 999px; background: #FFFFFF; border: 1px solid #E7DCC2; box-shadow: 0 4px 12px rgba(122,88,24,0.08); font-size: 12.5px; color: var(--point-color); font-weight: 700; }
+        .hl-meta:empty { display: none; }
+        .hl-meta i { width: 7px; height: 7px; border-radius: 50%; background: #2E9E6B; box-shadow: 0 0 0 4px rgba(46,158,107,0.15); }
+        .hl-vp { margin-top: 22px; overflow: hidden; padding: 10px 0 18px; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 5%, #000 95%, transparent 100%); mask-image: linear-gradient(to right, transparent 0, #000 5%, #000 95%, transparent 100%); }
+        .hl-track { display: flex; gap: var(--hl-gap, 16px); width: max-content; padding: 0 16px; }
+        .hl-flow .hl-track { padding: 0; animation: hlFlow var(--hl-dur, 60s) linear infinite; will-change: transform; }
+        .hl-vp:hover .hl-track, .hl-vp.is-paused .hl-track { animation-play-state: paused; }
+        @keyframes hlFlow { from { transform: translate3d(calc(-1 * var(--hl-set, 0px)), 0, 0); } to { transform: translate3d(0, 0, 0); } }
+        .hl-card { flex: 0 0 var(--hl-w, 180px); aspect-ratio: 232 / 385; display: flex; flex-direction: column; background: #FFFFFF; border: 1px solid #E7DCC2; border-radius: 16px; box-shadow: 0 10px 24px rgba(122,88,24,0.10); overflow: hidden; text-align: left; transition: transform .3s, border-color .3s; }
+        .hl-card:hover { transform: translateY(-4px); border-color: #C9A962; }
+        .hl-top { aspect-ratio: 1 / 1; display: flex; flex-direction: column; padding: 14px; box-sizing: border-box; background: radial-gradient(110% 80% at 85% 0%, rgba(201,169,98,0.22), rgba(201,169,98,0) 60%), linear-gradient(160deg, #F2F7F6 0%, #E3EEEC 100%); }
+        .hl-r1 { display: flex; align-items: center; gap: 6px; }
+        .hl-dt { font-weight: 800; font-size: 15px; color: var(--olive-dark); }
+        .hl-st { margin-left: auto; font-size: 10.5px; font-weight: 800; border-radius: 999px; padding: 3px 8px; white-space: nowrap; border: 1px solid; }
+        .hl-st.sch { color: #9A5B00; background: #FFF1D6; border-color: #F1C77A; }
+        .hl-st.wait { color: #1F5A5E; background: #E6F1EF; border-color: #B9D6D1; }
+        .hl-st.done { color: #1E7A4C; background: #E5F6EC; border-color: #A9DDBF; }
+        .hl-car { margin: auto 0; text-align: center; }
+        .hl-lg { display: inline-flex; align-items: center; justify-content: center; min-width: 64px; height: 32px; padding: 0 12px; border-radius: 9px; color: #FFFFFF; font-weight: 900; font-size: 15px; white-space: nowrap; }
+        .hl-body { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; padding: 10px 12px 12px; border-top: 1px solid #EFE6D0; background: #FFFDF8; }
+        .hl-it { display: flex; align-items: flex-start; gap: 7px; font-size: 11.5px; line-height: 1.35; }
+        .hl-l { flex: none; min-width: 52px; text-align: center; background: var(--olive-dark); color: #FFFFFF; font-size: 10px; font-weight: 800; padding: 3px 5px; border-radius: 5px; }
+        .hl-v { color: var(--sub-ink); font-weight: 600; padding-top: 2px; word-break: keep-all; }
+        .hl-v.nm { color: var(--ink); font-weight: 800; }
+        .hl-v.amt { color: #B4620C; font-weight: 900; }
+        .hl-v.pd { color: #1E7A4C; font-weight: 800; }
+        .hl-v.pw { color: #9A5B00; font-weight: 800; }
+        .hl-note { margin: 4px 16px 0; font-size: 12px; color: #8A7A57; word-break: keep-all; }
+        @media (max-width: 950px) {
+            .hl-sec { padding-top: 22px; }
+            .hl-sub { font-size: 13px; }
+            .hl-top { padding: 11px; }
+            .hl-lg { font-size: 13.5px; height: 28px; padding: 0 10px; }
+            .hl-body { padding: 8px 9px 10px; }
+            .hl-it { font-size: 11px; gap: 5px; }
+            .hl-l { min-width: 46px; font-size: 9.5px; padding: 2px 4px; }
+        }
+        @media (prefers-reduced-motion: reduce) { .hl-flow .hl-track { animation: none; } .hl-card { transition: none; } }
         @keyframes storyFlowRight { from { transform: translate3d(calc(-1 * var(--story-set-w, 0px)), 0, 0); } to { transform: translate3d(0, 0, 0); } }
 
         /* 10대 베스트 요금 라인업 대개편 */
@@ -1033,56 +1076,14 @@
         <div class="sg-consult-mark" aria-hidden="true">SAGEORI</div>
     </section>
 
-    <!-- 털보아저씨 찐 설치후기 가로 스와이프 슬라이더 섹션 -->
-    <div id="blog-stories-section" style="position: relative;">
-        <div class="sg-sec-eyebrow sg-reveal">Installation Stories</div>
-        <div class="section-title sg-reveal" style="margin-bottom: 25px; text-align: center;">설치 사업장 소개</div>
-        
-        <button class="story-arrow prev-arrow" onclick="scrollStory(-1)">◀</button>
-        <button class="story-arrow next-arrow" onclick="scrollStory(1)">▶</button>
-
-        <div class="story-slider-container" id="storySlider">
-            <div class="story-card">
-                <div class="story-img-box"><img src="야키토리 사화.jpg" alt="안산 야키토리 사화 설치후기" loading="lazy"></div>
-                <div class="story-content">
-                    <div class="story-info-item"><span class="story-label">업체명</span><div class="story-desc"><b>야키토리 사화</b>(안산시 고잔동)</div></div>
-                    <div class="story-info-item"><span class="story-label">가입상품</span><div class="story-desc">LG U+ 소상공인 결합 특가</div></div>
-                    <div class="story-info-item"><span class="story-label">매장소개</span><div class="story-desc">낭만적인 분위기의 야키토리 전문 맛집! 맛도 분위기도 최고인 안산1등 맛집입니다.</div></div>
-                </div>
-            </div>
-            <div class="story-card">
-                <div class="story-img-box"><img src="프리드라이프.png" alt="프리드라이프 의정부가능점 설치후기" loading="lazy"></div>
-                <div class="story-content">
-                    <div class="story-info-item"><span class="story-label">업체명</span><div class="story-desc"><b>프리드라이프 의정부가능점</b>(의정부시 의정부동)</div></div>
-                    <div class="story-info-item"><span class="story-label">가입상품</span><div class="story-desc">U+ 사무실인터넷 + PC 회선추가</div></div>
-                    <div class="story-info-item"><span class="story-label">매장소개</span><div class="story-desc">업무 차질이 없도록 끊김 없는 고속 통신망이 필수인 사무실 환경에 맞춤 설계 완료!</div></div>
-                </div>
-            </div>
-            <div class="story-card">
-                <div class="story-img-box"><img src="허그미세라믹.jpg" alt="대전 허그미세라믹 설치후기" loading="lazy"></div>
-                <div class="story-content">
-                    <div class="story-info-item"><span class="story-label">업체명</span><div class="story-desc"><b>허그미세라믹</b>(대전시 월평동)</div></div>
-                    <div class="story-info-item"><span class="story-label">가입상품</span><div class="story-desc">KT 매장용 100M + WIFI</div></div>
-                    <div class="story-info-item"><span class="story-label">매장소개</span><div class="story-desc">대전에 위치한 감성 가득한 도자기 공방! 취미생활이나 체험용으로 추천드립니다.</div></div>
-                </div>
-            </div>
-            <div class="story-card">
-                <div class="story-img-box"><img src="점보프린트.gif" alt="서울 점보프린트 설치후기" loading="lazy"></div>
-                <div class="story-content">
-                    <div class="story-info-item"><span class="story-label">업체명</span><div class="story-desc"><b>점보프린트</b>(서울시 삼성동)</div></div>
-                    <div class="story-info-item"><span class="story-label">가입상품</span><div class="story-desc">U+ 사무실인터넷+WIFI</div></div>
-                    <div class="story-info-item"><span class="story-label">매장소개</span><div class="story-desc">jumboprint.co.kr 명함/전단/팜플렛/스티커 등 모든 제작은 점보프린트!</div></div>
-                </div>
-            </div>
-            <div class="story-card">
-                <div class="story-img-box"><img src="연일왕자회오리날다.jpg" alt="대전 연일왕자회오리날다 설치후기" loading="lazy"></div>
-                <div class="story-content">
-                    <div class="story-info-item"><span class="story-label">업체명</span><div class="story-desc"><b>연일왕자회오리날다 노은점</b>(대전시 지족동)</div></div>
-                    <div class="story-info-item"><span class="story-label">가입상품</span><div class="story-desc">U+ 소상공인 배달전문점전용상품</div></div>
-                    <div class="story-info-item"><span class="story-label">매장소개</span><div class="story-desc">평범한 오리요리는 가라! 대전에서 오리요리 배달은 이곳에서!</div></div>
-                </div>
-            </div>
-        </div>
+    <!-- 실시간 접수 현황 (설치 사업장 소개 자리 · 관리자 페이지가 가입고객 장부에서 3시간마다 만든 공개용 요약: 가린 성함 · 통신사 · 진행 · 상담 혜택 · 입금 · 받지 못하거나 0건이면 숨김) -->
+    <div id="live-reception-section" class="hl-sec" hidden>
+        <div class="sg-sec-eyebrow">Live Status</div>
+        <div class="section-title hl-title">실시간 접수 현황</div>
+        <p class="hl-sub">사거리인터넷 가입고객 장부 기준으로 3시간마다 자동 반영돼요 · 성함은 일부 가려서 보여 드려요</p>
+        <div class="hl-meta" id="hl-meta"></div>
+        <div class="hl-vp" id="hl-vp"><div class="hl-track" id="hl-track"></div></div>
+        <p class="hl-note">상담 혜택은 상품별 단가표 기준 금액이에요 · 실제 혜택은 상담 내용에 따라 달라질 수 있어요</p>
     </div>
 
     <!-- 10대 베스트 요금 라인업 섹션 -->
@@ -3483,6 +3484,62 @@
                 if (IB_URL) send(vev); else if (waiting.length < 20) waiting.push(vev);
             }
         } catch (e) { /* 기록 실패는 고객 화면에 영향 없음 */ }
+    })();
+    /* 실시간 가입 현황: 서버(?a=live)에서 가린 성함 · 통신사 · 진행 · 상담 혜택 · 입금만 받아 카드로 (설치 사업장 소개처럼 천천히 흐름) */
+    (function () {
+        var sec = document.getElementById('live-reception-section'), vp = document.getElementById('hl-vp'), track = document.getElementById('hl-track');
+        if (!sec || !vp || !track || !window.fetch || typeof window.sgTeamUrl !== 'function') return;
+        var ST = { sch: '스케줄 조율 중', wait: '설치 대기', done: '설치 완료' };
+        var MAX = 30, CAR = { 'LG U+': '#E6007E', 'SK브로드밴드': '#E8452C', 'KT': '#1C1C1C', 'KT 스카이라이프': '#C8102E', 'LG헬로비전': '#D9381E' };
+        var SHORT = { 'KT 스카이라이프': 'SKY라이프' };
+        function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+        function ok(x) { return x && typeof x.m === 'string' && /^\d{4}-\d{2}$/.test(x.m) && typeof x.nm === 'string' && x.nm.indexOf('○') > 0 && CAR.hasOwnProperty(x.car) && ST.hasOwnProperty(x.st); }
+        function card(x) {   // 날짜는 보내지 않고 장부의 '월'만 (예: 10월)
+            var c = el('div', 'hl-card'), top = el('div', 'hl-top'), r1 = el('div', 'hl-r1'), car = SHORT[x.car] || x.car;
+            r1.appendChild(el('span', 'hl-dt', (+x.m.split('-')[1]) + '월'));
+            r1.appendChild(el('span', 'hl-st ' + x.st, ST[x.st]));
+            var cw = el('div', 'hl-car'), lg = el('span', 'hl-lg', car); lg.style.background = CAR[x.car]; cw.appendChild(lg);
+            top.appendChild(r1); top.appendChild(cw);
+            var body = el('div', 'hl-body'), amt = +x.amt || 0;
+            function it(l, v, cls) { var d = el('div', 'hl-it'); d.appendChild(el('span', 'hl-l', l)); d.appendChild(el('span', 'hl-v' + (cls ? ' ' + cls : ''), v)); body.appendChild(d); }
+            var pay = x.pay === 'done' ? ['입금 완료', 'pd'] : x.pay === 'wait' ? ['입금 대기', 'pw'] : x.st === 'done' ? ['설치 완료', ''] : ['설치 후 진행', ''];
+            it('고객명', x.nm.slice(0, 6) + ' 고객님', 'nm');
+            it('상담 혜택', amt > 0 ? amt.toLocaleString('ko-KR') + '원' : '맞춤 상담', amt > 0 ? 'amt' : '');
+            it('진행', pay[0], pay[1]);
+            c.appendChild(top); c.appendChild(body);
+            return c;
+        }
+        function flow() {
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { vp.style.overflowX = 'auto'; return; }
+            var originals = [].slice.call(track.children), last = 0;
+            sec.classList.add('hl-flow');
+            function layout() {
+                var vw = vp.clientWidth; if (!vw || vw === last) return; last = vw;
+                [].slice.call(track.querySelectorAll('.hl-clone')).forEach(function (c) { c.remove(); });
+                var iw = window.innerWidth, w = iw <= 950 ? Math.round((iw - 20) * 0.46) : 180, gap = iw <= 950 ? 12 : 16, setW = originals.length * (w + gap), sets = Math.ceil(vw / setW) + 1;
+                for (var k = 1; k < sets; k++) originals.forEach(function (c) { var x = c.cloneNode(true); x.classList.add('hl-clone'); x.setAttribute('aria-hidden', 'true'); track.appendChild(x); });
+                track.style.setProperty('--hl-w', w + 'px'); track.style.setProperty('--hl-gap', gap + 'px'); track.style.setProperty('--hl-set', setW + 'px'); track.style.setProperty('--hl-dur', (setW / 45) + 's');
+            }
+            layout();
+            var t; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(layout, 200); });
+            var tt; vp.addEventListener('touchstart', function () { clearTimeout(tt); vp.classList.add('is-paused'); }, { passive: true });
+            var resume = function () { clearTimeout(tt); tt = setTimeout(function () { vp.classList.remove('is-paused'); }, 1500); };
+            vp.addEventListener('touchend', resume, { passive: true }); vp.addEventListener('touchcancel', resume, { passive: true });
+        }
+        function show(j) {
+            var items = (j && j.ok && Array.isArray(j.items) ? j.items : []).filter(ok).slice(0, MAX);
+            if (!items.length) return;
+            items.forEach(function (x) { track.appendChild(card(x)); });
+            var meta = document.getElementById('hl-meta');
+            if (meta && j.at) { var at = new Date(+j.at); meta.textContent = ''; meta.appendChild(el('i')); meta.appendChild(document.createTextNode((at.getMonth() + 1) + '월 ' + at.getDate() + '일 ' + ('0' + at.getHours()).slice(-2) + ':' + ('0' + at.getMinutes()).slice(-2) + ' 업데이트 · 최근 ' + items.length + '건')); }
+            sec.hidden = false;
+            flow();
+        }
+        var ctl = window.AbortController ? new AbortController() : null, timer = setTimeout(function () { if (ctl) ctl.abort(); }, 8000);
+        window.sgTeamUrl().then(function (u) {
+            if (!u) return null;
+            return fetch(u + '?a=live&_=' + Date.now(), { cache: 'no-store', credentials: 'omit', signal: ctl ? ctl.signal : undefined }).then(function (r) { return r.ok ? r.json() : null; });
+        }).then(function (j) { clearTimeout(timer); show(j); }).catch(function () { clearTimeout(timer); });
     })();
     </script>
 <!-- MR Script Ver 2.0 -->
