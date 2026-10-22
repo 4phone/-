@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hO0xtC8bRH0lTgA9gMlAGPQ2oHd8ataiIcrYr+ayIdY='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-X0orFnIceT33I1sVME+wJOwf2zrJNjcL1QO7CPMFfkk='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -10531,7 +10531,7 @@
         }
 
         /* ---------- 사장님 전용 '실시간 접수 현황' (공개용 요약) ----------
-           최근 두 달 장부의 유선 접수 줄(최신 30건) → 접수 월 · 가린 성함(전○민) · 통신사 · 진행 상태 · 단가표 2차 상담 금액 · 입금 상태만 뽑아 서버에 보냄 (홈페이지 '실시간 접수 현황')
+           이번 달 장부의 유선 접수 줄(최신 30건) → 접수 월 · 가린 성함(전○민) · 통신사 · 진행 상태 · 단가표 2차 상담 금액 · 입금 상태만 뽑아 서버에 보냄 (홈페이지 '실시간 접수 현황')
            3시간마다 자동 (관리자 페이지가 열려 있는 기기 중 한 곳에서) · 연락처·주소·생년월일·계좌·메모는 보내지 않음 · 취소 줄은 빼고 */
         var LV_EVERY = 3 * 3600000, LV_MAX = 30, lv = { busy: false, chk: 0 };
         function lvMask(n) {
@@ -10627,7 +10627,8 @@
                         return glCall('glGet', { id: x.id, rev: -1 }).then(function (res) { return res.blob ? glDec(res.blob, GL_AAD + x.id) : null; })
                             .then(function (raw) { return raw ? lvRows(glNormSheet(raw), x.ym, D) : []; });
                     })).then(function (lists) {
-                        var all = [].concat.apply([], lists);
+                        var now = new Date(), cur = now.getFullYear() + '-' + pad(now.getMonth() + 1);
+                        var all = [].concat.apply([], lists).filter(function (x) { return x.d.slice(0, 7) === cur; });   // 홈페이지에는 이번 달 건만 ('10월' 표기)
                         all.sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : b.k - a.k; });
                         return all.slice(0, LV_MAX).map(function (x) { return { m: x.d.slice(0, 7), d: x.d, pr: x.pr || '인터넷', nm: x.nm, car: x.car, st: x.st, pay: x.pay, amt: x.amt }; });   // 홈페이지에는 월만 보임 (d·pr은 예전 서버 버전과 맞추려고 같이 보냄 · 새 서버는 받지 않고 버림)
                     });
@@ -10650,6 +10651,7 @@
                 return lvBuild().then(function (items) {
                     return ibCall('liveSet', { items: items }).then(function () { return items; }, function (e) {   // 예전 서버(25건까지)면 25건으로 다시
                         if (e && e.code === 'invalid' && items.length > 25) { var few = items.slice(0, 25); return ibCall('liveSet', { items: few }).then(function () { return few; }); }
+                        if (e && e.code === 'invalid') e.serverMessage = '서버(Apps Script)가 예전 버전이에요. drive-storage.gs를 새 버전으로 배포해 주세요.';
                         throw e;
                     });
                 });
