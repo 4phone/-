@@ -492,13 +492,13 @@
         .lx-head h2 { margin: 12px 0 10px; font-size: 34px; font-weight: 700; color: #F6F1E6; letter-spacing: -0.02em; }
         .lx-head p { margin: 0; font-size: 14.5px; color: rgba(237,230,214,0.6); word-break: keep-all; }
         .lx-viewport { max-width: 1760px; margin: 0 auto; overflow: hidden; padding: 14px 0 26px; -webkit-mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%); mask-image: linear-gradient(to right, transparent 0, #000 7%, #000 93%, transparent 100%); }
-        .lx-track { display: flex; gap: 26px; width: max-content; padding: 0 26px; }
+        .lx-track { display: flex; gap: 20px; width: max-content; padding: 0 20px; }
         .lx-flow .lx-track { padding: 0; animation: lxFlow var(--lx-dur, 60s) linear infinite; will-change: transform; }
         .lx-viewport:hover .lx-track, .lx-viewport.is-paused .lx-track { animation-play-state: paused; }
         @keyframes lxFlow { from { transform: translate3d(calc(-1 * var(--lx-set, 0px)), 0, 0); } to { transform: translate3d(0, 0, 0); } }
         .lx-card { flex: 0 0 var(--lx-w, 400px); display: flex; flex-direction: column; border-radius: 22px; overflow: hidden; background: linear-gradient(160deg, rgba(28,25,18,0.95) 0%, rgba(13,12,9,0.98) 100%); border: 1px solid rgba(212,175,55,0.22); box-shadow: 0 26px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(243,229,171,0.08); transition: transform .35s cubic-bezier(.2,.7,.2,1), border-color .35s, box-shadow .35s; word-break: keep-all; overflow-wrap: anywhere; }
         .lx-card:hover { transform: translateY(-6px); border-color: rgba(212,175,55,0.6); box-shadow: 0 34px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.15); }
-        .lx-img { position: relative; aspect-ratio: 16 / 10; background: #15130E; overflow: hidden; }
+        .lx-img { position: relative; aspect-ratio: 1 / 1; background: #15130E; overflow: hidden; }
         .lx-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,7,7,0) 55%, rgba(7,7,7,0.55) 100%); pointer-events: none; }
         .lx-img img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(.92); transition: transform .8s cubic-bezier(.2,.7,.2,1); }
         .lx-card:hover .lx-img img { transform: scale(1.04); }
@@ -2945,8 +2945,8 @@
         function layout() {
             var vw = vp.clientWidth; if (!vw || vw === last) return; last = vw;
             [].slice.call(track.querySelectorAll('.lx-clone')).forEach(function (c) { c.remove(); });
-            var w = window.innerWidth <= 900 ? Math.round(vw * 0.82) : Math.max(360, Math.min(460, Math.round(vw * 0.25)));   // PC: 홈페이지보다 넓게 (가로 16:10 사진)
-            var gap = window.innerWidth <= 900 ? 16 : 26, setW = originals.length * (w + gap), sets = Math.ceil(vw / setW) + 1;
+            var iw = window.innerWidth, mobile = iw <= 950, base = mobile ? iw - 20 : Math.min(1160, iw - 40), w = mobile ? Math.round(base * 0.85) : Math.max(300, Math.round(base * 0.28 - 14));   // 카드 크기·사진 비율은 홈페이지와 동일 (정사각형 사진), 보이는 폭만 넓게
+            var gap = mobile ? 16 : 20, setW = originals.length * (w + gap), sets = Math.ceil(vw / setW) + 1;
             for (var k = 1; k < sets; k++) originals.forEach(function (c) { var x = c.cloneNode(true); x.classList.add('lx-clone'); x.setAttribute('aria-hidden', 'true'); track.appendChild(x); });
             track.style.setProperty('--lx-w', w + 'px'); track.style.setProperty('--lx-set', setW + 'px'); track.style.setProperty('--lx-dur', (setW / SPEED) + 's');
         }
