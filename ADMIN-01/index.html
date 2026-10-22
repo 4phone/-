@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lRU45UwKfWf5BLjqAt0d2TcMDaUJ7lIo4IshTbMaSOM='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-kRIZMZZy+JzYa0qFF99yr0ag9HWmCMNo8zmw5tgkpIo='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -545,6 +545,29 @@
         .idr-part { display: flex; flex-direction: column; min-width: 0; }
         .idr-part > b { font-size: 12px; color: #4D5A2A; margin: 0 0 4px 2px; }
         .idr-parts .idr-intake { min-height: 0; height: auto; resize: vertical; overflow-y: auto; flex: 1 1 auto; padding: 8px 10px; }
+        .idr-hl { position: relative; display: flex; flex-direction: column; flex: 1 1 auto; min-width: 0; background: #fff; border-radius: 10px; }
+        .idr-hl-bd { position: absolute; top: 1px; left: 1px; box-sizing: border-box; padding: 8px 10px; font: inherit; font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: break-word; word-break: normal; overflow: hidden; pointer-events: none; color: #111; z-index: 0; }
+        .idr-parts .idr-intake.idr-hl-ta { position: relative; z-index: 1; background: transparent; color: transparent; caret-color: #111; overflow-wrap: break-word; word-break: normal; }
+        .idr-hl-ta::selection { color: transparent; background: rgba(46,125,50,0.25); }
+        .idr-hl-bd .idr-l { display: inline; margin: 0; padding: 0; font: inherit; line-height: inherit; }
+        .idr-l.ok { color: #111; }
+        .idr-l.miss { color: #D32F2F; }
+        .idr-l.pl { color: #4A5240; }
+        .idr-head-acts { flex-direction: column; align-items: flex-end; gap: 8px; }
+        .idr-dk-btn { border-color: #2F6B9A; color: #1E4E78; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
+        .idr-dk-n { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #D32F2F; color: #fff; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+        .dk-dlg { width: min(640px, calc(100vw - 24px)); }
+        .dk-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow: auto; }
+        .dk-item { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; background: #fff; }
+        .dk-item.got { background: #F7F8F2; }
+        .dk-item.bad { background: #FFF6F5; }
+        .dk-t { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .dk-new { margin-left: auto; font-size: 12px; font-weight: 800; color: #fff; background: #D32F2F; border-radius: 999px; padding: 1px 8px; }
+        .dk-got { margin-left: auto; font-size: 12px; font-weight: 700; color: #4A5240; }
+        .dk-s { margin: 4px 0 6px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+        .dk-p { font-size: 13px; color: #3E441E; }
+        .dk-a { display: flex; gap: 6px; justify-content: flex-end; }
+        .dk-warn { margin-bottom: 10px; padding: 8px 10px; border-radius: 8px; background: #FFF3BF; font-size: 13px; color: #6B5300; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         @media (max-width: 560px) { .idr-parts { grid-template-columns: minmax(0, 1fr); } }
         .cl-memo .cl-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px 10px; }
         .cl-memo .cl-form textarea { min-height: 52px; }
@@ -1454,7 +1477,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-21.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-21.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -5724,7 +5747,106 @@
         /* ---------- 신분증 요청: 고객 전용 접수 링크 만들기 → 문자로 보내기 ---------- */
         var SITE_URL = 'https://www.사거리인터넷.com';   // 고객에게 보내는 공식 홈페이지 주소 (id.html이 있는 곳)
         var idr = { items: null, busy: false, err: '', last: null, ui: null, sel: {}, deleting: false };
-        function idrFresh() { idr = { items: null, busy: false, err: '', last: null, ui: null, sel: {}, deleting: false }; idrOpen = Object.create(null); idrDraft = Object.create(null); }   // 잠그면 적던 내용·만든 링크도 지움
+        function idrFresh() { idr = { items: null, busy: false, err: '', last: null, ui: null, sel: {}, deleting: false }; idrOpen = Object.create(null); idrDraft = Object.create(null); dk = dkFresh(); }
+        /* ---------- 다이렉트 접수 확인: 홈페이지 '다이렉트 접수'를 불러와 신분증 요청 칸에 채움 ----------
+           홈페이지가 공개 열쇠로 암호화해 보낸 것만 서버에 30일 보관 · 푸는 열쇠는 팀 키로 잠가 서버에 맡겨 둠 (팀 키가 있는 이 화면에서만 풀림) */
+        var DK_AAD = 'dk-v1', DK_F = ['src', 'name', 'birth', 'phone', 'post', 'addr1', 'addr2', 'carrier', 'ptype', 'speed', 'tv', 'prod', 'price', 'giftText', 'giftType', 'appliance', 'gBank', 'gNum', 'payType', 'pBank', 'pNum', 'cName', 'cNum', 'cValid'];
+        function dkFresh() { return { items: null, busy: false, err: '', keyBad: false }; }
+        var dk = dkFresh();
+        function dkInitKey(force) {   // 대표: 열쇠 한 쌍을 만들어 공개 열쇠는 홈페이지용으로, 푸는 열쇠는 팀 키로 잠가서 서버에 맡김
+            var pair;
+            return crypto.subtle.generateKey({ name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' }, true, ['encrypt', 'decrypt']).then(function (kp) {
+                pair = kp; return Promise.all([crypto.subtle.exportKey('spki', kp.publicKey), crypto.subtle.exportKey('pkcs8', kp.privateKey)]);
+            }).then(function (r) {
+                return ensureTeam().then(function (t) { return encryptText(t.encKey, b64e(r[1]), DK_AAD); }).then(function (bl) { return ibCall('dkInit', { pub: b64e(r[0]), priv: bl.iv + '.' + bl.ct, force: !!force }); });
+            });
+        }
+        function dkPrivKey(priv) { var p = String(priv || '').split('.'); if (p.length !== 2) return Promise.reject(new Error('key')); return ensureTeam().then(function (t) { return decryptText(t.encKey, { iv: p[0], ct: p[1] }, DK_AAD); }).then(function (b) { return crypto.subtle.importKey('pkcs8', b64d(b), { name: 'RSA-OAEP', hash: 'SHA-256' }, false, ['decrypt']); }); }
+        function dkClean(o) { var r = {}; DK_F.forEach(function (k) { r[k] = o && (typeof o[k] === 'string' || typeof o[k] === 'number') ? String(o[k]).replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, 300) : ''; }); return r; }   // 홈페이지에서 온 값은 글자로만
+        function dkOpenOne(sk, x) {
+            return crypto.subtle.decrypt({ name: 'RSA-OAEP' }, sk, b64d(x.w)).then(function (raw) { return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']); })
+                .then(function (k) { return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(x.iv) }, k, b64d(x.ct)); }).then(function (buf) { return dkClean(JSON.parse(dec.decode(buf))); });
+        }
+        function dkLoad() {
+            if (dk.busy || !driveOn()) return Promise.resolve();
+            dk.busy = true;
+            return ibCall('dkList', {}).then(function (res) {
+                if (!res || !res.pub) {
+                    if (isBoss()) return dkInitKey(false).then(function () { return ibCall('dkList', {}); }).then(function (r2) { return r2; });
+                    return { pub: false, items: [] };
+                }
+                return res;
+            }).then(function (res) {
+                if (!res.pub) { dk.items = []; dk.err = '대표님 기기에서 이 화면을 한 번 열면 다이렉트 접수 확인이 준비돼요.'; return; }
+                var raw = (res.items || []).filter(function (x) { return x && typeof x.id === 'string' && typeof x.t === 'number' && typeof x.w === 'string' && typeof x.iv === 'string' && typeof x.ct === 'string'; });
+                return dkPrivKey(res.priv).then(function (sk) {
+                    dk.keyBad = false;
+                    return Promise.all(raw.map(function (x) { return dkOpenOne(sk, x).then(function (d) { return { id: x.id, t: x.t, got: x.got || null, d: d }; }, function () { return { id: x.id, t: x.t, got: x.got || null, bad: true }; }); }));
+                }, function () { dk.keyBad = true; return raw.map(function (x) { return { id: x.id, t: x.t, got: x.got || null, bad: true }; }); }).then(function (list) {
+                    dk.items = list.sort(function (a, b) { return b.t - a.t; }); dk.err = '';
+                });
+            }).catch(function (e) {
+                dk.err = e && e.code === 'bad_action' ? '서버(drive-storage.gs)가 예전 버전이에요. Apps Script를 새 버전으로 바꿔 [배포] 해 주세요.' : driveErrText(e);
+                if (dk.items === null) dk.items = [];
+            }).then(function () { dk.busy = false; render(); if (dlgDkOpen()) dkDlg(); });
+        }
+        function dlgDkOpen() { var d = document.getElementById('dlg'); return !!(d && d.open && d.classList.contains('dk-dlg')); }
+        function dkCarrier(c) { return { SK: 'SK브로드밴드', KT: 'KT', LG: 'LG U+', '스카이': 'KT스카이라이프', '헬로': 'LG헬로비전' }[c] || c; }
+        function dkMemo(d) {   // 다이렉트 접수 → 신분증 요청 접수 메모 양식 (없는 칸은 비워 둠 → 빨간 글씨로 보임)
+            var card = d.payType === '카드', cash = (/현금\s*([\d.,]+)\s*만\s*원/.exec(d.giftText || '') || [])[1];
+            var cashWon = cash ? Math.round(parseFloat(cash.replace(/,/g, '')) * 10000).toLocaleString('ko-KR') : '';
+            var V = {
+                '이름': d.name, '주민번호(전체)': d.birth ? d.birth + '-' : '', '휴대폰번호': d.phone ? mfPhone(d.phone) : '',
+                '설치주소': [d.addr1, d.addr2].filter(Boolean).join(' ') + (d.post ? ' (' + d.post + ')' : ''),
+                '은행 /카드사': card ? d.cName : d.pBank, '계좌/카드번호': card ? d.cNum : d.pNum, '카드유효기간': card ? d.cValid : (d.payType ? 'X' : ''),
+                '인터넷통신사': dkCarrier(d.carrier), '인터넷상품': d.speed, 'TV상품+셋탑1': d.tv || (d.ptype === '단독' ? 'X' : ''),
+                '월요금': String(d.price || '').replace(/^\s*월\s*/, ''),
+                '현금': d.giftType === '현금' && cashWon ? cashWon : '', '상품권종류': d.giftType === '가전' ? '가전 사은품' + (d.appliance ? ' (' + d.appliance + ')' : '') : '',
+                '은행+계좌': d.gBank || d.gNum ? [d.gBank, d.gNum].filter(Boolean).join(' ') : ''
+            };
+            return INTAKE_TPL.split('\n').map(function (l) {
+                var m = /^([^:]+?)\s*:(.*)$/.exec(l); if (!m) return l;
+                var k = m[1].trim(); if (!V.hasOwnProperty(k) || !V[k]) return l;
+                return m[1].replace(/\s+$/, '') + ' : ' + V[k] + (/원\s*$/.test(m[2]) && !/원$/.test(V[k]) ? '원' : '');
+            }).join('\n').replace(/(◆\s*고객사은품\s*◆[^\n]*)/, function (h0) { return d.giftText ? h0 + '\n접수 혜택 : ' + d.giftText.replace(/\s+/g, ' ') : h0; });
+        }
+        function dkFill(x) {   // [가져오기] → 고객 성함 · 휴대폰 · 접수 메모 4칸 (전용 링크 만들기 바로 전까지)
+            var U = idrUI(), d = x.d;
+            if ((U.name.value.trim() || U.phone.value.trim() || (U.memo.value !== INTAKE_TPL && intakeHas(U.memo.value))) && !confirm('지금 적던 내용 대신 ' + (d.name || '이 고객') + '님 다이렉트 접수 내용을 넣을까요?')) return;
+            closeDlg();
+            idr.last = null; idrSetKind('person');
+            U.name.value = d.name; U.phone.value = mfPhone(d.phone); U.memo.value = dkMemo(d);
+            idrPaint();
+            ibCall('dkMark', { ids: [x.id] }).then(function () { x.got = { t: Date.now(), by: staffName(me) }; render(); }, function () { /* 표시 실패는 넣은 내용에 영향 없음 */ });
+            setTimeout(function () { try { U.form.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* 무시 */ } }, 50);
+            toast((d.name || '고객') + '님 다이렉트 접수 내용을 넣었어요. 빨간 글씨는 아직 비어 있는 칸이에요.');
+        }
+        function dkDlg() {
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'dk-dlg';
+            var list = dk.items || [], boss = isBoss();
+            var body = dk.busy && !dk.items ? h('p', { class: 'cl-empty' }, '불러오는 중이에요...')
+                : list.length ? h('div', { class: 'dk-list' }, list.map(function (x) {
+                    var d = x.d || {}, got = x.got && x.got.t ? '가져옴 · ' + ibTime(x.got.t) + (x.got.by ? ' · ' + x.got.by : '') : '';
+                    var prod = x.bad ? '' : [dkCarrier(d.carrier), d.speed, d.tv, d.price].filter(Boolean).join(' · ');
+                    return h('div', { class: 'dk-item' + (got ? ' got' : '') + (x.bad ? ' bad' : ''), 'data-dk': x.id },
+                        h('div', { class: 'dk-t' }, h('b', {}, ibTime(x.t)), d.src ? ' · ' + d.src : '', got ? h('span', { class: 'dk-got' }, got) : h('span', { class: 'dk-new' }, '새 접수')),
+                        x.bad ? h('div', { class: 'dk-s' }, '열 수 없는 접수예요 (팀 키가 바뀌기 전에 들어온 접수 · 메일로 확인해 주세요)')
+                            : h('div', { class: 'dk-s' }, h('b', {}, d.name || '(성함 없음)'), ' ', d.phone ? clMask(d.phone) : '', prod ? h('span', { class: 'dk-p' }, prod) : null),
+                        h('div', { class: 'dk-a' },
+                            x.bad ? null : h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'dk-fill', onclick: function () { dkFill(x); } }, '가져오기'),
+                            boss ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'dk-del', onclick: function () {
+                                if (!confirm('이 다이렉트 접수를 지울까요? (메일로 받은 접수는 그대로예요)')) return;
+                                ibCall('dkDel', { ids: [x.id] }).then(function () { dk.items = (dk.items || []).filter(function (y) { return y.id !== x.id; }); render(); dkDlg(); toast('지웠어요.'); }, function (e) { toast('지우지 못했어요. ' + driveErrText(e)); });
+                            } }, '지우기') : null));
+                })) : h('p', { class: 'cl-empty' }, dk.err || '아직 들어온 다이렉트 접수가 없어요. 홈페이지에서 [다이렉트 접수]를 하면 여기에 모여요.');
+            dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '📥 다이렉트 접수 확인' + (list.length ? ' (' + list.length + ')' : '')),
+                h('div', { class: 'dlg-body' }, dk.keyBad && boss ? h('div', { class: 'dk-warn' }, '팀 키가 바뀌어 예전 열쇠를 열 수 없어요. ',
+                        h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { if (!confirm('새 열쇠를 만들까요? 지금까지 받은 접수는 메일로만 확인할 수 있어요.')) return; dkInitKey(true).then(function () { dk.items = null; dkLoad(); }, function (e) { toast('만들지 못했어요. ' + driveErrText(e)); }); } }, '새 열쇠 만들기')) : null,
+                    body,
+                    h('p', { class: 'hd-help' }, '🔒 홈페이지에서 암호화해서 보낸 내용이라 서버에서는 볼 수 없어요 · 30일 지나면 자동으로 지워져요 · [가져오기]를 누르면 아래 신분증 요청 칸에 채워져요.')),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', 'data-act': 'dk-reload', onclick: function () { dk.busy = false; dkLoad(); toast('새로 확인하고 있어요.'); } }, '다시 확인'), h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'))));
+            if (!dlg.open) showDlg(dlg);
+        }   // 잠그면 적던 내용·만든 링크도 지움
         function idrDelete(codes) {   // 최근 요청 지우기 (대표만 · 여러 건 한 번에 · 고객 주소도 바로 막힘 · 이 요청의 접수 메모도 같이 지움)
             if (!isBoss()) { toast('신분증 요청 기록은 대표님만 지울 수 있어요.'); return; }
             codes = codes.filter(Boolean); if (!codes.length || idr.deleting) return;
@@ -7253,16 +7375,33 @@
             return buf.map(function (b) { while (b.length && !b[b.length - 1].trim()) b.pop(); while (b.length && !b[0].trim()) b.shift(); return b.join('\n'); });
         }
         function idrJoin(parts) { return parts.filter(function (p) { return p.trim(); }).join('\n\n'); }   // 4칸 → 한 덩어리 (칸 사이 빈 줄 하나, 원래 양식과 똑같이)
+        function idrLineCls(l) {   // 'OO : 값' 줄: 값이 비었으면(단위 '원'만 있거나 '880202-'처럼 덜 적었으면) 빨강 · 적었으면 검정
+            var m = /^([^:：]+)[:：](.*)$/.exec(l); if (!m) return 'pl';
+            var v = m[2].replace(/원\s*$/, '').trim();
+            return !v || /-$/.test(v) ? 'miss' : 'ok';
+        }
+        function idrHlSize(ta, bd) { if (!ta.isConnected) return; bd.style.width = ta.clientWidth + 'px'; bd.style.height = ta.clientHeight + 'px'; bd.scrollTop = ta.scrollTop; }
+        function idrHl(U) {
+            if (!U || !U.hl) return;
+            U.parts.forEach(function (ta, i) {
+                var bd = U.hl[i], lines = ta.value.split('\n'); bd.textContent = '';
+                lines.forEach(function (l, j) { bd.appendChild(h('span', { class: 'idr-l ' + idrLineCls(l) }, l)); if (j < lines.length - 1) bd.appendChild(document.createTextNode('\n')); });
+                bd.appendChild(document.createTextNode('\u200b'));
+                idrHlSize(ta, bd);
+            });
+        }
         function idrRows(U) {   // 4칸 높이를 같게 · 긴 줄이 접혀도 칸 안에서 스크롤 없이 다 보이게 (화면에 붙은 뒤 실제 높이로 맞춤)
             if (!U || !U.parts) return;
             var n = 5; U.parts.forEach(function (ta) { n = Math.max(n, ta.value.split('\n').length + 1); }); n = Math.min(n, 22);
             U.parts.forEach(function (ta) { ta.rows = n; ta.style.height = ''; });
+            idrHl(U);
             if (!U.parts[0].isConnected) { clearTimeout(idrRows.t); idrRows.t = setTimeout(function () { if (U.parts[0].isConnected) idrRows(U); }, 0); return; }
             var b0 = U.parts[0].getBoundingClientRect(), b1 = U.parts[1].getBoundingClientRect();
             if (Math.abs(b0.left - b1.left) < 2) U.parts.forEach(function (ta) { ta.rows = Math.max(4, ta.value.split('\n').length + 1); });   // 휴대폰(한 줄에 한 칸): 칸마다 내용 높이만큼
             var mx = 0; U.parts.forEach(function (ta) { mx = Math.max(mx, ta.scrollHeight + 2); });
             mx = Math.min(mx, 640); U.parts.forEach(function (ta) { var want = Math.abs(b0.left - b1.left) < 2 ? Math.min(ta.scrollHeight + 2, 640) : mx; if (ta.getBoundingClientRect().height < want) ta.style.height = want + 'px'; });
             U.sized = true;
+            idrHl(U);
         }
         window.addEventListener('resize', function () { clearTimeout(idrRows.r); idrRows.r = setTimeout(function () { if (idr && idr.ui) { idr.ui.sized = false; idrRows(idr.ui); } }, 150); });
         function idrUI() {   // 입력 칸·문자 미리보기는 한 번만 만들어 계속 씀 → 콜 인입 등으로 화면이 새로 그려져도 적던 내용이 지워지지 않음
@@ -7276,7 +7415,15 @@
                 ta.addEventListener('input', function () { idrMemoSet.call(U.memo, idrJoin(U.parts.map(function (x) { return x.value; }))); idrRows(U); });
                 return ta;
             });
-            U.partsBox = h('div', { class: 'idr-parts' }, U.parts.map(function (ta, i) { return h('div', { class: 'idr-part' }, h('b', {}, IDR_PARTS[i][0]), ta); }));
+            U.hl = U.parts.map(function (ta) {
+                var bd = h('div', { class: 'idr-hl-bd', 'aria-hidden': 'true' });
+                ta.classList.add('idr-hl-ta');
+                ta.addEventListener('input', function () { idrHl(U); });
+                ta.addEventListener('scroll', function () { bd.scrollTop = ta.scrollTop; });
+                if (window.ResizeObserver) new ResizeObserver(function () { idrHlSize(ta, bd); }).observe(ta);
+                return bd;
+            });
+            U.partsBox = h('div', { class: 'idr-parts' }, U.parts.map(function (ta, i) { return h('div', { class: 'idr-part' }, h('b', {}, IDR_PARTS[i][0]), h('div', { class: 'idr-hl' }, U.hl[i], ta)); }));
             Object.defineProperty(U.memo, 'value', { configurable: true, get: function () { return idrMemoGet.call(this); }, set: function (v) { idrMemoSet.call(this, v); var p = idrSplit(v); U.parts.forEach(function (ta, i) { ta.value = p[i]; }); idrRows(U); } });   // 코드에서 메모를 바꾸면 4칸도 같이
             U.memo.value = INTAKE_TPL;
             U.tpl = h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'idr-tpl', onclick: function () {
@@ -7361,9 +7508,12 @@
             toast('새 고객 정보를 입력해 주세요.');
         }
         function renderIdreq() {
+            var dkNew = (dk.items || []).filter(function (x) { return !x.bad && !(x.got && x.got.t); }).length;
             var head = h('div', { class: 'page-head' }, h('h1', {}, '신분증 요청'),
-                h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'idr-refresh', onclick: function () { idr.busy = false; idrLoad(); toast('새로 확인하고 있어요.'); } }, '새로고침')));
+                h('div', { class: 'actions idr-head-acts' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'idr-refresh', onclick: function () { idr.busy = false; idrLoad(); dk.busy = false; dkLoad(); toast('새로 확인하고 있어요.'); } }, '새로고침'),
+                    driveOn() ? h('button', { type: 'button', class: 'btn idr-dk-btn', 'data-fk': 'idr-dk', 'data-act': 'dk-open', onclick: function () { dkDlg(); if (!dk.busy) dkLoad(); } }, '📥 다이렉트 접수 확인', dkNew ? h('span', { class: 'idr-dk-n', 'aria-label': '새 접수 ' + dkNew + '건' }, String(dkNew)) : null) : null));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '신분증 요청은 구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요.')));
+            if (dk.items === null && !dk.busy && !dk.err) setTimeout(dkLoad, 0);
             if (idr.items === null && !idr.busy && !idr.err) setTimeout(idrLoad, 0);
             if (db.intakes && db.intakes.some(function (x) { return x.t && x.t < Date.now() - INTAKE_KEEP_DAYS * 86400000; })) setTimeout(intakeCleanup, 0);
             var U = idrUI();
