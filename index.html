@@ -3528,7 +3528,8 @@
             vp.addEventListener('touchend', resume, { passive: true }); vp.addEventListener('touchcancel', resume, { passive: true });
         }
         function show(j) {
-            var items = (j && j.ok && Array.isArray(j.items) ? j.items : []).filter(ok).slice(0, MAX);
+            var now = new Date(), cur = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2);   // 이번 달 건만 (예: 10월) · 다음 달이 되면 그 달 건으로
+            var items = (j && j.ok && Array.isArray(j.items) ? j.items : []).filter(function (x) { return ok(x) && mon(x) === cur; }).slice(0, MAX);
             if (!items.length) return;
             items.forEach(function (x) { track.appendChild(card(x)); });
             var meta = document.getElementById('hl-meta');
