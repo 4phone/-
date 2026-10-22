@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-pBRsfEGPG472OcSG1/Ou0XCDsLqb7Hn/aYt0wspd7dQ='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-q060ERnQcFwR0nCUbY0FQkezwPpi66RXasr6/r55NAA='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -10531,9 +10531,9 @@
         }
 
         /* ---------- 사장님 전용 '실시간 접수 현황' (공개용 요약) ----------
-           최근 두 달 장부의 유선 접수 줄 → 접수일 · 가린 성함(전○민) · 통신사 · 상품 · 진행 상태 · 단가표 2차 상담 금액 · 지급 상태만 뽑아 서버에 보냄
+           최근 두 달 장부의 유선 접수 줄(최신 30건) → 접수 월 · 가린 성함(전○민) · 통신사 · 진행 상태 · 단가표 2차 상담 금액 · 입금 상태만 뽑아 서버에 보냄 (홈페이지 '실시간 접수 현황')
            3시간마다 자동 (관리자 페이지가 열려 있는 기기 중 한 곳에서) · 연락처·주소·생년월일·계좌·메모는 보내지 않음 · 취소 줄은 빼고 */
-        var LV_EVERY = 3 * 3600000, LV_MAX = 25, lv = { busy: false, chk: 0 };
+        var LV_EVERY = 3 * 3600000, LV_MAX = 30, lv = { busy: false, chk: 0 };
         function lvMask(n) {
             var a = Array.from(String(n || '').replace(/\(.*?\)|\[.*?\]/g, '').replace(/[^가-힣A-Za-z]/g, ''));
             if (!a.length) return '';
@@ -10629,7 +10629,7 @@
                     })).then(function (lists) {
                         var all = [].concat.apply([], lists);
                         all.sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : b.k - a.k; });
-                        return all.slice(0, LV_MAX).map(function (x) { return { d: x.d, nm: x.nm, car: x.car, pr: x.pr, st: x.st, pay: x.pay, amt: x.amt }; });
+                        return all.slice(0, LV_MAX).map(function (x) { return { m: x.d.slice(0, 7), nm: x.nm, car: x.car, st: x.st, pay: x.pay, amt: x.amt }; });   // 날짜(일)·상품명은 보내지 않고 월만
                     });
                 });
             });
@@ -10650,7 +10650,7 @@
                 return lvBuild().then(function (items) { return ibCall('liveSet', { items: items }).then(function () { return items; }); });
             }).then(function (items) {
                 lv.busy = false;
-                if (force && items) toast('사장님 전용 [실시간 접수 현황]에 ' + items.length + '건을 반영했어요. (성함은 가려서 · 3시간마다 자동으로 다시 반영)');
+                if (force && items) toast('홈페이지 [실시간 접수 현황]에 ' + items.length + '건을 반영했어요. (성함은 가려서 · 3시간마다 자동으로 다시 반영)');
             }, function (e) {
                 lv.busy = false;
                 if (force) toast('접수 현황을 반영하지 못했어요. ' + (e && e.message ? e.message : '잠시 뒤 다시 눌러 주세요.'));
@@ -10662,7 +10662,7 @@
             var boss = isBoss();
             var head = h('div', { class: 'page-head' }, h('h1', {}, '사거리가입고객리스트'), h('div', { class: 'actions' },
                 h('button', { type: 'button', class: 'btn', 'data-act': 'gl-refresh', onclick: function () { gl.busy = false; glLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침'),
-                h('button', { type: 'button', class: 'btn', 'data-act': 'lv-push', title: '사장님 전용 페이지의 [실시간 접수 현황]을 지금 장부 기준으로 바로 반영해요 (평소에는 3시간마다 자동) · 성함은 가려서, 연락처·주소·계좌는 보내지 않아요', onclick: function () { lvTick(true); } }, '👑 접수 현황 반영'),
+                h('button', { type: 'button', class: 'btn', 'data-act': 'lv-push', title: '홈페이지의 [실시간 접수 현황]을 지금 장부 기준으로 바로 반영해요 (평소에는 3시간마다 자동) · 성함은 가려서, 연락처·주소·계좌는 보내지 않아요', onclick: function () { lvTick(true); } }, '👑 접수 현황 반영'),
                 gl.idx && glLatest() ? h('button', { type: 'button', class: 'btn btn-close', 'data-act': 'gl-report', onclick: glReport, title: '하루 마감 순서: 마감1 상담리스트 → 마감2 실적장표 → 마감3 업무 마감보고 (그날 첫 보고는 시각 칸에 "목표", 그 뒤로는 보고한 시각이 적혀요)' }, h('span', { class: 'rpt-step' }, '마감2'), '실적장표 보고') : null,
                 gl.idx && glIdxList().length && glCanXlsx() ? h('button', { type: 'button', class: 'btn', 'data-act': 'gl-xlsx', onclick: glDownload }, '📥 엑셀 다운로드') : null,
                 boss && gl.idx && glLatest() ? h('button', { type: 'button', class: 'btn', 'data-act': 'gl-new', onclick: glNewMonth }, '+ ' + glNextName()) : null,
