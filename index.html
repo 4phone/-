@@ -3493,10 +3493,11 @@
         var MAX = 30, CAR = { 'LG U+': '#E6007E', 'SK브로드밴드': '#E8452C', 'KT': '#1C1C1C', 'KT 스카이라이프': '#C8102E', 'LG헬로비전': '#D9381E' };
         var SHORT = { 'KT 스카이라이프': 'SKY라이프' };
         function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
-        function ok(x) { return x && typeof x.m === 'string' && /^\d{4}-\d{2}$/.test(x.m) && typeof x.nm === 'string' && x.nm.indexOf('○') > 0 && CAR.hasOwnProperty(x.car) && ST.hasOwnProperty(x.st); }
+        function mon(x) { return typeof x.m === 'string' ? x.m : typeof x.d === 'string' ? x.d.slice(0, 7) : ''; }   // 서버 버전에 따라 월(m) 또는 날짜(d) → 월만 사용
+        function ok(x) { return x && /^\d{4}-\d{2}$/.test(mon(x)) && typeof x.nm === 'string' && x.nm.indexOf('○') > 0 && CAR.hasOwnProperty(x.car) && ST.hasOwnProperty(x.st); }
         function card(x) {   // 날짜는 보내지 않고 장부의 '월'만 (예: 10월)
             var c = el('div', 'hl-card'), top = el('div', 'hl-top'), r1 = el('div', 'hl-r1'), car = SHORT[x.car] || x.car;
-            r1.appendChild(el('span', 'hl-dt', (+x.m.split('-')[1]) + '월'));
+            r1.appendChild(el('span', 'hl-dt', (+mon(x).split('-')[1]) + '월'));
             r1.appendChild(el('span', 'hl-st ' + x.st, ST[x.st]));
             var cw = el('div', 'hl-car'), lg = el('span', 'hl-lg', car); lg.style.background = CAR[x.car]; cw.appendChild(lg);
             top.appendChild(r1); top.appendChild(cw);
