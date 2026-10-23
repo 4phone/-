@@ -3528,8 +3528,7 @@
             vp.addEventListener('touchend', resume, { passive: true }); vp.addEventListener('touchcancel', resume, { passive: true });
         }
         function show(j) {
-            var now = new Date(), cur = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2);   // 이번 달 건만 (예: 10월) · 다음 달이 되면 그 달 건으로
-            var items = (j && j.ok && Array.isArray(j.items) ? j.items : []).filter(function (x) { return ok(x) && mon(x) === cur; }).slice(0, MAX);
+            var items = (j && j.ok && Array.isArray(j.items) ? j.items : []).filter(ok).slice(0, MAX);   // 관리자 페이지가 정한 순서 그대로 (이번 달 건 먼저 · 모자라면 지난달 건) · 카드마다 그 건의 월로 표시
             if (!items.length) return;
             items.forEach(function (x) { track.appendChild(card(x)); });
             var meta = document.getElementById('hl-meta');
