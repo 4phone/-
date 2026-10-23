@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-X0orFnIceT33I1sVME+wJOwf2zrJNjcL1QO7CPMFfkk='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-OiHxVcYi+WJFSI+oUjaXccuaSNYtn8Aw3Y52tD+UKOA='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -499,6 +499,10 @@
         .cl-stpick { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
         .cl-stpick .cl-chip[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--scr, rgba(62,68,30,.35)); }
         .cl-meta { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+        .cl-ctp { display: table; margin-top: 3px; padding: 0 5px; border-radius: 999px; background: #E5F6EC; color: #1E7A4C; border: 1px solid #A9DDBF; font-size: 10px; line-height: 16px; font-weight: 800; white-space: nowrap; }
+        .cl-ctp.bad { background: #FFF1F0; color: #C62828; border-color: #F3B6B1; }
+        .btn.ct-done, .btn.ct-done:disabled { background: #E5F6EC; color: #1E7A4C; border-color: #A9DDBF; opacity: 1; cursor: default; font-weight: 800; }
+        .btn.ct-fail { border-color: #E57373; color: #C62828; }
         @media (max-width: 900px) {
             .cl-wrap { border: none; background: transparent; overflow: visible; }
             table.cl-tbl, .cl-tbl tbody { display: block; }
@@ -1477,7 +1481,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-22.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-23.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -7995,7 +7999,13 @@
             var P = clFormParts(s, row), inputs = P.inputs, pick = P.pick, fields = P.fields;
             var meta = !isNew && (r.by || r.u) ? h('p', { class: 'cl-meta' }, '마지막 수정: ' + (r.by || '?') + (r.u ? ' · ' + ibTime(r.u) : ''),
                 r.ctp ? ' · 📇 가망 번호: ' + ({ ok: '저장됨', fail: '저장 실패', cust: '이미 가입 고객 번호' }[r.ctp] || '') : '') : null;
-            var ctBtn = !isNew && r.st !== 'sale' && row.ty === 'row' ? h('button', { type: 'button', class: 'btn left', 'data-act': 'cl-ct-save', title: '이 고객 번호를 구글 연락처에 "가망 …"으로 저장', onclick: function () { var cur = clFind(row.id); if (cur) { clProspect(cur, s); toast('가망 번호를 저장하는 중이에요...'); } } }, '📇 가망 번호 저장') : null;
+            var ctBtn = !isNew && r.st !== 'sale' && row.ty === 'row' ? clCtBtn(r.ctp, function (btn) {
+                var cur = clFind(row.id); if (!cur) return;
+                var p = clProspect(cur, s);
+                if (!p) { toast('휴대폰 번호(010…)가 있어야 가망 번호로 저장할 수 있어요.'); return; }
+                btn.disabled = true; btn.textContent = '📇 저장하는 중…'; toast('가망 번호를 저장하는 중이에요...');
+                p.then(function () { var now = clFind(row.id); var nb = clCtBtn(now && now.ctp, btn._go); btn.replaceWith(nb); if (state.view === 'consult') render(); });   // 뒤쪽 상담 리스트 표시도 바로
+            }) : null;
             dlg.appendChild(h('form', { novalidate: true, onsubmit: function (e) {
                 e.preventDefault();
                 var v = P.values();
@@ -8393,7 +8403,7 @@
                         var longV = (kd === 'wide' || kd === 'mid') && (String(shownV).length > (kd === 'mid' ? 50 : 90) || String(shownV).split('\n').length > 4), opened = cl.openAll || !!cl.open[r.id];
                         var cellBody = longV ? [h('div', { class: 'cl-clip' + (opened ? ' open' : '') }, shownV), h('button', { type: 'button', class: 'cl-more', 'data-act': 'cl-more', onclick: function (e) { e.stopPropagation(); var on = !this.previousSibling.classList.contains('open'); this.previousSibling.classList.toggle('open', on); this.textContent = on ? '▲ 접기' : '▼ 더보기'; if (on) cl.open[r.id] = 1; else delete cl.open[r.id]; } }, opened ? '▲ 접기' : '▼ 더보기')] : shownV;
                         var td = h('td', { 'data-l': clHead(c), class: (kd === 'wide' ? 'wide' : kd === 'mid' ? 'mid' : kd === 'ph' ? 'ph' : (kd === 'date' || kd === 'time' || kd === 'staff' || kd === 'no') ? 'nw' : /위치/.test(c.l) ? 'loc' : '') + (v ? '' : ' blank'), style: css || false }, cellBody);
-                        if (i === 0) { td.classList.remove('blank'); td.appendChild(h('div', {}, h('span', { class: 'cl-st' + (hex && clLight(hex) ? ' lt' : ''), style: hex ? '--sb:#' + hex : '--sb:#9AA088' }, si && r.st !== 'etc' ? si[1] : (r.st === 'etc' ? '기타 색' : '보통')))); }
+                        if (i === 0) { td.classList.remove('blank'); td.appendChild(h('div', {}, h('span', { class: 'cl-st' + (hex && clLight(hex) ? ' lt' : ''), style: hex ? '--sb:#' + hex : '--sb:#9AA088' }, si && r.st !== 'etc' ? si[1] : (r.st === 'etc' ? '기타 색' : '보통')), r.ctp === 'ok' ? h('span', { class: 'cl-ctp', title: '구글 연락처에 가망 번호로 저장됨' }, '📇저장') : r.ctp === 'cust' ? h('span', { class: 'cl-ctp', title: '이미 가입 고객 번호' }, '📇가입') : r.ctp === 'fail' ? h('span', { class: 'cl-ctp bad', title: '가망 번호 저장 실패 — 줄을 눌러 다시 저장' }, '📇실패') : null)); }
                         return td;
                     }));
             }));
@@ -8530,10 +8540,15 @@
             var note = ['사거리인터넷 가망 고객 (재케어)', '상담 ' + (dm ? dm[0] : ymd(now)), st ? '상태 ' + st[1] : '', staff ? '담당 ' + staff : '', '상담 리스트 [' + s.name + ']' + (no ? ' ' + no + '번' : '')].filter(Boolean).join(' · ') + '\n' + clTplClean(memo).replace(/\s+/g, ' ');
             return { label: label, note: note.slice(0, 200) };
         }
+        function clCtBtn(ctp, go) {   // 가망 번호 저장 버튼: 저장됨 → '저장 완료'(누를 수 없음) / 이미 가입 고객 → 표시만 / 안 됨·실패 → 누를 수 있음
+            if (ctp === 'ok' || ctp === 'cust') return h('button', { type: 'button', class: 'btn left ct-done', 'data-act': 'cl-ct-save', disabled: true, title: ctp === 'ok' ? '구글 연락처에 가망 번호로 저장된 고객이에요' : '이미 가입 고객으로 저장된 번호예요' }, ctp === 'ok' ? '✅ 가망 번호 저장 완료' : '✅ 이미 가입 고객 번호');
+            var b = h('button', { type: 'button', class: 'btn left' + (ctp === 'fail' ? ' ct-fail' : ''), 'data-act': 'cl-ct-save', title: '이 고객 번호를 구글 연락처에 "가망 …"으로 저장', onclick: function () { go(this); } }, ctp === 'fail' ? '📇 가망 번호 다시 저장' : '📇 가망 번호 저장');
+            b._go = go; return b;
+        }
         function clProspect(r, s, tries) {   // 상담 완료: 판매성공이 아닌 고객 번호 → 구글 연락처 '가망 …' (가입하면 가입 확인서 저장 때 같은 연락처 이름이 가입 유형으로 바뀜)
-            if (!r || r.ty !== 'row' || r.st === 'sale' || !driveOn()) return;
+            if (!r || r.ty !== 'row' || r.st === 'sale' || !driveOn()) return null;
             var pc = clColBy(s, 'ph'), dig = pc ? digitsOnly(r.v[pc.k] || '') : '';
-            if (!/^01\d{8,9}$/.test(dig)) return;
+            if (!/^01\d{8,9}$/.test(dig)) return null;
             var c = clProspectInfo(r, s), id = r.id, mine = cl;
             function mark(v) { var cur = cl === mine && cl.data ? clFind(id) : null; if (cur && cur.ctp !== v) { cur.ctp = v; clStamp(cur); clQueue(); } }   // 줄에 저장 결과 기록 (상담 고치기에 보임)
             function fail(msg, again) {
@@ -8544,7 +8559,7 @@
                     else if (!again || (tries || 0) >= 2) alert('⚠ 가망 번호를 구글 연락처에 저장하지 못했어요.\n\n이유: ' + msg + '\n\n상담 리스트에서 그 줄을 눌러 [📇 가망 번호 저장]으로 나중에 다시 저장할 수 있어요.');
                 }, 300);
             }
-            ibCall('ctProspect', { contact: { label: c.label, phone: dig, note: c.note } }, 60000).then(function (res) {
+            return ibCall('ctProspect', { contact: { label: c.label, phone: dig, note: c.note } }, 60000).then(function (res) {
                 var x = res.contact || {};
                 if (x.ok && x.skipped) { mark('cust'); toast('이미 가입 고객으로 저장된 번호라 연락처는 그대로 뒀어요.'); }
                 else if (x.ok) { mark('ok'); toast('📇 구글 연락처에 "' + x.label + '"(으)로 ' + (x.updated ? '바꿔 ' : '') + '저장했어요.'); }
