@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hdYjcivCf2VrJd99Er5D9Jb1e8ooA0Rw7Vb+LpHvZlI='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gVkZ/3l6wCCQWeV2eOqniqaW8k/PLOt9ZWCbyyuGfzA='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -753,6 +753,15 @@
         .hp-list div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed var(--line); padding: 3px 0; }
         .hp-list span { word-break: keep-all; } .hp-list b { white-space: nowrap; font-variant-numeric: tabular-nums; }
         .hp-note { color: var(--muted); font-size: 12.5px; }
+        .vs-adg { border-color: #E9B4AE; }
+        .vs-adg-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        .vs-adg-sum { padding: 10px 16px; font-size: 14px; border-top: 1px solid var(--line); }
+        .vs-adg-sum b.bad { color: #C62828; }
+        .vs-adg-row { display: grid; grid-template-columns: 170px minmax(0, 1fr) 150px 70px; gap: 10px; align-items: center; padding: 9px 16px; border-top: 1px solid var(--line); font-size: 14px; }
+        .vs-adg-ip { font-variant-numeric: tabular-nums; color: #C62828; }
+        .vs-adg-n { font-weight: 700; }
+        .vs-adg-t { color: var(--muted); font-size: 13px; }
+        @media (max-width: 760px) { .vs-adg-row { grid-template-columns: minmax(0, 1fr) auto; } .vs-adg-t { grid-column: 1 / -1; } }
         .vs-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; }
         .vs-card small { color: var(--muted); font-size: 13px; } .vs-card b { font-size: 22px; letter-spacing: -0.5px; word-break: keep-all; }
         .vs-panel { margin-bottom: 14px; padding-bottom: 6px; }
@@ -1481,7 +1490,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-23.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-23.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -5639,7 +5648,7 @@
         function vsFresh() { return { pv: 'day', items: null, at: 0, err: '', busy: false, grp: 'all' }; }
         var vs = vsFresh();
         function vsOk(x) { return x && typeof x.t === 'number' && typeof x.src === 'string'; }
-        function vsNorm(x) { var src0 = String(x.src).slice(0, 30); if (!/구글/.test(src0) && /[?,](gclid|gbraid|wbraid|gad_source|gad_campaignid|gclsrc|dclid)(,|$|\s)/.test(String(x.page || ''))) src0 = '구글 광고'; return { t: x.t, src: src0, ref: String(x.ref || '').slice(0, 80), us: String(x.us || '').slice(0, 40), um: String(x.um || '').slice(0, 40), uc: String(x.uc || '').slice(0, 40), dev: x.dev === 'm' ? 'm' : 'pc', page: String(x.page || '').slice(0, 80) }; }
+        function vsNorm(x) { var src0 = String(x.src).slice(0, 30); if (!/구글/.test(src0) && /[?,](gclid|gbraid|wbraid|gad_source|gad_campaignid|gclsrc|dclid)(,|$|\s)/.test(String(x.page || ''))) src0 = '구글 광고'; return { t: x.t, src: src0, ref: String(x.ref || '').slice(0, 80), us: String(x.us || '').slice(0, 40), um: String(x.um || '').slice(0, 40), uc: String(x.uc || '').slice(0, 40), dev: x.dev === 'm' ? 'm' : 'pc', page: String(x.page || '').slice(0, 80), ad: x.ad === 1 ? 1 : 0, adn: typeof x.adn === 'number' ? x.adn : 0, ip: typeof x.ip === 'string' ? x.ip.slice(0, 45) : '', did: typeof x.did === 'string' ? x.did.slice(0, 16) : '' }; }
         function vsFetch(pv) { var r = periodRange(pv); return ibCall('vsList', { from: r.from, to: r.to }).then(function (res) { return { r: r, items: (Array.isArray(res.items) ? res.items : []).filter(vsOk).map(vsNorm) }; }); }
         function vsLoad() {
             if (!authed || !db || !driveOn() || vs.busy) return;
@@ -5674,7 +5683,7 @@
             if (s === '직접 방문') return '직접 방문';
             return '기타';
         }
-        function vsDetail(x) { var q = /\?(.+)$/.exec(String(x.page || '').replace(/\s*\[frame\]$/, '')); return [x.ref, x.us ? 'utm: ' + x.us + (x.um ? '/' + x.um : '') + (x.uc ? '/' + x.uc : '') : '', q ? '주소 표시: ' + q[1] : '', /\[frame\]$/.test(x.page || '') ? '다른 주소 안(프레임)에서 열림' : ''].filter(Boolean).join(' · '); }
+        function vsDetail(x) { var q = /\?(.+)$/.exec(String(x.page || '').replace(/\s*\[frame\]$/, '')); return [x.ip ? 'IP ' + x.ip : '', x.adn >= 3 ? '⚠ 7일 광고 클릭 ' + x.adn + '번째' : x.adn ? '7일 광고 클릭 ' + x.adn + '번째' : '', x.ref, x.us ? 'utm: ' + x.us + (x.um ? '/' + x.um : '') + (x.uc ? '/' + x.uc : '') : '', q ? '주소 표시: ' + q[1] : '', /\[frame\]$/.test(x.page || '') ? '다른 주소 안(프레임)에서 열림' : ''].filter(Boolean).join(' · '); }
         function vsExcel(pv, btn) {
             if (!driveOn()) { toast('공유 저장소를 연결한 기기에서 내려받을 수 있어요.'); return; }
             var label = btn.textContent; btn.disabled = true; btn.textContent = '만드는 중...';
@@ -5695,13 +5704,41 @@
                 sum.push(['모바일', mob], ['PC', items.length - mob], []);
                 head.push(sum.length); sum.push(['날짜', '방문', '모바일', 'PC']);
                 days.forEach(function (d) { sum.push([d, byDay[d].all, byDay[d].m, byDay[d].pc]); });
-                var det = [['일시', '경로 묶음', '유입 경로', '참조 사이트', 'utm_source', 'utm_medium', 'utm_campaign', '기기', '첫 화면']];
-                items.forEach(function (x) { det.push([fmtDT(x.t), vsGroup(x.src), x.src, x.ref, x.us, x.um, x.uc, x.dev === 'm' ? '모바일' : 'PC', x.page]); });
+                var det = [['일시', '경로 묶음', '유입 경로', '참조 사이트', 'utm_source', 'utm_medium', 'utm_campaign', '기기', '첫 화면', '광고 IP', '7일 광고 클릭', '기기 표시']];
+                items.forEach(function (x) { det.push([fmtDT(x.t), vsGroup(x.src), x.src, x.ref, x.us, x.um, x.uc, x.dev === 'm' ? '모바일' : 'PC', x.page, x.ip, x.adn || '', x.did]); });
+                var sus = vsAdSus(items); if (sus.length) { sum.push([]); head.push(sum.length); sum.push(['광고 부정클릭 의심 IP (' + VS_AD_MIN + '번 이상)', '이 기간 클릭', '7일 최대']); sus.forEach(function (o) { sum.push([o.ip || '(기기 ' + o.did + ')', o.n, o.max7 || '']); }); }
                 saveBlob('홈페이지인입_' + r.label + '.xlsx', xlsxBlob([
                     { name: '요약', widths: [34, 10, 10, 10], rows: sum, head: head },
-                    { name: '상세', widths: [20, 12, 22, 26, 16, 14, 18, 8, 24], rows: det, head: [0], freeze: 1 }]));
+                    { name: '상세', widths: [20, 12, 22, 26, 16, 14, 18, 8, 24, 16, 12, 14], rows: det, head: [0], freeze: 1 }]));
                 toast('홈페이지 인입 ' + r.label + ' 엑셀을 내려받았어요. (' + items.length + '건)');
             }, function (e) { btn.disabled = false; btn.textContent = label; toast('엑셀을 만들지 못했어요. ' + driveErrText(e)); });
+        }
+        /* 광고 부정클릭 의심: 같은 IP(없으면 같은 기기)에서 기간 안에 구글 광고로 3번 이상 */
+        var VS_AD_MIN = 3;
+        function vsAdSus(items) {
+            var g = Object.create(null);
+            items.forEach(function (x) {
+                if (!(x.ad || x.src === '구글 광고')) return;
+                var k = x.ip ? 'ip:' + x.ip : x.did ? 'd:' + x.did : ''; if (!k) return;
+                var o = g[k] || (g[k] = { ip: x.ip, did: x.did, n: 0, last: 0, first: x.t, dev: x.dev, max7: 0 });
+                o.n++; o.last = Math.max(o.last, x.t); o.first = Math.min(o.first, x.t); o.max7 = Math.max(o.max7, x.adn || 0); if (!o.ip && x.ip) o.ip = x.ip;
+            });
+            return Object.keys(g).map(function (k) { return g[k]; }).filter(function (o) { return o.n >= VS_AD_MIN || o.max7 >= VS_AD_MIN; }).sort(function (a, b) { return Math.max(b.n, b.max7) - Math.max(a.n, a.max7) || b.last - a.last; });
+        }
+        function vsAdPanel(all, label) {
+            var ads = all.filter(function (x) { return x.ad || x.src === '구글 광고'; }), sus = vsAdSus(all), ips = sus.filter(function (o) { return o.ip; }).map(function (o) { return o.ip; });
+            var copyBtn = ips.length ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'vs-ip-copy', onclick: function () {
+                copyText(ips.join('\n')).then(function (okd) { toast(okd ? '의심 IP ' + ips.length + '개를 복사했어요. 광고업체에 보내 "IP 제외"에 등록해 달라고 하세요.' : '복사하지 못했어요. 목록을 직접 선택해 복사해 주세요.'); });
+            } }, '📋 의심 IP 복사 (' + ips.length + ')') : null;
+            return h('div', { class: 'panel vs-panel vs-adg' },
+                h('div', { class: 'vs-h vs-adg-h' }, h('span', {}, '🛡 광고 부정클릭 의심 (' + label + ')'), copyBtn),
+                h('div', { class: 'vs-adg-sum' }, '구글 광고 클릭 ', h('b', {}, ads.length + '건'), ' · 같은 IP·기기에서 ' + VS_AD_MIN + '번 이상 ', h('b', { class: sus.length ? 'bad' : '' }, sus.length + '곳')),
+                sus.length ? sus.slice(0, 50).map(function (o) {
+                    return h('div', { class: 'vs-adg-row' }, h('b', { class: 'vs-adg-ip' }, o.ip || '(IP 없음 · 기기 ' + o.did + ')'),
+                        h('span', { class: 'vs-adg-n' }, '이 기간 ' + o.n + '번' + (o.max7 > o.n ? ' · 7일 최대 ' + o.max7 + '번' : '')),
+                        h('span', { class: 'vs-adg-t' }, '마지막 ' + ibTime(o.last)), h('span', { class: 'ib-dev' }, o.dev === 'm' ? '모바일' : 'PC'));
+                }) : h('div', { class: 'empty' }, ads.length ? '반복 클릭 의심이 없어요.' : '이 기간에 구글 광고로 들어온 기록이 없어요.'),
+                h('p', { class: 'ib-help' }, '※ 같은 기기에서 7일 안에 광고 클릭이 ' + VS_AD_MIN + '번째가 되면 홈페이지에 안내창이 떠요. 의심 IP를 복사해 광고업체에 보내면 구글 광고 [IP 제외]에 등록해 그 사람에게 광고가 안 보이게 할 수 있어요. IP는 90일 뒤 기록과 함께 지워져요.'));
         }
         function renderVisits() {
             var head = h('div', { class: 'page-head' }, h('h1', {}, '홈페이지 인입'),
@@ -5744,6 +5781,7 @@
                             h('span', { class: 'vs-bar-track' }, h('span', { class: 'vs-bar-fill', style: 'width:' + Math.max(2, Math.round(s[1] * 100 / (top || 1))) + '%' })),
                             h('span', { class: 'vs-bar-num' }, s[1] + '건 · ' + pct + '%'));
                     }) : h('div', { class: 'empty' }, vs.items === null ? '불러오는 중이에요...' : vs.grp === 'all' ? '이 기간에 들어온 기록이 없어요.' : '이 기간에 ' + vs.grp + '(으)로 들어온 기록이 없어요.')),
+                vsAdPanel(all, r.label),
                 h('div', { class: 'panel vs-panel' }, h('div', { class: 'vs-h' }, '최근 방문' + (items.length > 300 ? ' (최근 300건만 표시, 전체는 엑셀)' : '')),
                     rows.length ? rows : h('div', { class: 'empty' }, vs.items === null ? '불러오는 중이에요...' : '기록이 없어요.')),
                 h('p', { class: 'ib-help' }, '※ 경로는 고객 브라우저가 알려주는 "이전 사이트"와 광고 주소의 utm·구글 광고 표시로 판단해요. 구글은 검색(google.com 등)·구글 앱·구글 광고를 모두 "구글"로 묶어요. 앱 안에서 열거나 주소를 직접 입력하면 "직접 방문"으로 보일 수 있어요. 이름·번호 같은 개인정보는 남기지 않아요.'));
