@@ -764,6 +764,26 @@
         .sns-icon-btn span { color: rgba(244,250,248,0.9); background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); }
         /* 채널: 인스타그램 · 블로그를 실제 화면 그대로 (왼쪽 · 오른쪽) */
         .sns-banner-section .sns-banner-sub { margin-bottom: 30px; }
+        /* 부정클릭 방지 안내창 */
+        .sg-adw-ov { position: fixed; inset: 0; z-index: 2147483000; background: rgba(6,24,28,0.62); display: flex; align-items: center; justify-content: center; padding: 18px; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+        .sg-adw { width: 100%; max-width: 460px; max-height: calc(100vh - 36px); overflow: auto; border-radius: 20px; background: #FFFFFF; box-shadow: 0 30px 70px rgba(0,0,0,0.4); }
+        .sg-adw-hd { display: flex; align-items: center; gap: 14px; padding: 22px 24px; background: linear-gradient(135deg, #134047 0%, #0E343B 100%); color: #FFFFFF; border-bottom: 2px solid #E9CF8F; }
+        .sg-adw-ic { flex: none; width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 26px; background: rgba(233,207,143,0.16); border: 1px solid rgba(233,207,143,0.5); }
+        .sg-adw-ht small { display: block; font-family: 'Cormorant Garamond', serif; font-style: italic; color: #E9CF8F; letter-spacing: 1.5px; font-size: 13px; }
+        .sg-adw-ht b { font-size: 20px; font-weight: 800; letter-spacing: -0.4px; }
+        .sg-adw-bd { padding: 20px 24px 6px; color: var(--sub-ink); font-size: 14px; line-height: 1.6; word-break: keep-all; }
+        .sg-adw-bd p { margin: 0 0 10px; }
+        .sg-adw-lead { font-size: 16px; color: var(--ink); font-weight: 700; }
+        .sg-adw-lead b { color: #C62828; }
+        .sg-adw-warn { color: #C62828; font-weight: 700; font-size: 13px; }
+        .sg-adw-cap { margin-top: 14px; font-size: 12.5px; font-weight: 800; color: var(--ink); }
+        .sg-adw-tb { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: 13px; }
+        .sg-adw-tb th { text-align: center; padding: 7px 6px; color: #134047; border-top: 2px solid #134047; border-bottom: 1px solid #DCE7E5; font-weight: 800; }
+        .sg-adw-tb td { text-align: center; padding: 7px 6px; border-bottom: 1px solid #EEF2F1; font-variant-numeric: tabular-nums; }
+        .sg-adw-tip { font-size: 12.5px; color: var(--muted-ink); background: #F3F7F6; border-radius: 10px; padding: 8px 12px; }
+        .sg-adw-ft { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px 20px; font-size: 11.5px; color: var(--muted-ink); }
+        .sg-adw-ok { flex: none; border: 0; border-radius: 12px; padding: 11px 20px; background: #134047; color: #FFFFFF; font-weight: 800; font-size: 14px; cursor: pointer; }
+        .sg-adw-ok:hover { background: #1F5A5E; }
         .ch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; max-width: 1080px; margin: 0 auto; text-align: left; }
         .ch-card { display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; background: #FFFFFF; border: 1px solid rgba(233,207,143,0.35); box-shadow: 0 22px 50px rgba(0,0,0,0.28); }
         .ch-head { display: flex; align-items: center; gap: 12px; padding: 14px 18px; text-decoration: none; color: var(--ink); border-bottom: 1px solid #EEF2F1; background: #FFFFFF; }
@@ -1672,8 +1692,10 @@
             <div class="privacy-modal-body">
                 <h4>1. 수집하는 개인정보의 항목 및 이용 목적</h4>
                 <p>사거리인터넷은 유선통신 가입 상담, 개통 신청 접수, 상품 안내를 목적으로 정보주체의 동의를 받아 성명, 연락처, 설치 주소 등을 수집하고 있습니다.</p>
+                <p>또한 온라인 광고를 통해 홈페이지에 방문하신 경우, 부정 클릭(반복적인 광고 클릭) 방지를 위해 접속 IP 주소, 방문 일시, 기기 종류(모바일/PC), 기기 식별 표시가 자동으로 수집됩니다.</p>
                 <h4>2. 개인정보의 보유 및 이용기간</h4>
                 <p><b>수집된 개인정보는 가입 상담 완료 및 개통 전산 처리 등 목적이 달성된 후 지체 없이 안전한 방법으로 즉시 파기합니다.</b> 정보주체가 파기를 요청하는 경우에도 즉시 파기 처리됩니다.</p>
+                <p>광고 부정 클릭 방지를 위해 수집된 접속 정보(IP 주소 등)는 수집일로부터 90일간 보관한 후 자동으로 파기하며, 부정 클릭 확인 및 광고 노출 제외 등록 목적으로만 이용합니다.</p>
             </div>
         </div>
     </div>
@@ -3490,7 +3512,55 @@
             } catch (x) { /* 무시 */ }
         }, true);
 
-        // [추가] 홈페이지 인입: 이 창에서 처음 들어왔을 때 한 번만, 어떤 경로로 왔는지 기록 (개인정보는 남기지 않음)
+        /* [부정클릭 방지] 구글 광고로 들어온 횟수를 이 기기에 세고(최근 7일), 3번째부터 안내창 · 관리자 페이지 '홈페이지 인입'에 IP와 함께 기록 */
+        var SG_AD_DAYS = 7, SG_AD_WARN = 3;
+        function sgAdList() { try { var l = JSON.parse(localStorage.getItem('sg_adc') || '[]'); return Array.isArray(l) ? l.filter(function (x) { return x && typeof x.t === 'number'; }) : []; } catch (e) { return []; } }
+        function sgAdMark() {
+            var q = {}, now = Date.now(), did = '';
+            try { new URLSearchParams(location.search).forEach(function (v, k) { q[k.toLowerCase()] = String(v); }); } catch (e) { /* 무시 */ }
+            var key = String(q.gclid || q.gbraid || q.wbraid || q.dclid || '').slice(0, 120);
+            try { did = localStorage.getItem('sg_did') || ''; if (!/^[a-z0-9]{12}$/.test(did)) { did = ''; while (did.length < 12) did += Math.random().toString(36).slice(2); did = did.slice(0, 12); localStorage.setItem('sg_did', did); } } catch (e) { did = ''; }
+            var list = sgAdList().filter(function (x) { return now - x.t < 30 * 86400000; });
+            var fresh = key ? !list.some(function (x) { return x.k === key; }) : !list.some(function (x) { return !x.k && now - x.t < 10 * 60000; });   // 같은 광고 클릭(새로고침)은 한 번만
+            if (fresh) list.push({ t: now, k: key });
+            try { localStorage.setItem('sg_adc', JSON.stringify(list.slice(-40))); } catch (e) { /* 저장 못 해도 진행 */ }
+            return { fresh: fresh, did: did, n: list.filter(function (x) { return now - x.t < SG_AD_DAYS * 86400000; }).length };
+        }
+        function sgAdSaveIp(ip) { try { var l = sgAdList(); if (l.length) { l[l.length - 1].ip = ip; localStorage.setItem('sg_adc', JSON.stringify(l.slice(-40))); } } catch (e) { /* 무시 */ } }
+        function sgIp() {   // 접속 IP (공개 IP 확인 서비스 · 광고 방문 때만)
+            if (!window.fetch) return Promise.resolve('');
+            var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 2500);
+            return fetch('https://api.ipify.org?format=json', { cache: 'no-store', credentials: 'omit', signal: ctl ? ctl.signal : undefined })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (j) { clearTimeout(tm); var ip = j && typeof j.ip === 'string' ? j.ip.trim() : ''; return /^[0-9a-fA-F.:]{3,45}$/.test(ip) ? ip : ''; })
+                .catch(function () { clearTimeout(tm); return ''; });
+        }
+        function sgAdWarn(n, ip) {
+            if (document.getElementById('sg-adw')) return;
+            var now = Date.now(), rows = sgAdList().filter(function (x) { return now - x.t < SG_AD_DAYS * 86400000; }).slice(-5).reverse();
+            function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+            function dt(t) { var d = new Date(t), p = function (v) { return ('0' + v).slice(-2); }; return d.getFullYear() + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()); }
+            var ov = el('div', 'sg-adw-ov'); ov.id = 'sg-adw'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-labelledby', 'sg-adw-t');
+            var box = el('div', 'sg-adw'), hd = el('div', 'sg-adw-hd');
+            hd.appendChild(el('div', 'sg-adw-ic', '🛡')); var ht = el('div', 'sg-adw-ht'); ht.appendChild(el('small', '', 'Ad Click Notice')); var h = el('b', '', '반복된 광고 클릭 안내'); h.id = 'sg-adw-t'; ht.appendChild(h); hd.appendChild(ht);
+            var bd = el('div', 'sg-adw-bd');
+            var p1 = el('p', 'sg-adw-lead'); p1.appendChild(document.createTextNode('최근 7일 동안 광고를 통해 ')); p1.appendChild(el('b', '', n + '번')); p1.appendChild(document.createTextNode(' 방문하셨어요.')); bd.appendChild(p1);
+            bd.appendChild(el('p', '', '다음부터는 검색창에 "사거리인터넷"을 검색하시거나 즐겨찾기로 방문해 주세요. 같은 기기·IP에서 반복되는 광고 클릭은 부정 클릭으로 기록되며, 광고 노출 제외 대상으로 등록될 수 있어요.'));
+            bd.appendChild(el('p', 'sg-adw-warn', '의도적인 반복 클릭은 법적 조치의 대상이 될 수 있습니다.'));
+            var tb = el('table', 'sg-adw-tb'), th = el('tr'); ['IP', '광고 접속 일시'].forEach(function (x) { th.appendChild(el('th', '', x)); }); var thd = el('thead'); thd.appendChild(th); tb.appendChild(thd);
+            var tbd = el('tbody'); rows.forEach(function (x, i) { var tr = el('tr'); tr.appendChild(el('td', '', x.ip || (i === 0 && ip) || '-')); tr.appendChild(el('td', '', dt(x.t))); tbd.appendChild(tr); }); tb.appendChild(tbd);
+            var cap = el('div', 'sg-adw-cap', '광고 접속 내역 (최근 7일 · 이 기기)'); bd.appendChild(cap); bd.appendChild(tb);
+            var mob = window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
+            bd.appendChild(el('p', 'sg-adw-tip', mob ? '즐겨찾기: 브라우저 메뉴(⋮ 또는 공유) → "북마크" 또는 "홈 화면에 추가"' : '즐겨찾기: 키보드 Ctrl + D (맥은 ⌘ + D)'));
+            var ft = el('div', 'sg-adw-ft'), btn = el('button', 'sg-adw-ok', '확인했어요'); btn.type = 'button';
+            function close() { ov.remove(); document.removeEventListener('keydown', esc); }
+            function esc(e) { if (e.key === 'Escape') close(); }
+            btn.onclick = close; ov.addEventListener('click', function (e) { if (e.target === ov) close(); }); document.addEventListener('keydown', esc);
+            ft.appendChild(el('span', '', '부정클릭 방지 기능이 작동 중이에요 · 사거리인터넷')); ft.appendChild(btn);
+            box.appendChild(hd); box.appendChild(bd); box.appendChild(ft); ov.appendChild(box); document.body.appendChild(ov);
+            try { btn.focus({ preventScroll: true }); } catch (e) { /* 무시 */ }
+        }
+        // [추가] 홈페이지 인입: 이 창에서 처음 들어왔을 때 한 번만, 어떤 경로로 왔는지 기록 (광고 방문만 부정클릭 확인용 IP를 같이)
         function sourceOf() {
             var q = {}, ua = navigator.userAgent || '', host = '', out;
             try { new URLSearchParams(location.search).forEach(function (v, k) { q[k.toLowerCase()] = String(v).slice(0, 40); }); } catch (e) { /* 무시 */ }
@@ -3541,12 +3611,16 @@
             var bot = /bot|crawl|spider|slurp|yeti|daum(oa)?-?bot|headlesschrome|lighthouse|preview/i.test(navigator.userAgent || '');
             var first = true;
             try { first = sessionStorage.getItem('sg_visit') !== '1'; sessionStorage.setItem('sg_visit', '1'); } catch (e) { first = true; }
-            if (first && !bot) {
-                var so = sourceOf();
+            var so = !bot ? sourceOf() : null, adv = so && so.src === '구글 광고' ? sgAdMark() : null;   // 광고로 들어왔으면 이 기기의 광고 클릭 기록 (같은 클릭 새로고침은 1번만)
+            if (!bot && (first || (adv && adv.fresh))) {
                 var keys = []; try { new URLSearchParams(location.search).forEach(function (v, k) { if (keys.indexOf(k) < 0 && /^[A-Za-z0-9_]{1,20}$/.test(k)) keys.push(k); }); } catch (e) { /* 무시 */ }
                 var inFrame = false; try { inFrame = window.top !== window.self; } catch (e) { inFrame = true; }
                 var vev = { action: 'visit', src: so.src, ref: so.ref, us: so.us, um: so.um, uc: so.uc, dev: isMobile() ? 'm' : 'pc', page: (String(location.pathname || '/') + (keys.length ? '?' + keys.join(',') : '') + (inFrame ? ' [frame]' : '')).slice(0, 80) };   // 들어온 주소의 표시 이름만 (값은 안 남김) → 광고 표시가 붙어 왔는지 확인용
-                if (IB_URL) send(vev); else if (waiting.length < 20) waiting.push(vev);
+                var go = function () { if (IB_URL) send(vev); else if (waiting.length < 20) waiting.push(vev); };
+                if (adv && adv.fresh) {   // 광고 방문: 부정클릭 확인용으로 IP · 기기 표시 · 최근 7일 광고 클릭 수를 같이 (2.5초 안에 IP를 못 받으면 없이)
+                    vev.ad = 1; vev.adn = adv.n; if (adv.did) vev.did = adv.did;
+                    sgIp().then(function (ip) { if (ip) { vev.ip = ip; sgAdSaveIp(ip); } go(); if (adv.n >= SG_AD_WARN) setTimeout(function () { sgAdWarn(adv.n, ip); }, 900); });
+                } else go();
             }
         } catch (e) { /* 기록 실패는 고객 화면에 영향 없음 */ }
     })();
