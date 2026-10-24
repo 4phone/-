@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-p7MNL3PQQUJi626XoEJMSArEV3EZhUznO98pU5Xjihs='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-QxHJLIHP6NT6tTqRY2cr7gLywkusyFdF0YBHg73le2U='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1001,6 +1001,22 @@
         .mf-xpol.warn { color: #7A5200; background: #FFF6DD; border-top-color: #EBD9A6; }
         .mf-xpol.bad { color: #B3261E; background: #FDECEA; border-top-color: #F1C2BD; }
         .mf-xpol[hidden], .mf-snap .mf-xpol { display: none !important; }
+        .mf-rows > .mf-xpol { border-top: 1px dashed #CFE3D6; }
+        .mf-prow > .mf-cell:not(.tight) { flex: 1 1 200px; }
+        .mf-prow > .mf-cell:last-child { flex: 0 1 150px; }
+        .mf-prow > .mf-cell { flex-wrap: nowrap; } .mf-sheet .mf-prow .mf-in { min-width: 0; }
+        .mf-prow > .mf-cell > .mf-k { flex: none; white-space: nowrap; }
+        .mf-prow > .mf-cell.tight { flex: 0 0 auto; padding-left: 6px; padding-right: 6px; gap: 6px; }
+        .mf-sheet .mf-prow .mf-in.short { flex: 0 0 46px; width: 46px; min-width: 0; }
+        .mf-prow .mf-xend { min-width: 0; padding: 2px 2px; }
+        .mf-done-dlg { max-width: 560px; }
+        .mf-done-who { margin: 0 0 8px; font-weight: 700; font-size: 15px; }
+        .mf-done-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+        .mf-done-li { display: flex; flex-direction: column; gap: 2px; padding: 9px 11px; border-radius: 10px; background: #EEF8F1; border: 1px solid #CFE3D6; font-size: 14px; word-break: keep-all; overflow-wrap: anywhere; }
+        .mf-done-li b { color: #146B3A; } .mf-done-li small { color: #5B6670; font-size: 12.5px; }
+        .mf-done-li.warn { background: #FFF6DD; border-color: #EBD9A6; } .mf-done-li.warn b { color: #7A5200; }
+        .mf-done-li.info { background: #F4F5F6; border-color: #DDE0E3; } .mf-done-li.info b { color: #4A535C; }
+        .mf-done-li.bad { background: #FDECEA; border-color: #F1C2BD; } .mf-done-li.bad b { color: #B3261E; }
         @media print { .mf-xpol { display: none !important; } }
         .mf-info { color: var(--mf-green); font-size: 12.5px; margin-top: 4px; } .mf-info.red { color: var(--mf-red); }
         .mf-note { color: var(--mf-red); font-size: 12.5px; }
@@ -1496,7 +1512,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-23.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-23.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1650,6 +1666,7 @@
                 if (r.inst === true) o.inst = true;
                 if (isYmd(r.instDate)) o.instDate = r.instDate;
                 if (str(r.xev, 40)) o.xev = str(r.xev, 40);   // 부가서비스 해지 가능일 캘린더 일정
+                if (str(r.pev, 40)) o.pev = str(r.pev, 40);   // 요금제 변경일 캘린더 일정
                 out.regs.push(o);
             });
             list(d.policies, 12).forEach(function (x) {   // 인터넷상담 단가표 (최근 10개 보관)
@@ -4141,6 +4158,7 @@
             K.tcell = function () { return h('div', { class: 'mf-cell tight' }, kids(arguments)); };
             K.wcell = function () { return h('div', { class: 'mf-cell wide' }, kids(arguments)); };
             K.row = function () { return h('div', { class: 'mf-row' }, kids(arguments)); };
+            K.prow = function (r) { r.classList.add('mf-prow'); return r; };   // 가입 요금제 줄: 칸 4개가 한 줄에 들어가게
             K.grp = function (title) { return h('div', { class: 'mf-grp' }, h('div', { class: 'mf-sub' }, title), h('div', { class: 'mf-rows' }, kids(arguments, 1))); };
             K.sec = function (title, mod) { return h('section', { class: 'mf-sec' + (mod ? ' ' + mod : '') }, h('div', { class: 'mf-lab' }, title), h('div', { class: 'mf-body' }, kids(arguments, 2))); };
             K.info = function (t, red) { return h('p', { class: 'mf-info' + (red ? ' red' : '') }, t); };
@@ -4243,8 +4261,9 @@
 
                 sec('가입 내역', '',
                     grp('요금제',
-                        row(cell(k('가입 요금제'), inp('plan1', '가입 요금제')), tcell(k('유지기간'), inp('keep1', '가입 요금제 유지기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')), cell(k('청구금액'), inp('bill1', '가입 요금제 청구금액(원)', MONEY), k('원'))),
-                        row(cell(k('변경 요금제'), inp('plan2', '변경 요금제')), tcell(k('유지기간'), inp('keep2', '변경 요금제 유지기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')), cell(k('청구금액'), inp('bill2', '변경 요금제 청구금액(원)', MONEY), k('원')))),
+                        K.prow(row(cell(k('가입 요금제'), inp('plan1', '가입 요금제')), tcell(k('유지기간'), inp('keep1', '가입 요금제 유지기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')), tcell(k('변경일'), h('span', { class: 'mf-xend', 'data-pend': '1', 'aria-live': 'polite' })), cell(k('청구금액'), inp('bill1', '가입 요금제 청구금액(원)', MONEY), k('원')))),
+                        row(cell(k('변경 요금제'), inp('plan2', '변경 요금제')), tcell(k('유지기간'), inp('keep2', '변경 요금제 유지기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')), cell(k('청구금액'), inp('bill2', '변경 요금제 청구금액(원)', MONEY), k('원'))),
+                        h('p', { class: 'mf-xpol', 'data-pol': 'p', hidden: true, role: 'status', 'aria-live': 'polite' })),
                     grp('핸드폰 보험',
                         row(cell(chk('insY', '신청', 'ins'), k('( 보험명'), inp('insName', '핸드폰 보험 이름', { cls: 'mid' }), k('/'), inp('insFee', '핸드폰 보험료(원)', { mode: 'numeric', kind: 'money', max: 15, cls: 'amt' }), k('원)')), tcell(chk('insN', '미신청', 'ins')), tcell(note('*개통 30일 내 신청'))))),
 
@@ -4255,7 +4274,7 @@
                     row(cell(inp('extra', '추가 서비스 (부가서비스)', { max: 150 })),
                         tcell(k('유지기간'), inp('xKeep', '부가서비스 유지기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')),
                         tcell(k('해지 가능일'), h('span', { class: 'mf-xend', 'data-xend': '1', 'aria-live': 'polite' }))),
-                    h('p', { class: 'mf-xpol', hidden: true, role: 'status', 'aria-live': 'polite' })),
+                    h('p', { class: 'mf-xpol', 'data-pol': 'x', hidden: true, role: 'status', 'aria-live': 'polite' })),
                 info('[안내] 기타 정보에도 중요한 내용이 첨부되니 놓치지말고 확인해 주세요.', true),
 
                 sec('기타 정보', 'beige',
@@ -4618,6 +4637,32 @@
             showDlg(dlg);
             var ok = dlg.querySelector('[data-act="mf-replace-ok"]'); if (ok) ok.focus();
         }
+        function mfDonePopup(M, regOk, cr) {   // 모바일 확인서 저장 결과를 팝업으로 한 번 더 (부가서비스·요금제 캘린더 등록을 다시 읽어서 확인)
+            var dlg = document.getElementById('dlg'), rows = [];
+            var line = function (lv, head, text, sub) { rows.push(h('li', { class: 'mf-done-li ' + lv }, h('b', {}, (lv === 'ok' ? '✓ ' : lv === 'info' ? '· ' : '⚠ ') + head), h('span', {}, text), sub ? h('small', {}, sub) : null)); };
+            line('ok', '드라이브', (M.savedFolder ? M.savedFolder + ' / ' : '') + M.saved);
+            line(regOk ? 'ok' : 'bad', '가입 장부', regOk ? '정리했어요' : '정리하지 못했어요 (가입 장부에서 확인해 주세요)');
+            (M.calRes || []).forEach(function (res) {
+                var who = res.info ? staffName(res.info.sid) + ' 님' : '', d = res.info ? mfXDay(res.info.date) : '', P = res.k === 'p';
+                var why = res.x ? (P ? (!res.x.svc ? '가입 요금제가 없어요' : !res.x.plan2 ? '변경 요금제가 없어서 넣지 않았어요' : '날짜를 계산하지 못했어요 (유지기간·개통일 확인)') : (!res.x.svc ? '부가서비스 없음 (미유치)' : '날짜를 계산하지 못했어요 (유지기간·개통일 확인)')) : '';
+                if (res.st === 'fail') line('bad', res.label, '등록하지 못했어요. 캘린더에 직접 넣어 주세요.');
+                else if (res.st === 'kept') line('ok', res.label, '이미 끝낸 할 일이라 그대로 두었어요');
+                else if (res.st === 'skip') line('warn', res.label, '캘린더에서 직접 지운 일정이라 다시 넣지 않았어요');
+                else if (res.st === 'drop') line('ok', res.label, '일정·할 일을 지웠어요 (' + why + ')');
+                else if (res.st === 'none') line('info', res.label, '등록할 일정 없음 · ' + why);
+                else line(!res.ok ? 'bad' : res.warn ? 'warn' : 'ok', res.label, d + ' → ' + who + ' 캘린더·할 일 ' + (res.st === 'new' ? '등록' : res.st === 'move' ? '날짜 옮김' : res.st === 'edit' ? '내용 고침' : '그대로') + (res.ok ? ' (확인 완료)' : ' — 확인되지 않아요. 캘린더를 확인해 주세요'),
+                    (res.x.base === 'pol' ? '정책서 [' + res.x.pol.tag + '] ' + mfXPolText(res.x.pol) : '적은 유지기간 ' + res.x.n + '개월') + (res.warn ? ' · ⚠ ' + res.warn : ''));
+            });
+            line(cr && cr.ok ? 'ok' : 'warn', '구글 연락처', cr && cr.ok ? '저장했어요' : '아직 저장 안 됨 (안내 창을 확인해 주세요)');
+            var bad = rows.some(function (li) { return /\bbad\b/.test(li.className); });
+            dlg.textContent = ''; dlg.className = 'mf-done-dlg';
+            dlg.appendChild(h('div', { 'data-dlg': 'mf-done' },
+                h('div', { class: 'dlg-head' }, bad ? '⚠ 저장 결과 확인이 필요해요' : '✓ 업로드 완료'),
+                h('div', { class: 'dlg-body' }, h('p', { class: 'mf-done-who' }, (M.sheet.querySelector('[data-mf="name"]') || {}).value || ''), h('ul', { class: 'mf-done-list' }, rows)),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-done-ok', onclick: function () { closeDlg(); } }, '확인'))));
+            showDlg(dlg);
+            var ok = dlg.querySelector('[data-act="mf-done-ok"]'); if (ok) ok.focus();
+        }
         function ctOkMsg(cr, ct) {   // 판매 고객 연락처 저장 결과 문구
             return (cr.updated ? (cr.fromProspect ? '재케어(가망) 연락처를 판매 고객 "' + ct.label + '"(으)로 바꿨어요.' : '같은 번호의 구글 연락처를 "' + ct.label + '"(으)로 바꿨어요.') : '구글 연락처에 "' + ct.label + '"(으)로 저장했어요.')
                 + (cr.removed ? ' 남아 있던 재케어 연락처 ' + cr.removed + '개는 지웠어요.' : '');
@@ -4646,7 +4691,8 @@
                 M.saved = String(res.name || ''); M.savedId = String(res.id || ''); M.savedFolder = String(res.folder || folder); M.dirty = false;
                 mfSaveBtn(M);
                 var regMsg = '';
-                try { regMsg = regUpsert(M, y, m, d) ? ' 가입 장부에도 정리했어요.' + (M.xMsg || '') : ''; } catch (re) { regMsg = ' (가입 장부 정리는 실패했어요)'; }
+                var regOk = false; M.calRes = [];
+                try { regOk = regUpsert(M, y, m, d); regMsg = regOk ? ' 가입 장부에도 정리했어요.' + (M.xMsg || '') : ''; } catch (re) { regMsg = ' (가입 장부 정리는 실패했어요)'; }
                 var cr = res.contact;   // 구글 연락처 결과 (그림 저장과 따로)
                 if (cr && cr.ok) { M.contactId = String(cr.id || ''); regMsg += ' ' + ctOkMsg(cr, ct); }
                 var ctWarn = cr && !cr.ok ? String(cr.msg || '저장하지 못했어요').slice(0, 160) : !cr ? '서버 프로그램(Apps Script)이 예전 버전이라 연락처는 저장하지 않았어요. 새 코드로 바꾸고 "새 버전"으로 배포해 주세요.' : '';
@@ -4654,6 +4700,7 @@
                 mfCount(M, 'save'); mfGate(M);
                 if (replaceId) toast((res.replaced ? '이전 파일은 지우고 수정본을 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' : '이전 파일을 찾지 못해서(이미 지웠거나 옮긴 경우) 수정본만 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.') + regMsg);
                 else toast('구글 드라이브 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' + regMsg);
+                if (M.kind === 'mobile') { try { mfDonePopup(M, regOk, cr); } catch (pe) { /* 알림은 이미 띄움 */ } }
             }, function (e) {
                 btn.disabled = false; btn.removeAttribute('data-busy'); mfSaveBtn(M); mfGate(M);
                 if (e && e.name === 'AbortError') toast('드라이브 응답이 늦어요. 이미 저장됐을 수 있으니 드라이브의 "' + folder + '" 폴더를 확인한 뒤 다시 시도해 주세요.');
@@ -5105,7 +5152,7 @@
             return out.filter(function (x) { return x.length >= 2; });
         }
         function mfXHit(tok, keys) { return tok.some(function (t) { return keys.some(function (k) { return k.indexOf(t) >= 0 || t.indexOf(k) >= 0; }); }); }
-        function mfXPolicy(dealer, carrier, svc) {   // 접수처 → 정책서 거래처 · 통신사 확인 → 부가서비스 유지기간
+        function mfPolBase(dealer, carrier) {   // 접수처 → 정책서 거래처 → 통신사 확인 (부가서비스·요금제 공통)
             if (!dealer) return { st: 'nonet' };
             if (!mp.data) return { st: mp.err ? 'err' : driveOn() ? 'load' : 'off' };
             var dl = mp.data.dealers.filter(function (x) { return x.name === dealer; })[0];
@@ -5114,7 +5161,16 @@
             if (!fk) return { st: 'nocar', tag: tag };
             if (!dk) return { st: 'nopc', tag: tag };
             if (dk !== fk) return { st: 'car', tag: tag, pc: dl.carrier, fc: carrier };
-            var tok = mfXParts(svc, true), parts = mfXParts(svc, false), hits = [], keys = [];
+            return { st: 'dl', dl: dl, tag: tag };
+        }
+        function mfPolOk(tag, hits) {   // 맞은 정책서 줄 → 기간 읽기 (못 읽는 기간이 있으면 정책서 기준을 쓰지 않음)
+            if (!hits.length) return { st: 'none', tag: tag };
+            for (var i = 0; i < hits.length; i++) { hits[i].per = mfXPer(hits[i].raw); if (!hits[i].per) return { st: 'bad', tag: tag, raw: hits[i].raw }; }
+            return { st: 'ok', tag: tag, hits: hits };
+        }
+        function mfXPolicy(dealer, carrier, svc) {   // 부가서비스 유지기간
+            var b = mfPolBase(dealer, carrier); if (b.st !== 'dl') return b;
+            var dl = b.dl, tok = mfXParts(svc, true), parts = mfXParts(svc, false), hits = [], keys = [];
             (dl.addons || []).forEach(function (a) { var ks = mfXParts(a.name, true); keys = keys.concat(ks); if (a.keep && mfXHit(tok, ks)) hits.push({ name: a.name, raw: a.keep }); });
             if (!hits.length) (dl.keep || []).forEach(function (x) {
                 if (!x.period || /부가서비스|회선|요금제|유선|결합|device|중고|직전/i.test(x.item)) return;
@@ -5124,50 +5180,101 @@
             var left = parts.filter(function (t) { return !mfXHit([t], keys); });   // 정책서 이름과 안 맞은 부가서비스
             if (gk && (!hits.length || left.length)) hits.push({ name: hits.length ? '그 밖의 부가서비스' : '부가서비스', raw: gk.period });
             if (!hits.length) { var ps = (dl.addons || []).map(function (a) { return a.keep; }).filter(Boolean); if (ps.length && ps.every(function (p) { return p === ps[0]; })) hits.push({ name: '부가서비스 전체', raw: ps[0] }); }
-            if (!hits.length) return { st: 'none', tag: tag };
-            for (var i = 0; i < hits.length; i++) { hits[i].per = mfXPer(hits[i].raw); if (!hits[i].per) return { st: 'bad', tag: tag, raw: hits[i].raw }; }
-            return { st: 'ok', tag: tag, hits: hits };
+            return mfPolOk(b.tag, hits);
         }
-        function mfXCalc(sheet) {   // 확인서 칸 → { svc, n, open, date, base: 'pol'|'typed', same, pol }
-            var v = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return el ? String(el.value || '').trim() : ''; };
-            var svc = mfXSvc(v('extra')), ns = digitsOnly(v('xKeep')), y = parseInt(v('y'), 10), m = parseInt(v('m'), 10), d = parseInt(v('d'), 10);
-            if (y >= 0 && y < 100) y += 2000;   // 저장할 때와 같은 규칙 (26 → 2026)
-            var dt = new Date(y, m - 1, d), okD = y >= 2000 && y < 2100 && dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
-            var x = { svc: svc, ns: ns, n: ns ? +ns : -1, open: okD ? ymd(dt) : '', date: '', typed: '', base: '', same: null, pol: svc ? mfXPolicy(v('netUse'), v('carrier'), svc) : { st: 'nosvc' } };
-            if (!svc || !okD) return x;
-            x.typed = ns ? mfXDate(y, m, d, { k: 'M', n: x.n }) : '';
+        var MF_PTYPE = { 'new': '010신규', port: 'MNP', re: '기변' };   // 가입 유형: 신규 = 010신규 · 번호이동 = MNP · 재가입 = 기변
+        function mfPTypes(nt) {   // 메모 맨 앞의 가입 유형 ('010신규 183일 유지' → ['new'] · 'MNP·기변 123일 유지' → ['port','re'] · 없으면 null = 전 유형)
+            var T = '(?:010\\s*신규|신규|MNP|번호이동|기기변경|기변)';
+            var m = new RegExp('^\\s*(' + T + '(?:\\s*[·,\\/]\\s*' + T + ')*)(?=\\s|\\d|$)', 'i').exec(String(nt || '')); if (!m) return null;
+            var out = [];
+            if (/신규/.test(m[1])) out.push('new');
+            if (/MNP|번호이동/i.test(m[1])) out.push('port');
+            if (/기변|기기변경/.test(m[1])) out.push('re');
+            return out;
+        }
+        function mfPPolicy(dealer, carrier, f) {   // 가입 요금제 유지기간: 가입 유형 · 비구매(중고) · 할인 방법 · 유통망지원금에 맞는 정책서 줄 (여러 줄이면 가장 늦은 날)
+            var b = mfPolBase(dealer, carrier); if (b.st !== 'dl') return b;
+            if (!f.type) return { st: 'notype', tag: b.tag };
+            var dl = b.dl, hits = [];
+            var same = (dl.tables || []).some(function (t) { return (t.notes || []).some(function (n) { return /요금제\s*유지기간\s*동일/.test(n); }); });   // '중고폰·자급제: 요금제 유지기간 동일'
+            (dl.keep || []).forEach(function (k) {
+                var it = String(k.item || '').trim(), nt = String(k.note || ''), p = String(k.period || '').trim();
+                if (!it || /하향|105|2nd|device|결합|부가|구독|폰케어|직전|유선|회선/i.test(it)) return;   // 요금제 기간이 아닌 줄
+                var used = /중고|자급제/.test(it);
+                if (!/요금제/.test(it) && !(used && (/요금제/.test(nt) || same))) return;
+                if (used && !f.used) return;                                     // 중고·자급제 줄 = 비구매 개통만
+                if (/중고\s*신규/.test(it) && f.type !== 'new') return;
+                if (/중고\s*MNP/i.test(it) && f.type !== 'port') return;
+                if (/유통망\s*지원금/.test(it) && !f.pay) return;                // '유통망 지원금 요금제' = 유통망지원금을 적은 개통만
+                var tys = mfPTypes(nt); if (tys && tys.indexOf(f.type) < 0) return;
+                var nm = it + (tys ? ' (' + tys.map(function (t) { return MF_PTYPE[t]; }).join('·') + ')' : '');
+                var ov = /010\s*신규는\s*([DM]\s*\+\s*\d+)/i.exec(nt);             // '010신규는 D+181'
+                if (ov && f.type === 'new') { p = ov[1]; nm = it + ' (010신규)'; }
+                if (dl.name === '수석' && it === '요금제' && /유통망\s*지원금/.test(nt)) {   // 대표님 기준 (2026-10-23): 선택약정 D+93 · 공시지원금·유통망지원금 개통 D+183
+                    if (f.disc === 'sel') { p = 'D+93'; nm = '요금제 (선택약정)'; } else nm = '요금제 (공시지원금·유통망지원금)';
+                }
+                hits.push({ name: nm, raw: p });
+            });
+            return mfPolOk(b.tag, hits);
+        }
+        function mfV(sheet) { return function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return el ? String(el.value || '').trim() : ''; }; }
+        function mfC(sheet) { return function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return !!(el && el.checked); }; }
+        function mfOpen(v) {   // 개통일 = 확인서 맨 아래 년·월·일 (저장할 때와 같은 규칙: 26 → 2026)
+            var y = parseInt(v('y'), 10), m = parseInt(v('m'), 10), d = parseInt(v('d'), 10);
+            if (y >= 0 && y < 100) y += 2000;
+            var dt = new Date(y, m - 1, d), ok = y >= 2000 && y < 2100 && dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d;
+            return { y: y, m: m, d: d, ok: ok, ymd: ok ? ymd(dt) : '' };
+        }
+        function mfKDates(x, o) {   // 적은 개월 수 날짜 · 정책서 날짜(가장 늦은 날) · 일치 여부
+            if (!x.svc || !o.ok) return x;
+            x.typed = x.ns ? mfXDate(o.y, o.m, o.d, { k: 'M', n: x.n }) : '';
             var pd = '';
-            if (x.pol.st === 'ok') x.pol.hits.forEach(function (hh) { hh.date = mfXDate(y, m, d, hh.per); if (hh.date > pd) pd = hh.date; });
+            if (x.pol.st === 'ok') x.pol.hits.forEach(function (hh) { hh.date = mfXDate(o.y, o.m, o.d, hh.per); if (hh.date > pd) pd = hh.date; });
             x.date = pd || x.typed; x.base = pd ? 'pol' : x.typed ? 'typed' : '';
-            if (pd && ns) x.same = x.pol.hits.some(function (hh) { return hh.date === pd && mfXSame(x.n, hh.per); });
+            if (pd && x.ns) x.same = x.pol.hits.some(function (hh) { return hh.date === pd && mfXSame(x.n, hh.per); });
             return x;
         }
-        var MF_XWHY = { nonet: '접수처를 안 골랐어요', load: '모바일 정책서를 아직 못 불러왔어요', off: '모바일 정책서를 불러올 수 없어요 (드라이브 연결 필요)', err: '모바일 정책서를 불러오지 못했어요', nocar: '가입 통신사를 안 골랐어요', nopc: '정책서에 이 거래처 통신사가 없어요', bad: '정책서 유지기간을 읽지 못했어요' };
+        function mfXCalc(sheet) {   // 부가서비스 → 해지 가능일
+            var v = mfV(sheet), o = mfOpen(v), svc = mfXSvc(v('extra')), ns = digitsOnly(v('xKeep'));
+            return mfKDates({ k: 'x', svc: svc, ns: ns, n: ns ? +ns : -1, open: o.ymd, date: '', typed: '', base: '', same: null, pol: svc ? mfXPolicy(v('netUse'), v('carrier'), svc) : { st: 'nosvc' } }, o);
+        }
+        function mfPCalc(sheet) {   // 가입 요금제 → 변경 가능일
+            var v = mfV(sheet), c = mfC(sheet), o = mfOpen(v), plan = v('plan1'), ns = digitsOnly(v('keep1'));
+            var f = { type: c('tNew') ? 'new' : c('tPort') ? 'port' : c('tRe') ? 're' : '', used: c('noBuy'), disc: c('dSel') ? 'sel' : c('dSub') ? 'sub' : '', pay: +digitsOnly(v('payAmt')) > 0, payAmt: digitsOnly(v('payAmt')) };
+            return mfKDates({ k: 'p', svc: plan, plan2: v('plan2'), keep2: digitsOnly(v('keep2')), bill2: v('bill2'), f: f, ns: ns, n: ns ? +ns : -1, open: o.ymd, date: '', typed: '', base: '', same: null, pol: plan ? mfPPolicy(v('netUse'), v('carrier'), f) : { st: 'nosvc' } }, o);
+        }
+        var MF_XWHY = { nonet: '접수처를 안 골랐어요', load: '모바일 정책서를 아직 못 불러왔어요', off: '모바일 정책서를 불러올 수 없어요 (드라이브 연결 필요)', err: '모바일 정책서를 불러오지 못했어요', nocar: '가입 통신사를 안 골랐어요', nopc: '정책서에 이 거래처 통신사가 없어요', bad: '정책서 유지기간을 읽지 못했어요', notype: '가입 유형(신규·번호이동·재가입)을 안 골랐어요' };
         function mfXPolText(p) { return p.hits.map(function (hh) { return hh.name.slice(0, 30) + ' ' + hh.per.t; }).join(', '); }
         function mfXWhy(x) {
-            var p = x.pol;
-            return p.st === 'nodealer' ? '모바일 정책서에 [' + p.dealer + '] 정책이 없어요' : p.st === 'none' ? '정책서 [' + p.tag + ']에 부가서비스 유지기간이 없어요' : p.st === 'car' ? '⚠ 접수처 정책서는 ' + p.pc + '인데 가입 통신사가 ' + p.fc + '예요' : MF_XWHY[p.st] || '';
+            var p = x.pol, what = x.k === 'p' ? '이 가입 유형의 요금제' : '부가서비스';
+            return p.st === 'nodealer' ? '모바일 정책서에 [' + p.dealer + '] 정책이 없어요' : p.st === 'none' ? '정책서 [' + p.tag + ']에 ' + what + ' 유지기간이 없어요' : p.st === 'car' ? '⚠ 접수처 정책서는 ' + p.pc + '인데 가입 통신사가 ' + p.fc + '예요' : MF_XWHY[p.st] || '';
         }
         function mfXText(x) {   // 확인 줄 [글, 'ok'|'warn'|'bad']
-            var p = x.pol, nTxt = x.n + '개월';
-            if (!x.svc) return x.ns ? ['추가 서비스(부가서비스) 이름도 적어 주세요.', 'warn'] : ['', ''];
+            var p = x.pol, nTxt = x.n + '개월', verb = x.k === 'p' ? '변경 가능' : '해지 가능';
+            if (!x.svc) return x.ns ? [x.k === 'p' ? '가입 요금제 이름도 적어 주세요.' : '추가 서비스(부가서비스) 이름도 적어 주세요.', 'warn'] : ['', ''];
             if (!x.open) return ['⚠ 맨 아래 개통 날짜(년·월·일)를 확인해 주세요.', 'bad'];
+            var cal = x.k === 'p' && x.date && !x.plan2 ? ' · 변경 요금제가 없어 캘린더에는 안 넣어요' : '';
             if (p.st === 'ok') {
-                var head = '정책서 [' + p.tag + '] ' + mfXPolText(p) + ' → 해지 가능 ' + mfXDot(x.date);
-                if (!x.ns) return ['✓ ' + head + ' · 유지기간(개월)도 적어 주세요', 'warn'];
-                return x.same ? ['✓ ' + head + ' · 적은 ' + nTxt + '과 일치', 'ok'] : ['⚠ ' + head + ' · 적은 ' + nTxt + '과 달라요 (정책서 날짜로 캘린더에 등록돼요)', 'bad'];
+                var head = '정책서 [' + p.tag + '] ' + mfXPolText(p) + ' → ' + verb + ' ' + mfXDot(x.date);
+                if (!x.ns) return ['✓ ' + head + ' · 유지기간(개월)도 적어 주세요' + cal, 'warn'];
+                return x.same ? ['✓ ' + head + ' · 적은 ' + nTxt + '과 일치' + cal, 'ok'] : ['⚠ ' + head + ' · 적은 ' + nTxt + '과 달라요 (정책서 날짜로 캘린더에 등록돼요)' + cal, 'bad'];
             }
-            var tail = x.ns ? ' → 적은 ' + nTxt + ' 기준 해지 가능 ' + mfXDot(x.typed) : ' → 유지기간(개월)을 적어 주세요';
-            return [mfXWhy(x) + tail, /^(car|err|bad|nopc)$/.test(p.st) ? 'bad' : 'warn'];
+            var tail = x.ns ? ' → 적은 ' + nTxt + ' 기준 ' + verb + ' ' + mfXDot(x.typed) : ' → 유지기간(개월)을 적어 주세요';
+            return [mfXWhy(x) + tail + cal, /^(car|err|bad|nopc)$/.test(p.st) ? 'bad' : 'warn'];
         }
-        function mfXWire(M) {   // 모바일 확인서: 칸을 고칠 때마다 해지 가능일 · 정책서 확인 줄을 다시 계산
-            var sh = M.sheet, out = sh.querySelector('[data-xend]'), line = sh.querySelector('.mf-xpol');
-            if (!out || !line) return;
-            M.xUpd = function () {
-                var x = mfXCalc(sh), t = mfXText(x);
+        function mfXWire(M) {   // 모바일 확인서: 칸을 고칠 때마다 해지 가능일 · 변경 가능일 · 정책서 확인 줄을 다시 계산
+            var sh = M.sheet, xo = sh.querySelector('[data-xend]'), xl = sh.querySelector('[data-pol="x"]'), po = sh.querySelector('[data-pend]'), pl = sh.querySelector('[data-pol="p"]');
+            if (!xo || !xl || !po || !pl) return;
+            var paint = function (x, out, line) {
+                var t = mfXText(x);
                 out.textContent = x.date ? mfXDot(x.date) : '';
                 line.textContent = t[0]; line.className = 'mf-xpol' + (t[1] ? ' ' + t[1] : ''); line.hidden = !t[0];
-                if (driveOn() && !mp.busy && (x.pol.st === 'load' || (x.pol.st === 'err' && Date.now() - mp.at > 60000))) mpLoad();   // 정책서를 아직 못 받았으면 받기
+            };
+            M.xUpd = function () {
+                var x = mfXCalc(sh), pp = mfPCalc(sh);
+                paint(x, xo, xl); paint(pp, po, pl);
+                var st = [x.pol.st, pp.pol.st];
+                if (driveOn() && !mp.busy && (st.indexOf('load') >= 0 || (st.indexOf('err') >= 0 && Date.now() - mp.at > 60000))) mpLoad();   // 정책서를 아직 못 받았으면 받기
                 return x;
             };
             sh.addEventListener('input', M.xUpd); sh.addEventListener('change', M.xUpd);
@@ -5175,53 +5282,81 @@
             M.xUpd();
         }
         function mfXRefresh() { Object.keys(mforms).forEach(function (k) { var M = mforms[k]; if (M && M.xUpd) { try { M.xUpd(); } catch (e) { /* 무시 */ } } }); }
-        function regXDrop(r) {   // 해지 가능일 일정·아직 안 끝난 할 일 지우기 (끝난 할 일은 기록으로 남김)
-            var ev = r && r.xev && db ? db.events.filter(function (e) { return e.id === r.xev; })[0] || null : null;
-            if (r) delete r.xev;
+        /* ---------- 장부 줄 ↔ 캘린더 일정 (xev: 부가서비스 해지 가능일 · pev: 요금제 변경일) ---------- */
+        function regEvOf(r, key) { return r && r[key] && db ? db.events.filter(function (e) { return e.id === r[key]; })[0] || null : null; }
+        function regEvDrop(r, key) {   // 일정·아직 안 끝난 할 일 지우기 (끝난 할 일은 기록으로 남김)
+            var ev = regEvOf(r, key);
+            if (r) delete r[key];
             if (!ev) return false;
             var lt = evTask(ev);
             db.events = db.events.filter(function (x) { return x.id !== ev.id; }); tomb(ev.id);
             if (lt && !closed(lt)) { db.tasks = db.tasks.filter(function (x) { return x.id !== lt.id; }); tomb(lt.id); } else if (lt) { delete lt.evId; stamp(lt); }
             return true;
         }
-        function regXInfo(r, x) {   // 캘린더 일정 · 할 일에 들어갈 글 (고객명 · 부가서비스 · 기준까지 자세히)
-            var p = x.pol, sid = clStaffId(r.seller);
+        function regXDrop(r) { return regEvDrop(r, 'xev'); }
+        function regEvSync(r, key, info) {   // info 없으면 지우기 → { st: new|move|edit|same|kept|skip|drop|none }
+            var ev = regEvOf(r, key), t = ev ? evTask(ev) : null;
+            if (!info) {
+                if (ev && !(t && closed(t))) { regEvDrop(r, key); return { st: 'drop' }; }
+                if (!ev) delete r[key];
+                return { st: ev ? 'kept' : 'none' };
+            }
+            if (ev) {
+                if (t && closed(t)) return { st: 'kept' };   // 이미 끝낸 업무는 그대로
+                if (ev.date === info.date && ev.title === info.title && ev.memo === info.memo && ev.staffId === info.sid && t) return { st: 'same' };
+                var moved = ev.date !== info.date;
+                ev.title = info.title; ev.date = info.date; ev.memo = info.memo; ev.staffId = info.sid;
+                if (t) evSyncTask(ev); else evMakeTask(ev);   // 할 일이 없어졌으면 다시 만듦
+                stamp(ev);
+                return { st: moved ? 'move' : 'edit' };
+            }
+            if (r[key]) return { st: 'skip' };   // 캘린더에서 직접 지운 일정은 다시 만들지 않음
+            var ne = stamp({ id: uid(), title: info.title, date: info.date, time: '', staffId: info.sid, memo: info.memo, u: 0 });
+            db.events.push(ne); evMakeTask(ne); stamp(ne); r[key] = ne.id;
+            return { st: 'new' };
+        }
+        function regEvCheck(r, key, info) {   // 저장한 뒤 다시 읽어서 확인: 일정 날짜 · 할 일 마감 · 담당자
+            var ev = regEvOf(r, key), t = ev ? evTask(ev) : null;
+            return !!(ev && t && ev.date === info.date && t.due === info.date && ev.staffId === info.sid && t.staffId === info.sid && ev.title === info.title);
+        }
+        function regKInfo(r, x) {   // 캘린더 일정 · 할 일에 들어갈 글 (고객명 · 서비스·요금제 · 기준까지 자세히)
+            var p = x.pol, sid = clStaffId(r.seller), P = x.k === 'p';
             var memo = [
                 '고객명: ' + (r.name || '-'),
                 '휴대폰: ' + (r.phone || '-'),
                 '가입 통신사: ' + (r.carrier || '-') + ' · 접수처: ' + (r.dealer || '-'),
-                '부가서비스: ' + x.svc,
+                P ? '가입 유형: ' + (r.type || '-') + (x.f.disc ? ' · ' + (x.f.disc === 'sel' ? '선택약정' : '공시지원금') : '') + (x.f.pay ? ' · 유통망지원금 ' + (+x.f.payAmt).toLocaleString('ko-KR') + '원' : '') : '부가서비스: ' + x.svc,
+                P ? '가입 요금제: ' + x.svc : '',
+                P ? '변경 요금제: ' + x.plan2 + (x.keep2 ? ' (유지 ' + x.keep2 + '개월)' : '') + (x.bill2 ? ' · 청구금액 ' + x.bill2 + '원' : '') : '',
                 '개통일: ' + mfXDay(x.open),
-                '해지 가능일: ' + mfXDay(x.date) + ' (이날부터 해지 가능)',
+                (P ? '요금제 변경 가능일: ' : '해지 가능일: ') + mfXDay(x.date) + (P ? ' (이날부터 변경 가능)' : ' (이날부터 해지 가능)'),
                 '기준: ' + (x.base === 'pol' ? '모바일 정책서 [' + p.tag + '] ' + mfXPolText(p) : '적은 유지기간 ' + x.n + '개월 (' + mfXWhy(x) + ')'),
                 '적은 유지기간: ' + (x.ns ? x.n + '개월' + (x.base === 'pol' ? (x.same ? ' (정책서와 일치)' : ' ⚠ 정책서와 달라요 → 정책서 날짜로 등록') : '') : '없음'),
-                r.model ? '모델: ' + r.model : '', r.plan ? '요금제: ' + r.plan : '',
+                r.model ? '모델: ' + r.model : '', !P && r.plan ? '요금제: ' + r.plan : '',
                 '판매자: ' + (r.seller || staffName(sid)),
-                '※ 고객에게 먼저 안내한 뒤 부가서비스를 해지해 주세요.'
+                P ? '※ 변경 날짜에 고객에게 전화(부재 시 문자)한 뒤 변경 요금제로 바꿔 주세요.' : '※ 고객에게 먼저 안내한 뒤 부가서비스를 해지해 주세요.'
             ].filter(Boolean).join('\n').slice(0, 1900);
-            return { title: ('📵 부가서비스 해지 가능 · ' + (r.name || '고객') + ' · ' + x.svc).slice(0, 120), memo: memo, sid: sid, date: x.date };
+            var title = P ? '📱 요금제 변경 · ' + (r.name || '고객') + ' · ' + x.svc + ' → ' + x.plan2 : '📵 부가서비스 해지 가능 · ' + (r.name || '고객') + ' · ' + x.svc;
+            return { title: title.slice(0, 120), memo: memo, sid: sid, date: x.date };
         }
-        function regXCal(M, r) {   // 드라이브 저장 때마다: 해지 가능일 일정 만들기 / 바뀌면 고치기 / 부가서비스를 지우면 일정도 지우기 → 알림 문구
-            if (!db || !r || r.kind !== 'mobile' || !M.sheet) return '';
-            var x = mfXCalc(M.sheet), ev = r.xev ? db.events.filter(function (e) { return e.id === r.xev; })[0] || null : null, t = ev ? evTask(ev) : null;
-            if (!x.svc || !x.date) {
-                if (ev && !(t && closed(t))) { regXDrop(r); return ' 부가서비스 해지 일정은 지웠어요.'; }
-                if (!ev) delete r.xev;
-                return '';
-            }
-            var info = regXInfo(r, x);
-            var warn = x.base === 'pol' ? (x.ns && !x.same ? ' ⚠ 적은 유지기간이 정책서와 달라 정책서 날짜로 넣었어요.' : '') : ' (' + mfXWhy(x).replace(/^⚠ /, '') + ' → 적은 ' + x.n + '개월로 계산)';
-            if (ev) {
-                if (t && closed(t)) return '';   // 이미 끝낸 해지 업무는 그대로
-                if (ev.date === info.date && ev.title === info.title && ev.memo === info.memo && ev.staffId === info.sid) return '';
-                var moved = ev.date !== info.date;
-                ev.title = info.title; ev.date = info.date; ev.memo = info.memo; ev.staffId = info.sid; evSyncTask(ev); stamp(ev);
-                return ' 부가서비스 해지 일정을 ' + (moved ? mfXDay(info.date) + '로 옮겼어요.' : '고쳤어요.') + warn;
-            }
-            if (r.xev) return '';   // 직접 지운 해지 일정은 다시 만들지 않음
-            var ne = stamp({ id: uid(), title: info.title, date: info.date, time: '', staffId: info.sid, memo: info.memo, u: 0 });
-            db.events.push(ne); evMakeTask(ne); stamp(ne); r.xev = ne.id;
-            return ' ' + mfXDay(info.date) + ' 부가서비스 해지 가능일을 ' + staffName(info.sid) + ' 님 캘린더·할 일에 넣었어요.' + warn;
+        function regKCal(M, r, k) {   // 드라이브 저장 때마다: 일정 만들기 / 바뀌면 고치기 / 없어지면 지우기 → 결과 (팝업·알림용)
+            var P = k === 'p', key = P ? 'pev' : 'xev', label = P ? '요금제 변경일' : '부가서비스 해지 가능일';
+            var x = P ? mfPCalc(M.sheet) : mfXCalc(M.sheet);
+            var want = !!(x.svc && x.date && (!P || x.plan2));
+            var info = want ? regKInfo(r, x) : null, res = regEvSync(r, key, info);
+            res.k = k; res.label = label; res.x = x; res.info = info;
+            res.warn = !info ? '' : x.base === 'pol' ? (x.ns && !x.same ? '적은 유지기간(' + x.n + '개월)이 정책서와 달라 정책서 날짜로 넣었어요' : '') : mfXWhy(x).replace(/^⚠ /, '') + ' → 적은 ' + x.n + '개월로 계산했어요';
+            res.ok = info && /^(new|move|edit|same)$/.test(res.st) ? regEvCheck(r, key, info) : null;
+            return res;
+        }
+        function regKMsg(res) {   // 알림 한 줄
+            if (res.st === 'fail') return ' (' + res.label + ' 등록은 실패했어요. 캘린더에 직접 넣어 주세요)';
+            var d = res.info ? mfXDay(res.info.date) : '', w = res.warn ? ' (' + res.warn + ')' : '';
+            if (res.st === 'new') return ' ' + d + ' ' + res.label + '을 ' + staffName(res.info.sid) + ' 님 캘린더·할 일에 넣었어요.' + w;
+            if (res.st === 'move') return ' ' + res.label + ' 일정을 ' + d + '로 옮겼어요.' + w;
+            if (res.st === 'edit') return ' ' + res.label + ' 일정을 고쳤어요.' + w;
+            if (res.st === 'drop') return ' ' + res.label + ' 일정은 지웠어요.';
+            return '';
         }
         function regUpsert(M, y, m, d) {   // 드라이브 저장 성공 → 장부에 추가 (같은 확인서를 다시 저장하면 그 줄을 고침)
             if (!db || !M.sheet) return false;
@@ -5237,8 +5372,12 @@
             } else {
                 rec.id = uid(); rec.u = 0; db.regs.push(stamp(rec)); M.regId = rec.id;
             }
-            M.xMsg = '';
-            try { M.xMsg = regXCal(M, ex || rec); stamp(ex || rec); } catch (xe) { M.xMsg = ' (부가서비스 해지 일정 등록은 실패했어요. 캘린더에 직접 넣어 주세요)'; }
+            M.xMsg = ''; M.calRes = [];
+            if (rec.kind === 'mobile') ['x', 'p'].forEach(function (k) {   // 부가서비스 해지 가능일 · 요금제 변경일 → 캘린더·담당자 할 일
+                var res; try { res = regKCal(M, ex || rec, k); } catch (xe) { res = { k: k, st: 'fail', label: k === 'p' ? '요금제 변경일' : '부가서비스 해지 가능일' }; }
+                M.calRes.push(res); M.xMsg += regKMsg(res);
+            });
+            stamp(ex || rec);
             state.regYm = rec.date.slice(0, 7);
             commit();
             glQueueReg(ex || rec);   // 사거리가입고객리스트에도 한 줄 (암호화해서)
@@ -5304,9 +5443,9 @@
         function regDelText(r) { return '"' + (r.name || '(이름 없음)') + '" ' + mdText(r.date) + ' ' + (r.kind === 'mobile' ? '모바일' : '유선') + ' 줄을 지울까요?\n가입 장부와 거래처별 개통 확인에서 함께 지워져요. (드라이브에 저장된 확인서 파일은 그대로예요)' + delNote(); }
         function regRemove(r) {   // 장부 한 줄 삭제 (대표만)
             if (!isBoss()) { toast('가입 장부 삭제는 대표만 할 수 있어요.'); return; }
-            var xd = regXDrop(r);
+            var xd = regEvDrop(r, 'xev'), pd = regEvDrop(r, 'pev');
             db.regs = db.regs.filter(function (x) { return x.id !== r.id; }); tomb(r.id); delete regDraft[r.id];
-            commit('가입 장부에서 지웠어요.' + (xd ? ' 부가서비스 해지 일정도 지웠어요.' : ''));
+            commit('가입 장부에서 지웠어요.' + (xd ? ' 부가서비스 해지 일정도 지웠어요.' : '') + (pd ? ' 요금제 변경 일정도 지웠어요.' : ''));
         }
         function regDelBtn(r) {   // 대표에게만 보이는 [삭제]
             if (!isBoss()) return null;
