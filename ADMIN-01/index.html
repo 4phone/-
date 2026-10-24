@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-QxHJLIHP6NT6tTqRY2cr7gLywkusyFdF0YBHg73le2U='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oF8SCwJh34IRaUCa9wkhbXx9HcGJQ8rpZZMnNsHs6tE='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1010,6 +1010,7 @@
         .mf-sheet .mf-prow .mf-in.short { flex: 0 0 46px; width: 46px; min-width: 0; }
         .mf-prow .mf-xend { min-width: 0; padding: 2px 2px; }
         .mf-done-dlg { max-width: 560px; }
+        .form-meta { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); word-break: keep-all; }
         .mf-done-who { margin: 0 0 8px; font-weight: 700; font-size: 15px; }
         .mf-done-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
         .mf-done-li { display: flex; flex-direction: column; gap: 2px; padding: 9px 11px; border-radius: 10px; background: #EEF8F1; border: 1px solid #CFE3D6; font-size: 14px; word-break: keep-all; overflow-wrap: anywhere; }
@@ -1512,7 +1513,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-23.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-24.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1637,6 +1638,8 @@
                 if (!e || !isYmd(e.date) || !str(e.title, 120).trim()) return;
                 out.events.push({ id: str(e.id, 40) || uid(), title: str(e.title, 120).trim(), date: e.date, time: /^\d{2}:\d{2}$/.test(e.time || '') ? e.time : '', staffId: okStaff(e.staffId), memo: str(e.memo, 2000), u: num(e.u), b: num(e.b) });
                 if (str(e.taskId, 40)) out.events[out.events.length - 1].taskId = str(e.taskId, 40);   // 이 일정으로 만든 할 일
+                if (e.noTask === 1) out.events[out.events.length - 1].noTask = 1;
+                if (str(e.by, 40)) out.events[out.events.length - 1].by = str(e.by, 40);   // 등록한 사람 (2026-10-24부터)   // 업무에서 할 일을 직접 지움 (자동으로 다시 만들지 않음)
             });
             list(d.notices, 50000).forEach(function (n) {
                 if (!n || !str(n.title, 120).trim()) return;
@@ -1986,6 +1989,7 @@
                     }))));
                 } else { if (f.half) field.classList.add('half'); body.appendChild(field); }
             });
+            if (cfg.meta) body.appendChild(h('p', { class: 'form-meta', 'data-meta': '1' }, cfg.meta));
             var cancel = h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기');
             var save = h('button', { type: 'submit', class: 'btn btn-primary' }, cfg.saveText || '저장');
             var foot = h('div', { class: 'dlg-foot' });
@@ -2022,6 +2026,37 @@
             var t = { id: uid(), title: e.title, staffId: e.staffId || me, due: e.date, priority: 'normal', status: 'todo', memo: evTaskMemo(e), u: 0, evId: e.id };
             db.tasks.push(stamp(t)); e.taskId = t.id;
             return t;
+        }
+        /* 자동으로 만든 일정(재케어 · 부가서비스 해지 가능 · 요금제 변경)은 담당자 할 일이 꼭 있어야 함
+           → 오늘·앞으로 일정인데 할 일이 없으면 다시 만듦 (업무에서 직접 지운 할 일은 noTask 표시가 있어 다시 만들지 않음)
+           할 일 번호는 일정 번호로 정해서, 여러 기기가 동시에 고쳐도 할 일이 두 개 생기지 않음 */
+        var AUTO_EV = /^(📞 재케어 · |📵 부가서비스 해지 가능 · |📱 요금제 변경 · )/;
+        function autoTaskFix(e) {
+            if (!e || !AUTO_EV.test(e.title || '') || e.noTask || !e.staffId || !staffById(e.staffId) || evTask(e)) return false;
+            var tid = String(e.id).slice(0, 37) + '-t', had = db.tasks.filter(function (t) { return t.id === tid; })[0];
+            if (had) { if (e.taskId !== tid) { e.taskId = tid; stamp(e); } if (had.evId !== e.id) { had.evId = e.id; stamp(had); } return true; }
+            if (db.del[tid]) { e.noTask = 1; stamp(e); return false; }   // 다시 만든 할 일을 직접 지웠던 경우
+            db.tasks.push(stamp({ id: tid, title: e.title, staffId: e.staffId, due: e.date, priority: 'normal', status: 'todo', memo: evTaskMemo(e), u: 0, evId: e.id }));
+            e.taskId = tid; stamp(e);
+            return true;
+        }
+        function autoTaskHeal() {   // 동기화를 마친 뒤 (모든 기기 내용이 합쳐진 상태에서) → 고친 건수
+            if (!db || !db.events) return 0;
+            var today = ymd(new Date()), n = 0;
+            db.events.forEach(function (e) { if (e.date >= today && autoTaskFix(e)) n++; });
+            return n;
+        }
+        function idTime(id) {   // uid()로 만든 번호 'i' + 만든 시각(36진수 8자리) + 임의 6자리 → 만든 시각 (모르면 0)
+            var m = /^i([0-9a-z]{8})[0-9a-z]{4,8}$/.exec(String(id || '')); if (!m) return 0;
+            var t = parseInt(m[1], 36); return t > Date.UTC(2024, 0, 1) && t < Date.now() + 86400000 ? t : 0;
+        }
+        function whenText(t) { var d = new Date(t), hh = d.getHours(); return d.getFullYear() + '년 ' + koDate(ymd(d)) + ' ' + (hh < 12 ? '오전 ' : '오후 ') + ((hh % 12) || 12) + ':' + String(d.getMinutes()).padStart(2, '0'); }
+        function evMetaText(e) {   // 일정 수정 창 아래: 등록 · 마지막 수정
+            if (!e) return '';
+            var c = idTime(e.id), by = e.by && staffById(e.by) ? staffName(e.by) : '', out = [];
+            out.push('등록: ' + (c ? whenText(c) : '알 수 없음') + (by ? ' · ' + by : ''));
+            if (e.u && (!c || e.u - c > 60000)) out.push('마지막 수정: ' + whenText(e.u));
+            return out.join('   ');
         }
         function evSyncTask(e) {   // 일정을 고치면 연결된 할 일도 (끝난 할 일은 제목만)
             var t = evTask(e); if (!t) return;
@@ -2060,7 +2095,7 @@
                 ].concat(linked ? [] : [{ key: 'mkTask', label: '할 일에도 등록 (완료·내일로 옮기기가 캘린더에 같이 반영돼요)', type: 'checkbox', value: isNew }]),
                 validate: function (v) { return isYmd(v.date) ? null : '날짜를 올바르게 입력해 주세요.'; },
                 onSave: function (v) {
-                    if (isNew) { var ne = stamp({ id: uid(), title: v.title, date: v.date, time: v.time, staffId: v.staffId, memo: v.memo, u: 0 }); db.events.push(ne); if (v.mkTask) { evMakeTask(ne); stamp(ne); } }
+                    if (isNew) { var ne = stamp({ id: uid(), title: v.title, date: v.date, time: v.time, staffId: v.staffId, memo: v.memo, u: 0, by: me }); db.events.push(ne); if (v.mkTask) { evMakeTask(ne); stamp(ne); } }
                     else { ev.title = v.title; ev.date = v.date; ev.time = v.time; ev.staffId = v.staffId; ev.memo = v.memo; if (linked) evSyncTask(ev); else if (v.mkTask) evMakeTask(ev); stamp(ev); }
                     state.selDate = v.date; var d = parseYmd(v.date); state.calY = d.getFullYear(); state.calM = d.getMonth();
                     commit(isNew ? '일정을 저장했어요.' : '일정을 수정했어요.');
@@ -2072,6 +2107,7 @@
                     else if (lt) { delete lt.evId; stamp(lt); }
                     commit('일정을 삭제했어요.' + (lt && !closed(lt) ? ' 연결된 할 일도 지웠어요.' : ''));
                 },
+                meta: isNew ? '' : evMetaText(ev),
                 deleteConfirm: '이 일정을 삭제할까요?' + (linked && !closed(linked) ? '\n연결된 할 일 "' + linked.title + '"도 함께 지워져요.' : '') + delNote()
             });
         }
@@ -2126,7 +2162,7 @@
                     commit(isNew ? '업무를 저장했어요.' : '업무를 수정했어요.' + (t && t.evId && taskEv(t) ? ' (캘린더에도 반영)' : ''));
                     if (pre.after) setTimeout(pre.after, 30);
                 },
-                onDelete: isNew ? null : function () { var le = taskEv(t); db.tasks = db.tasks.filter(function (x) { return x.id !== t.id; }); tomb(t.id); if (le) { delete le.taskId; stamp(le); } commit('업무를 삭제했어요.' + (le ? ' 캘린더 일정은 그대로 남아요.' : '')); },
+                onDelete: isNew ? null : function () { var le = taskEv(t); db.tasks = db.tasks.filter(function (x) { return x.id !== t.id; }); tomb(t.id); if (le) { delete le.taskId; if (AUTO_EV.test(le.title || '')) le.noTask = 1; stamp(le); } commit('업무를 삭제했어요.' + (le ? ' 캘린더 일정은 그대로 남아요.' : '')); },
                 deleteConfirm: '이 업무를 삭제할까요?' + delNote()
             });
         }
@@ -3261,6 +3297,8 @@
                 var wasOk = driveState.status === 'ok';
                 driveState = { status: 'ok', at: new Date(), msg: '' };
                 if (info.changedLocal || info.changedRev || info.pushed || info.marked) saveDb();
+                var healed = 0; try { healed = autoTaskHeal(); } catch (he) { healed = 0; }
+                if (healed) { saveDb(); info.changedLocal = true; requestSync(DRIVE_PUSH_DELAY_MS); }   // 빠졌던 담당자 할 일을 다시 넣었으면 바로 올림
                 if (info.changedLocal || !wasOk) render();
                 fetchAcctQuiet();
                 if (info.conflicts) toast('같은 항목을 동시에 고친 내용이 있어서 한쪽을 "[충돌본]"으로 함께 보관했어요. 확인한 뒤 필요 없는 쪽을 삭제해 주세요.');
@@ -5311,7 +5349,7 @@
                 return { st: moved ? 'move' : 'edit' };
             }
             if (r[key]) return { st: 'skip' };   // 캘린더에서 직접 지운 일정은 다시 만들지 않음
-            var ne = stamp({ id: uid(), title: info.title, date: info.date, time: '', staffId: info.sid, memo: info.memo, u: 0 });
+            var ne = stamp({ id: uid(), title: info.title, date: info.date, time: '', staffId: info.sid, memo: info.memo, u: 0, by: me });
             db.events.push(ne); evMakeTask(ne); stamp(ne); r[key] = ne.id;
             return { st: 'new' };
         }
@@ -8505,13 +8543,15 @@
             if (!ok) { if (ev && clRecareDrop(r)) { save(); return ' 재케어 일정은 지웠어요.'; } delete r.rc; delete r.rcd; return ''; }
             var sc = clColBy(s, 'staff'), sid = clStaffId(sc ? r.v[sc.k] : ''), due = nextWorkDay(date, sid), info = clRecareInfo(r, s);   // 담당자 휴무면 휴무 다음 근무일
             if (ev) {   // 이미 있는 일정: 등록 날짜를 고쳤을 때만 날짜·담당자를 따라 옮김 (직접 옮긴 일정은 그대로)
+                var fixed = ev.date >= today && autoTaskFix(ev);   // 담당자 할 일이 빠져 있으면 다시
                 var t = evTask(ev);
                 if (r.rcd && r.rcd !== date && !(t && closed(t)) && due >= today) { ev.date = due; ev.staffId = sid; ev.title = info.title; ev.memo = info.memo; evSyncTask(ev); stamp(ev); r.rcd = date; save(); return ' 재케어 일정을 ' + koDate(due) + '로 옮겼어요.'; }
+                if (fixed) { save(); return ' 빠져 있던 재케어 할 일을 ' + staffName(ev.staffId) + ' 님 업무에 다시 넣었어요.'; }
                 return '';
             }
             if (r.rc) return '';            // 직접 지운 재케어 일정은 다시 만들지 않음
             if (due < today) return '';     // 이미 지난 날짜는 만들지 않음 (예전 상담)
-            var ne = stamp({ id: uid(), title: info.title, date: due, time: '', staffId: sid, memo: info.memo, u: 0 });
+            var ne = stamp({ id: uid(), title: info.title, date: due, time: '', staffId: sid, memo: info.memo, u: 0, by: me });
             db.events.push(ne); evMakeTask(ne); stamp(ne);
             r.rc = ne.id; r.rcd = date; save();
             return ' ' + koDate(due) + ' 재케어 일정을 ' + staffName(sid) + ' 님 캘린더·업무에 넣었어요.';
