@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-BK9mtQlQ1FlomiB8Dc64fE16ufq34HeHQJnkOCmZhKk='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7jpOIwMWha3NknNUUi4baRIJEmE7Tcc8LNGuwhPeuQU='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1191,6 +1191,18 @@
         .pol-sps .btn[aria-pressed="true"] { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
         .pol-search { display: flex; gap: 8px; align-items: center; }
         .pol-search input { max-width: 340px; }
+        .pa-list { display: flex; flex-direction: column; gap: 6px; padding: 10px 16px 14px; }
+        .pa-grp { margin-top: 6px; font-size: 13px; font-weight: 800; color: var(--c); }
+        .pa-row { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1.1fr) auto; gap: 8px; align-items: center; width: 100%; text-align: left; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font: inherit; font-size: 14px; cursor: pointer; }
+        .pa-row:hover { border-color: var(--c); }
+        .pa-row.on { background: #EAF2FC; border-color: var(--c); box-shadow: inset 4px 0 0 var(--c); }
+        .pa-n { font-weight: 800; word-break: keep-all; } .pa-n small { display: block; font-weight: 600; font-size: 12px; color: var(--muted); }
+        .pa-p { font-variant-numeric: tabular-nums; } .pa-f { font-weight: 800; color: #1F6B2A; font-variant-numeric: tabular-nums; }
+        .pa-b { justify-self: end; font-size: 12.5px; font-weight: 800; color: var(--c); white-space: nowrap; }
+        .pa-row.on .pa-b { color: #1F6B2A; }
+        .pa-how { font-size: 13px; color: var(--muted); word-break: keep-all; }
+        .pa-note { border-color: #9DBBE3; background: #EAF2FC; }
+        @media (max-width: 700px) { .pa-row { grid-template-columns: minmax(0, 1fr) auto; } .pa-n { grid-column: 1 / -1; } .pa-b { grid-column: 1 / -1; justify-self: start; } }
         .pol-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; margin-bottom: 18px; overflow: hidden; }
         .pol-head { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; padding: 12px 16px; background: var(--c); color: #fff; }
         .pol-head h2 { font-size: 21px; font-weight: 900; letter-spacing: -0.5px; }
@@ -1513,7 +1525,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-26.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-26.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -6284,7 +6296,7 @@
             var out = { v: 1, date: str(d.date, 40), title: str(d.title, 40), src: str(d.src, 200), carriers: [] };
             d.carriers.slice(0, 30).forEach(function (c) {
                 if (!c || !str(c.id, 20) || !str(c.name, 30) || !Array.isArray(c.groups)) return;
-                var cc = { id: str(c.id, 20), name: str(c.name, 30), sub: str(c.sub, 160), color: /^#[0-9a-fA-F]{6}$/.test(c.color || '') ? c.color : '#3E441E', closed: !!c.closed,
+                var cc = { id: str(c.id, 20), name: str(c.name, 30), sub: str(c.sub, 160), color: /^#[0-9a-fA-F]{6}$/.test(c.color || '') ? c.color : '#3E441E', closed: !!c.closed, addon: !!c.addon || str(c.id, 20) === 'caps',
                     guide: {}, penalty: str(c.penalty, 80), comb: str(c.comb, 400), groups: [], extra: polStrs(c.extra, 60, 300), refund: polStrs(c.refund, 40, 300), notes: polStrs(c.notes, 40, 400),
                     region: Array.isArray(c.region) ? c.region.slice(0, 40).filter(function (r) { return Array.isArray(r) && str(r[0], 30) && str(r[1], 600); }).map(function (r) { return [str(r[0], 30), str(r[1], 600)]; }) : [], regionNote: str(c.regionNote, 200) };
                 var gd = c.guide && typeof c.guide === 'object' ? c.guide : {};
@@ -6358,7 +6370,7 @@
                         h('small', {}, ((P.data && P.data.date) ? P.data.date + ' 기준 · ' : '') + '불러온 시각 ' + (at.getMonth() + 1) + '/' + at.getDate() + ' ' + pad(at.getHours()) + ':' + pad(at.getMinutes()) + (P.by ? ' · ' + P.by : '') +
                             (P.act ? ' · ' + (function (t) { return (t.getMonth() + 1) + '/' + t.getDate() + ' ' + pad(t.getHours()) + ':' + pad(t.getMinutes()); })(new Date(P.act)) + ' 지금 단가표로 바꿈' + (P.actBy ? '(' + P.actBy + ')' : '') : ''))),
                     h('div', { class: 'ph-btns' },
-                        h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ph-view', onclick: function () { state.pol.view = isCur ? '' : P.id; polPick = null; polLast = null; polOn = Object.create(null); closeDlg(); render(); try { window.scrollTo(0, 0); } catch (e) { /* 무시 */ } } }, isCur ? '지금 단가표 보기' : '보기'),
+                        h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ph-view', onclick: function () { state.pol.view = isCur ? '' : P.id; polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); closeDlg(); render(); try { window.scrollTo(0, 0); } catch (e) { /* 무시 */ } } }, isCur ? '지금 단가표 보기' : '보기'),
                         boss && !isCur ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'ph-set', onclick: function () { polSetCur(P); } }, '이 단가표로 바꾸기') : null));
             });
             var form = h('form', { novalidate: true }, h('div', { class: 'dlg-head' }, '단가표 날짜별 보기'),
@@ -6440,7 +6452,70 @@
                 render();
             } }, won(gmax), h('small', {}, gn), on ? h('small', { class: 'p-picked' }, '✔ 짚어 둠') : null);
         }
+        /* ---------- 추가 상품 (ADT캡스 CCTV · 도난안심 보험) ----------
+           인터넷 상품처럼 '짚어 두기'(상담 통신사·상품·요금·오퍼 줄)는 건드리지 않고,
+           누르면 상담 메모의 '재케어 메모' 줄 아래에 따로 줄을 넣어요. 다시 누르면 빠져요. (CCTV 1개 · 보험 1개까지) */
+        var polAdd = Object.create(null);   // { cctv: {key,c,r,g}, ins: {...} }
+        var POL_ADD_KEYS = ['추가 상품 (CCTV)', '추가 상품 (도난안심 보험)', 'CCTV 안내'];
+        function polAddKind(g) { return /보험/.test(g && g.name || '') ? 'ins' : 'cctv'; }
+        function polAddSig() { return ['cctv', 'ins'].map(function (k) { return polAdd[k] ? polAdd[k].key : ''; }).join('|').replace(/^\|$/, ''); }
+        function polAddLines() {   // 고른 추가 상품 → 상담 메모 줄
+            var out = [], cc = polAdd.cctv, ins = polAdd.ins;
+            if (cc) out.push('■ 추가 상품 (CCTV) : ' + cc.c.name.replace(/\s*CCTV\s*$/, '') + ' ' + cc.r.n + ' · 표준요금 월 ' + won(cc.r.p) + ' (VAT별도) · 수수료 ' + won(Math.round(cc.r.t * 10000)) + ' (월정액×400%, 월정액은 계약 시 확정)');
+            if (ins) out.push('■ 추가 상품 (도난안심 보험) : ' + ins.r.n.replace(/^도난안심 보험\s*/, '') + ' · 월 ' + won(ins.r.p));
+            if (cc) out.push('■ CCTV 안내 : 36개월 약정 · 4대 기준 설치비 무료 · SKT 휴대폰 결합 시 월 1,100~5,500원 할인 (동일명의) · 2년 이내 해지 시 수수료 전액 환수');
+            return out;
+        }
+        function clAddPut(t) {   // 상담 메모: 예전 추가 상품 줄은 빼고 '재케어 메모'(이어 적은 줄까지) 바로 아래에 새로 넣음 — 다른 줄은 그대로
+            var lines = String(t == null ? '' : t).split('\n').filter(function (l) { return !POL_ADD_KEYS.some(function (k) { return l.indexOf('■ ' + k) === 0; }); });
+            var add = polAddLines();
+            if (!add.length) return lines.join('\n');
+            if (!lines.some(function (l) { return l.indexOf('■ 재케어 메모') === 0; })) lines = clTplFull(lines.join('\n')).split('\n');
+            var i = -1; lines.forEach(function (l, k) { if (i < 0 && l.indexOf('■ 재케어 메모') === 0) i = k; });
+            var at = i + 1; while (at < lines.length && lines[at].trim() && lines[at].indexOf('■ ') !== 0) at++;
+            lines.splice.apply(lines, [at, 0].concat(add));
+            return lines.join('\n');
+        }
+        function clMemoAddon() {   // 추가 상품을 고르거나 뺄 때마다 상담 메모에 바로 반영
+            var M = cl.memo; if (!M || !M.open) return;
+            var sig = polAddSig(); if (sig === M.asig) return;
+            var first = M.asig == null; M.asig = sig;
+            if (first && !sig) return;   // 새로 연 메모에 고른 추가 상품이 없으면 손대지 않음
+            if (M.P && M.P.memoEl) { var el = M.P.memoEl, v = clAddPut(el.value); if (v !== el.value) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); el.classList.remove('cl-flash'); void el.offsetWidth; el.classList.add('cl-flash'); } }
+            else if (M.min || !M.P) M.raw = clAddPut(M.raw);
+        }
+        function polAddonCard(c, q) {
+            var rows = [];
+            c.groups.forEach(function (g) {
+                var kind = polAddKind(g), list = g.rows.filter(function (r) { return polMatch(r, 'all', q); });
+                if (!list.length) return;
+                rows.push(h('div', { class: 'pa-grp' }, g.name));
+                list.forEach(function (r) {
+                    var key = c.id + '|' + g.name + '|' + r.n, on = !!(polAdd[kind] && polAdd[kind].key === key);
+                    rows.push(h('button', { type: 'button', class: 'pa-row' + (on ? ' on' : ''), 'data-act': 'pol-addon', 'data-key': key, 'aria-pressed': on ? 'true' : 'false', onclick: function () {
+                        if (on) delete polAdd[kind]; else polAdd[kind] = { key: key, c: c, r: r, g: g };
+                        render(); clMemoAddon();
+                        var open = cl.memo && cl.memo.open;
+                        toast(on ? r.n + ' 을(를) 뺐어요.' + (open ? ' 상담 메모에서도 지웠어요.' : '') : r.n + ' 을(를) 골랐어요.' + (open ? ' 상담 메모 [재케어 메모] 아래에 넣었어요.' : ' 상담 메모를 열면 [재케어 메모] 아래에 들어가요.'));
+                    } },
+                        h('span', { class: 'pa-n' }, r.n, r.nt ? h('small', {}, r.nt) : null),
+                        h('span', { class: 'pa-p' }, '월 ' + won(r.p)),
+                        h('span', { class: 'pa-f' }, r.t > 0 ? '수수료 ' + won(Math.round(r.t * 10000)) : '수수료 표기 없음'),
+                        h('span', { class: 'pa-b' }, on ? '✔ 상담 메모에 추가됨' : '＋ 상담 메모에 추가')));
+                });
+            });
+            if (!rows.length) return null;
+            function box(title, items, open) { return items.length ? h('details', { open: open ? true : false }, h('summary', {}, title + ' (' + items.length + ')'), h('ul', {}, items.map(function (t) { return h('li', {}, t); }))) : h('details', {}, h('summary', {}, title + ' (없음)')); }
+            return h('section', { class: 'pol-card pol-addon', style: '--c:' + c.color, 'data-car': c.id },
+                h('div', { class: 'pol-head' }, h('h2', {}, c.name), h('span', {}, c.sub)),
+                h('div', { class: 'pol-info' },
+                    h('div', {}, c.comb ? h('div', { class: 'pol-comb' }, '결합: ' + c.comb) : null),
+                    h('div', { class: 'pa-how' }, '눌러서 고르면 상담 메모 [재케어 메모] 아래에 들어가요. 짚어 둔 인터넷 상품 줄은 그대로예요. (CCTV 1개 · 보험 1개까지 · 다시 누르면 빠져요)')),
+                h('div', { class: 'pa-list' }, rows),
+                h('div', { class: 'pol-more' }, box('수수료 · 확인 사항', c.extra, true), box('해지 · 환수 기준', c.refund, false), box('결합 조건', c.notes, false)));
+        }
         function polCard(c, sp, q) {
+            if (c.addon) return polAddonCard(c, q);
             var rows = [], shown = 0;
             c.groups.forEach(function (g) {
                 var list = g.rows.filter(function (r) { return polMatch(r, sp, q); });
@@ -7619,11 +7694,12 @@
             var viewBar = viewing ? h('div', { class: 'ph-viewbar', role: 'status' },
                 h('span', {}, '📅 이전 단가표를 보는 중: ', h('b', {}, polLabel(P)), ' — 지금 단가표는 ', h('b', {}, polLabel(CUR)), '이에요. (이 기기에서만 보여요)'),
                 h('div', { class: 'ph-btns' },
-                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ph-back', onclick: function () { state.pol.view = ''; polPick = null; polLast = null; polOn = Object.create(null); render(); } }, '지금 단가표로 돌아가기'),
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ph-back', onclick: function () { state.pol.view = ''; polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); render(); } }, '지금 단가표로 돌아가기'),
                     boss ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', onclick: function () { polSetCur(P); } }, '이 단가표로 바꾸기') : null)) : null;
             return h('div', {}, head, viewBar, meta, viewing ? null : hpBar(D),
                 h('div', { class: 'pol-tools' }, h('div', { class: 'pol-row1' }, cars, acts), h('div', { class: 'pol-search' }, q, h('div', { class: 'pol-sps' }, sps)),
-                    picked ? h('div', { class: 'pol-picknote' }, '선택: ', h('b', {}, picked.c.name + ' · ' + picked.r.n), polPick ? ' · ' + polStageText(polPick) : '', h('button', { type: 'button', class: 'link-btn', onclick: function () { polPick = null; polLast = null; polOn = Object.create(null); render(); } }, '선택 지우기')) : null),
+                    polAddSig() ? h('div', { class: 'pol-picknote pa-note' }, '추가 상품: ', h('b', {}, ['cctv', 'ins'].filter(function (k) { return polAdd[k]; }).map(function (k) { return polAdd[k].r.n; }).join(' · ')), h('button', { type: 'button', class: 'link-btn', 'data-act': 'pol-addon-clear', onclick: function () { polAdd = Object.create(null); render(); clMemoAddon(); } }, '추가 상품 빼기')) : null,
+                    picked ? h('div', { class: 'pol-picknote' }, '선택: ', h('b', {}, picked.c.name + ' · ' + picked.r.n), polPick ? ' · ' + polStageText(polPick) : '', h('button', { type: 'button', class: 'link-btn', onclick: function () { polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); render(); } }, '선택 지우기')) : null),
                 cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '조건에 맞는 요금제가 없어요. 통신사·속도·검색어를 바꿔 보세요.')),
                 D.src ? h('p', { class: 'ib-help' }, '출처: ' + D.src + ' · 결합요금은 각 통신사 공식 홈페이지의 가족결합 인터넷 할인 기준(3년 약정)이에요. SK 인터넷+TV는 표 요금이 인터넷·TV 결합할인(광랜 1,100 / 기가 5,500) 적용가라서, 휴대폰 결합 시 그 할인을 되돌린 뒤 휴대폰 결합할인을 빼요(+표시). KT는 단독 500M·1G만 휴대폰 결합 시 5,500원이 한 번 더 빠지고, TV를 함께 쓰면 5,500원까지예요.') : null);
         }
@@ -8827,7 +8903,7 @@
         function clMemoOpen() {
             if (!driveOn()) { toast('상담 메모는 공유 저장소를 연결한 기기에서 쓸 수 있어요.'); return; }
             if (!cl.memo) cl.memo = { open: false, min: false, sheet: '', el: null, P: null, built: '', vals: null, st: 'n', raw: null, sig: null };
-            if (!cl.memo.open) cl.memo.sig = null;   // 새로 열면 지금 짚어 둔 상품부터 넣음
+            if (!cl.memo.open) { cl.memo.sig = null; cl.memo.asig = null; }   // 새로 열면 지금 짚어 둔 상품 · 고른 추가 상품부터 넣음
             cl.memo.open = true; cl.memo.min = false;
             if (!cl.data && !cl.busy) clLoad(true);
             clMemoPaint();
@@ -8872,7 +8948,7 @@
             toast(pk.c.name + ' · ' + pk.r.n + ' 을(를) 상담 메모에 넣었어요.');
         }
         function clMemoStash() { var M = cl.memo; if (M && M.P) { M.vals = M.P.values(); M.st = M.P.st; if (M.P.memoEl) M.raw = M.P.memoEl.value; } }
-        function clMemoBlank(M) { M.P = null; M.built = ''; M.vals = null; M.st = 'n'; M.raw = null; M.sig = null; M.draftId = ''; }
+        function clMemoBlank(M) { M.P = null; M.built = ''; M.vals = null; M.st = 'n'; M.raw = null; M.sig = null; M.asig = null; M.draftId = ''; }
         function clDraftHas(s, v, raw) {   // 새 메모 기본값(순번·날짜·청약일·담당자 등)만 있으면 '내용 없음'
             var base = clNewRowVals(s);
             var any = Object.keys(v).some(function (k) { var c = s.cols.filter(function (x) { return x.k === k; })[0], kd = c ? clColKind(c) : 'no'; return kd !== 'no' && kd !== 'date' && kd !== 'time' && kd !== 'staff' && String(v[k] || '').trim() !== String(base[k] || '').trim() && !(c && /상담내용/.test(c.l.replace(/\s/g, ''))); });
@@ -8985,12 +9061,12 @@
                 }
                 M.open = false; clMemoBlank(M); clMemoPaint();
                 if (polPick || polLast) polToIdr(); else { state.view = 'idreq'; render(); }
-                polPick = null; polLast = null; polOn = Object.create(null);
+                polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null);
                 setTimeout(function () { toast('판매성공 — 상담 리스트 "' + s.name + '"에 저장하고 신분증 요청으로 왔어요. 고객 이름을 적고 링크를 보내 주세요. (번호는 가입 확인서 저장 때 저장돼요)'); try { (U.name.value ? U.phone : U.name).focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }, 80);
                 return;
             }
             M.open = false; clMemoBlank(M); clMemoPaint();
-            polPick = null; polLast = null; polOn = Object.create(null);   // 상담 끝: 단가표 선택도 비워서 다음 고객은 새로 시작
+            polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null);   // 상담 끝: 단가표 선택도 비워서 다음 고객은 새로 시작
             state.view = 'consult'; cl.sheet = s.id; cl.st = 'all'; cl.q = ''; cl.hl = row.id;
             render();
             setTimeout(function () { var tr = document.querySelector('tr[data-row="' + row.id + '"]'); if (tr) tr.scrollIntoView({ block: 'center' }); }, 60);
@@ -8998,7 +9074,7 @@
             toast('상담 리스트 "' + s.name + '"에 저장했어요.' + rcMsg);
             clProspect(row, s);   // 판매성공이 아니면 '가망' 연락처로 번호 저장
         }
-        function clMemoPaint() { clMemoPaint0(); clMemoAuto(); clTabsPos(); }
+        function clMemoPaint() { clMemoPaint0(); clMemoAuto(); clMemoAddon(); clTabsPos(); }
         function clTabsPos() {   // 시트 탭: 처음엔 맨 뒤(최근 달)가 보이게, 그 뒤엔 보던 자리 그대로
             var t = document.querySelector('.cl-tabs'); if (!t) return;
             if (!t.getAttribute('data-sx')) { t.setAttribute('data-sx', '1'); t.addEventListener('scroll', function () { cl.tabX = t.scrollLeft; }, { passive: true }); }
