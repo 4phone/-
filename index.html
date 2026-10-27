@@ -21,13 +21,28 @@
     <!-- [추가] 첫 화면·제목용 글꼴 (Noto Sans KR 가는 굵기, Noto Serif KR 명조, Cormorant Garamond 영문 장식) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap"></noscript>
     
     <!-- 다음/카카오 주소 검색 API -->
-    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script defer src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 
     <!-- [추가] 카카오맵 API 연동 마법의 열쇠 -->
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=4f0f0fafb89730a9e1f316b339e8fae2&libraries=services"></script>
+    <script>
+        /* 카카오맵은 처음 화면을 늦추지 않게 '필요할 때' 불러와요 (페이지가 다 뜬 뒤 미리 받아 두기도 함) */
+        function sgKakaoLoad(cb) {
+            if (window.kakao && kakao.maps && kakao.maps.services) { cb(true); return; }
+            var q = sgKakaoLoad.q; if (q) { q.push(cb); return; } q = sgKakaoLoad.q = [cb];
+            function done(ok) { var a = sgKakaoLoad.q || []; sgKakaoLoad.q = null; if (!ok) sgKakaoLoad.fail = true; a.forEach(function (f) { try { f(ok); } catch (e) { console.error(e); } }); }
+            var t = setTimeout(function () { done(false); }, 12000);
+            var s = document.createElement('script');
+            s.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=4f0f0fafb89730a9e1f316b339e8fae2&libraries=services&autoload=false';
+            s.onload = function () { try { kakao.maps.load(function () { clearTimeout(t); done(!!(kakao.maps && kakao.maps.services)); }); } catch (e) { clearTimeout(t); done(false); } };
+            s.onerror = function () { clearTimeout(t); done(false); };
+            document.head.appendChild(s);
+        }
+        window.addEventListener('load', function () { setTimeout(function () { sgKakaoLoad(function () {}); }, 2500); });
+    </script>
 
     <style>
         :root { --main-bg: #F3F7F6; --point-color: #1F5A5E; --gold-color: #FFD700; --fire-orange: #FF5722; --footer-bg: #EAEFE9; --footer-text: #555555; --ink: #0E2A30; --sub-ink: #3D5A5E; --muted-ink: #62797C; --line: #DCE7E5; --olive-dark: #134047; --olive-soft: #E6F1EF; }   /* 청록 테마 기본 색 (2026-10) */
@@ -591,14 +606,14 @@
         .sg-hero-inner { position: relative; z-index: 1; max-width: 1600px; margin: 0 auto; box-sizing: border-box; padding: 136px 140px 110px 96px; min-height: 760px; display: flex; align-items: center; }
         .sg-hero-copy { position: relative; flex: 1 1 auto; min-width: 0; max-width: 1200px; }
         .sg-eyebrow { display: flex; align-items: center; gap: 14px; margin-bottom: 34px; }
-        .sg-rule { display: block; width: 56px; height: 1px; background: var(--sg-gold); transform-origin: left; animation: sgRule 1.2s cubic-bezier(.2,.7,.2,1) .25s both; }
+        .sg-rule { display: block; width: 56px; height: 1px; background: var(--sg-gold); transform-origin: left; animation: sgRule .6s cubic-bezier(.2,.7,.2,1) 0s both; }
         .sg-eyebrow-en { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 20px; letter-spacing: 3px; color: var(--sg-gold); }
         .sg-eyebrow-sub { font-size: 13px; letter-spacing: 4px; color: rgba(244,250,248,0.62); font-weight: 500; }
         .sg-title { margin: 0; font-family: 'Noto Sans KR', 'Pretendard', sans-serif; font-weight: 300; font-size: clamp(56px, 6.1vw, 96px); line-height: 1.14; letter-spacing: -0.035em; color: #F4FAF8; }
         .sg-mask { display: block; overflow: hidden; padding-bottom: 8px; }
         .sg-mask-2 { overflow: visible; }
-        .sg-l1 { display: block; animation: sgRise 1s cubic-bezier(.2,.7,.2,1) .2s both; }
-        .sg-l2 { display: flex; align-items: center; gap: 22px; animation: sgRise 1s cubic-bezier(.2,.7,.2,1) .38s both; }
+        .sg-l1 { display: block; animation: sgRise .45s cubic-bezier(.2,.7,.2,1) 0s both; }
+        .sg-l2 { display: flex; align-items: center; gap: 22px; animation: sgRise .45s cubic-bezier(.2,.7,.2,1) .05s both; }
         .sg-gold { font-style: normal; font-family: 'Noto Serif KR', serif; font-weight: 700; letter-spacing: -0.04em; background: linear-gradient(100deg, #D9B66A 0%, #F3DFA8 30%, #FFFFFF 50%, #F3DFA8 70%, #D9B66A 100%); background-size: 220% 100%; background-position: 130% 0; -webkit-background-clip: text; background-clip: text; color: transparent; animation: sgShine 6.5s ease-in-out 1.8s infinite; }
         .sg-mascot { display: inline-block; flex: none; animation: sgPop .9s cubic-bezier(.2,.7,.2,1) .75s both; }
         .sg-mascot-float { display: inline-block; animation: sgFloat 6s ease-in-out 1.7s infinite; }
@@ -669,12 +684,12 @@
         .sg-cue { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px; letter-spacing: 4px; color: rgba(244,250,248,0.55); }
         .sg-cue i { position: relative; display: block; width: 1px; height: 46px; background: rgba(255,255,255,0.14); overflow: hidden; }
         .sg-cue b { position: absolute; inset: 0; background: var(--sg-gold); animation: sgCue 2.4s ease-in-out 2s infinite; }
-        .sg-a-fade { animation: sgFade .9s ease .1s both; }
-        .sg-a2 { animation: sgRise .9s cubic-bezier(.2,.7,.2,1) .7s both; }
-        .sg-a3 { animation: sgRise .9s cubic-bezier(.2,.7,.2,1) .85s both; }
-        .sg-a4 { animation: sgRise .9s cubic-bezier(.2,.7,.2,1) 1s both; }
-        .sg-a5 { animation: sgRise .9s cubic-bezier(.2,.7,.2,1) 1.15s both; }
-        .sg-a6 { animation: sgRise .9s cubic-bezier(.2,.7,.2,1) 1.3s both; }
+        .sg-a-fade { animation: sgFade .4s ease 0s both; }
+        .sg-a2 { animation: sgRise .45s cubic-bezier(.2,.7,.2,1) .08s both; }
+        .sg-a3 { animation: sgRise .45s cubic-bezier(.2,.7,.2,1) .1s both; }
+        .sg-a4 { animation: sgRise .45s cubic-bezier(.2,.7,.2,1) .12s both; }
+        .sg-a5 { animation: sgRise .45s cubic-bezier(.2,.7,.2,1) .14s both; }
+        .sg-a6 { animation: sgRise .45s cubic-bezier(.2,.7,.2,1) .16s both; }
         @keyframes sgRise { from { opacity: 0; transform: translateY(34px); } to { opacity: 1; transform: none; } }
         @keyframes sgFade { from { opacity: 0; } to { opacity: 1; } }
         @keyframes sgSlide { from { opacity: 0; transform: translateX(48px); } to { opacity: 1; transform: none; } }
@@ -1094,6 +1109,70 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
 .p-acts .p-apply-btn { width: 100%; }
 @media (max-width: 900px) { .sgc-fab { bottom: calc(88px + env(safe-area-inset-bottom)); } }
     </style>
+    <style>
+        /* ===== 30초 사은품 확인기 ===== */
+        .sgk { background: #F3F7F6; padding: 56px 20px 40px; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; color: #0E2A30; scroll-margin-top: 80px; }
+        .sgk * { box-sizing: border-box; }
+        .sgk-in { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+        .sgk-head { grid-column: 1 / -1; }
+        .sgk-eye { display: inline-block; font-size: 13px; font-weight: 800; letter-spacing: .4px; color: #8A6418; background: #FBF3DC; border-radius: 999px; padding: 6px 12px; }
+        .sgk-head h2 { margin: 12px 0 6px; font-size: clamp(24px, 3.2vw, 34px); font-weight: 800; letter-spacing: -0.6px; line-height: 1.3; word-break: keep-all; }
+        .sgk-head p { margin: 0; color: #3D5A5E; font-size: 15.5px; word-break: keep-all; }
+        .sgk-opts { background: #FFFFFF; border: 1px solid #DCE7E5; border-radius: 22px; padding: 8px 22px 14px; box-shadow: 0 10px 28px rgba(10,43,50,0.06); }
+        .sgk-step { padding: 16px 0; border-bottom: 1px solid #EEF3F2; }
+        .sgk-step:last-child { border-bottom: 0; }
+        .sgk-step[hidden] { display: none; }
+        .sgk-q { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
+        .sgk-q i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; background: #134047; color: #F3DFA8; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+        .sgk-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+        .sgk-chip { min-height: 46px; padding: 8px 15px; border-radius: 14px; border: 1.5px solid #D4E0DF; background: #F7FAFA; color: #0E2A30; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; flex-direction: column; align-items: flex-start; justify-content: center; line-height: 1.25; text-align: left; }
+        .sgk-chip small { font-size: 11.5px; font-weight: 600; color: #62797C; margin-top: 2px; }
+        .sgk-chip[aria-pressed="true"] { border-color: #134047; background: #134047; color: #FFFFFF; box-shadow: 0 6px 16px rgba(19,64,71,0.22); }
+        .sgk-chip[aria-pressed="true"] small { color: #F3DFA8; }
+        .sgk-chip.rec::after { content: '추천'; margin-top: 3px; font-size: 10.5px; font-weight: 800; color: #8A6418; background: #FBF3DC; border-radius: 999px; padding: 1px 7px; }
+        .sgk-chip:focus-visible { outline: 3px solid #E2C27A; outline-offset: 2px; }
+        .sgk-res { position: sticky; top: 96px; background: #0A2B32; color: #F4FAF8; border-radius: 22px; padding: 22px; box-shadow: 0 18px 40px rgba(5,18,21,0.28); }
+        .sgk-res-k { font-size: 13.5px; color: rgba(244,250,248,0.75); font-weight: 600; }
+        .sgk-gift { display: block; margin: 4px 0 2px; font-size: clamp(30px, 4vw, 40px); font-weight: 800; color: #F3DFA8; letter-spacing: -0.8px; line-height: 1.15; word-break: keep-all; }
+        .sgk-gift small { font-size: 15px; font-weight: 700; color: #F3DFA8; letter-spacing: 0; }
+        .sgk-gnote { font-size: 13px; color: rgba(244,250,248,0.8); }
+        .sgk-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.12); }
+        .sgk-fee { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .sgk-fee small { font-size: 13px; font-weight: 600; color: rgba(244,250,248,0.75); margin-left: 4px; }
+        .sgk-pick { margin-top: 6px; font-size: 13.5px; color: rgba(244,250,248,0.85); word-break: keep-all; }
+        .sgk-cmp { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+        .sgk-cmp li button { width: 100%; display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 9px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); color: #F4FAF8; font-size: 13.5px; font-family: inherit; cursor: pointer; text-align: left; }
+        .sgk-cmp li button b { color: #F3DFA8; white-space: nowrap; }
+        .sgk-cmp li.top button { border-color: rgba(243,223,168,0.6); background: rgba(243,223,168,0.12); }
+        .sgk-go { margin-top: 16px; width: 100%; min-height: 56px; border: 0; border-radius: 14px; background: linear-gradient(135deg, #F3DFA8, #E2C27A); color: #0E343B; font-size: 17px; font-weight: 800; cursor: pointer; font-family: inherit; }
+        .sgk-call { display: block; margin-top: 8px; text-align: center; color: #F4FAF8; font-size: 14.5px; font-weight: 700; text-decoration: none; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); }
+        .sgk-form { margin-top: 14px; display: grid; gap: 8px; }
+        .sgk-form[hidden] { display: none; }
+        .sgk-form input[type=tel], .sgk-form input[type=text] { width: 100%; height: 52px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.25); background: #FFFFFF; color: #0E2A30; padding: 0 14px; font-size: 16px; font-family: inherit; }
+        .sgk-agree { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: rgba(244,250,248,0.85); line-height: 1.45; cursor: pointer; }
+        .sgk-agree input { width: 20px; height: 20px; margin: 1px 0 0; flex: none; accent-color: #E2C27A; }
+        .sgk-agree small { display: block; color: rgba(244,250,248,0.6); font-size: 11.5px; }
+        .sgk-msg { min-height: 18px; margin: 0; font-size: 13.5px; color: #FFB4A0; }
+        .sgk-done { text-align: center; padding: 8px 0 2px; }
+        .sgk-done b { display: block; font-size: 19px; color: #F3DFA8; margin-bottom: 6px; }
+        .sgk-done p { margin: 0; font-size: 14px; color: rgba(244,250,248,0.85); line-height: 1.6; }
+        .sgk-foot { grid-column: 1 / -1; margin: 0; font-size: 12.5px; color: #62797C; word-break: keep-all; }
+        .sgk-wait { color: rgba(244,250,248,0.75); font-size: 15px; }
+        @media (max-width: 900px) {
+            .sgk { padding: 36px 14px 28px; }
+            .sgk-in { grid-template-columns: 1fr; gap: 14px; }
+            .sgk-opts { padding: 4px 16px 10px; border-radius: 18px; }
+            .sgk-chip { min-height: 44px; padding: 7px 12px; font-size: 14.5px; }
+            .sgk-res { position: sticky; top: auto; bottom: calc(82px + env(safe-area-inset-bottom)); padding: 16px 16px 14px; border-radius: 18px; z-index: 5; }
+            .sgk-gift { font-size: 28px; }
+            .sgk-cmp { display: none; }
+            .sgk-res:not(.form-on) .sgk-call { display: none; }
+            .sgk-res:not(.form-on) .sgk-pick { margin-top: 4px; font-size: 12.5px; }
+            .sgk-res:not(.form-on) .sgk-row { margin-top: 10px; padding-top: 10px; }
+            .sgk-res:not(.form-on) .sgk-go { margin-top: 12px; min-height: 52px; }
+        }
+    </style>
+    <style>.sgk-res.form-on { position: relative; top: auto; bottom: auto; }</style>
 </head>
 <body>
     
@@ -1169,11 +1248,11 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             <div class="sg-hero-copy">
                 <div class="sg-eyebrow sg-a-fade"><span class="sg-rule"></span><span class="sg-eyebrow-en">Sageori Internet</span><span class="sg-eyebrow-sub">PREMIUM CONSULTING</span></div>
                 <h1 class="sg-title">
-                    <span class="sg-mask"><span class="sg-l1">전국 인터넷 가입은</span></span>
-                    <span class="sg-mask sg-mask-2"><span class="sg-l2"><span><em class="sg-gold">사거리 인터넷</em>에서</span></span></span>
+                    <span class="sg-mask"><span class="sg-l1">인터넷 · TV 바꾸고</span></span>
+                    <span class="sg-mask sg-mask-2"><span class="sg-l2"><span><em class="sg-gold">현금 사은품</em> 받으세요</span></span></span>
                 </h1>
-                <p class="sg-sub sg-a2">합리적 요금 컨설팅과 가장 많은 혜택을 동시에</p>
-                <p class="sg-desc sg-a3">정확한 요금 설계부터 보이지 않던 혜택까지,<br class="sg-br-m"> 사거리인터넷이 처음부터 끝까지 책임집니다.</p>
+                <p class="sg-sub sg-a2">결합 신청 시 최대 132만원 · 설치 당일 지급</p>
+                <p class="sg-desc sg-a3">통신사·속도만 고르면 받을 사은품과 월 요금이<br class="sg-br-m"> 30초 만에 바로 보여요. 상담부터 설치까지 사거리인터넷이 책임집니다.</p>
 
                 <div class="sg-tiles sg-a4">
                     <a class="sg-tile sg-tile-link" href="#best-plan-section" onclick="sgTileGo(event, 'best-plan-section')"><span class="sg-tile-k">가정용</span><b class="sg-tile-v">인터넷·TV·<wbr>전화</b><svg class="sg-tile-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
@@ -1183,7 +1262,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                 </div>
 
                 <div class="sg-ctas sg-a5">
-                    <a href="#" class="sg-cta" onclick="sgGoConsult(event)">최대 지원금 확인하기<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+                    <a href="#sg-check" class="sg-cta" onclick="sgCheckGo(event)">내 사은품 30초 확인<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
                     <a href="tel:18332440" class="sg-ghost sg-ghost-call">전화 상담 1833-2440</a>
                 </div>
 
@@ -1203,6 +1282,46 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             </div>
         </div>
         <div class="sg-cue sg-a6" aria-hidden="true"><span>scroll</span><i><b></b></i></div>
+    </section>
+
+
+    <!-- 30초 사은품 확인기 (우리 단가표 기준 · 고르는 대로 바로 계산) -->
+    <section class="sgk" id="sg-check" aria-labelledby="sgk-title">
+        <div class="sgk-in">
+            <div class="sgk-head">
+                <span class="sgk-eye">30초 확인</span>
+                <h2 id="sgk-title">우리 집 사은품, 바로 계산해 드려요</h2>
+                <p>고르는 대로 받을 사은품과 월 요금이 바로 바뀌어요. 사거리인터넷 실시간 단가표 기준이에요.</p>
+            </div>
+            <div class="sgk-opts">
+                <div class="sgk-step"><p class="sgk-q"><i>1</i>통신사</p><div class="sgk-chips" data-k="prov" role="group" aria-label="통신사"></div></div>
+                <div class="sgk-step"><p class="sgk-q"><i>2</i>상품</p><div class="sgk-chips" data-k="type" role="group" aria-label="상품"></div></div>
+                <div class="sgk-step"><p class="sgk-q"><i>3</i>인터넷 속도</p><div class="sgk-chips" data-k="speed" role="group" aria-label="인터넷 속도"></div></div>
+                <div class="sgk-step" id="sgk-tv-step" hidden><p class="sgk-q"><i>4</i>TV 상품</p><div class="sgk-chips" data-k="tv" role="group" aria-label="TV 상품"></div></div>
+                <div class="sgk-step"><p class="sgk-q"><i id="sgk-mob-n">4</i>같은 통신사 휴대폰이 있으세요?</p><div class="sgk-chips" data-k="mob" role="group" aria-label="휴대폰 결합"></div></div>
+            </div>
+            <div class="sgk-res" id="sgk-res" aria-live="polite">
+                <p class="sgk-wait" id="sgk-wait">요금표를 불러오고 있어요…</p>
+                <div id="sgk-out" hidden>
+                    <span class="sgk-res-k">예상 사은품</span>
+                    <b class="sgk-gift" id="sgk-gift"></b>
+                    <span class="sgk-gnote" id="sgk-gnote"></span>
+                    <div class="sgk-row"><span class="sgk-res-k">월 요금</span><span class="sgk-fee" id="sgk-fee"></span></div>
+                    <p class="sgk-pick" id="sgk-pick"></p>
+                    <ul class="sgk-cmp" id="sgk-cmp" aria-label="통신사별 사은품 비교"></ul>
+                    <button type="button" class="sgk-go" id="sgk-go">이 조건으로 무료 상담받기</button>
+                    <div class="sgk-form" id="sgk-form" hidden>
+                        <input type="tel" id="sgk-phone" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="휴대폰 번호 (- 없이)" aria-label="휴대폰 번호">
+                        <input type="text" id="sgk-name" autocomplete="name" maxlength="20" placeholder="성함 (선택)" aria-label="성함 (선택)">
+                        <label class="sgk-agree"><input type="checkbox" id="sgk-agree"><span>개인정보 수집 및 이용 동의 (필수)<small>목적: 가입 상담 및 접수 안내 · 항목: 성명, 연락처 · 기간: 목적 달성 즉시 파기</small></span></label>
+                        <p class="sgk-msg" id="sgk-msg" role="alert"></p>
+                        <button type="button" class="sgk-go submit-btn" id="sgk-send">상담 신청하기</button>
+                    </div>
+                    <a class="sgk-call" href="tel:18332440">전화로 바로 물어보기 1833-2440</a>
+                </div>
+            </div>
+            <p class="sgk-foot">※ 예상 금액은 오늘 단가표 기준이에요. 설치 주소·결합 조건에 따라 달라질 수 있고, 최종 금액은 상담 때 확정해 드려요. 상담 시간(10:00~19:30) 밖에 남기시면 다음 상담 시간에 순서대로 연락드려요.</p>
+        </div>
     </section>
 
     <!-- [추가] 본문 띠: 첫 화면과 같은 청록 그라데이션 + SAGEORI 배경 글씨 -->
@@ -2164,6 +2283,11 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             document.getElementById('map-popup-overlay').classList.add('active');
             document.body.style.overflow = 'hidden';
             mapRenderCarriers();
+            if (!(window.kakao && kakao.maps && kakao.maps.services) && !openMapPopup.waited) {
+                mapMsg('지도를 불러오고 있어요…', 'info');
+                sgKakaoLoad(function () { openMapPopup.waited = true; try { if (document.getElementById('map-popup-overlay').classList.contains('active')) { mapMsg(''); openMapPopup(); } } finally { openMapPopup.waited = false; } });
+                return;
+            }
             if (!window.kakao || !kakao.maps || !kakao.maps.services) { mapMsg('지도를 불러오지 못했어요. 잠시 뒤 다시 열어 주시거나 아래 버튼으로 상담을 신청해 주세요.', 'err'); return; }
             if (!kakaoMap) {
                 setTimeout(() => {   // 팝업이 뜨는 시간을 기다렸다가 지도를 그려야 깨지지 않아요
@@ -3394,11 +3518,11 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             setTimeout(function () {
                 var start = Date.now();
                 var iv = setInterval(function () {
-                    var p = Math.min(1, (Date.now() - start) / 1500), k = 1 - Math.pow(1 - p, 3);
+                    var p = Math.min(1, (Date.now() - start) / 700), k = 1 - Math.pow(1 - p, 3);
                     el.textContent = String(Math.round(to * k));
                     if (p >= 1) clearInterval(iv);
                 }, 32);
-            }, 1050);
+            }, 120);
         }
         // 상단 메뉴 '렌탈': 누르면 펼치기(마우스를 올려도 펼쳐짐) · 바깥을 누르거나 Esc로 닫기
         window.sgRentalToggle = function (e) {
@@ -4082,6 +4206,101 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         var box = document.getElementById('best-plan-container');
         if (box && window.MutationObserver) new MutationObserver(fix).observe(box, { childList: true, subtree: true });
         fix();
+    })();
+    </script>
+    <script>
+    /* ===== 30초 사은품 확인기: 요금표(allData)로 바로 계산 ===== */
+    (function () {
+        var PROVS = [['', '잘 모르겠어요', '가장 많이 주는 곳'], ['LG', 'LG U+'], ['KT', 'KT'], ['SK', 'SK브로드밴드'], ['스카이', 'KT스카이라이프'], ['헬로', 'LG헬로비전']];
+        var FULL = { LG: 'LG U+', KT: 'KT', SK: 'SK브로드밴드', '스카이': 'KT스카이라이프', '헬로': 'LG헬로비전' };
+        var DEF_TV = { SK: '스탠다드TV', KT: '라이트TV', LG: '실속형TV', '스카이': 'TV 베이직', '헬로': '뉴베이직 TV' };
+        var HINT = { '100M': '1~2인 · 웹서핑', '160M': '1~2인', '200M': '1~3인', '500M': '2~4인 · 영상·게임', '1G': '고사양 · 기기 많을 때' };
+        var st = { prov: '', type: '결합', speed: '500M', tv: '', mob: 'y' };
+        var root = document.getElementById('sg-check'); if (!root) return;
+        var $ = function (id) { return document.getElementById(id); };
+        function rows() { try { return (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData : []; } catch (e) { return []; } }
+        function provOf(r) { var s = String(r[0] || '').trim(); return ['스카이', '헬로', 'SK', 'LG', 'KT'].find(function (p) { return s.indexOf(p) >= 0; }) || ''; }
+        function num(t) { return parseInt(String(t || '').replace(/[^0-9]/g, ''), 10) || 0; }
+        function giftMan(t) { var m = /([\d.]+)\s*만\s*원/.exec(String(t || '')); return m ? parseFloat(m[1]) : 0; }
+        function feeOf(r, mob) { var dc = num(r[5]); return (mob && dc > 0) ? num(r[6]) : num(r[4]); }
+        function base() { return rows().filter(function (r) { var t = String(r[1] || '').trim(); return (t === '단독' || t === '결합') && provOf(r); }); }
+        function speeds(prov, type) {
+            var out = []; base().forEach(function (r) { if ((!prov || provOf(r) === prov) && r[1].trim() === type) { var s = String(r[2] || '').trim(); if (s && out.indexOf(s) < 0) out.push(s); } });
+            if (!prov) out = out.filter(function (s) { return ['100M', '500M', '1G'].indexOf(s) >= 0; });
+            return out.sort(function (a, b) { return (num(a) * (/G/i.test(a) ? 1000 : 1)) - (num(b) * (/G/i.test(b) ? 1000 : 1)); });
+        }
+        function tvs(prov, speed) { var out = []; base().forEach(function (r) { if (provOf(r) === prov && r[1].trim() === '결합' && String(r[2]).trim() === speed) { var t = String(r[3] || '').trim(); if (t && out.indexOf(t) < 0) out.push(t); } }); return out; }
+        function rowFor(prov, type, speed, tv) {
+            var c = base().filter(function (r) { return provOf(r) === prov && r[1].trim() === type && String(r[2]).trim() === speed; });
+            if (type === '결합') { var want = tv || DEF_TV[prov]; return c.find(function (r) { return String(r[3]).trim() === want; }) || c[0] || null; }
+            return c[0] || null;
+        }
+        function chip(k, v, label, sub, rec) {
+            var b = document.createElement('button'); b.type = 'button'; b.className = 'sgk-chip' + (rec ? ' rec' : ''); b.setAttribute('aria-pressed', String(st[k] === v));
+            b.appendChild(document.createTextNode(label)); if (sub) { var s = document.createElement('small'); s.textContent = sub; b.appendChild(s); }
+            b.addEventListener('click', function () { st[k] = v; touched = true; paint(); }); return b;
+        }
+        function fill(k, items) { var box = root.querySelector('[data-k="' + k + '"]'); box.textContent = ''; items.forEach(function (it) { box.appendChild(chip(k, it[0], it[1], it[2], it[3])); }); }
+        var touched = false;
+        function paint() {
+            var all = base();
+            if (!all.length) { $('sgk-wait').textContent = window.sgPlanLoadFailed ? '요금표를 불러오지 못했어요. 아래 전화나 상담 신청으로 바로 안내해 드릴게요.' : '요금표를 불러오고 있어요…'; $('sgk-wait').hidden = false; $('sgk-out').hidden = !window.sgPlanLoadFailed; if (window.sgPlanLoadFailed) { $('sgk-gift').textContent = '상담 시 안내'; $('sgk-gnote').textContent = ''; $('sgk-fee').textContent = '-'; $('sgk-pick').textContent = ''; $('sgk-cmp').textContent = ''; } return; }
+            $('sgk-wait').hidden = true; $('sgk-out').hidden = false;
+            fill('prov', PROVS.map(function (p) { return [p[0], p[1], p[2] || '', p[0] === '']; }));
+            fill('type', [['결합', '인터넷 + TV', '사은품이 더 커요', false], ['단독', '인터넷만', '', false]]);
+            var sp = speeds(st.prov, st.type); if (sp.indexOf(st.speed) < 0) st.speed = sp.indexOf('500M') >= 0 ? '500M' : (sp[0] || '');
+            fill('speed', sp.map(function (s) { return [s, s.replace('M', 'M').replace(/^1G$/, '1G (기가)'), HINT[s] || '', false]; }));
+            var tvStep = $('sgk-tv-step'), showTv = st.prov && st.type === '결합'; tvStep.hidden = !showTv; $('sgk-mob-n').textContent = showTv ? '5' : '4';
+            if (showTv) { var tl = tvs(st.prov, st.speed); if (tl.indexOf(st.tv) < 0) st.tv = tl.indexOf(DEF_TV[st.prov]) >= 0 ? DEF_TV[st.prov] : (tl[0] || ''); fill('tv', tl.map(function (t) { return [t, t, t === DEF_TV[st.prov] ? '기본 추천' : '', false]; })); }
+            fill('mob', [['y', '있어요', '휴대폰 결합 할인', false], ['n', '없어요', '', false]]);
+            // 계산
+            var mob = st.mob === 'y', pick = null, list = [];
+            Object.keys(FULL).forEach(function (p) { var r = rowFor(p, st.type, st.speed, st.prov === p ? st.tv : ''); if (r) list.push({ p: p, r: r, g: giftMan(r[7]), fee: feeOf(r, mob) }); });
+            list.sort(function (a, b) { return (b.g - a.g) || (a.fee - b.fee); });
+            if (st.prov) pick = list.find(function (x) { return x.p === st.prov; }) || null; else pick = list[0] || null;
+            var cmp = $('sgk-cmp'); cmp.textContent = '';
+            if (!pick) { $('sgk-gift').textContent = '상담 시 안내'; $('sgk-gnote').textContent = ''; $('sgk-fee').textContent = '-'; $('sgk-pick').textContent = '이 조건은 상담 때 맞춰 안내해 드려요.'; cur = null; return; }
+            var gt = String(pick.r[7] || '').trim(), gm = giftMan(gt);
+            var gEl = $('sgk-gift'); gEl.textContent = '';
+            if (gm) { gEl.appendChild(document.createTextNode(gm + '만원')); var rest = gt.replace(/^\s*[\d.,]+\s*만\s*원\s*/, ''); if (rest) { var sm = document.createElement('small'); sm.textContent = ' ' + rest; gEl.appendChild(sm); } }
+            else gEl.textContent = gt || '상담 시 안내';
+            $('sgk-gnote').textContent = '설치 당일 지급';
+            var fEl = $('sgk-fee'); fEl.textContent = '월 ' + pick.fee.toLocaleString() + '원'; var fs = document.createElement('small'); fs.textContent = mob && num(pick.r[5]) > 0 ? '휴대폰 결합 시' : '기본 요금'; fEl.appendChild(fs);
+            var label = FULL[pick.p] + ' · ' + (st.type === '결합' ? '인터넷 ' + pick.r[2] + ' + ' + pick.r[3] : '인터넷 ' + pick.r[2]);
+            $('sgk-pick').textContent = (st.prov ? '' : '가장 많이 주는 곳: ') + label;
+            if (!st.prov) list.slice(0, 5).forEach(function (x, i) {
+                var li = document.createElement('li'); if (i === 0) li.className = 'top';
+                var b = document.createElement('button'); b.type = 'button';
+                var a = document.createElement('span'); a.textContent = FULL[x.p] + ' · 월 ' + x.fee.toLocaleString() + '원'; var g = document.createElement('b'); g.textContent = x.g ? x.g + '만원' : '상담 안내';
+                b.appendChild(a); b.appendChild(g); b.addEventListener('click', function () { st.prov = x.p; st.tv = ''; touched = true; paint(); }); li.appendChild(b); cmp.appendChild(li);
+            });
+            cur = { prov: pick.p, label: label, fee: pick.fee, mob: mob && num(pick.r[5]) > 0, gift: gt || '상담 시 안내' };
+        }
+        var cur = null;
+        $('sgk-go').addEventListener('click', function () {
+            var res = $('sgk-res'); res.classList.add('form-on'); $('sgk-form').hidden = false; $('sgk-go').hidden = true;
+            try { res.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { res.scrollIntoView(); }
+            setTimeout(function () { try { $('sgk-phone').focus({ preventScroll: true }); } catch (e) { } }, 350);
+        });
+        $('sgk-phone').addEventListener('input', function () { var d = this.value.replace(/\D/g, '').slice(0, 11); this.value = d.length > 7 ? d.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3').replace(/^(\d{3})(\d{4})(\d{1,3})$/, '$1-$2-$3') : d.length > 3 ? d.slice(0, 3) + '-' + d.slice(3) : d; });
+        $('sgk-send').addEventListener('click', function () {
+            var msg = $('sgk-msg'), phone = $('sgk-phone').value.trim(), name = $('sgk-name').value.replace(/[<>"'`]/g, '').trim();
+            if (phone.length !== 13 || phone.indexOf('010') !== 0) { msg.textContent = '휴대폰 번호 11자리를 적어 주세요.'; $('sgk-phone').focus(); return; }
+            if (!$('sgk-agree').checked) { msg.textContent = '개인정보 수집 및 이용에 동의해 주세요.'; return; }
+            msg.textContent = '';
+            var c = cur, want = c ? '[' + c.label + '] 월 ' + c.fee.toLocaleString() + '원' + (c.mob ? '(휴대폰 결합)' : '') + ' · 예상 사은품 ' + c.gift : '상담 후 결정';
+            var formData = { type: '30초 사은품 확인', name: name || '성함 미입력', phone: phone, summary: '희망상품: ' + want + (st.prov ? '' : ' (통신사 추천 요청)') };
+            if (typeof sendReception !== 'function') { msg.textContent = '접수 기능을 불러오지 못했어요. 1833-2440으로 전화 부탁드려요.'; return; }
+            sendReception(formData, function () {
+                var f = $('sgk-form'); f.textContent = '';
+                var d = document.createElement('div'); d.className = 'sgk-done'; var b = document.createElement('b'); b.textContent = '상담 신청이 접수됐어요'; var p = document.createElement('p'); p.textContent = '상담 시간(10:00~19:30)에 순서대로 연락드려요. 고른 조건 그대로 확인해서 안내해 드릴게요.'; d.appendChild(b); d.appendChild(p); f.appendChild(d);
+            }, '[30초 사은품 확인 · 상담 접수 완료]\n\n연락처: ' + phone + '\n희망: ' + want + '\n\n가장 빠른 시간 내에 연락드리겠습니다!');
+        });
+        window.sgCheckGo = function (e) { if (e) e.preventDefault(); try { root.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (x) { root.scrollIntoView(); } };
+        window.sgCheckPaint = paint;
+        // 요금표가 준비되면 그리기 (요금표 화면을 다시 그릴 때마다 같이)
+        if (typeof window.renderBestPlans === 'function') { var orig = window.renderBestPlans; window.renderBestPlans = function () { var r = orig.apply(this, arguments); try { paint(); } catch (e) { console.error('사은품 확인기 오류', e); } return r; }; }
+        paint(); var tries = 0, iv = setInterval(function () { tries++; if (base().length || window.sgPlanLoadFailed || tries > 40) { clearInterval(iv); try { paint(); } catch (e) { } } }, 500);
     })();
     </script>
 </body>
