@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-AEFkFngBIlMB5yS76MbBM594YoGmOK/SpwfxrfV5HNk='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WPJVW/p1HSbRE80FSsogrOZpDBj5HywWyya77cF8QXw='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -570,6 +570,12 @@
         .dk-got { margin-left: auto; font-size: 12px; font-weight: 700; color: #4A5240; }
         .dk-s { margin: 4px 0 6px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
         .dk-p { font-size: 13px; color: #3E441E; }
+        .dk-rt { margin: 0 0 6px; font-size: 13px; } .dk-rt summary { cursor: pointer; color: var(--muted); }
+        .dk-rt pre { margin: 6px 0 0; padding: 8px 10px; background: #F7F8F2; border-radius: 8px; white-space: pre-wrap; word-break: break-all; font: inherit; font-size: 13px; line-height: 1.6; }
+        .rt-box { margin: 0 0 10px; padding: 9px 11px; border: 1px solid #CFE3D6; background: #F3FAF5; border-radius: 10px; font-size: 13.5px; line-height: 1.6; }
+        .rt-box.bad { border-color: #EBC2B8; background: #FFF6F3; }
+        .rt-box .btn { margin-left: 4px; } .rt-l { font-size: 13px; color: #3E441E; } .rt-m { color: var(--muted); font-size: 12px; }
+        .rt-box details { font-size: 12.5px; } .rt-box ul { margin: 4px 0 0; padding-left: 18px; }
         .dk-a { display: flex; gap: 6px; justify-content: flex-end; }
         .dk-warn { margin-bottom: 10px; padding: 8px 10px; border-radius: 8px; background: #FFF3BF; font-size: 13px; color: #6B5300; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         @media (max-width: 560px) { .idr-parts { grid-template-columns: minmax(0, 1fr); } }
@@ -1525,7 +1531,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-26.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-26.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -6165,8 +6171,41 @@
         function idrFresh() { idr = { items: null, busy: false, err: '', last: null, ui: null, sel: {}, deleting: false }; idrOpen = Object.create(null); idrDraft = Object.create(null); dk = dkFresh(); }
         /* ---------- 다이렉트 접수 확인: 홈페이지 '다이렉트 접수'를 불러와 신분증 요청 칸에 채움 ----------
            홈페이지가 공개 열쇠로 암호화해 보낸 것만 서버에 30일 보관 · 푸는 열쇠는 팀 키로 잠가 서버에 맡겨 둠 (팀 키가 있는 이 화면에서만 풀림) */
-        var DK_AAD = 'dk-v1', DK_F = ['src', 'name', 'birth', 'phone', 'post', 'addr1', 'addr2', 'carrier', 'ptype', 'speed', 'tv', 'prod', 'price', 'giftText', 'giftType', 'appliance', 'gBank', 'gNum', 'payType', 'pBank', 'pNum', 'cName', 'cNum', 'cValid'];
-        function dkFresh() { return { items: null, busy: false, err: '', keyBad: false }; }
+        var DK_AAD = 'dk-v1', DK_F = ['src', 'name', 'birth', 'phone', 'post', 'addr1', 'addr2', 'carrier', 'ptype', 'speed', 'tv', 'prod', 'price', 'giftText', 'giftType', 'appliance', 'gBank', 'gNum', 'payType', 'pBank', 'pNum', 'cName', 'cNum', 'cValid',
+            'rt', 'region', 'ctime', 'pid', 'pname', 'model', 'brand', 'rcat', 'rco', 'rmonths', 'rmand', 'rfee', 'rafter', 'rgift', 'rplan', 'agree', 'at0'];   // rt: 홈페이지 렌탈 접수 (rental.html)
+        function dkFresh() { return { items: null, busy: false, err: '', keyBad: false, rt: null, rtBusy: false }; }
+        /* ---------- 렌탈 접수 (홈페이지 rental.html) ---------- */
+        function dkIsRt(d) { return !!(d && d.rt === '1'); }
+        function dkRtWon(v) { return /^\d+$/.test(v || '') ? won(+v) : (v || ''); }
+        function dkRtText(d) {   // 렌탈 접수 → 상담용 글 (받은 값 그대로)
+            return ['[렌탈 접수]', '이름 : ' + d.name, '연락처 : ' + (d.phone ? mfPhone(d.phone) : ''), '설치 지역 : ' + d.region, '상담 가능 시간 : ' + d.ctime,
+                '상품 : ' + d.pname + (d.model ? ' (' + d.model + ')' : ''), '제조사 · 종류 : ' + [d.brand, d.rcat].filter(Boolean).join(' · '),
+                '렌탈사 : ' + d.rco, '약정 : ' + (d.rmonths ? d.rmonths + '개월' + (d.rmand ? ' (의무 ' + d.rmand + '개월)' : '') : '상담 때 정함'),
+                '월 렌탈료 : ' + (d.rfee ? dkRtWon(d.rfee) : '상담 때 안내'), d.rafter ? '할인 뒤 : ' + d.rafter.replace(/월 (\d+)$/, function (m0, n) { return '월 ' + won(+n); }) : '', d.rgift ? '사은품 : ' + d.rgift : '',
+                '동의 : ' + d.agree, '상품 번호 : ' + d.pid].filter(Boolean).join('\n');
+        }
+        function dkRtLoad(run) {   // 렌탈 상품 데이터 점검 결과 (서버가 7일마다 · [지금 점검])
+            if (dk.rtBusy || !driveOn()) return;
+            dk.rtBusy = true; if (dlgDkOpen()) dkDlg();
+            ibCall(run ? 'rtCheck' : 'rtStatus', {}).then(function (r) { dk.rt = r && r.last ? r.last : null; if (run) toast(r && r.recent ? '5분 안에 점검한 결과예요.' : '점검했어요.'); },
+                function (e) { dk.rt = { fail: e && e.code === 'bad_action' ? '서버(drive-storage.gs)를 새 버전으로 배포하면 점검 결과가 보여요.' : driveErrText(e) }; })
+                .then(function () { dk.rtBusy = false; if (dlgDkOpen()) dkDlg(); });
+        }
+        var RT_ISSUE = { format: '형식 오류', noId: '상품 번호 없음', dupId: '상품 번호 중복', noName: '상품명 없음', noImage: '사진 주소 이상', galleryType: '사진 목록 형식', noCompanies: '렌탈사 없음', noPlans: '약정 없음', badFee: '월 렌탈료 이상', badMonths: '약정 개월 이상', mandatoryOver: '의무기간 > 약정', promoHalf: '할인 정보 일부만', giftType: '사은품 형식', noLowest: '최저가 없음', lowestMismatch: '최저가 ≠ 요금표 최저값', countMismatch: '상품 수 불일치', noUpdatedAt: '갱신 시각 없음', stale: '3일 넘게 갱신 안 됨', newCategory: '새 분류', notObject: '형식 오류' };
+        function dkRtBox() {
+            var r = dk.rt, run = h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'rt-run', disabled: dk.rtBusy ? true : null, onclick: function () { dkRtLoad(true); } }, dk.rtBusy ? '점검 중...' : '지금 점검');
+            if (!r) return h('div', { class: 'rt-box' }, h('b', {}, '🧴 렌탈 상품 데이터 점검'), ' ', dk.rtBusy ? '불러오는 중이에요...' : '아직 결과가 없어요.', ' ', run);
+            if (r.fail) return h('div', { class: 'rt-box' }, h('b', {}, '🧴 렌탈 상품 데이터 점검'), ' ', r.fail, ' ', run);
+            var iss = Object.keys(r.issues || {}), when = r.t ? ibTime(r.t) : '', df = r.diff;
+            return h('div', { class: 'rt-box' + (r.ok ? '' : ' bad'), 'data-rt': r.ok ? 'ok' : 'bad' },
+                h('div', {}, h('b', {}, '🧴 렌탈 상품 데이터 점검 '), r.ok ? '✅ 정상' : '⚠️ 확인 필요', ' · 상품 ' + (r.count || 0) + '개',
+                    r.cats ? ' (' + Object.keys(r.cats).map(function (k) { return k + ' ' + r.cats[k]; }).join(' · ') + ')' : '', when ? ' · ' + when + ' 점검' : '', ' ', run),
+                r.err ? h('div', { class: 'rt-l' }, '· ' + r.err) : null,
+                iss.length ? h('div', { class: 'rt-l' }, '· ' + iss.map(function (k) { return (RT_ISSUE[k] || k) + ' ' + r.issues[k] + '건'; }).join(' · ')) : null,
+                df ? h('div', { class: 'rt-l' }, '· 지난 점검' + (df.since ? '(' + ibTime(df.since) + ')' : '') + '보다 새 상품 ' + df.added + ' · 빠진 상품 ' + df.removed + ' · 최저가 바뀜 ' + df.fee) : null,
+                df && df.ex && df.ex.length ? h('details', {}, h('summary', {}, '바뀐 내용 보기'), h('ul', {}, df.ex.map(function (t) { return h('li', {}, t); }))) : null,
+                h('div', { class: 'rt-l rt-m' }, '홈페이지 렌탈 페이지는 렌탈 데이터를 그대로 보여 줘요. 문제가 있으면 관리자 메일로도 알려 드려요.'));
+        }
         var dk = dkFresh();
         function dkInitKey(force) {   // 대표: 열쇠 한 쌍을 만들어 공개 열쇠는 홈페이지용으로, 푸는 열쇠는 팀 키로 잠가서 서버에 맡김
             var pair;
@@ -6185,6 +6224,7 @@
         function dkLoad() {
             if (dk.busy || !driveOn()) return Promise.resolve();
             dk.busy = true;
+            if (!dk.rt) setTimeout(function () { dkRtLoad(false); }, 0);
             return ibCall('dkList', {}).then(function (res) {
                 if (!res || !res.pub) {
                     if (isBoss()) return dkInitKey(false).then(function () { return ibCall('dkList', {}); }).then(function (r2) { return r2; });
@@ -6242,20 +6282,26 @@
             var body = dk.busy && !dk.items ? h('p', { class: 'cl-empty' }, '불러오는 중이에요...')
                 : list.length ? h('div', { class: 'dk-list' }, list.map(function (x) {
                     var d = x.d || {}, got = x.got && x.got.t ? '가져옴 · ' + ibTime(x.got.t) + (x.got.by ? ' · ' + x.got.by : '') : '';
-                    var prod = x.bad ? '' : [dkCarrier(d.carrier), d.speed, d.tv, d.price].filter(Boolean).join(' · ');
+                    var rtx = !x.bad && dkIsRt(d);
+                    var prod = x.bad ? '' : rtx ? ['🧴 렌탈', d.pname, d.rco, d.rmonths ? d.rmonths + '개월' : '', d.rfee ? '월 ' + dkRtWon(d.rfee) : ''].filter(Boolean).join(' · ') : [dkCarrier(d.carrier), d.speed, d.tv, d.price].filter(Boolean).join(' · ');
                     return h('div', { class: 'dk-item' + (got ? ' got' : '') + (x.bad ? ' bad' : ''), 'data-dk': x.id },
                         h('div', { class: 'dk-t' }, h('b', {}, ibTime(x.t)), d.src ? ' · ' + d.src : '', got ? h('span', { class: 'dk-got' }, got) : h('span', { class: 'dk-new' }, '새 접수')),
                         x.bad ? h('div', { class: 'dk-s' }, '열 수 없는 접수예요 (팀 키가 바뀌기 전에 들어온 접수 · 메일로 확인해 주세요)')
                             : h('div', { class: 'dk-s' }, h('b', {}, d.name || '(성함 없음)'), ' ', d.phone ? clMask(d.phone) : '', prod ? h('span', { class: 'dk-p' }, prod) : null),
+                        rtx ? h('details', { class: 'dk-rt' }, h('summary', {}, '렌탈 접수 내용 보기'), h('pre', {}, dkRtText(d))) : null,
                         h('div', { class: 'dk-a' },
-                            x.bad ? null : h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'dk-fill', onclick: function () { dkFill(x); } }, '가져오기'),
+                            x.bad ? null : rtx ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'dk-rt-copy', onclick: function () {
+                                copyText(dkRtText(d)).then(function (okc) { toast(okc ? (d.name || '고객') + '님 렌탈 접수 내용을 복사했어요.' : '복사하지 못했어요. [렌탈 접수 내용 보기]에서 직접 복사해 주세요.'); });
+                                if (!(x.got && x.got.t)) ibCall('dkMark', { ids: [x.id] }).then(function () { x.got = { t: Date.now(), by: staffName(me) }; render(); if (dlgDkOpen()) dkDlg(); }, function () { /* 표시 실패는 무시 */ });
+                            } }, '복사 · 확인 표시')
+                            : h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'dk-fill', onclick: function () { dkFill(x); } }, '가져오기'),
                             boss ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'dk-del', onclick: function () {
                                 if (!confirm('이 다이렉트 접수를 지울까요? (메일로 받은 접수는 그대로예요)')) return;
                                 ibCall('dkDel', { ids: [x.id] }).then(function () { dk.items = (dk.items || []).filter(function (y) { return y.id !== x.id; }); render(); dkDlg(); toast('지웠어요.'); }, function (e) { toast('지우지 못했어요. ' + driveErrText(e)); });
                             } }, '지우기') : null));
                 })) : h('p', { class: 'cl-empty' }, dk.err || '아직 들어온 다이렉트 접수가 없어요. 홈페이지에서 [다이렉트 접수]를 하면 여기에 모여요.');
             dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '📥 다이렉트 접수 확인' + (list.length ? ' (' + list.length + ')' : '')),
-                h('div', { class: 'dlg-body' }, dk.keyBad && boss ? h('div', { class: 'dk-warn' }, '팀 키가 바뀌어 예전 열쇠를 열 수 없어요. ',
+                h('div', { class: 'dlg-body' }, dkRtBox(), dk.keyBad && boss ? h('div', { class: 'dk-warn' }, '팀 키가 바뀌어 예전 열쇠를 열 수 없어요. ',
                         h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { if (!confirm('새 열쇠를 만들까요? 지금까지 받은 접수는 메일로만 확인할 수 있어요.')) return; dkInitKey(true).then(function () { dk.items = null; dkLoad(); }, function (e) { toast('만들지 못했어요. ' + driveErrText(e)); }); } }, '새 열쇠 만들기')) : null,
                     body,
                     h('p', { class: 'hd-help' }, '🔒 홈페이지에서 암호화해서 보낸 내용이라 서버에서는 볼 수 없어요 · 30일 지나면 자동으로 지워져요 · [가져오기]를 누르면 아래 신분증 요청 칸에 채워져요.')),
