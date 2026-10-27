@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-NjcG8TDoqjwjk6SEQB6o00yjM92pjUy4SrOSb1zLLHc='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-BCtFxDbrIvUsP5FMi4Nrnj/Ru4SWPV2jYEFm+ieDKN0='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -359,6 +359,14 @@ img { max-width: 100%; }
     .fchip { min-height: 36px; padding: 0 12px; font-size: 13.5px; }
 }
 
+/* 사은품 / 최저가 나눠 보기 (데이터에 사은품이 있을 때만) */
+.gseg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding: 5px; margin: 4px 0 6px; border-radius: 16px; background: #FFFFFF; border: 1px solid var(--line); }
+.gtab { min-height: 48px; border: 0; border-radius: 12px; background: transparent; font-size: 15px; font-weight: 800; color: var(--muted); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.gtab small { font-size: 12px; font-weight: 700; }
+.gtab[aria-selected="true"] { background: var(--teal); color: #FFFFFF; }
+.gtab[aria-selected="true"][data-g="gift"] { background: linear-gradient(135deg, var(--gold-2), var(--gold-3)); color: #0E343B; }
+@media (max-width: 900px) { .gtab { font-size: 13.5px; min-height: 44px; } }
+
 </style>
 </head>
 <body>
@@ -566,7 +574,7 @@ img { max-width: 100%; }
     }
 
     /* ---------- 주소(?type= · ?id=) ---------- */
-    var st = { type: '', kind: [], feat: [], size: [], brand: [], price: [], q: '', sort: 'low', shown: PAGE, kexp: false }, listY = 0, fromList = false;
+    var st = { type: '', kind: [], feat: [], size: [], brand: [], price: [], gift: [], q: '', sort: 'low', shown: PAGE, kexp: false }, listY = 0, fromList = false;
     /* 고르는 칸: 정수기 기능(상품명 기준) · 가격대(월 렌탈료 최저가 기준 — 받은 값을 비교만 함) */
     var FEATS = ['냉온정', '냉온정+얼음', '냉정', '냉정+얼음', '정수전용'];
     function featOf(p) {   // 상품명에 적힌 말로만 나눔 (모르면 빈칸 → '기능 전체'에서만 보임)
@@ -609,9 +617,12 @@ img { max-width: 100%; }
         '세탁기·건조기': { label: '용량', opts: [['w1', '14kg 이하'], ['w2', '15~20kg'], ['w3', '21~24kg'], ['w4', '25kg 이상']], of: function (p) { return band(kgOf(p), [['w1', '', 0, 14.5], ['w2', '', 14.5, 20.5], ['w3', '', 20.5, 24.5], ['w4', '', 24.5, Infinity]]); } },
         'TV': { label: '인치', opts: null, of: function (p) { var v = inchOf(p); return v ? [String(v)] : []; } }
     };
+    /* 사은품: 데이터의 사은품 칸(gift)이 있는 조건만 '사은품 받기'로 나눔 (지금은 비어 있어 숨김 · 들어오면 자동으로 보임) */
+    function giftPlans(p) { return p.cos.some(function (c) { return c.plans.some(function (x) { return !!x.g; }); }); }
+    function plainPlans(p) { return p.cos.some(function (c) { return c.plans.some(function (x) { return !x.g; }); }); }
     function sizeOf(p) { var c = SIZE[p.kind]; return c ? c.of(p) : []; }
     /* 여러 개 고르기: 같은 줄 안에서는 '또는', 줄끼리는 '그리고' */
-    var MULTI = ['kind', 'feat', 'size', 'brand', 'price'];
+    var MULTI = ['kind', 'feat', 'size', 'brand', 'price', 'gift'];
     function clearPicks() { MULTI.forEach(function (k) { st[k] = []; }); }
     function has(a, v) { return a.indexOf(v) >= 0; }
     function priceOk(p, k) { if (!k) return true; for (var i = 0; i < PRICES.length; i++) if (PRICES[i][0] === k) return p.low != null && p.low >= PRICES[i][2] && p.low < PRICES[i][3]; return true; }
@@ -619,7 +630,7 @@ img { max-width: 100%; }
         var q = new URLSearchParams(location.search);
         function list(name, n, ok) { var out = []; q.getAll(name).slice(0, 40).forEach(function (v) { v = S(v, n); if (v && out.indexOf(v) < 0 && (!ok || ok(v))) out.push(v); }); return out; }
         return { id: S(q.get('id'), 80), type: S(q.get('type'), 30), kind: list('kind', 40), feat: list('feat', 20, function (v) { return FEATS.indexOf(v) >= 0; }), size: list('size', 10),
-            price: list('price', 4, function (v) { return PRICES.some(function (x) { return x[0] === v; }); }), brand: list('brand', 40), q: S(q.get('q'), 40), sort: /^(low|high|name)$/.test(q.get('sort') || '') ? q.get('sort') : 'low' };
+            price: list('price', 4, function (v) { return PRICES.some(function (x) { return x[0] === v; }); }), gift: list('gift', 1, function (v) { return v === 'y' || v === 'n'; }), brand: list('brand', 40), q: S(q.get('q'), 40), sort: /^(low|high|name)$/.test(q.get('sort') || '') ? q.get('sort') : 'low' };
     }
     function listQs() {
         var q = new URLSearchParams();
@@ -629,6 +640,7 @@ img { max-width: 100%; }
         if (st.kind.length === 1) st.size.forEach(function (v) { q.append('size', v); });
         st.brand.forEach(function (v) { q.append('brand', v); });
         st.price.forEach(function (v) { q.append('price', v); });
+        st.gift.forEach(function (v) { q.append('gift', v); });
         if (st.q) q.set('q', st.q);
         if (st.sort !== 'low') q.set('sort', st.sort);
         var s = q.toString(); return s ? '?' + s : location.pathname.split('/').pop() || 'rental.html';
@@ -640,7 +652,7 @@ img { max-width: 100%; }
         var u = readUrl();
         if (u.id) { showDetail(u.id); return; }
         fromList = false;
-        st.type = u.type; st.kind = u.kind; st.feat = u.feat; st.size = u.size; st.brand = u.brand; st.price = u.price; st.q = u.q; st.sort = u.sort;
+        st.type = u.type; st.kind = u.kind; st.feat = u.feat; st.size = u.size; st.brand = u.brand; st.price = u.price; st.gift = u.gift; st.q = u.q; st.sort = u.sort;
         showList();
     }
     window.addEventListener('popstate', function () { var wasDetail = !$('detail-view').hidden; route(); if (wasDetail && !readUrl().id) window.scrollTo(0, listY); });
@@ -671,7 +683,8 @@ img { max-width: 100%; }
         var q = key(st.q);
         return p.cat === st.type && (skip === 'kind' || !st.kind.length || has(st.kind, p.kind)) && (skip === 'feat' || !st.feat.length || has(st.feat, featOf(p)))
             && (skip === 'size' || !st.size.length || st.kind.length !== 1 || sizeOf(p).some(function (z) { return has(st.size, z); }))
-            && (skip === 'brand' || !st.brand.length || has(st.brand, p.brand)) && (skip === 'price' || !st.price.length || st.price.some(function (k) { return priceOk(p, k); })) && (!q || key(p.name).indexOf(q) >= 0 || key(p.model).indexOf(q) >= 0);
+            && (skip === 'brand' || !st.brand.length || has(st.brand, p.brand)) && (skip === 'price' || !st.price.length || st.price.some(function (k) { return priceOk(p, k); }))
+            && (skip === 'gift' || !st.gift.length || (has(st.gift, 'y') && giftPlans(p)) || (has(st.gift, 'n') && plainPlans(p))) && (!q || key(p.name).indexOf(q) >= 0 || key(p.model).indexOf(q) >= 0);
     }
     function filtered() { return DATA.items.filter(function (p) { return match(p, ''); }); }
     function pick(name, v) {   // v: '' = 이 줄 전체 (선택 모두 풀기) · 값 = 넣거나 빼기
@@ -749,6 +762,11 @@ img { max-width: 100%; }
         fx.appendChild(frow('제조사', 'brand', brands.map(function (b) { return [b, b, bc[b] || 0]; }), st.brand));
         var pc = PRICES.map(function (x) { var n = 0; DATA.items.forEach(function (p) { if (match(p, 'price') && priceOk(p, x[0])) n++; }); return [x[0], x[1], n]; });
         fx.appendChild(frow('가격', 'price', pc, st.price));
+        var gy = 0, gn = 0, anyGift = inCat.some(giftPlans);
+        if (anyGift) {   // 사은품 정보가 있을 때만 보임
+            DATA.items.forEach(function (p) { if (match(p, 'gift')) { if (giftPlans(p)) gy++; if (plainPlans(p)) gn++; } });
+            fx.appendChild(frow('혜택', 'gift', [['y', '🎁 사은품 받기', gy], ['n', '💰 사은품 없이 최저가', gn]], st.gift));
+        } else st.gift = [];
         $('sort').value = st.sort;
         if ($('q').value !== st.q && document.activeElement !== $('q')) $('q').value = st.q;
         var list = sortList(filtered()), grid = $('grid');
@@ -766,7 +784,7 @@ img { max-width: 100%; }
         var href = '?id=' + encodeURIComponent(p.id);
         return h('article', { class: 'card', 'data-id': p.id },
             h('a', { class: 'card-link', href: href, onclick: function (e) { if (e.ctrlKey || e.metaKey || e.shiftKey || e.button) return; e.preventDefault(); openDetail(p.id); } },
-                h('span', { class: 'thumb' }, picture(p.img, p, 'img-wrap')),
+                h('span', { class: 'thumb' }, picture(p.img, p, 'img-wrap'), giftPlans(p) ? h('span', { class: 'badges' }, h('span', { class: 'badge ev' }, '🎁 사은품')) : null),
                 h('span', { class: 'body' },
                     h('span', { class: 'brand' }, p.brand || ' ', p.kind ? h('span', { class: 'kind-tag' }, ' · ' + p.kind) : null),
                     h('span', { class: 'name' }, p.name),
@@ -794,6 +812,7 @@ img { max-width: 100%; }
             setUrl(listQs(), true); route(); window.scrollTo(0, 0);
         } }, '← 목록으로');
     }
+    var detMode = Object.create(null);   // 상세: 상품마다 사은품 / 최저가 보기
     function renderDetail(p) {
         var box = $('detail-view'); clear(box);
         document.title = p.name + ' | 사거리인터넷 렌탈';
@@ -832,14 +851,25 @@ img { max-width: 100%; }
         var plans = h('section', { class: 'plans', 'aria-label': '렌탈사별 요금' },
             h('h2', {}, '렌탈사별 약정 · 월 렌탈료'),
             h('p', { class: 'sub' }, '원하는 조건의 [이 조건으로 접수]를 누르면 바로 접수할 수 있어요.'));
-        var allFees = []; p.cos.forEach(function (c) { c.plans.forEach(function (x) { allFees.push(x.fee); }); });
+        var gmode = giftPlans(p) && plainPlans(p) ? (detMode[p.id] || 'gift') : '';   // 둘 다 있을 때만 나눠 보기
+        function shown(x) { return !gmode || (gmode === 'gift' ? !!x.g : !x.g); }
+        var allFees = []; p.cos.forEach(function (c) { c.plans.forEach(function (x) { if (shown(x)) allFees.push(x.fee); }); });
         var minFee = allFees.length ? Math.min.apply(null, allFees) : null;
+        if (gmode) {
+            var nG = 0, nP = 0; p.cos.forEach(function (c) { c.plans.forEach(function (x) { if (x.g) nG++; else nP++; }); });
+            plans.appendChild(h('div', { class: 'gseg', role: 'tablist', 'aria-label': '사은품' },
+                [['gift', '🎁 사은품 받는 조건', nG], ['low', '💰 사은품 없이 최저가', nP]].map(function (m) {
+                    return h('button', { type: 'button', role: 'tab', class: 'gtab', 'aria-selected': gmode === m[0] ? 'true' : 'false', 'data-g': m[0], onclick: function () { detMode[p.id] = m[0]; renderDetail(p); } }, m[1], h('small', {}, String(m[2])));
+                })));
+        }
         if (!p.cos.length) plans.appendChild(h('div', { class: 'note' }, '이 상품의 렌탈사 · 약정 정보가 아직 없어요. 접수해 주시면 상담 때 안내해 드릴게요.'));
         p.cos.forEach(function (c, ci) {
+            var vis = c.plans.filter(shown).length; if (!vis) return;
             var rows = h('div', { class: 'co', 'data-co': ci },
-                h('div', { class: 'co-h' }, c.name ? h('h3', {}, c.name) : h('h3', { class: 'nameless' }, '렌탈사 상담 시 안내'), h('span', {}, '약정 ' + c.plans.length + '가지')),
+                h('div', { class: 'co-h' }, c.name ? h('h3', {}, c.name) : h('h3', { class: 'nameless' }, '렌탈사 상담 시 안내'), h('span', {}, '약정 ' + vis + '가지')),
                 h('div', { class: 'pl-head', 'aria-hidden': 'true' }, h('span', {}, '약정'), h('span', {}, '의무사용'), h('span', {}, '월 렌탈료'), h('span', {}, '할인 뒤 요금'), h('span', {}, '사은품'), h('span', {}, '')));
             c.plans.forEach(function (x, pi) {
+                if (!shown(x)) return;
                 rows.appendChild(h('div', { class: 'pl-row' + (x.fee === minFee ? ' low' : ''), 'data-plan': ci + '-' + pi },
                     h('span', {}, h('span', { class: 'lb' }, '약정'), mon(x.m)),
                     h('span', {}, h('span', { class: 'lb' }, '의무사용'), mon(x.mm)),
@@ -858,7 +888,7 @@ img { max-width: 100%; }
     /* ---------- 접수 ---------- */
     var formP = null, sending = false, lastSent = 0;
     function planOf(p, k) { var m = /^(\d+)-(\d+)$/.exec(k || ''); if (!m) return null; var c = p.cos[+m[1]], x = c && c.plans[+m[2]]; return x ? { c: c, x: x } : null; }
-    function planText(c, x) { return (c.name || '렌탈사 상담 시 안내') + ' · ' + mon(x.m) + ' 약정' + (x.mm != null ? ' (의무 ' + mon(x.mm) + ')' : '') + ' · 월 ' + won(x.fee); }
+    function planText(c, x) { return (c.name || '렌탈사 상담 시 안내') + ' · ' + mon(x.m) + ' 약정' + (x.mm != null ? ' (의무 ' + mon(x.mm) + ')' : '') + ' · 월 ' + won(x.fee) + (x.g ? ' · 사은품 ' + x.g : ''); }
     function openModal() { var m = $('modal'); m.classList.add('open'); document.body.style.overflow = 'hidden'; setTimeout(function () { var f = m.querySelector('select, input'); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }, 30); }
     function closeModal() { $('modal').classList.remove('open'); document.body.style.overflow = ''; formP = null; }
     $('m-x').addEventListener('click', closeModal);
