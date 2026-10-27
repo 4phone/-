@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-r1g+HuwIaVnSiVD5vOH0oHOMgGwcQkr1L8rBLCoE+wk='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-/qLfKVW4h2WFxtgoqFjbYqpPX9G0i9Tmpcdei22v/zg='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -429,6 +429,7 @@ img { max-width: 100%; }
     var FEED = 'https://modil.co.kr/api/feed/rental';
     var CK = 'sg-rental-feed-v1', TTL = 30 * 60 * 1000, PAGE = 24;
     var URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
+    var MAIL_URL = 'https://script.google.com/macros/s/AKfycby_1x_FqN2kW6FJyoHDXw7IF_-Rgl4lD1n_msdM48sgXG7Ch1lMCnTKz5ytcylQAy-P/exec';   // 홈페이지 · 사장님전용 상담 접수와 같은 접수 메일
     var CAT_ORDER = ['정수기', '가전렌탈'];
     var SIDO = ['서울', '경기', '인천', '부산', '대구', '광주', '대전', '울산', '세종', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주'];
     var TIMES = ['아무 때나 괜찮아요', '오전 (10시 ~ 12시)', '점심 이후 (12시 ~ 15시)', '오후 (15시 ~ 18시)', '저녁 (18시 ~ 19시 30분)'];
@@ -789,7 +790,7 @@ img { max-width: 100%; }
                     h('tr', {}, h('th', {}, '보유기간'), h('td', {}, h('b', {}, '상담이 끝나면 바로 파기'), ' (늦어도 접수일로부터 30일 뒤 자동 파기)')))),
                 h('div', { class: 'cfoot' }, '동의하지 않으실 수 있어요. 다만 동의하지 않으시면 접수를 할 수 없어요. (전화 상담은 가능해요)')),
             tpBox,
-            h('p', { class: 'cnote' }, '🔒 주민등록번호 · 신분증 사본 · 계좌번호 · 카드번호는 받지 않아요. 본인 확인과 결제는 렌탈사 계약 단계에서 진행돼요. 접수 내용은 암호화되어 사거리인터넷 담당자만 볼 수 있어요.'),
+            h('p', { class: 'cnote' }, '🔒 주민등록번호 · 신분증 사본 · 계좌번호 · 카드번호는 받지 않아요. 본인 확인과 결제는 렌탈사 계약 단계에서 진행돼요. 접수 내용은 사거리인터넷 담당자에게만 전달돼요.'),
             msg, btn);
         body.appendChild(form);
         tp(); openModal();
@@ -852,15 +853,34 @@ img { max-width: 100%; }
     function ping(url, label) {   // 관리자 페이지 '콜 인입' 알림 (이름 · 연락처는 넣지 않음)
         try { fetch(url, { method: 'POST', mode: 'no-cors', keepalive: true, credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'inbound', kind: 'form', label: label.slice(0, 60), dev: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '') || window.innerWidth <= 950 ? 'm' : 'pc' }) }).catch(function () { /* 무시 */ }); } catch (e) { /* 무시 */ }
     }
+    function mailText(o) {   // 접수 메일 본문 (홈페이지 상담 접수 메일과 같은 형식: type · name · phone · summary)
+        var fee = o.rfee ? won(+o.rfee) : '상담 때 안내';
+        return ['[렌탈 상담 접수]', '상품: ' + o.pname + (o.model ? ' (' + o.model + ')' : ''), '제조사 · 종류: ' + [o.brand, o.rcat].filter(Boolean).join(' · '),
+            '렌탈사: ' + o.rco, '약정: ' + (o.rmonths ? o.rmonths + '개월' + (o.rmand ? ' (의무 ' + o.rmand + '개월)' : '') : '상담 때 정함'), '월 렌탈료: ' + fee,
+            o.rafter ? '할인 뒤: ' + o.rafter.replace(/월 (\d+)$/, function (m0, n) { return '월 ' + won(+n); }) : '', o.rgift ? '사은품: ' + o.rgift : '',
+            '설치 지역: ' + o.region, '상담 가능 시간: ' + o.ctime, '동의: ' + o.agree, '상품 번호: ' + o.pid].filter(Boolean).join('\n');
+    }
+    function sendMail(o) {   // 접수 메일 (응답을 읽을 수 없는 방식이라, 보내기만 확인)
+        var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
+        var data = { type: '렌탈 접수 · ' + (o.model || o.pname).slice(0, 40), name: o.name, phone: o.phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3'), summary: mailText(o) };
+        return fetch(MAIL_URL, { method: 'POST', mode: 'no-cors', credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(data), signal: ctl ? ctl.signal : undefined })
+            .then(function () { clearTimeout(tm); return true; }, function () { clearTimeout(tm); return false; });
+    }
     function send() {
         if (sending) return;
         var o = collect(); if (!o) return;
         if (Date.now() - lastSent < 30000) { $('f-msg').textContent = '방금 접수하셨어요. 잠시 뒤 다시 시도해 주세요.'; return; }
         if (!window.crypto || !crypto.subtle || !window.TextEncoder || !window.fetch) { $('f-msg').textContent = '이 브라우저에서는 접수를 보낼 수 없어요. 1833-2440으로 전화 주세요.'; return; }
         sending = true; var btn = $('f-send'); btn.disabled = true; btn.textContent = '보내는 중이에요...';
-        saveEnc(o, 0).then(function (url) {
+        // 두 곳에 보냄: ① 접수 메일 ② 관리자 페이지 [다이렉트 접수 확인] (암호화) — 둘 중 하나라도 되면 접수 완료
+        var mailP = sendMail(o), encP = saveEnc(o, 0).then(function (url) { return url; }, function (e) { return { err: e }; });
+        Promise.all([mailP, encP]).then(function (r) {
+            if (!r[0] && typeof r[1] !== 'string') throw (r[1] && r[1].err) || new Error('save');   // 메일 · 보관 둘 다 실패
+            return r;
+        }).then(function (r) {
+            var url = typeof r[1] === 'string' ? r[1] : '';
             sending = false; lastSent = Date.now();
-            ping(url, '렌탈 접수 · ' + (o.model || o.pname));
+            if (url) ping(url, '렌탈 접수 · ' + (o.model || o.pname));
             var body = $('m-body'); clear(body); $('m-title').textContent = '접수 완료';
             body.appendChild(h('div', { class: 'done', role: 'status' }, h('div', { class: 'ic', 'aria-hidden': 'true' }, '✓'), h('b', {}, '접수됐어요'),
                 h('p', {}, o.ctime === TIMES[0] ? '확인되는 대로 연락드릴게요.' : '고르신 시간(' + o.ctime + ')에 연락드릴게요.'),

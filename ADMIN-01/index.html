@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WPJVW/p1HSbRE80FSsogrOZpDBj5HywWyya77cF8QXw='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-fIzvAcoo9sHP2L1r3Xz/4go+peFMfjW2/PQZHqonkvI='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1531,7 +1531,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-26.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-27.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -6342,7 +6342,7 @@
             var out = { v: 1, date: str(d.date, 40), title: str(d.title, 40), src: str(d.src, 200), carriers: [] };
             d.carriers.slice(0, 30).forEach(function (c) {
                 if (!c || !str(c.id, 20) || !str(c.name, 30) || !Array.isArray(c.groups)) return;
-                var cc = { id: str(c.id, 20), name: str(c.name, 30), sub: str(c.sub, 160), color: /^#[0-9a-fA-F]{6}$/.test(c.color || '') ? c.color : '#3E441E', closed: !!c.closed, addon: !!c.addon || str(c.id, 20) === 'caps',
+                var cc = { id: str(c.id, 20), name: str(c.name, 30), sub: str(c.sub, 160), color: /^#[0-9a-fA-F]{6}$/.test(c.color || '') ? c.color : '#3E441E', closed: !!c.closed, addon: !!c.addon || str(c.id, 20) === 'caps', arate: str(c.arate, 80), ainfo: str(c.ainfo, 300),
                     guide: {}, penalty: str(c.penalty, 80), comb: str(c.comb, 400), groups: [], extra: polStrs(c.extra, 60, 300), refund: polStrs(c.refund, 40, 300), notes: polStrs(c.notes, 40, 400),
                     region: Array.isArray(c.region) ? c.region.slice(0, 40).filter(function (r) { return Array.isArray(r) && str(r[0], 30) && str(r[1], 600); }).map(function (r) { return [str(r[0], 30), str(r[1], 600)]; }) : [], regionNote: str(c.regionNote, 200) };
                 var gd = c.guide && typeof c.guide === 'object' ? c.guide : {};
@@ -6507,9 +6507,9 @@
         function polAddSig() { return ['cctv', 'ins'].map(function (k) { return polAdd[k] ? polAdd[k].key : ''; }).join('|').replace(/^\|$/, ''); }
         function polAddLines() {   // 고른 추가 상품 → 상담 메모 줄
             var out = [], cc = polAdd.cctv, ins = polAdd.ins;
-            if (cc) out.push('■ 추가 상품 (CCTV) : ' + cc.c.name.replace(/\s*CCTV\s*$/, '') + ' ' + cc.r.n + ' · 표준요금 월 ' + won(cc.r.p) + ' (VAT별도) · 수수료 ' + won(Math.round(cc.r.t * 10000)) + ' (월정액×400%, 월정액은 계약 시 확정)');
+            if (cc) out.push('■ 추가 상품 (CCTV) : ' + cc.c.name.replace(/\s*CCTV\s*$/, '') + ' ' + cc.r.n + ' · 표준요금 월 ' + won(cc.r.p) + ' (VAT별도) · 수수료 ' + won(Math.round(cc.r.t * 10000)) + ' (' + (cc.c.arate || '월정액×400%, 월정액은 계약 시 확정') + ')');
             if (ins) out.push('■ 추가 상품 (도난안심 보험) : ' + ins.r.n.replace(/^도난안심 보험\s*/, '') + ' · 월 ' + won(ins.r.p));
-            if (cc) out.push('■ CCTV 안내 : 36개월 약정 · 4대 기준 설치비 무료 · SKT 휴대폰 결합 시 월 1,100~5,500원 할인 (동일명의) · 2년 이내 해지 시 수수료 전액 환수');
+            if (cc) out.push('■ CCTV 안내 : ' + (cc.c.ainfo || '36개월 약정 · 4대 기준 설치비 무료 · SKT 휴대폰 결합 시 월 1,100~5,500원 할인 (동일명의) · 2년 이내 해지 시 수수료 전액 환수'));
             return out;
         }
         function clAddPut(t) {   // 상담 메모: 예전 추가 상품 줄은 빼고 '재케어 메모'(이어 적은 줄까지) 바로 아래에 새로 넣음 — 다른 줄은 그대로
