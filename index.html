@@ -1182,6 +1182,79 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         #sg-channels .sg-consult .consult-main-card { max-width: none; }
         @media (max-width: 900px) { #sg-channels .sg-consult { padding: 28px 6px 6px; } }
     </style>
+    <style>
+        /* ===== 사거리 AI 상담 ===== */
+        .sga-ask { display: flex; align-items: center; gap: 8px; margin: 22px 0 6px; max-width: 640px; padding: 6px 6px 6px 18px; border-radius: 999px; background: #FFFFFF; box-shadow: 0 14px 34px rgba(3,20,24,0.28); border: 2px solid transparent; background-image: linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(90deg, #E2C27A, #8FD3C8, #C6A3E8); background-origin: border-box; background-clip: padding-box, border-box; }
+        .sga-ask input { flex: 1 1 auto; min-width: 0; height: 46px; border: 0; outline: 0; background: transparent; font-size: 16px; color: #0E2A30; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif; }
+        .sga-ask input::placeholder { color: #7A8F91; }
+        .sga-ask-go { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 46px; padding: 0 18px; border-radius: 999px; border: 0; cursor: pointer; font-size: 15px; font-weight: 800; color: #FFFFFF; background: linear-gradient(135deg, #134047, #1F5A5E); font-family: inherit; }
+        .sga-ask-go i { font-style: normal; font-size: 12px; font-weight: 800; padding: 2px 7px; border-radius: 999px; color: #0E343B; background: linear-gradient(135deg, #F3DFA8, #E2C27A); }
+        .sga-ask-hint { margin: 2px 0 0 18px; font-size: 12.5px; color: rgba(244,250,248,0.7); }
+        .sga-fab { position: fixed; left: 14px; bottom: calc(88px + env(safe-area-inset-bottom)); z-index: 99989; display: none; align-items: center; gap: 6px; height: 48px; padding: 0 16px 0 12px; border-radius: 999px; border: 2px solid transparent; cursor: pointer; font-size: 14px; font-weight: 800; color: #0E2A30; background-image: linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(90deg, #E2C27A, #8FD3C8, #C6A3E8); background-origin: border-box; background-clip: padding-box, border-box; box-shadow: 0 12px 26px rgba(5,18,21,0.3); font-family: 'Pretendard', -apple-system, sans-serif; }
+        .sga-fab b { font-size: 18px; }
+        .pc-btn-ai { background: #FFFFFF !important; color: #134047 !important; border: 2px solid transparent !important; background-image: linear-gradient(#FFFFFF, #FFFFFF), linear-gradient(135deg, #E2C27A, #8FD3C8, #C6A3E8) !important; background-origin: border-box !important; background-clip: padding-box, border-box !important; }
+        .sga-ov { position: fixed; inset: 0; z-index: 2147482500; background: rgba(5,18,21,0.55); display: flex; align-items: center; justify-content: center; padding: 20px; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif; }
+        .sga-ov[hidden] { display: none !important; }
+        html.sga-lock, html.sga-lock body { overflow: hidden; }
+        .sga-ov * { box-sizing: border-box; }
+        .sga-panel { width: 100%; max-width: 640px; height: min(780px, calc(100vh - 40px)); height: min(780px, calc(100dvh - 40px)); display: flex; flex-direction: column; background: #F5F7F8; border-radius: 22px; overflow: hidden; box-shadow: 0 30px 70px rgba(0,0,0,0.35); color: #0E2A30; }
+        .sga-head { flex: none; display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #FFFFFF; border-bottom: 1px solid #E3E8E6; }
+        .sga-av { width: 42px; height: 42px; border-radius: 50%; overflow: hidden; background: #0A2B32; flex: none; display: flex; align-items: center; justify-content: center; }
+        .sga-av img { width: 100%; height: 100%; object-fit: cover; }
+        .sga-ttl { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .sga-ttl b { font-size: 17px; font-weight: 800; }
+        .sga-ttl small { font-size: 12.5px; color: #5C7376; }
+        .sga-x { width: 42px; height: 42px; border-radius: 12px; border: 1px solid #E3E8E6; background: #FFFFFF; font-size: 17px; cursor: pointer; color: #0E2A30; }
+        .sga-log { flex: 1 1 auto; overflow-y: auto; padding: 18px 16px 8px; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; }
+        .sga-msg { max-width: 92%; display: flex; flex-direction: column; gap: 8px; animation: sgaIn .25s ease; }
+        @keyframes sgaIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        .sga-msg p { margin: 0; font-size: 15px; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere; }
+        .sga-msg.bot { align-self: flex-start; }
+        .sga-msg.bot > p { background: #FFFFFF; border: 1px solid #E3E8E6; padding: 10px 14px; border-radius: 4px 16px 16px 16px; }
+        .sga-msg.bot > p.sga-ex { background: transparent; border: 0; padding: 0 4px; font-size: 13px; color: #5C7376; }
+        .sga-msg.bot > p.sga-strong { font-weight: 800; }
+        .sga-msg.me { align-self: flex-end; }
+        .sga-msg.me p { background: #134047; color: #FFFFFF; padding: 10px 14px; border-radius: 16px 4px 16px 16px; }
+        .sga-cards { display: grid; gap: 8px; }
+        .sga-card { background: #FFFFFF; border: 1.5px solid #DCE7E5; border-radius: 16px; padding: 12px 14px; display: grid; gap: 6px; }
+        .sga-card.top { border-color: #E2C27A; box-shadow: 0 8px 20px rgba(138,100,24,0.12); }
+        .sga-c-h { display: flex; align-items: center; gap: 8px; }
+        .sga-c-h b { font-size: 15px; line-height: 1.35; word-break: keep-all; }
+        .sga-rank { flex: none; width: 22px; height: 22px; border-radius: 50%; background: #134047; color: #F3DFA8; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+        .sga-img { width: 44px; height: 44px; border-radius: 10px; object-fit: contain; background: #F6F7F5; flex: none; }
+        .sga-c-r { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+        .sga-fee { font-size: 19px; font-weight: 800; font-variant-numeric: tabular-nums; }
+        .sga-c-r small { font-size: 12.5px; color: #5C7376; }
+        .sga-gift { font-size: 14px; font-weight: 700; color: #8A6418; }
+        .sga-apply { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 46px; border: 0; border-radius: 12px; background: linear-gradient(135deg, #F3DFA8, #E2C27A); color: #0E343B; font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; font-family: inherit; text-align: center; padding: 0 12px; }
+        .sga-link { display: inline-flex; align-self: flex-start; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 12px; border: 1px solid #C9D9D7; background: #FFFFFF; color: #134047; font-size: 14px; font-weight: 700; text-decoration: none; cursor: pointer; font-family: inherit; }
+        .sga-form { display: grid; gap: 8px; background: #FFFFFF; border: 1.5px solid #DCE7E5; border-radius: 16px; padding: 12px; }
+        .sga-form input[type=tel], .sga-form input[type=text] { width: 100%; height: 48px; border-radius: 12px; border: 1.5px solid #D4E0DF; background: #F7FAFA; padding: 0 14px; font-size: 16px; color: #0E2A30; font-family: inherit; }
+        .sga-agree { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: #3D5A5E; line-height: 1.45; cursor: pointer; }
+        .sga-agree input { width: 20px; height: 20px; margin: 1px 0 0; flex: none; accent-color: #134047; }
+        .sga-agree small { display: block; font-size: 11.5px; color: #7A8F91; }
+        .sga-err { margin: 0; min-height: 18px; font-size: 13px !important; color: #B5452E; }
+        .sga-done b { display: block; font-size: 16px; margin-bottom: 4px; }
+        .sga-done p { font-size: 14px !important; color: #3D5A5E; }
+        .sga-chips { flex: none; display: flex; gap: 6px; overflow-x: auto; padding: 8px 16px 4px; scrollbar-width: none; }
+        .sga-chips::-webkit-scrollbar { display: none; }
+        .sga-chip { flex: none; min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1.5px solid #C9D9D7; background: #FFFFFF; color: #134047; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; white-space: nowrap; }
+        .sga-chip:hover { border-color: #134047; }
+        .sga-in { flex: none; display: flex; gap: 8px; padding: 8px 12px 6px; background: #F5F7F8; }
+        .sga-in input { flex: 1; min-width: 0; height: 50px; border-radius: 14px; border: 1.5px solid #C9D9D7; background: #FFFFFF; padding: 0 14px; font-size: 16px; color: #0E2A30; font-family: inherit; }
+        .sga-in input:focus { outline: none; border-color: #134047; }
+        .sga-send { flex: none; width: 50px; height: 50px; border-radius: 14px; border: 0; background: #134047; color: #FFFFFF; font-size: 20px; font-weight: 800; cursor: pointer; }
+        .sga-note { flex: none; margin: 0; padding: 0 16px 10px; font-size: 11.5px; color: #7A8F91; text-align: center; }
+        @media (max-width: 900px) {
+            .sga-fab { display: inline-flex; }
+            .sga-ov { padding: 0; }
+            .sga-panel { max-width: none; height: 100vh; height: 100dvh; border-radius: 0; }
+            .sga-ask { margin: 18px 0 4px; padding: 5px 5px 5px 14px; }
+            .sga-ask input { height: 44px; font-size: 15px; }
+            .sga-ask-go { height: 44px; padding: 0 12px; font-size: 14px; }
+            .sga-ask-hint { margin-left: 14px; }
+        }
+    </style>
 </head>
 <body>
     
@@ -1262,6 +1335,11 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                 </h1>
                 <p class="sg-sub sg-a2">결합 신청 시 최대 132만원 · 설치 당일 지급</p>
                 <p class="sg-desc sg-a3">통신사·속도만 고르면 받을 사은품과 월 요금이<br class="sg-br-m"> 30초 만에 바로 보여요. 상담부터 설치까지 사거리인터넷이 책임집니다.</p>
+                <form class="sga-ask sg-a3" role="search" onsubmit="sgAiAsk(event)">
+                    <input type="text" id="sga-q" maxlength="200" placeholder="예) 혼자 사는데 인터넷 싸게 · 얼음 정수기 추천" aria-label="AI에게 물어보기" autocomplete="off" enterkeyhint="search">
+                    <button type="submit" class="sga-ask-go"><i>AI</i>모드</button>
+                </form>
+                <p class="sga-ask-hint sg-a3">말로 물어보면 AI가 우리 상품 중에서 골라 드리고 바로 가입까지 도와드려요</p>
 
                 <div class="sg-tiles sg-a4">
                     <a class="sg-tile sg-tile-link" href="#best-plan-section" onclick="sgTileGo(event, 'best-plan-section')"><span class="sg-tile-k">가정용</span><b class="sg-tile-v">인터넷·TV·<wbr>전화</b><svg class="sg-tile-go" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
@@ -1822,6 +1900,9 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
 
     <!-- PC 우측 고정 퀵메뉴 -->
     <div class="pc-quick-menu">
+        <a href="#" onclick="sgAiOpen(event)" class="pc-q-btn pc-btn-ai">
+            <span class="pc-q-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.6L18 9.4l-4.2 1.8L12 16l-1.8-4.8L6 9.4l4.2-1.8z"></path><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"></path></svg></span>AI 상담
+        </a>
         <a href="tel:18332440" class="pc-q-btn pc-btn-phone">
             <span class="pc-q-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg></span>상담전화
         </a>
@@ -4310,6 +4391,560 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         if (typeof window.renderBestPlans === 'function') { var orig = window.renderBestPlans; window.renderBestPlans = function () { var r = orig.apply(this, arguments); try { paint(); } catch (e) { console.error('사은품 확인기 오류', e); } return r; }; }
         paint(); var tries = 0, iv = setInterval(function () { tries++; if (base().length || window.sgPlanLoadFailed || tries > 40) { clearInterval(iv); try { paint(); } catch (e) { } } }, 500);
     })();
+    </script>
+    <button type="button" class="sga-fab" onclick="sgAiOpen(event)" aria-label="AI 상담 열기"><b>✨</b>AI 상담</button>
+    <script>
+/* ===== 사거리 AI 상담: 말 알아듣기 (외부 AI 없이 이 안에서만) ===== */
+var SGAI = (function () {
+    function low(t) { return String(t || '').toLowerCase().replace(/[ㅤ ]/g, ' '); }
+    function sq(t) { return low(t).replace(/\s+/g, ''); }
+    function any(c, list) { for (var i = 0; i < list.length; i++) if (c.indexOf(list[i]) >= 0) return list[i]; return ''; }
+    function rx(c, r) { return r.test(c); }
+    var NUMKO = { '일': 1, '이': 2, '삼': 3, '사': 4, '오': 5, '육': 6, '칠': 7, '팔': 8, '구': 9, '십': 10, '한': 1, '두': 2, '세': 3, '네': 4 };
+
+    /* --- 통신사 --- */
+    var CAR = [
+        ['스카이', ['스카이라이프', 'skylife', '스카이', 'sky라이프', 'kt스카이']],
+        ['헬로', ['헬로비전', '헬로', 'hellovision', 'hello', 'lg헬로', '엘지헬로']],
+        ['LG', ['유플러스', '유플', 'u+', 'uplus', 'lgu', '엘지유플', '엘쥐', '엘지', 'lg']],
+        ['KT', ['케이티', '올레', 'olleh', '지니tv', '지니티비', '케티', 'kt']],
+        ['SK', ['브로드밴드', 'skb', 'sk브로드', '에스케이', 'btv', '비티비', 'sk']]
+    ];
+    var RENT_BRAND_HINT = ['sk매직', '에스케이매직', 'skmagic', 'lg케어', '엘지케어', 'lg전자', '엘지전자', 'lg퓨리케어', '퓨리케어', 'lg오브제', '오브제', '엘지오브제'];
+    function carriersIn(c) {   // 글 안에 나온 통신사들 (순서대로) — 렌탈 브랜드 말은 빼고
+        var t = c.replace(/skt/g, 'sk'); RENT_BRAND_HINT.forEach(function (w) { t = t.split(w).join(' '); });
+        var out = [];
+        CAR.forEach(function (cv) { cv[1].forEach(function (w) { var i = t.indexOf(w); if (i >= 0) { out.push([i, cv[0]]); t = t.split(w).join(' '.repeat(w.length)); } }); });
+        out.sort(function (a, b) { return a[0] - b[0]; });
+        var r = []; out.forEach(function (x) { if (r.indexOf(x[1]) < 0) r.push(x[1]); }); return r;
+    }
+
+    /* --- 렌탈 종류 (위에서부터 먼저) --- */
+    var KINDS = [
+        ['김치냉장고', ['김치냉장고', '김치 냉장고', '김냉', '딤채', '김치톡톡', '김치플러스']],
+        ['업소용 냉장고', ['업소용냉장고', '업소용 냉장고', '쇼케이스', '테이블냉장고']],
+        ['냉장고', ['냉장고', '냉동고', '비스포크냉장고', '양문형', '4도어']],
+        ['세탁기·건조기', ['세탁기', '건조기', '워시타워', '워시콤보', '통돌이', '드럼세탁', '빨래']],
+        ['에어컨', ['에어컨', '냉난방기', '시스템에어컨', '벽걸이에어컨', '스탠드에어컨', '에어콘', '에어 컨']],
+        ['공기청정기', ['공기청정기', '공기 청정기', '공청기', '공기청정', '미세먼지', '환기청정기']],
+        ['비데', ['비데']],
+        ['안마의자', ['안마의자', '안마기', '마사지체어', '안마 의자', '마사지기', '바디프랜드', '세라젬', '척추']],
+        ['매트리스·침대', ['매트리스', '침대', '프레임', '토퍼', '슈퍼싱글', '라지킹', '퀸사이즈', '킹사이즈']],
+        ['식기세척기', ['식기세척기', '식세기', '식세', '설거지']],
+        ['전기레인지', ['인덕션', '전기레인지', '하이라이트', '하이브리드레인지']],
+        ['음식물처리기', ['음식물처리기', '음식물 처리기', '음처기', '음식물쓰레기', '미생물처리기']],
+        ['제습기', ['제습기', '제습']],
+        ['가습기', ['가습기', '가습']],
+        ['의류관리기', ['의류관리기', '스타일러', '에어드레서', '의류청정기', '옷관리']],
+        ['커피머신', ['커피머신', '커피 머신', '에스프레소', '커피기계']],
+        ['연수기', ['연수기', '샤워필터']],
+        ['청소기', ['로봇청소기', '청소기', '물걸레']],
+        ['제빙기', ['제빙기', '얼음기계']],
+        ['반려동물', ['반려동물', '펫', '강아지', '고양이', '급수기']],
+        ['TV', ['tv렌탈', '티비렌탈', '텔레비전렌탈', 'tv 렌탈', '티비 렌탈', '인치tv', '인치 tv', '인치티비', '스마트tv', '올레드tv', 'oled', 'qled', '네오qled']],
+        ['정수기', ['정수기', '냉온수기', '얼음정수기', '직수정수기', '물맛', '생수', '정수 기']]
+    ];
+    var RENT_WORDS = ['렌탈', '렌털', '대여', '가전', '구독', '빌려'];
+    var FEAT = [['얼음', ['얼음']], ['냉온', ['냉온', '온수', '뜨거운물', '따뜻한물', '온정']], ['직수', ['직수']], ['정수전용', ['정수만', '정수전용', '정수 전용', '찬물안', '냉수 필요없']], ['냉정', ['냉정', '냉수']]];
+    var BRANDS = [['코웨이', ['코웨이', 'coway', '웅진']], ['SK매직', ['sk매직', '에스케이매직', 'skmagic', '매직']], ['쿠쿠', ['쿠쿠', 'cuckoo']], ['청호나이스', ['청호', '청호나이스']],
+        ['LG', ['lg', '엘지', '퓨리케어', '오브제', '트롬', '디오스', '휘센']], ['삼성', ['삼성', 'samsung', '비스포크', '비스포크']], ['현대큐밍', ['큐밍', '현대큐밍']], ['교원웰스', ['교원', '웰스']],
+        ['세라젬', ['세라젬', '세라잼']], ['바디프랜드', ['바디프랜드']], ['현대유버스', ['유버스', 'ubus']], ['스타리온', ['스타리온']], ['위니아', ['위니아', '딤채']], ['힘펠', ['힘펠']]];
+
+    /* --- 업무 · 자주 묻는 질문 --- */
+    var BIZ = ['사업자', '사업장', '가게', '매장', '식당', '카페', '사무실', '업소', '상가', '점포', 'cctv', '씨씨티비', '씨씨tv', '포스기', '포스', '카드단말기', '단말기', '키오스크', '병원', '학원', '미용실', '편의점', '창업', '오픈준비', '개업'];
+    var NET = ['인터넷', '와이파이', '와파', 'wifi', 'wi-fi', '공유기', '기가', '메가', '광랜', '속도', 'tv', '티비', '테레비', '텔레비', 'iptv', '채널', '넷플', '유튜브', '통신사', '결합', '갈아타', '갈아탈', '번호이동', '셋톱', '셋탑', '약정끝', '약정만료', '약정이끝', '재약정', '요금제', '랜선', '인터넷가입', '집전화', '인터넷전화'];
+
+    function budget(c) {
+        var m = /(\d+(?:\.\d+)?)\s*만\s*(?:원|원대)?\s*(?:이하|아래|미만|안쪽|이내|내외|까지|정도|선|밑|대)/.exec(c) || /(?:월|한달|달에)\s*(\d+(?:\.\d+)?)\s*만/.exec(c);
+        if (m) return Math.round(parseFloat(m[1]) * 10000);
+        m = /([일이삼사오육칠팔구])\s*만\s*(?:원)?\s*(?:이하|아래|미만|안쪽|이내|까지|정도|대)/.exec(c); if (m) return NUMKO[m[1]] * 10000;
+        m = /(\d{4,6})\s*원\s*(?:이하|아래|미만|안쪽|이내|까지|정도)/.exec(c); if (m) return parseInt(m[1], 10);
+        return 0;
+    }
+    function people(c) {
+        var m = /(\d)\s*(?:인(?!치)|명)\s*(?:가족|가구|이서|이)?/.exec(c); if (m) return parseInt(m[1], 10);
+        m = /([한두세네])\s*(?:명|식구)/.exec(c); if (m) return NUMKO[m[1]];
+        m = /(\d)\s*식구/.exec(c); if (m) return parseInt(m[1], 10);
+        if (rx(c, /혼자|자취|원룸|1인|혼삶|독거|고시원|오피스텔혼자|기숙사/)) return 1;
+        if (rx(c, /둘이|신혼|부부|커플|2인|동거|와이프랑|남편이랑|아내랑/)) return 2;
+        if (rx(c, /가족|애들|아이들|아이둘|자녀|대가족|식구많/)) return 4;
+        return 0;
+    }
+
+    /* 한 문장 → 알아낸 것들 */
+    function parse(text) {
+        var t = low(text), c = sq(text), o = { raw: String(text || '') };
+        if (!c) { o.empty = true; return o; }
+        // 인사 · 감사 · 부정
+        if (rx(c, /^(안녕|안녕하세요|하이|헬로우|ㅎㅇ|hi|hello|반가워|반갑습니다|여보세요|저기요|계세요)[!.~?]*$/)) o.hello = true;
+        if (rx(c, /고마워|감사|땡큐|thank|ㄱㅅ|수고하세요|수고하셨/)) o.thanks = true;
+        if (rx(c, /^(아니|아니요|아뇨|ㄴㄴ|노노|싫어|별로|됐어|괜찮아요|다음에)/)) o.no = true;
+        if (rx(c, /^(네|넵|예|응|ㅇㅇ|ㅇㅋ|오케이|ok|좋아|좋아요|그래|그걸로|그거로|콜|ㄱㄱ|가자|고고)[!.~]*$/)) o.yes = true;
+        // 몇 번째
+        var nm = /(\d)\s*번|([첫두세])\s*번째|(첫번째|두번째|세번째|첫째|둘째|셋째)/.exec(c);
+        if (nm) o.pickN = nm[1] ? parseInt(nm[1], 10) : ({ '첫': 1, '두': 2, '세': 3, '첫번째': 1, '두번째': 2, '세번째': 3, '첫째': 1, '둘째': 2, '셋째': 3 })[nm[2] || nm[3]];
+        // 가입 · 신청 · 상담원
+        if (rx(c, /가입|신청|접수|이걸로|그걸로|이거로|이거할|이걸할|진행해|진행할|할게|할께|할래|하고싶|하겠|개통해|바로해|설치해줘|설치할게|계약/)) o.apply = true;
+        if (rx(c, /상담원|사람이랑|직원|사장님|전화주|연락주|연락해|전화해줘|전화부탁|콜백|통화하고|직접상담|상담받고|상담받을|상담원연결|상담하고|상담신청/)) o.human = true;
+        // 질문들
+        if (rx(c, /(사은품|현금|지원금|상품권|혜택|돈).{0,8}(언제|며칠|당일|입금|지급)|언제.{0,6}(입금|지급|받|들어와|줘|주)/)) o.qWhenGift = true;
+        if (rx(c, /(설치|개통|기사).{0,8}(언제|며칠|빨리|당일|오늘|내일|주말|일요일|토요일|공휴일|걸려|가능한날|시간)|(주말|일요일|토요일|공휴일|오늘|내일|당일|저녁|밤).{0,6}(설치|개통)|설치비|설치비용/)) o.qInstall = true;
+        if (rx(c, /위약금|해지|해약|중도|약정남|약정이남|약정이아직|남은약정|위약/)) o.qPenalty = true;
+        if (rx(c, /이사/)) o.qMove = true;
+        if (rx(c, /(우리|저희|이|그)(집|동네|지역|주소|아파트|건물).{0,8}(되|가능|설치|들어와|나와|돼)|설치(가능|되는|돼|되나)지역|지역확인|가능지역|커버리지|주소.{0,4}(확인|조회)/)) o.qArea = true;
+        if (rx(c, /전화번호|연락처|번호알려|번호뭐|대표번호|상담시간|영업시간|몇시까지|몇시부터|운영시간|쉬는날|휴무|주말에도|주말도/)) o.qContact = true;
+        if (rx(c, /매장|위치|주소알려|어디에있|어디있|찾아가|방문|오프라인|사무실어디/) && !rx(c, /설치|가능/)) o.qPlace = true;
+        if (rx(c, /카톡|카카오톡|카카오/)) o.qKakao = true;
+        if (rx(c, /결합(할인)?(이|은|이란|이라는게)?(뭐|무엇|뭔가|뭔지|어떻게되|설명)|가족결합(이|은)?(뭐|어떻게)/)) o.qBundle = true;
+        if (rx(c, /아이폰|갤럭시|폴드|플립|휴대폰(을|도)?(사|구매|바꾸|개통|팔|싸게)|핸드폰(을|도)?(사|구매|바꾸|개통|팔|싸게)|폰(을)?바꾸|기기변경|기변|번호이동|자급제|유심|요금제바꾸/)) o.qPhone = true;
+        if (rx(c, /믿을|사기|먹튀|안전한|신뢰|진짜줘|진짜주|정말주|후기|리뷰/)) o.qTrust = true;
+        if (rx(c, /비교|차이|뭐가나|뭐가좋|어디가좋|어디가나|어느게|어떤게좋|추천해|추천좀|추천부탁|골라|알아서/)) o.recommend = true;
+        if (rx(c, /품질|속도느|끊기|끊겨|안터|느려|ping|핑|렉|버벅/)) o.qQuality = true;
+        if (rx(c, /알뜰|요금할인형|저가형/)) o.alddeul = true;
+        // 우선순위
+        if (rx(c, /싸|싼|저렴|최저|가성비|아끼|절약|요금낮|요금적|적게내|부담없|최소|저가/)) o.prio = 'cheap';
+        if (rx(c, /사은품많|현금많|지원금많|혜택많|많이주|많이받|제일많|최대|가장많|돈많이|현금으로|현금받|사은품|지원금|현금/)) o.prio = o.prio === 'cheap' ? 'both' : 'gift';
+        o.budget = budget(c);
+        if (o.qInstall || o.qPenalty || o.qWhenGift || o.qArea) o.apply = false;
+        if (rx(c, /요금|통신비|인터넷비|월정액/) && !any(c, ['렌탈', '렌털'])) o.netWord = true;
+        // 업무
+        var biz = any(c, BIZ); if (biz) o.biz = biz;
+        // 렌탈
+        for (var i = 0; i < KINDS.length; i++) { var w = any(c, KINDS[i][1]); if (w) { o.kind = KINDS[i][0]; break; } }
+        if (!o.kind && rx(c, /얼음물|물마시|정수/)) o.kind = '정수기';
+        // 'TV 렌탈' 과 '인터넷 TV' 구분
+        if (o.kind === 'TV' && rx(c, /인터넷|iptv|채널|결합|셋톱/)) delete o.kind;
+        if (!o.kind && rx(c, /(\d{2,3})\s*인치/) && rx(c, /tv|티비|텔레비/)) o.kind = 'TV';
+        o.rentWord = !!any(c, RENT_WORDS);
+        var fe = []; FEAT.forEach(function (f) { if (any(c, f[1])) fe.push(f[0]); }); if (fe.length) o.feat = fe;
+        var br = []; BRANDS.forEach(function (b) { if (any(c, b[1])) br.push(b[0]); });
+        // 'sk' 'lg' 는 렌탈 얘기일 때만 브랜드
+        if (br.length) o.brands = br;
+        var mm = /(\d{2,3})\s*평/.exec(c); if (mm) o.pyeong = parseInt(mm[1], 10);
+        mm = /(\d{2,4})\s*(?:l|리터)(?![a-z])/.exec(c); if (mm) o.liter = parseInt(mm[1], 10);
+        mm = /(\d{1,2})\s*(?:kg|키로|킬로)/.exec(c); if (mm) o.kg = parseInt(mm[1], 10);
+        mm = /(\d{2,3})\s*인치/.exec(c); if (mm) o.inch = parseInt(mm[1], 10);
+        if (rx(c, /라지킹/)) o.bed = 'LK'; else if (rx(c, /슈퍼싱글|ss사이즈/)) o.bed = 'SS'; else if (rx(c, /퀸/)) o.bed = 'Q'; else if (rx(c, /킹/)) o.bed = 'K'; else if (rx(c, /싱글/)) o.bed = 'S';
+        // 인터넷
+        o.net = !!any(c, NET) || rx(c, /\d+\s*(m|메가|기가|g)\b/);
+        var tvNo = rx(c, /인터넷만|tv(는|도)?(필요없|안|없|노|x)|티비(는|도)?(필요없|안|없|노|x)|tv빼|티비빼|단독|tv안봐|티비안봐|티비는안|tv는안|티비없이|tv없이/);
+        var tvYes = !tvNo && rx(c, /tv|티비|테레비|텔레비|iptv|채널|넷플|btv|지니|셋톱|셋탑|결합상품|인터넷이랑tv|인터넷이랑티비|인터넷\+tv|인터넷티비/) && o.kind !== 'TV';
+        if (tvNo) o.type = '단독'; else if (tvYes) o.type = '결합';
+        // 속도
+        if (rx(c, /(1|일|한)\s*(기가|g|gb|기가비트)|1000\s*(m|메가)|기가인터넷|기가급|^기가$|기가로|기가요|기가짜리|제일빠른|가장빠른|최고속|최대속도/)) o.speed = '1G';
+        else if (rx(c, /500|오백/)) o.speed = '500M';
+        else if (rx(c, /200|이백/)) o.speed = '200M';
+        else if (rx(c, /160/)) o.speed = '160M';
+        else if (rx(c, /100|백메|백메가|광랜|기본속도|제일느린|최저속도/)) o.speed = '100M';
+        var ppl = people(c); if (ppl) o.people = ppl;
+        if (!o.speed) {
+            if (rx(c, /게임많|배그|배틀그라운드|롤|오버워치|발로란트|피파|스팀|방송|스트리밍방송|유튜버|재택|고사양|업로드|대용량|빠른거|빠르게|빨라야|속도중요|버벅|렉없/)) o.speedHint = '1G';
+            else if (rx(c, /게임|넷플|유튜브|영상|ott|디즈니|티빙|웨이브|쿠팡플레이|아이들|애들|가족|화상|인강|온라인수업/) || ppl >= 3) o.speedHint = '500M';
+            else if (ppl === 1 || ppl === 2 || rx(c, /부모님|어르신|노인|할머니|할아버지|어머니|아버지|웹서핑|검색만|카톡만|뉴스만|가끔|조금|별로안/)) o.speedHint = '100M';
+        }
+        // 휴대폰 결합: '휴대폰은 KT', 'KT폰', '알뜰폰'
+        var cars = carriersIn(c);
+        var mobM = /(휴대폰|핸드폰|폰|휴대전화|스마트폰|모바일|가족폰|우리폰|내폰)(은|는|이|도|을|를)?(다|전부|모두)?(lg|엘지|유플러스|유플|u\+|kt|케이티|sk|에스케이|skt|티)/.exec(c) || /(lg|엘지|유플러스|유플|u\+|kt|케이티|skt|sk|에스케이)(폰|휴대폰|핸드폰|쓰|써|사용|이용|가입되|통신사|요금제)/.exec(c);
+        if (rx(c, /알뜰폰|알뜰요금|헬로모바일|리브엠|kt엠모바일|유모바일|세컨드폰/)) { o.mob = 'n'; o.mobBudget = true; }
+        else if (mobM) { o.mob = 'y'; var mc = carriersIn(mobM[0].replace(/skt/, 'sk').replace(/티$/, ''))[0]; if (mc) o.mobProv = mc; }
+        else if (rx(c, /폰(은|는)?(따로|결합안|결합x|상관없)|결합안|결합없|결합x|결합안할|결합안해|결합은안|결합못|휴대폰없|핸드폰없/)) o.mob = 'n';
+        else if (rx(c, /휴대폰결합|핸드폰결합|폰결합|가족결합|결합할인|결합해|결합하|결합할수|결합돼|결합되/)) o.mob = 'y';
+        // 인터넷 통신사 (휴대폰 통신사와 다르게 말할 수 있음)
+        var netCars = mobM ? carriersIn(c.replace(mobM[0], ' ')) : cars;
+        if (netCars.length && (o.net || !o.kind || !o.rentWord)) { o.prov = netCars[0]; if (netCars.length > 1) o.provs = netCars; }
+        if (rx(c, /통신사(는|도)?(상관없|아무거나|다좋|모르|추천)|아무데나|어디든|잘모르|모르겠|몰라/)) o.provAny = true;
+        // 통신사 이름만 말하면 인터넷 얘기
+        if ((o.prov || o.mob) && !o.kind) o.net = true;
+        o.netStrong = !!(any(c, NET) || o.prov || o.mob || o.speed || o.type || o.speedHint);
+        if (o.speed || o.speedHint || o.type || o.netWord) o.net = true;
+        if (o.kind) o.net = false;
+        // LG/SK 같은 말은 렌탈 맥락이면 브랜드로
+        if (o.kind && o.brands) { delete o.prov; }
+        if (!o.kind && o.brands && !o.rentWord) { o.brands = o.brands.filter(function (b) { return ['LG', 'SK매직', '삼성'].indexOf(b) < 0 || o.rentWord; }); if (!o.brands.length) delete o.brands; }
+        if (!o.kind && o.brands && (o.brands.indexOf('코웨이') >= 0 || o.brands.indexOf('쿠쿠') >= 0 || o.brands.indexOf('청호나이스') >= 0 || o.brands.indexOf('SK매직') >= 0 || o.brands.indexOf('현대큐밍') >= 0 || o.brands.indexOf('교원웰스') >= 0)) o.rentAny = true;
+        if (o.rentWord && !o.kind) o.rentAny = true;
+        return o;
+    }
+
+    /* 대화 상태에 합치기 */
+    function merge(st, o) {
+        if (o.kind || o.rentAny) {
+            if (st.topic !== 'rent' || (o.kind && o.kind !== st.r.kind) || (!o.kind && /다른/.test(o.raw))) st.r = {};
+            st.topic = 'rent';
+            ['kind', 'feat', 'brands', 'pyeong', 'liter', 'kg', 'inch', 'bed'].forEach(function (k) { if (o[k] != null) st.r[k] = o[k]; });
+            if (o.budget) st.r.budget = o.budget;
+            if (o.prio) st.r.prio = o.prio;
+        } else if (o.biz && !o.kind) {
+            st.topic = 'biz';
+        } else if (st.topic === 'rent' && !o.netStrong && (o.prio || o.budget || o.feat || o.brands)) {
+            if (o.prio) st.r.prio = o.prio; if (o.budget) st.r.budget = o.budget; if (o.feat) st.r.feat = o.feat; if (o.brands) st.r.brands = o.brands;
+        } else if (o.net || o.prov || o.mob || o.speed || o.type || o.alddeul || (st.topic === 'net' && (o.prio || o.budget || o.people || o.provAny))) {
+            if (st.topic !== 'net') st.n = {};
+            st.topic = 'net';
+            if (o.provAny) delete st.n.prov;
+            if (o.prov) st.n.prov = o.prov;
+            if (o.mob) st.n.mob = o.mob;
+            if (o.mob === 'n') delete st.n.mobProv;
+            if (o.mobProv) st.n.mobProv = o.mobProv;
+            if (o.type) st.n.type = o.type;
+            if (o.speed) st.n.speed = o.speed; else if (o.speedHint && !st.n.speed) st.n.speedHint = o.speedHint;
+            if (o.prio) st.n.prio = o.prio;
+            if (o.budget) st.n.budget = o.budget;
+            if (o.people) st.n.people = o.people;
+            if (o.alddeul) st.n.alddeul = true;
+        } else if (st.topic === 'rent' && (o.prio || o.budget || o.feat || o.brands)) {
+            if (o.prio) st.r.prio = o.prio; if (o.budget) st.r.budget = o.budget; if (o.feat) st.r.feat = o.feat; if (o.brands) st.r.brands = o.brands;
+        }
+        return st;
+    }
+
+    /* 인터넷 추천: rows = 요금표(allData 모양) */
+    var FULL = { LG: 'LG U+', KT: 'KT', SK: 'SK브로드밴드', '스카이': 'KT스카이라이프', '헬로': 'LG헬로비전' };
+    var DEF_TV = { SK: '스탠다드TV', KT: '라이트TV', LG: '실속형TV', '스카이': 'TV 베이직', '헬로': '뉴베이직 TV' };
+    function num(t) { return parseInt(String(t || '').replace(/[^0-9]/g, ''), 10) || 0; }
+    function giftMan(t) { var m = /([\d.]+)\s*만\s*원/.exec(String(t || '')); return m ? parseFloat(m[1]) : 0; }
+    function provOf(r) { var s = String(r[0] || '').trim(); return ['스카이', '헬로', 'SK', 'LG', 'KT'].filter(function (p) { return s.indexOf(p) >= 0; })[0] || ''; }
+    function netPick(rows, n) {
+        var type = n.type || (n.prio === 'cheap' && !n.mob ? '단독' : '결합'), speed = n.speed || n.speedHint || '500M', mob = n.mob !== 'n';
+        var base = (rows || []).filter(function (r) { var t = String(r[1] || '').trim(); return (t === '단독' || t === '결합') && provOf(r); });
+        if (!base.length) return { list: [], type: type, speed: speed };
+        var out = [];
+        Object.keys(FULL).forEach(function (p) {
+            if (n.prov && p !== n.prov) return;
+            var c = base.filter(function (r) { return provOf(r) === p && r[1].trim() === type; });
+            if (!c.length) return;
+            var sp = c.filter(function (r) { return String(r[2]).trim() === speed; });
+            if (!sp.length) { // 가까운 속도
+                var want = num(speed) * (/G/.test(speed) ? 1000 : 1);
+                sp = c.slice().sort(function (a, b) { return Math.abs(num(a[2]) * (/G/i.test(a[2]) ? 1000 : 1) - want) - Math.abs(num(b[2]) * (/G/i.test(b[2]) ? 1000 : 1) - want); });
+                sp = sp.filter(function (r) { return String(r[2]).trim() === String(sp[0][2]).trim(); });
+            }
+            var r = type === '결합' ? (sp.filter(function (x) { return String(x[3]).trim() === DEF_TV[p]; })[0] || sp[0]) : sp[0];
+            var dc = num(r[5]), fee = (mob && dc > 0) ? num(r[6]) : num(r[4]);
+            out.push({ p: p, name: FULL[p], r: r, type: type, speed: String(r[2]).trim(), tv: type === '결합' ? String(r[3]).trim() : '', fee: fee, mobDisc: mob && dc > 0, base: num(r[4]), gift: String(r[7] || '').trim(), g: giftMan(r[7]) });
+        });
+        if (n.budget) { var ok = out.filter(function (x) { return x.fee <= n.budget; }); out = ok.length ? ok : out.sort(function (a, b) { return a.fee - b.fee; }).slice(0, 1).map(function (x) { x.overBudget = true; return x; }); }
+        var prio = n.prio || 'gift';
+        out.sort(function (a, b) {
+            if (n.mobProv && !n.prov && n.mob !== 'n') { var am = a.p === n.mobProv ? 0 : 1, bm = b.p === n.mobProv ? 0 : 1; if (am !== bm) return am - bm; }
+            if (prio === 'cheap') return (a.fee - b.fee) || (b.g - a.g);
+            if (prio === 'both') return ((b.g * 10000 - b.fee * 36) - (a.g * 10000 - a.fee * 36));
+            return (b.g - a.g) || (a.fee - b.fee);
+        });
+        return { list: out, type: type, speed: speed, mob: mob };
+    }
+
+    /* 렌탈 추천: items = 렌탈 데이터(정리된 모양) */
+    function featOf(p) {
+        var n = String(p.name || '') + ' ' + String(p.sum || ''), ice = /얼음/.test(n), hot = /냉온|온정|온수/.test(n), cold = /냉정|냉수|냉온/.test(n), only = /정수\s*전용|정수기\s*\(정수\)|\(정수\)|무전원/.test(n);
+        var out = []; if (ice) out.push('얼음'); if (hot) out.push('냉온'); if (/직수/.test(n)) out.push('직수'); if (only && !hot && !cold) out.push('정수전용'); if (cold && !hot) out.push('냉정'); return out;
+    }
+    function numIn(t, r) { var m = r.exec(t || ''); return m ? parseFloat(m[1].replace(/,/g, '')) : null; }
+    function rentPick(items, r) {
+        var list = (items || []).filter(function (p) {
+            if (!p || !p.cos || !p.cos.length) return false;
+            if (r.kind === '정수기') { if (p.cat !== '정수기') return false; }
+            else if (r.kind) { var k = String(p.kind || ''); if (!(k === r.kind || k.indexOf(r.kind) >= 0 || r.kind.indexOf(k) >= 0 && k) && !(r.kind === '에어컨' && /냉난방|에어컨/.test(k))) return false; }
+            if (r.brands && r.brands.length && !r.brands.some(function (b) { return String(p.brand || '').indexOf(b) >= 0 || String(p.name || '').indexOf(b) >= 0 || (b === '세라젬' && /세라잼/.test(p.brand)); })) return false;
+            if (r.feat && r.feat.length) { var f = featOf(p); if (!r.feat.every(function (x) { return f.indexOf(x) >= 0; })) return false; }
+            if (r.pyeong) { var py = numIn(p.name, /([\d.]+)\s*평/); if (py != null && py < r.pyeong) return false; }
+            if (r.inch) { var inch = numIn(p.name, /(\d{2,3})\s*인치/); if (inch != null && Math.abs(inch - r.inch) > 10) return false; }
+            if (r.liter) { var li = numIn(p.sum, /전체용량\s*:\s*([\d.,]+)/) || numIn(p.name, /([\d.,]+)\s*L(?![A-Za-z])/); if (li != null && Math.abs(li - r.liter) > r.liter * 0.25) return false; }
+            if (r.kg) { var kg = numIn(p.sum, /(?:세탁용량|건조용량)\s*:\s*([\d.]+)/) || numIn(p.name, /([\d.]+)\s*kg/i); if (kg != null && Math.abs(kg - r.kg) > 4) return false; }
+            if (r.bed) { var nm = String(p.name); var hasB = { LK: /라지킹|\bLK\b/, SS: /슈퍼싱글|\bSS\b/, Q: /퀸|\bQK?\b/, K: /킹|\bK\b|\bQK\b/, S: /싱글/ }[r.bed]; if (hasB && !hasB.test(nm)) return false; }
+            return true;
+        }).map(function (p) {
+            var best = null, maxG = 0;
+            p.cos.forEach(function (c) { c.plans.forEach(function (x) { var g = giftMan(x.g); if (g > maxG) maxG = g; if (!best || x.fee < best.fee) best = { co: c.name, m: x.m, fee: x.fee, g: x.g }; }); });
+            return { p: p, low: best ? best.fee : (p.low || 0), maxG: maxG, best: best };
+        });
+        if (r.budget) { var ok = list.filter(function (x) { return x.low && x.low <= r.budget; }); if (ok.length) list = ok; }
+        var prio = r.prio || 'gift';
+        list.sort(function (a, b) { if (prio === 'cheap') return (a.low - b.low) || (b.maxG - a.maxG); return (b.maxG - a.maxG) || (a.low - b.low); });
+        return list;
+    }
+
+    return { parse: parse, merge: merge, netPick: netPick, rentPick: rentPick, featOf: featOf, FULL: FULL, giftMan: giftMan, KINDS: KINDS.map(function (k) { return k[0]; }) };
+})();
+if (typeof module !== 'undefined') module.exports = SGAI;
+
+/* ===== 사거리 AI 상담 화면 ===== */
+(function () {
+    if (!window.SGAI) return;
+    var A = window.SGAI;
+    var st = { topic: '', n: {}, r: {}, cards: [], hist: [], rentItems: null, busy: false };
+    var FEED = 'https://modil.co.kr/api/feed/rental', CK = 'sg-ai-rent-v1', TTL = 30 * 60 * 1000;
+    var TEL = '1833-2440', KAKAO = 'http://pf.kakao.com/_PxjsKG/chat';
+    var $ = function (id) { return document.getElementById(id); };
+    function h(tag, attrs) {
+        var e = document.createElement(tag);
+        if (attrs) Object.keys(attrs).forEach(function (k) { var v = attrs[k]; if (v == null || v === false) return; if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v; else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? '' : v); });
+        for (var i = 2; i < arguments.length; i++) { var c = arguments[i]; if (c == null || c === false) continue; (Array.isArray(c) ? c : [c]).forEach(function (x) { if (x == null || x === false) return; e.appendChild(typeof x === 'string' ? document.createTextNode(x) : x); }); }
+        return e;
+    }
+    function won(n) { return Number(n || 0).toLocaleString('ko-KR') + '원'; }
+    function rows() { try { return (typeof allData !== 'undefined' && Array.isArray(allData)) ? allData : []; } catch (e) { return []; } }
+
+    /* ---------- 화면 ---------- */
+    var ov, log, chips, input;
+    function build() {
+        if (ov) return;
+        ov = h('div', { class: 'sga-ov', id: 'sga-ov', hidden: true, role: 'dialog', 'aria-modal': 'true', 'aria-label': '사거리 AI 상담' },
+            h('div', { class: 'sga-panel' },
+                h('div', { class: 'sga-head' },
+                    h('span', { class: 'sga-av' }, h('img', { src: '털보아저씨국방색.png', alt: '' })),
+                    h('div', { class: 'sga-ttl' }, h('b', { text: '사거리 AI 상담' }), h('small', { text: '인터넷·TV · 렌탈 추천부터 가입까지' })),
+                    h('button', { type: 'button', class: 'sga-x', 'aria-label': '닫기', onclick: close }, '✕')),
+                log = h('div', { class: 'sga-log', 'aria-live': 'polite' }),
+                chips = h('div', { class: 'sga-chips' }),
+                h('form', { class: 'sga-in', onsubmit: function (e) { e.preventDefault(); send(input.value); } },
+                    input = h('input', { type: 'text', maxlength: '200', placeholder: '무엇이든 편하게 물어보세요', 'aria-label': '질문 입력', autocomplete: 'off', enterkeyhint: 'send' }),
+                    h('button', { type: 'submit', class: 'sga-send', 'aria-label': '보내기' }, '↑')),
+                h('p', { class: 'sga-note', text: '추천 금액은 오늘 단가표 기준이고 상담 때 확정돼요 · 대화 내용은 신청하실 때만 상담용으로 보내져요' })));
+        ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && ov && !ov.hidden) close(); });
+        document.body.appendChild(ov);
+        greet();
+    }
+    function open(q) {
+        build(); ov.hidden = false; document.documentElement.classList.add('sga-lock');
+        if (q && String(q).trim()) send(q); else setTimeout(function () { try { input.focus({ preventScroll: true }); } catch (e) { } }, 60);
+    }
+    function close() { if (!ov) return; ov.hidden = true; document.documentElement.classList.remove('sga-lock'); }
+    function scroll() { setTimeout(function () { log.scrollTop = log.scrollHeight; }, 30); }
+    function bot() { var b = h('div', { class: 'sga-msg bot' }); for (var i = 0; i < arguments.length; i++) { var c = arguments[i]; if (c == null) continue; b.appendChild(typeof c === 'string' ? h('p', { text: c }) : c); } log.appendChild(b); scroll(); return b; }
+    function me(t) { log.appendChild(h('div', { class: 'sga-msg me' }, h('p', { text: t }))); scroll(); }
+    function setChips(list) {
+        chips.textContent = '';
+        (list || []).forEach(function (c) { var t = typeof c === 'string' ? c : c[0], act = typeof c === 'string' ? null : c[1]; chips.appendChild(h('button', { type: 'button', class: 'sga-chip', onclick: function () { if (act) act(); else send(t); } }, t)); });
+    }
+    function greet() {
+        bot('안녕하세요! 사거리인터넷 AI 상담이에요 😊', '인터넷·TV나 정수기·가전 렌탈, 편하게 말로 물어보세요. 딱 맞는 상품 골라서 바로 가입까지 도와드릴게요.',
+            h('p', { class: 'sga-ex', text: '예) "혼자 사는데 인터넷 싸게" · "KT 폰 쓰는데 인터넷+TV 사은품 많은 곳" · "얼음 정수기 추천"' }));
+        setChips(['인터넷+TV 사은품 많은 곳', '혼자 살아요, 인터넷 싸게', '정수기 추천해줘', '공기청정기 렌탈', '사업장 인터넷·CCTV', '사은품 언제 줘요?']);
+    }
+
+    /* ---------- 대화 ---------- */
+    function send(text) {
+        text = String(text || '').trim().slice(0, 200); if (!text || st.busy) return;
+        input.value = ''; me(text); st.hist.push(text); if (st.hist.length > 8) st.hist.shift();
+        setTimeout(function () { try { reply(text); } catch (e) { console.error('AI 상담 오류', e); bot('앗, 잠시 문제가 생겼어요. 전화(' + TEL + ')나 아래 상담 신청으로 바로 도와드릴게요.'); offerHuman(); } }, 220);
+    }
+    function reply(text) {
+        var o = A.parse(text);
+        if (o.empty) return;
+        var answered = false;
+        // 카드 고르기 (1번, 두번째 …)
+        if (o.pickN && st.cards.length) { var c = st.cards[o.pickN - 1]; if (c) { applyCard(c); return; } }
+        // 자주 묻는 질문
+        if (o.qWhenGift) { bot('사은품(현금)은 설치가 끝난 날 바로 지급해 드려요. 설치 확인되면 당일 입금이 원칙이고, 받으실 계좌·방법은 상담 때 안내해 드려요.'); answered = true; }
+        if (o.qInstall) { bot('설치 날짜는 주소와 통신사 기사님 일정에 따라 정해져요. 신청해 주시면 가능한 가장 빠른 날로 잡아 드리고, 주말 설치도 가능한 지역이 많아요. 설치비는 통신사·상품마다 달라 상담 때 정확히 알려드려요.'); answered = true; }
+        if (o.qPenalty) { bot('지금 쓰시는 통신사 약정이 남았다면 위약금이 생길 수 있어요. 남은 약정을 확인해서 바꾸는 게 이득인지(사은품으로 위약금이 메워지는지) 상담 때 정확히 계산해 드릴게요.'); answered = true; }
+        if (o.qMove) { bot('이사하시는 곳에 새로 가입하시면 사은품을 받으실 수 있는 경우가 많아요. 새 주소에서 되는 통신사부터 확인해 볼까요?', h('button', { type: 'button', class: 'sga-link', onclick: function () { close(); if (window.openMapPopup) openMapPopup(); } }, '📍 새 주소 설치 가능 통신사 확인')); answered = true; }
+        if (o.qArea) { bot('주소만 넣으면 설치 가능한 통신사를 바로 확인할 수 있어요.', h('button', { type: 'button', class: 'sga-link', onclick: function () { close(); if (window.openMapPopup) openMapPopup(); } }, '📍 우리집 설치 가능 지역 확인')); answered = true; }
+        if (o.qContact || o.qPlace) { bot('상담 전화 ' + TEL + ' · 상담 시간 오전 10시 ~ 오후 7시 30분이에요. 매장은 경기도 안산시 단원구 화정로1길 6, 1층에 있어요. 시간 밖에 남겨 주시면 다음 상담 시간에 순서대로 연락드려요.', h('a', { class: 'sga-link', href: 'tel:18332440' }, '📞 ' + TEL + ' 전화하기')); answered = true; }
+        if (o.qKakao) { bot('카카오톡으로도 상담해 드려요.', h('a', { class: 'sga-link', href: KAKAO, target: '_blank', rel: 'noopener' }, '💬 카톡 상담 열기')); answered = true; }
+        if (o.qBundle) { bot('결합 할인은 같은 통신사의 휴대폰과 인터넷을 묶으면 매달 인터넷 요금이 내려가는 거예요. 휴대폰이 어느 통신사인지 알려주시면 결합 기준으로 계산해 드릴게요.'); answered = true; }
+        if (o.qTrust) { bot('사거리인터넷은 안산에 매장이 있는 정식 사업자(사업자등록 603-54-00909)예요. 홈페이지의 "실시간 접수 현황"은 실제 장부 기준으로 올라가고, 사은품은 설치 당일 지급이 원칙이에요. 당근·네이버 플레이스에서 실제 후기도 보실 수 있어요.'); answered = true; }
+        if (o.qQuality) { bot('속도가 느리거나 자주 끊기면 공유기·속도 상품이 맞지 않는 경우가 많아요. 가족 수와 주로 하는 것(영상·게임 등)을 알려주시면 맞는 속도로 추천해 드릴게요.'); answered = true; }
+        if (o.qPhone) { bot('휴대폰 개통(번호이동·기기변경)도 매장에서 상담해 드려요. 원하시는 기종을 남겨 주시면 조건 확인해서 연락드릴게요.'); offerHuman('휴대폰 개통 상담'); return; }
+        if (o.human) { bot('네, 상담원이 직접 연락드릴게요. 번호만 남겨 주세요.'); offerHuman(); return; }
+        if (answered && !(o.prov || o.mob || o.speed || o.type || o.budget || o.kind || o.feat || o.brands || o.biz)) { followChips(); return; }
+        var changes = o.prov || o.mob || o.speed || o.speedHint || o.type || o.prio || o.budget || o.kind || o.feat || o.brands || o.rentAny || o.provAny;
+        if ((o.apply || o.yes) && !changes && st.cards.length) { applyCard(st.cards[0]); return; }
+        // 대화 상태
+        A.merge(st, o);
+        if (o.biz && st.topic === 'biz') {
+            bot('사업장은 인터넷·TV·CCTV·전화·포스기까지 한 번에 묶으면 혜택이 커요. 사장님 전용 페이지에서 보시거나, 번호 남겨 주시면 업종에 맞게 견적 드릴게요.', h('a', { class: 'sga-link', href: 'boss.html', target: '_blank', rel: 'noopener' }, '🏪 사장님 전용 페이지 보기'));
+            offerHuman('사업장 상담 (' + o.biz + ')'); return;
+        }
+        if (st.topic === 'net' && (o.net || o.prov || o.mob || o.speed || o.type || o.prio || o.budget || o.people || o.provAny || o.alddeul || o.recommend || o.apply || o.yes)) { netReply(o); return; }
+        if (st.topic === 'rent' && (o.kind || o.rentAny || o.prio || o.budget || o.feat || o.brands || o.recommend || o.apply || o.yes)) { rentReply(o); return; }
+        if (answered) { followChips(); return; }
+        if (o.apply || o.yes) {
+            if (st.cards.length) { applyCard(st.cards[0]); return; }
+            bot('어떤 상품으로 가입하실까요?'); setChips(['인터넷+TV 사은품 많은 곳', '인터넷만 싸게', '정수기 추천해줘', '다른 가전 렌탈']); return;
+        }
+        if (o.prio || o.budget || o.recommend || o.people || o.provAny) { st.topic = 'net'; A.merge(st, Object.assign({ net: true }, o)); netReply(o); return; }
+        if (o.hello) { bot('안녕하세요! 어떤 상품 알아보고 계세요?'); setChips(['인터넷+TV 사은품 많은 곳', '인터넷만 싸게', '정수기 추천해줘', '가전 렌탈 보기']); return; }
+        if (o.thanks) { bot('도움이 됐다니 다행이에요! 더 궁금한 거 있으면 언제든 물어보세요 😊'); followChips(); return; }
+        if (o.no) { bot('알겠어요. 다른 조건으로 볼까요?'); followChips(); return; }
+        bot('제가 정확히 이해를 못 했어요 😅 이렇게 물어보시면 바로 찾아드려요.', h('p', { class: 'sga-ex', text: '"인터넷+TV 사은품 많은 곳" · "KT 폰 쓰는데 인터넷만" · "얼음 정수기" · "사은품 언제 줘요?"' }));
+        setChips(['인터넷+TV 추천', '정수기 추천', '가전 렌탈 보기', ['상담원 연결', function () { me('상담원 연결'); bot('네, 번호 남겨 주시면 바로 연락드릴게요.'); offerHuman(); }]]);
+    }
+    function followChips() {
+        if (st.topic === 'rent') setChips(['사은품 많은 순으로', '월 요금 싼 순으로', '다른 가전 렌탈', '인터넷도 알아볼래요']);
+        else setChips(['인터넷+TV 사은품 많은 곳', '인터넷만 싸게', '정수기 추천해줘', ['상담원 연결', function () { me('상담원 연결'); offerHuman(); }]]);
+    }
+
+    /* ---------- 인터넷 추천 ---------- */
+    function netReply(o) {
+        var n = st.n;
+        if (!rows().length) { bot('요금표를 불러오는 중이에요. 잠시 뒤 다시 물어봐 주시거나, 번호 남겨 주시면 바로 안내해 드릴게요.'); offerHuman(); return; }
+        if (n.alddeul && o.alddeul) {
+            bot('알뜰형(요금할인형)은 사은품 대신 매달 요금을 깎아 주는 상품이에요. SK브로드밴드·KT스카이라이프 알뜰형이 있고, 요금표의 "알뜰형"에서 보실 수 있어요. 사은품형과 비교해 드릴까요?');
+        }
+        var res = A.netPick(rows(), n);
+        if (!res.list.length) { bot('그 조건에 맞는 요금을 찾지 못했어요. 조건을 조금 바꿔 볼까요?'); setChips(['통신사 상관없이', '500M로', '인터넷만으로']); return; }
+        var why = [];
+        if (n.speed) why.push(n.speed + ' 기준'); else if (n.speedHint) why.push((n.people === 1 ? '혼자 쓰시면 ' : n.people >= 3 ? n.people + '인 가족이면 ' : '') + res.speed + '면 충분해요');
+        else why.push('가장 많이 쓰는 ' + res.speed + ' 기준');
+        why.push(res.type === '결합' ? '인터넷 + TV' : '인터넷만');
+        if (n.mob === 'n') why.push('휴대폰 결합 없이'); else why.push('휴대폰 결합 할인 넣어서' + (n.mobProv && !n.prov ? ' (휴대폰이 ' + A.FULL[n.mobProv] + '라 같은 통신사를 먼저)' : ''));
+        if (n.budget) why.push('월 ' + won(n.budget) + ' 이하');
+        var pr = n.prio === 'cheap' ? '월 요금 싼 순' : n.prio === 'both' ? '요금·사은품 함께 따져서' : '사은품 많은 순';
+        var top = res.list.slice(0, n.prov ? 1 : 3);
+        st.cards = top.map(function (x) { return { kind: 'net', x: x }; });
+        var intro = n.prov ? A.FULL[n.prov] + ' 조건으로 찾아봤어요.' : pr + '으로 골라 봤어요.';
+        if (top[0] && top[0].overBudget) intro = '말씀하신 금액 안쪽 상품은 없어서, 가장 저렴한 걸 보여드려요.';
+        bot(intro + ' (' + why.join(' · ') + ')', h('div', { class: 'sga-cards' }, top.map(function (x, i) { return netCard(x, i); })), top.length > 1 ? h('p', { class: 'sga-ex', text: '마음에 드는 걸 누르거나 "1번으로 할게요"라고 말씀해 주세요.' }) : null);
+        var ch = [];
+        ch.push(res.type === '결합' ? '인터넷만으로 볼게요' : 'TV도 같이 볼게요');
+        ['100M', '500M', '1G'].filter(function (s) { return s !== res.speed; }).forEach(function (s) { ch.push(s + '로 바꿔줘'); });
+        ch.push(n.mob === 'n' ? '휴대폰 결합 할 수 있어요' : '휴대폰 결합 없이');
+        ch.push(n.prio === 'cheap' ? '사은품 많은 순으로' : '월 요금 싼 순으로');
+        if (n.prov) ch.push('통신사 상관없이 비교'); else ch.push('KT로 볼래요', 'LG로 볼래요', 'SK로 볼래요');
+        setChips(ch);
+        if (o.apply && top.length === 1) applyCard(st.cards[0]);
+    }
+    function netLabel(x) { return x.name + ' · 인터넷 ' + x.speed + (x.tv ? ' + ' + x.tv : ''); }
+    function netCard(x, i) {
+        return h('div', { class: 'sga-card' + (i === 0 ? ' top' : '') },
+            h('div', { class: 'sga-c-h' }, h('span', { class: 'sga-rank', text: String(i + 1) }), h('b', { text: netLabel(x) })),
+            h('div', { class: 'sga-c-r' }, h('span', { class: 'sga-fee' }, '월 ' + won(x.fee)), h('small', { text: x.mobDisc ? '휴대폰 결합 시' : '기본 요금' })),
+            h('div', { class: 'sga-gift' }, '🎁 사은품 ' + (x.gift || '상담 시 안내')),
+            h('button', { type: 'button', class: 'sga-apply', onclick: function () { me(netLabel(x) + ' 가입할게요'); applyCard({ kind: 'net', x: x }); } }, '이걸로 가입 신청'));
+    }
+
+    /* ---------- 렌탈 추천 ---------- */
+    function giftTxt(v) { return v % 10000 === 0 ? (v / 10000) + '만원' : (Math.round(v / 1000) / 10) + '만원'; }
+    function S(v, n) { return typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f\u2028\u2029]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n || 200) : ''; }
+    function N(v) { return typeof v === 'number' && isFinite(v) && v >= 0 ? v : null; }
+    function U(v) { return typeof v === 'string' && v.length < 800 && /^https:\/\/[A-Za-z0-9.-]+(?::\d+)?\/[^\s"'<>\\`]*$/.test(v) ? v : ''; }
+    function loadRent() {
+        if (st.rentItems) return Promise.resolve(st.rentItems);
+        try { var c = JSON.parse(sessionStorage.getItem(CK) || 'null'); if (c && Date.now() - c.t < TTL && Date.now() >= c.t && Array.isArray(c.d) && c.d.length) { st.rentItems = c.d; return Promise.resolve(c.d); } } catch (e) { }
+        var gp = fetch('rental-gift.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; });
+        var fp = fetch(FEED, { credentials: 'omit', cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); });
+        return Promise.all([fp, gp]).then(function (a) {
+            var j = a[0], G = (a[1] && typeof a[1] === 'object') ? a[1] : {}, out = [], seen = {};
+            (j && Array.isArray(j.products) ? j.products : []).forEach(function (p) {
+                if (!p || typeof p !== 'object') return; var id = S(p.id, 80), name = S(p.name, 200), model = S(p.modelCode, 80);
+                if (!id || seen[id] || !(name || model)) return; seen[id] = 1;
+                var cos = [];
+                (Array.isArray(p.companies) ? p.companies : []).slice(0, 10).forEach(function (c) {
+                    if (!c || typeof c !== 'object') return; var plans = [], cn = S(c.name, 40);
+                    (Array.isArray(c.plans) ? c.plans : []).slice(0, 24).forEach(function (x) {
+                        if (!x || typeof x !== 'object') return; var fee = N(x.monthlyFee); if (!fee) return;
+                        var g = S(x.gift, 120), k = cn + '|' + model + '|' + N(x.contractMonths) + '|' + fee, gw = Object.prototype.hasOwnProperty.call(G, k) ? G[k] : null;
+                        if (!g && typeof gw === 'number' && gw > 0) g = giftTxt(gw);
+                        plans.push({ m: N(x.contractMonths), fee: fee, g: g });
+                    });
+                    if (plans.length) cos.push({ name: cn, plans: plans });
+                });
+                out.push({ id: id, cat: S(p.category, 30), kind: S(p.kind, 40), brand: S(p.brand, 40), name: name || model, model: model, sum: S(p.summary, 300), img: U(p.image), low: N(p.lowestMonthlyFee), cos: cos });
+            });
+            if (!out.length) throw new Error('empty');
+            st.rentItems = out; try { sessionStorage.setItem(CK, JSON.stringify({ t: Date.now(), d: out })); } catch (e) { }
+            return out;
+        });
+    }
+    var KIND_CHIPS = ['정수기', '공기청정기', '비데', '안마의자', '매트리스', '냉장고', '세탁기·건조기', '에어컨', '식기세척기', '김치냉장고', '음식물처리기', '전기레인지'];
+    function rentReply(o) {
+        var r = st.r;
+        if (!r.kind) { bot('어떤 제품을 렌탈하실까요? 골라 주시거나 말로 알려주세요.'); setChips(KIND_CHIPS.map(function (k) { return k + ' 추천'; })); return; }
+        st.busy = true; var wait = bot('렌탈 상품을 찾고 있어요…');
+        loadRent().then(function (items) {
+            st.busy = false; wait.remove();
+            var list = A.rentPick(items, r);
+            if (!list.length && (r.feat || r.brands || r.pyeong || r.liter || r.kg || r.inch || r.bed)) {
+                bot('그 조건에 딱 맞는 ' + r.kind + '는 지금 없어서, 조건을 조금 넓혀서 보여드릴게요.');
+                list = A.rentPick(items, { kind: r.kind, prio: r.prio, budget: r.budget });
+            }
+            if (!list.length) { bot(r.kind + ' 상품은 지금 목록에 없어요. 번호 남겨 주시면 따로 찾아서 안내해 드릴게요.'); offerHuman(r.kind + ' 렌탈 상담'); return; }
+            var top = list.slice(0, 3);
+            st.cards = top.map(function (x) { return { kind: 'rent', x: x }; });
+            var cond = []; if (r.brands) cond.push(r.brands.join('·')); if (r.feat) cond.push(r.feat.join('·')); if (r.pyeong) cond.push(r.pyeong + '평 이상'); if (r.inch) cond.push(r.inch + '인치'); if (r.liter) cond.push(r.liter + 'L'); if (r.kg) cond.push(r.kg + 'kg'); if (r.budget) cond.push('월 ' + won(r.budget) + ' 이하');
+            bot(r.kind + ' ' + list.length + '개 중에서 ' + (r.prio === 'cheap' ? '월 요금 싼 순' : '사은품 많은 순') + '으로 골랐어요' + (cond.length ? ' (' + cond.join(' · ') + ')' : '') + '.',
+                h('div', { class: 'sga-cards' }, top.map(function (x, i) { return rentCard(x, i); })),
+                h('a', { class: 'sga-link', href: rentListUrl(r) }, '🔎 ' + r.kind + ' 전체 ' + list.length + '개 비교하기'));
+            var ch = [r.prio === 'cheap' ? '사은품 많은 순으로' : '월 요금 싼 순으로'];
+            if (r.kind === '정수기') ['얼음 정수기', '냉온 정수기', '직수 정수기'].forEach(function (x) { ch.push(x); });
+            var brands = []; list.slice(0, 40).forEach(function (x) { var b = x.p.brand; if (b && brands.indexOf(b) < 0) brands.push(b); });
+            brands.filter(function (b) { var q = A.parse(b + ' ' + r.kind); return q.brands && q.brands.length && (!r.brands || r.brands.indexOf(q.brands[0]) < 0); }).slice(0, 4).forEach(function (b) { ch.push(b + ' ' + r.kind); });
+            ch.push('다른 가전 렌탈');
+            setChips(ch);
+            if (o.apply && o.pickN == null) applyCard(st.cards[0]);
+        }).catch(function () {
+            st.busy = false; wait.remove();
+            bot('렌탈 상품 정보를 불러오지 못했어요. 렌탈 페이지에서 보시거나 번호 남겨 주시면 안내해 드릴게요.', h('a', { class: 'sga-link', href: rentListUrl(r) }, '🔎 렌탈 페이지 열기'));
+            offerHuman(r.kind + ' 렌탈 상담');
+        });
+    }
+    function rentListUrl(r) {
+        var q = new URLSearchParams();
+        if (r.kind === '정수기') q.set('type', '정수기'); else { q.set('type', '가전렌탈'); if (r.kind) q.append('kind', r.kind); }
+        (r.brands || []).forEach(function (b) { q.append('brand', b); });
+        if (r.prio !== 'cheap') q.append('gift', 'y');
+        return 'rental.html?' + q.toString();
+    }
+    function rentCard(x, i) {
+        var p = x.p;
+        return h('div', { class: 'sga-card rent' + (i === 0 ? ' top' : '') },
+            h('div', { class: 'sga-c-h' }, h('span', { class: 'sga-rank', text: String(i + 1) }),
+                p.img ? h('img', { class: 'sga-img', src: p.img, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : null,
+                h('b', { text: p.name })),
+            h('div', { class: 'sga-c-r' }, h('span', { class: 'sga-fee' }, '월 ' + won(x.low) + '~'), h('small', { text: p.brand || '' })),
+            h('div', { class: 'sga-gift' }, x.maxG ? '🎁 사은품 최대 ' + x.maxG + '만원' : '사은품은 상담 시 안내'),
+            h('a', { class: 'sga-apply', href: 'rental.html?id=' + encodeURIComponent(p.id) }, '자세히 보고 바로 접수'));
+    }
+
+    /* ---------- 가입 신청 ---------- */
+    function applyCard(c) {
+        if (!c) return;
+        if (c.kind === 'rent') {
+            bot('좋아요! 렌탈은 렌탈사·약정을 고르고 접수하는 화면에서 바로 진행돼요.', h('a', { class: 'sga-apply', href: 'rental.html?id=' + encodeURIComponent(c.x.p.id) }, c.x.p.name + ' 접수하러 가기'));
+            return;
+        }
+        var x = c.x, label = netLabel(x);
+        form('[' + label + '] 월 ' + won(x.fee) + (x.mobDisc ? '(휴대폰 결합)' : '') + ' · 사은품 ' + (x.gift || '상담 시 안내'), label + ' 가입 신청이에요.');
+    }
+    function offerHuman(what) { form(what || '상담 요청', null); }
+    function form(want, title) {
+        var phone, name, agree, msg, btn;
+        var box = bot(title ? h('p', { class: 'sga-strong', text: title }) : null, h('p', { text: '휴대폰 번호만 남겨 주시면 상담원이 확인 전화 드리고 설치 일정까지 잡아 드려요.' }),
+            h('div', { class: 'sga-form' },
+                phone = h('input', { type: 'tel', inputmode: 'numeric', autocomplete: 'tel', maxlength: '13', placeholder: '휴대폰 번호 (숫자만)', 'aria-label': '휴대폰 번호' }),
+                name = h('input', { type: 'text', autocomplete: 'name', maxlength: '20', placeholder: '성함 (선택)', 'aria-label': '성함 (선택)' }),
+                h('label', { class: 'sga-agree' }, agree = h('input', { type: 'checkbox' }), h('span', {}, '개인정보 수집 및 이용 동의 (필수)', h('small', { text: '목적: 가입 상담 및 접수 안내 · 항목: 성명, 연락처, 상담 내용 · 기간: 목적 달성 즉시 파기' }))),
+                msg = h('p', { class: 'sga-err', role: 'alert' }),
+                btn = h('button', { type: 'button', class: 'sga-apply submit-btn' }, '가입 상담 신청하기')));
+        phone.addEventListener('input', function () { var d = this.value.replace(/\D/g, '').slice(0, 11); this.value = d.length > 7 ? d.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3').replace(/^(\d{3})(\d{4})(\d{1,3})$/, '$1-$2-$3') : d.length > 3 ? d.slice(0, 3) + '-' + d.slice(3) : d; });
+        btn.addEventListener('click', function () {
+            var p = phone.value.trim(), nm = name.value.replace(/[<>"'`]/g, '').trim();
+            if (p.length !== 13 || p.indexOf('010') !== 0) { msg.textContent = '휴대폰 번호 11자리를 적어 주세요.'; phone.focus(); return; }
+            if (!agree.checked) { msg.textContent = '개인정보 수집 및 이용에 동의해 주세요.'; return; }
+            msg.textContent = '';
+            var talk = st.hist.slice(-4).join(' / ').replace(/[<>"'`]/g, '').slice(0, 300);
+            var fd = { type: 'AI 상담 신청', name: nm || '성함 미입력', phone: p, summary: '희망상품: ' + want + '\n고객 대화: ' + talk };
+            if (typeof sendReception !== 'function') { msg.textContent = '접수 기능을 불러오지 못했어요. ' + TEL + '으로 전화 부탁드려요.'; return; }
+            sendReception(fd, function () {
+                var f = box.querySelector('.sga-form'); f.textContent = '';
+                f.appendChild(h('div', { class: 'sga-done' }, h('b', { text: '✅ 신청이 접수됐어요' }), h('p', { text: '상담 시간(10:00~19:30)에 순서대로 확인 전화 드려요. 고르신 조건 그대로 확인해서 안내해 드릴게요.' })));
+                setChips(['사은품 언제 줘요?', '설치는 언제 돼요?', '정수기도 볼래요']);
+            }, '[AI 상담 · 가입 신청 접수 완료]\n\n연락처: ' + p + '\n희망: ' + want + '\n\n가장 빠른 시간 내에 연락드리겠습니다!');
+        });
+        setTimeout(function () { try { phone.focus({ preventScroll: true }); } catch (e) { } scroll(); }, 80);
+        return box;
+    }
+
+    window.sgAiOpen = function (e, q) { if (e && e.preventDefault) e.preventDefault(); open(q); };
+    window.sgAiAsk = function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        var i = document.getElementById('sga-q'); var q = i ? i.value : ''; if (i) i.value = ''; open(q);
+    };
+})();
+
     </script>
 </body>
 </html>
