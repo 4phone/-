@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-AFtlFoY8S8oudKrCWu6v3FW9IuLromHP7KP+ks7E30c='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6nimqlUlhClLRX+ePbFkUK9qjhs35ZUmgSNAhg59dkw='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -225,7 +225,7 @@
         .chip.ev-done { text-decoration: line-through; opacity: .65; }
         .chip.ev-ext { opacity: .6; font-style: italic; }
         .ev-st { display: inline-block; font-size: 11.5px; font-weight: 800; padding: 1px 7px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; }
-        .ev-st.todo { background: #F1F4E6; color: #4F5A33; } .ev-st.doing { background: #FFF3BF; color: #7A5B00; } .ev-st.done { background: #DDF0DD; color: #1F6B2A; } .ev-st.ext { background: #E8EEF8; color: #2B4C7E; }
+        .ev-st.todo { background: #F1F4E6; color: #4F5A33; } .ev-st.doing { background: #FFF3BF; color: #7A5B00; } .ev-st.doing.paused { background: #FFE3DC; color: #B3401F; } .ev-st.done { background: #DDF0DD; color: #1F6B2A; } .ev-st.ext { background: #E8EEF8; color: #2B4C7E; }
         .row.ev-closed .title { text-decoration: line-through; color: #7A8270; }
         .chip { font-size: 12px; line-height: 1.3; padding: 2px 6px; border-left: 4px solid var(--c, #9AA38A); background: #F1F4E6; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .more { font-size: 12px; color: var(--muted); padding-left: 2px; }
@@ -1531,7 +1531,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-27.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-27.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2095,8 +2095,9 @@
         }
         function evStateTag(e) {
             var st = evState(e), t = evTask(e); if (!st) return null;
-            var txt = st === 'ext' ? koDate(t.ext) + '로 이동' : st === 'done' ? '완료' : st === 'doing' ? '진행 중' : '할 일';
-            return h('span', { class: 'ev-st ' + st }, txt);
+            var paused = st === 'doing' && t.ps;
+            var txt = st === 'ext' ? koDate(t.ext) + '로 이동' : st === 'done' ? '완료' : st === 'doing' ? (paused ? '중지됨' : '진행 중') : '할 일';
+            return h('span', { class: 'ev-st ' + st + (paused ? ' paused' : '') }, txt);
         }
 
         /* ---------- 일정 / 공지 / 업무 / 직원 입력 ---------- */
@@ -2728,7 +2729,7 @@
             }
             if (D.today.length) {
                 L.push('- 미완료 ' + D.today.length + '건');
-                D.today.forEach(function (t) { L.push('  · ' + t.title + (t.ext ? ' (→ ' + rptMD(t.ext) + ' 이동)' : t.status === 'doing' ? ' (진행 중)' : '')); });
+                D.today.forEach(function (t) { L.push('  · ' + t.title + (t.ext ? ' (→ ' + rptMD(t.ext) + ' 이동)' : t.status === 'doing' ? (t.ps ? ' (중지됨)' : ' (진행 중)') : '')); });
                 L.push('- 사유 : ' + String(f.reason || '').trim());
             } else L.push(D.done.length ? '- 금일 업무 모두 완료' : '- 금일 마감 업무 없음');
             L.push('', '◆ 익일업무 ◆');
@@ -2835,7 +2836,7 @@
                         h('div', { class: 'rpt-row' }, h('label', {}, '모바일', mobIn, '건'), h('label', {}, '유선', wIn, '건'), h('label', {}, '번호저장', savedIn, '건'))),
                     h('section', { class: 'rpt-sec' }, h('h3', {}, '◆ 금일업무 ◆', h('small', {}, ' ' + koDate(date) + ' 마감 업무 자동 · 완료 ' + D.done.length + ' / 미완료 ' + D.today.length)),
                         D.done.length ? h('ul', { class: 'rpt-list rpt-done-list' }, D.done.map(function (t) { return h('li', {}, h('span', { class: 'rpt-chk', 'aria-hidden': 'true' }, '✔'), t.title, h('b', { class: 'rpt-done-tag' }, '완료')); })) : null,
-                        D.today.length ? h('ul', { class: 'rpt-list' }, D.today.map(function (t) { return h('li', {}, t.title, t.ext ? h('small', {}, ' → ' + rptMD(t.ext) + ' 이동') : t.status === 'doing' ? h('small', {}, ' 진행 중') : h('small', {}, ' 미완료')); })) : h('p', { class: 'rpt-ok' }, D.done.length ? '미완료 업무가 없어요 (모두 완료)' : koDate(date) + ' 마감 업무가 없어요'),
+                        D.today.length ? h('ul', { class: 'rpt-list' }, D.today.map(function (t) { return h('li', {}, t.title, t.ext ? h('small', {}, ' → ' + rptMD(t.ext) + ' 이동') : t.status === 'doing' ? h('small', {}, t.ps ? ' 중지됨' : ' 진행 중') : h('small', {}, ' 미완료')); })) : h('p', { class: 'rpt-ok' }, D.done.length ? '미완료 업무가 없어요 (모두 완료)' : koDate(date) + ' 마감 업무가 없어요'),
                         reason ? h('label', { class: 'rpt-full' }, '사유', reason) : null),
                     h('section', { class: 'rpt-sec' }, h('h3', {}, '◆ 익일업무 ◆', h('small', {}, ' ' + koDate(D.next) + ' 업무 자동')),
                         D.tmr.length ? h('ul', { class: 'rpt-list' }, D.tmr.map(function (t) { return h('li', {}, t.title); })) : h('p', { class: 'rpt-warn' }, koDate(D.next) + '에 등록된 업무가 없어요.'),
@@ -2979,7 +2980,7 @@
                 g.font = '700 17px ' + F; g.fillStyle = due.color; g.fillText(fitText(g, due.text, cols[3].w - 8), xs[3] + 4, y + 36);
                 var pri = t.priority === 'high' ? ['높음', '#E64A19'] : t.priority === 'low' ? ['낮음', '#8A937A'] : ['보통', '#1E2310'];
                 g.fillStyle = pri[1]; g.fillText(pri[0], xs[4] + 4, y + 36);
-                var st = t.ext ? ['내일로 연장', '#E6EEFF', '#2F55B8'] : t.status === 'done' ? ['완료', '#DDF0DD', '#1F6B2A'] : t.status === 'doing' ? ['진행 중', '#FFF3BF', '#7A5B00'] : ['할 일', '#F1F4E6', '#4A5240'];
+                var st = t.ext ? ['내일로 연장', '#E6EEFF', '#2F55B8'] : t.status === 'done' ? ['완료', '#DDF0DD', '#1F6B2A'] : t.status === 'doing' ? (t.ps ? ['중지됨', '#FFE3DC', '#B3401F'] : ['진행 중', '#FFF3BF', '#7A5B00']) : ['할 일', '#F1F4E6', '#4A5240'];
                 g.font = '700 17px ' + F; var sw = g.measureText(st[0]).width + 26; rrect(g, xs[5], y + 14, sw, 30, 15, st[1]); g.fillStyle = st[2]; g.fillText(st[0], xs[5] + 13, y + 36);
                 for (i = 0; i < r.tl.length; i++) { g.font = (i === 0 && t.status !== 'todo' ? '700 15px ' : '500 15px ') + F; g.fillStyle = i === 0 && t.status !== 'todo' ? '#3E441E' : '#66705A'; g.fillText(fitText(g, r.tl[i], cols[5].w - 4), xs[5] + 2, y + 66 + i * 21); }
                 y += r.h;
