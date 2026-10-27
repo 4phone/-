@@ -1124,12 +1124,13 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         .sgk-step[hidden] { display: none; }
         .sgk-q { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 15px; font-weight: 800; }
         .sgk-q i { font-style: normal; width: 22px; height: 22px; border-radius: 50%; background: #134047; color: #F3DFA8; font-size: 12px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
-        .sgk-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-        .sgk-chip { min-height: 46px; padding: 8px 15px; border-radius: 14px; border: 1.5px solid #D4E0DF; background: #F7FAFA; color: #0E2A30; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; flex-direction: column; align-items: flex-start; justify-content: center; line-height: 1.25; text-align: left; }
-        .sgk-chip small { font-size: 11.5px; font-weight: 600; color: #62797C; margin-top: 2px; }
+        .sgk-chips { display: grid; grid-template-columns: repeat(var(--c, 3), minmax(0, 1fr)); gap: 8px; }
+        .sgk-chip { position: relative; width: 100%; min-height: 60px; padding: 8px 10px; border-radius: 14px; border: 1.5px solid #D4E0DF; background: #F7FAFA; color: #0E2A30; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; line-height: 1.25; text-align: center; word-break: keep-all; transition: background .15s, border-color .15s; }
+        .sgk-chip:hover { border-color: #9DB8B6; }
+        .sgk-chip small { font-size: 11.5px; font-weight: 600; color: #62797C; line-height: 1.2; }
         .sgk-chip[aria-pressed="true"] { border-color: #134047; background: #134047; color: #FFFFFF; box-shadow: 0 6px 16px rgba(19,64,71,0.22); }
         .sgk-chip[aria-pressed="true"] small { color: #F3DFA8; }
-        .sgk-chip.rec::after { content: '추천'; margin-top: 3px; font-size: 10.5px; font-weight: 800; color: #8A6418; background: #FBF3DC; border-radius: 999px; padding: 1px 7px; }
+        .sgk-chip.rec::after { content: '추천'; position: absolute; top: -9px; right: 8px; font-size: 10.5px; font-weight: 800; color: #8A6418; background: #FBF3DC; border: 1px solid #EAD9A6; border-radius: 999px; padding: 1px 7px; line-height: 1.4; }
         .sgk-chip:focus-visible { outline: 3px solid #E2C27A; outline-offset: 2px; }
         .sgk-res { position: sticky; top: 96px; background: #0A2B32; color: #F4FAF8; border-radius: 22px; padding: 22px; box-shadow: 0 18px 40px rgba(5,18,21,0.28); }
         .sgk-res-k { font-size: 13.5px; color: rgba(244,250,248,0.75); font-weight: 600; }
@@ -1162,7 +1163,9 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             .sgk { padding: 36px 14px 28px; }
             .sgk-in { grid-template-columns: 1fr; gap: 14px; }
             .sgk-opts { padding: 4px 16px 10px; border-radius: 18px; }
-            .sgk-chip { min-height: 44px; padding: 7px 12px; font-size: 14.5px; }
+            .sgk-chip { min-height: 56px; padding: 7px 6px; font-size: 14.5px; }
+            .sgk-chips[data-n="4"], .sgk-chips[data-k="prov"] { --c: 2 !important; }
+            .sgk-chip small { font-size: 11px; }
             .sgk-res { position: sticky; top: auto; bottom: calc(82px + env(safe-area-inset-bottom)); padding: 16px 16px 14px; border-radius: 18px; z-index: 5; }
             .sgk-gift { font-size: 28px; }
             .sgk-cmp { display: none; }
@@ -4214,7 +4217,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         var PROVS = [['', '잘 모르겠어요', '가장 많이 주는 곳'], ['LG', 'LG U+'], ['KT', 'KT'], ['SK', 'SK브로드밴드'], ['스카이', 'KT스카이라이프'], ['헬로', 'LG헬로비전']];
         var FULL = { LG: 'LG U+', KT: 'KT', SK: 'SK브로드밴드', '스카이': 'KT스카이라이프', '헬로': 'LG헬로비전' };
         var DEF_TV = { SK: '스탠다드TV', KT: '라이트TV', LG: '실속형TV', '스카이': 'TV 베이직', '헬로': '뉴베이직 TV' };
-        var HINT = { '100M': '1~2인 · 웹서핑', '160M': '1~2인', '200M': '1~3인', '500M': '2~4인 · 영상·게임', '1G': '고사양 · 기기 많을 때' };
+        var HINT = { '100M': '1~2인 · 웹서핑', '160M': '1~2인', '200M': '1~3인', '500M': '2~4인 · 영상·게임', '1G': '기기 많을 때' };
         var st = { prov: '', type: '결합', speed: '500M', tv: '', mob: 'y' };
         var root = document.getElementById('sg-check'); if (!root) return;
         var $ = function (id) { return document.getElementById(id); };
@@ -4240,7 +4243,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             b.appendChild(document.createTextNode(label)); if (sub) { var s = document.createElement('small'); s.textContent = sub; b.appendChild(s); }
             b.addEventListener('click', function () { st[k] = v; touched = true; paint(); }); return b;
         }
-        function fill(k, items) { var box = root.querySelector('[data-k="' + k + '"]'); box.textContent = ''; items.forEach(function (it) { box.appendChild(chip(k, it[0], it[1], it[2], it[3])); }); }
+        function fill(k, items) { var box = root.querySelector('[data-k="' + k + '"]'); box.textContent = ''; var n = items.length; box.setAttribute('data-n', String(n)); box.style.setProperty('--c', String(k === 'prov' ? 3 : Math.max(2, Math.min(n, 4)))); items.forEach(function (it) { box.appendChild(chip(k, it[0], it[1], it[2], it[3])); }); }
         var touched = false;
         function paint() {
             var all = base();
@@ -4249,7 +4252,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             fill('prov', PROVS.map(function (p) { return [p[0], p[1], p[2] || '', p[0] === '']; }));
             fill('type', [['결합', '인터넷 + TV', '사은품이 더 커요', false], ['단독', '인터넷만', '', false]]);
             var sp = speeds(st.prov, st.type); if (sp.indexOf(st.speed) < 0) st.speed = sp.indexOf('500M') >= 0 ? '500M' : (sp[0] || '');
-            fill('speed', sp.map(function (s) { return [s, s.replace('M', 'M').replace(/^1G$/, '1G (기가)'), HINT[s] || '', false]; }));
+            fill('speed', sp.map(function (s) { return [s, s, HINT[s] || '', false]; }));
             var tvStep = $('sgk-tv-step'), showTv = st.prov && st.type === '결합'; tvStep.hidden = !showTv; $('sgk-mob-n').textContent = showTv ? '5' : '4';
             if (showTv) { var tl = tvs(st.prov, st.speed); if (tl.indexOf(st.tv) < 0) st.tv = tl.indexOf(DEF_TV[st.prov]) >= 0 ? DEF_TV[st.prov] : (tl[0] || ''); fill('tv', tl.map(function (t) { return [t, t, t === DEF_TV[st.prov] ? '기본 추천' : '', false]; })); }
             fill('mob', [['y', '있어요', '휴대폰 결합 할인', false], ['n', '없어요', '', false]]);
