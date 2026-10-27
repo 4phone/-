@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-/qLfKVW4h2WFxtgoqFjbYqpPX9G0i9Tmpcdei22v/zg='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-+bwDuEd0QAYpkjvIvn5bNcVwxT2l/SACPTzmmi3D5fI='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -327,6 +327,38 @@ img { max-width: 100%; }
     .tools { position: static; }
 }
 
+/* 고르는 칸 (모딜식 · 우리 색) */
+.facets { display: grid; gap: 10px; }
+.frow { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 1px 0 3px; -webkit-overflow-scrolling: touch; }
+.frow::-webkit-scrollbar { display: none; }
+@media (min-width: 901px) { .frow { flex-wrap: wrap; overflow: visible; } }
+.fchip { flex: none; display: inline-flex; align-items: center; gap: 5px; min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid #DCD2BA; background: #FFFFFF; font-size: 14px; font-weight: 600; color: var(--ink); }
+.fchip small { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+.fchip.all { font-weight: 800; color: var(--teal); }
+.fchip[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: #FFFFFF; }
+.fchip[aria-pressed="true"] small { color: var(--gold-2); }
+.fchip.all[aria-pressed="true"] { background: var(--deep); border-color: var(--deep); color: var(--gold-2); }
+.fchip:disabled { opacity: .45; cursor: default; }
+.kwrap { padding: 2px 0 4px; }
+.ktitle { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 800; color: var(--ink); margin: 2px 0 10px; }
+.kclear { border: 0; background: none; padding: 4px 2px; font-size: 13px; font-weight: 700; color: var(--teal-2); text-decoration: underline; }
+.kgrid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; }
+.ktile { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--ink); min-width: 0; }
+.kimg { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; max-width: 92px; aspect-ratio: 1 / 1; border-radius: 20px; background: #FFFFFF; border: 1px solid var(--line); overflow: hidden; font-size: 16px; font-weight: 800; color: var(--muted); box-shadow: 0 6px 16px rgba(14,52,59,0.06); }
+.kimg img { width: 100%; height: 100%; object-fit: contain; padding: 8px; display: block; }
+.kname { font-size: 13.5px; font-weight: 700; line-height: 1.25; text-align: center; word-break: keep-all; }
+.ktile small { margin-top: -4px; font-size: 11.5px; color: var(--muted); }
+.ktile:hover .kimg { border-color: var(--gold-3); }
+.ktile[aria-pressed="true"] .kimg { border: 2px solid var(--teal); box-shadow: 0 0 0 3px rgba(19,64,71,0.12); }
+.ktile[aria-pressed="true"] .kname { color: var(--teal); }
+.kmore .kimg { background: #FAF7EE; }
+@media (max-width: 900px) {
+    .kgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 8px; }
+    .kimg { border-radius: 16px; }
+    .kname { font-size: 12.5px; }
+    .fchip { min-height: 36px; padding: 0 12px; font-size: 13.5px; }
+}
+
 </style>
 </head>
 <body>
@@ -371,7 +403,6 @@ img { max-width: 100%; }
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
                 <input id="q" type="search" placeholder="상품명 · 모델코드 검색" autocomplete="off" enterkeyhint="search" maxlength="40">
             </label>
-            <label><span class="sr">제조사</span><select id="brand" class="sel"></select></label>
             <label><span class="sr">정렬</span>
                 <select id="sort" class="sel">
                     <option value="low">렌탈료 낮은 순</option>
@@ -383,7 +414,7 @@ img { max-width: 100%; }
     </div>
 </div>
 <div class="subtools">
-    <div class="chips" id="kinds" role="group" aria-label="종류" hidden></div>
+    <div class="facets" id="facets" hidden></div>
     <div class="meta"><span id="count" aria-live="polite"></span><button type="button" class="reset" id="reset" hidden>조건 초기화</button></div>
 </div>
 <main class="list">
@@ -535,16 +566,30 @@ img { max-width: 100%; }
     }
 
     /* ---------- 주소(?type= · ?id=) ---------- */
-    var st = { type: '', kind: '', brand: '', q: '', sort: 'low', shown: PAGE }, listY = 0, fromList = false;
+    var st = { type: '', kind: '', feat: '', brand: '', price: '', q: '', sort: 'low', shown: PAGE, kexp: false }, listY = 0, fromList = false;
+    /* 고르는 칸: 정수기 기능(상품명 기준) · 가격대(월 렌탈료 최저가 기준 — 받은 값을 비교만 함) */
+    var FEATS = ['냉온정', '냉온정+얼음', '냉정', '냉정+얼음', '정수전용'];
+    function featOf(p) {   // 상품명에 적힌 말로만 나눔 (모르면 빈칸 → '기능 전체'에서만 보임)
+        if (p.cat !== '정수기') return '';
+        var n = String(p.name || '').replace(/\s+/g, ''), ice = /얼음/.test(n);
+        if (!ice && /정수전용|\(정수\)|정수형$/.test(n)) return '정수전용';
+        if (/냉온|온냉/.test(n)) return ice ? '냉온정+얼음' : '냉온정';
+        if (/냉정|냉수/.test(n)) return ice ? '냉정+얼음' : '냉정';
+        return '';
+    }
+    var PRICES = [['u2', '월 2만원 미만', 0, 20000], ['2-3', '월 2~3만원', 20000, 30000], ['3-4', '월 3~4만원', 30000, 40000], ['4-5', '월 4~5만원', 40000, 50000], ['5u', '월 5만원 이상', 50000, Infinity]];
+    function priceOk(p, k) { if (!k) return true; for (var i = 0; i < PRICES.length; i++) if (PRICES[i][0] === k) return p.low != null && p.low >= PRICES[i][2] && p.low < PRICES[i][3]; return true; }
     function readUrl() {
         var q = new URLSearchParams(location.search);
-        return { id: S(q.get('id'), 80), type: S(q.get('type'), 30), kind: S(q.get('kind'), 40), brand: S(q.get('brand'), 40), q: S(q.get('q'), 40), sort: /^(low|high|name)$/.test(q.get('sort') || '') ? q.get('sort') : 'low' };
+        return { id: S(q.get('id'), 80), type: S(q.get('type'), 30), kind: S(q.get('kind'), 40), feat: FEATS.indexOf(q.get('feat')) >= 0 ? q.get('feat') : '', price: PRICES.some(function (x) { return x[0] === q.get('price'); }) ? q.get('price') : '', brand: S(q.get('brand'), 40), q: S(q.get('q'), 40), sort: /^(low|high|name)$/.test(q.get('sort') || '') ? q.get('sort') : 'low' };
     }
     function listQs() {
         var q = new URLSearchParams();
         if (st.type) q.set('type', st.type);
         if (st.kind) q.set('kind', st.kind);
+        if (st.feat) q.set('feat', st.feat);
         if (st.brand) q.set('brand', st.brand);
+        if (st.price) q.set('price', st.price);
         if (st.q) q.set('q', st.q);
         if (st.sort !== 'low') q.set('sort', st.sort);
         var s = q.toString(); return s ? '?' + s : location.pathname.split('/').pop() || 'rental.html';
@@ -556,7 +601,7 @@ img { max-width: 100%; }
         var u = readUrl();
         if (u.id) { showDetail(u.id); return; }
         fromList = false;
-        st.type = u.type; st.kind = u.kind; st.brand = u.brand; st.q = u.q; st.sort = u.sort;
+        st.type = u.type; st.kind = u.kind; st.feat = u.feat; st.brand = u.brand; st.price = u.price; st.q = u.q; st.sort = u.sort;
         showList();
     }
     window.addEventListener('popstate', function () { var wasDetail = !$('detail-view').hidden; route(); if (wasDetail && !readUrl().id) window.scrollTo(0, listY); });
@@ -581,13 +626,22 @@ img { max-width: 100%; }
             clear(grid); for (var i = 0; i < 8; i++) grid.appendChild(h('div', { class: 'skel', 'aria-hidden': 'true' }));
             $('count').textContent = '상품 정보를 불러오는 중이에요...'; $('more').hidden = true;
         }
-        getFeed().then(function () { renderList(); }, function () { $('count').textContent = ''; $('tabs').textContent = ''; $('kinds').hidden = true; $('more').hidden = true; failed(grid); });
+        getFeed().then(function () { renderList(); }, function () { $('count').textContent = ''; $('tabs').textContent = ''; $('facets').hidden = true; $('more').hidden = true; failed(grid); });
     }
-    function filtered() {
+    function match(p, skip) {   // skip: 개수를 셀 때 그 칸 자신의 선택은 빼고 셈
         var q = key(st.q);
-        return DATA.items.filter(function (p) {
-            return p.cat === st.type && (!st.kind || p.kind === st.kind) && (!st.brand || p.brand === st.brand) && (!q || key(p.name).indexOf(q) >= 0 || key(p.model).indexOf(q) >= 0);
-        });
+        return p.cat === st.type && (skip === 'kind' || !st.kind || p.kind === st.kind) && (skip === 'feat' || !st.feat || featOf(p) === st.feat)
+            && (skip === 'brand' || !st.brand || p.brand === st.brand) && (skip === 'price' || priceOk(p, st.price)) && (!q || key(p.name).indexOf(q) >= 0 || key(p.model).indexOf(q) >= 0);
+    }
+    function filtered() { return DATA.items.filter(function (p) { return match(p, ''); }); }
+    function pick(name, v) { st[name] = v; st.shown = PAGE; setUrl(listQs(), false); renderList(); }
+    function frow(label, name, items, cur) {   // 한 줄 칩: [○○ 전체] + 항목(개수)
+        return h('div', { class: 'frow', role: 'group', 'aria-label': label, 'data-row': name },
+            h('button', { type: 'button', class: 'fchip all', 'aria-pressed': cur ? 'false' : 'true', onclick: function () { pick(name, ''); } }, label + ' 전체'),
+            items.map(function (it) {
+                var on = cur === it[0];
+                return h('button', { type: 'button', class: 'fchip', 'aria-pressed': on ? 'true' : 'false', disabled: !on && !it[2] ? true : null, 'data-v': it[0], onclick: function () { pick(name, on ? '' : it[0]); } }, it[1], h('small', {}, String(it[2])));
+            }));
     }
     function sortList(l) {
         var s = st.sort;
@@ -606,27 +660,44 @@ img { max-width: 100%; }
         var tabs = $('tabs'); clear(tabs);
         cats.forEach(function (c) {
             tabs.appendChild(h('button', { type: 'button', class: 'tab', role: 'tab', 'aria-selected': c.name === st.type ? 'true' : 'false', 'data-cat': c.name, onclick: function () {
-                if (st.type === c.name) return; st.type = c.name; st.kind = ''; st.brand = ''; st.shown = PAGE; setUrl(listQs(), true); renderList();
+                if (st.type === c.name) return; st.type = c.name; st.kind = ''; st.feat = ''; st.brand = ''; st.price = ''; st.kexp = false; st.shown = PAGE; setUrl(listQs(), true); renderList();
             } }, c.name, h('small', {}, String(c.n))));
         });
         var inCat = DATA.items.filter(function (p) { return p.cat === st.type; });
-        // 종류(kind)
-        var kc = Object.create(null), kinds = [];
-        inCat.forEach(function (p) { if (p.kind) { if (!kc[p.kind]) { kc[p.kind] = 0; kinds.push(p.kind); } kc[p.kind]++; } });
-        kinds.sort(function (a, b) { return kc[b] - kc[a] || a.localeCompare(b, 'ko'); });
-        if (st.kind && !kc[st.kind]) st.kind = '';
-        var kb = $('kinds'); clear(kb); kb.hidden = !kinds.length;
-        if (kinds.length) [''].concat(kinds).forEach(function (k) {
-            kb.appendChild(h('button', { type: 'button', class: 'chip', 'aria-pressed': st.kind === k ? 'true' : 'false', 'data-kind': k, onclick: function () { st.kind = k; st.brand = ''; st.shown = PAGE; setUrl(listQs(), false); renderList(); } }, k ? k + ' ' + kc[k] : '전체 ' + inCat.length));
-        });
-        // 제조사(brand) — 고른 종류 안에서
-        var bc = Object.create(null), brands = [];
-        inCat.forEach(function (p) { if ((!st.kind || p.kind === st.kind) && p.brand) { if (!bc[p.brand]) { bc[p.brand] = 0; brands.push(p.brand); } bc[p.brand]++; } });
-        brands.sort(function (a, b) { return a.localeCompare(b, 'ko'); });
-        if (st.brand && !bc[st.brand]) st.brand = '';
-        var bs = $('brand'); clear(bs);
-        bs.appendChild(h('option', { value: '' }, '제조사 전체'));
-        brands.forEach(function (b) { var o = h('option', { value: b }, b + ' (' + bc[b] + ')'); if (b === st.brand) o.selected = true; bs.appendChild(o); });
+        // 고르는 칸 (가전: 종류 그림 · 정수기: 기능) · 제조사 · 가격대 — 개수는 다른 조건을 적용한 상태에서 셈
+        var fx = $('facets'); clear(fx); fx.hidden = false;
+        var kc = Object.create(null), kinds = [], kimg = Object.create(null);
+        inCat.forEach(function (p) { if (p.kind) { if (!(p.kind in kc)) { kc[p.kind] = 0; kinds.push(p.kind); } } });
+        DATA.items.forEach(function (p) { if (p.kind && p.kind in kc && match(p, 'kind')) kc[p.kind]++; });
+        var all = Object.create(null); inCat.forEach(function (p) { if (p.kind) all[p.kind] = (all[p.kind] || 0) + 1; });
+        kinds.sort(function (a, b) { return all[b] - all[a] || a.localeCompare(b, 'ko'); });
+        sortList(inCat).forEach(function (p) { if (p.kind && !kimg[p.kind] && U(p.img[0])) kimg[p.kind] = p.img[0]; });   // 종류마다 대표 사진 (렌탈료 낮은 상품)
+        if (st.kind && !(st.kind in kc)) st.kind = '';
+        if (kinds.length) {
+            var SHOW = 7, idx = kinds.indexOf(st.kind), open = st.kexp || idx >= SHOW, list0 = open ? kinds : kinds.slice(0, SHOW);
+            var kg = h('div', { class: 'kgrid', role: 'group', 'aria-label': '종류' }, list0.map(function (k) {
+                var on = st.kind === k;
+                return h('button', { type: 'button', class: 'ktile', 'aria-pressed': on ? 'true' : 'false', 'data-kind': k, onclick: function () { pick('kind', on ? '' : k); } },
+                    h('span', { class: 'kimg' }, kimg[k] ? h('img', { src: kimg[k], alt: '', loading: 'lazy', decoding: 'async', referrerpolicy: 'no-referrer', onerror: function () { this.style.visibility = 'hidden'; } }) : null),
+                    h('span', { class: 'kname' }, k), h('small', {}, String(kc[k])));
+            }));
+            if (kinds.length > SHOW) kg.appendChild(h('button', { type: 'button', class: 'ktile kmore', 'data-act': 'kmore', 'aria-expanded': open ? 'true' : 'false', onclick: function () { st.kexp = !open; renderList(); } },
+                h('span', { class: 'kimg' }, open ? '접기' : '+' + (kinds.length - SHOW)), h('span', { class: 'kname' }, open ? '줄이기' : '전체')));
+            fx.appendChild(h('div', { class: 'kwrap' }, h('div', { class: 'ktitle' }, '어떤 ' + (st.type === '가전렌탈' ? '가전' : '상품') + '을 찾으세요?', st.kind ? h('button', { type: 'button', class: 'kclear', onclick: function () { pick('kind', ''); } }, '종류 전체 보기') : null), kg));
+        }
+        if (st.type === '정수기') {
+            var fc = {}; FEATS.forEach(function (f) { fc[f] = 0; });
+            DATA.items.forEach(function (p) { var f = featOf(p); if (f && match(p, 'feat')) fc[f]++; });
+            fx.appendChild(frow('기능', 'feat', FEATS.map(function (f) { return [f, f, fc[f]]; }), st.feat));
+        }
+        var bc = Object.create(null), border = Object.create(null);
+        inCat.forEach(function (p) { if (p.brand) border[p.brand] = (border[p.brand] || 0) + 1; });
+        DATA.items.forEach(function (p) { if (p.brand && match(p, 'brand')) bc[p.brand] = (bc[p.brand] || 0) + 1; });
+        if (st.brand && !border[st.brand]) st.brand = '';
+        var brands = Object.keys(border).filter(function (b) { return bc[b] || b === st.brand; }).sort(function (a, b) { return border[b] - border[a] || a.localeCompare(b, 'ko'); });
+        fx.appendChild(frow('제조사', 'brand', brands.map(function (b) { return [b, b, bc[b] || 0]; }), st.brand));
+        var pc = PRICES.map(function (x) { var n = 0; DATA.items.forEach(function (p) { if (match(p, 'price') && priceOk(p, x[0])) n++; }); return [x[0], x[1], n]; });
+        fx.appendChild(frow('가격', 'price', pc, st.price));
         $('sort').value = st.sort;
         if ($('q').value !== st.q && document.activeElement !== $('q')) $('q').value = st.q;
         var list = sortList(filtered()), grid = $('grid');
@@ -635,8 +706,8 @@ img { max-width: 100%; }
         $('count').appendChild(document.createTextNode(st.type + ' '));
         $('count').appendChild(h('b', {}, list.length.toLocaleString('ko-KR') + '개'));
         if (DATA.at) { var t = new Date(DATA.at); if (!isNaN(t)) $('count').appendChild(document.createTextNode(' · 요금 기준 ' + (t.getMonth() + 1) + '/' + t.getDate() + ' ' + String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0'))); }
-        $('reset').hidden = !(st.kind || st.brand || st.q);
-        if (!list.length) grid.appendChild(h('div', { class: 'empty' }, h('b', {}, '조건에 맞는 상품이 없어요'), '검색어나 제조사를 바꿔 보세요.'));
+        $('reset').hidden = !(st.kind || st.feat || st.brand || st.price || st.q);
+        if (!list.length) grid.appendChild(h('div', { class: 'empty' }, h('b', {}, '조건에 맞는 상품이 없어요'), '고른 조건을 줄이거나 [조건 초기화]를 눌러 보세요.'));
         list.slice(0, st.shown).forEach(function (p) { grid.appendChild(card(p)); });
         $('more').hidden = list.length <= st.shown;
     }
@@ -668,7 +739,7 @@ img { max-width: 100%; }
         return h('a', { class: 'back', href: '?type=' + encodeURIComponent(p ? p.cat : (st.type || '정수기')), 'data-act': 'back', onclick: function (e) {
             e.preventDefault();
             if (fromList) { history.back(); return; }   // 목록에서 들어왔으면 보던 자리로
-            if (p) { st.type = p.cat; st.kind = ''; st.brand = ''; st.q = ''; }
+            if (p) { st.type = p.cat; st.kind = ''; st.feat = ''; st.brand = ''; st.price = ''; st.q = ''; }
             setUrl(listQs(), true); route(); window.scrollTo(0, 0);
         } }, '← 목록으로');
     }
@@ -896,9 +967,8 @@ img { max-width: 100%; }
     /* ---------- 고르는 도구 ---------- */
     var qT = 0;
     $('q').addEventListener('input', function () { clearTimeout(qT); qT = setTimeout(function () { st.q = S($('q').value, 40); st.shown = PAGE; setUrl(listQs(), false); if (DATA) renderList(); }, 180); });
-    $('brand').addEventListener('change', function () { st.brand = $('brand').value; st.shown = PAGE; setUrl(listQs(), false); renderList(); });
     $('sort').addEventListener('change', function () { st.sort = /^(low|high|name)$/.test($('sort').value) ? $('sort').value : 'low'; st.shown = PAGE; setUrl(listQs(), false); renderList(); });
-    $('reset').addEventListener('click', function () { st.kind = ''; st.brand = ''; st.q = ''; $('q').value = ''; st.shown = PAGE; setUrl(listQs(), false); renderList(); });
+    $('reset').addEventListener('click', function () { st.kind = ''; st.feat = ''; st.brand = ''; st.price = ''; st.q = ''; $('q').value = ''; st.shown = PAGE; setUrl(listQs(), false); renderList(); });
     $('more-btn').addEventListener('click', function () { st.shown += PAGE; renderList(); });
     $('m-ask').addEventListener('click', function () {
         var u = readUrl(), p = u.id && DATA ? find(u.id) : null;
@@ -906,7 +976,7 @@ img { max-width: 100%; }
     });
     // 메뉴의 정수기 · 가전렌탈 (같은 페이지 안에서 바꾸기)
     Array.prototype.forEach.call(document.querySelectorAll('[data-nav]'), function (a) {
-        a.addEventListener('click', function (e) { if (e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); st.type = a.getAttribute('data-nav'); st.kind = ''; st.brand = ''; st.q = ''; $('q').value = ''; st.shown = PAGE; closeModal(); setUrl(listQs(), true); route(); window.scrollTo(0, 0); });
+        a.addEventListener('click', function (e) { if (e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); st.type = a.getAttribute('data-nav'); st.kind = ''; st.feat = ''; st.brand = ''; st.price = ''; st.kexp = false; st.q = ''; $('q').value = ''; st.shown = PAGE; closeModal(); setUrl(listQs(), true); route(); window.scrollTo(0, 0); });
     });
     route();
 })();
