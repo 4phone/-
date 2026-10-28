@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-g/ZG1YrFD/m+roYnsxTkOAXjcHG9DpFxvt3KrFs8zdg='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-uhGs+Li0y7wCAbzuXyv9owhPIVprqTdJsMq6FvfORCQ='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1504,6 +1504,10 @@
         .bl-here { margin-bottom: 10px; }
         .bl-here > summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: #3D5A5E; padding: 6px 0; }
         .bl-here[open] > summary { margin-bottom: 8px; }
+        .bl-h1 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .bl-reset { font-weight: 800; }
+        .bl-stop { min-height: 50px; font-weight: 800; border-color: #C0392B; color: #C0392B; background: #fff; }
+        .bl-stop:hover { background: #FDECEA; }
 </style>
     <style>
         /* ===== 렌탈 단가표 · 렌탈 상담 메모 · 렌탈 가입 확인서 ===== */
@@ -1645,7 +1649,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-28.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-28.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -8573,15 +8577,30 @@
             if (bl.busy) return;
             if (!bl.topic.trim()) { toast('주제를 먼저 적어 주세요.'); return; }
             if (!driveOn()) { toast('구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요.'); return; }
-            bl.busy = true; bl.err = ''; render();
+            bl.busy = true; bl.err = ''; var gen = bl.gen = (bl.gen || 0) + 1; render();   // gen: [멈춤]을 누르면 늦게 온 결과는 버림
             ibCall('blogAi', { topic: bl.topic, memo: bl.memo, extra: bl.extra, cat: bl.cat, len: bl.len, who: bl.who, whoName: bl.whoName, photos: bl.photos.map(function (p) { return p.ai; }), notes: bl.photos.map(function (p) { return p.note || ''; }), kinds: bl.photos.map(function (p) { return blIsVid(p) ? 'video' : 'photo'; }) }, 170000).then(function (r) {
+                if (gen !== bl.gen) return;   // 멈춘 요청
                 bl.busy = false;
                 if (!r || !r.ok) { bl.err = (r && r.message) || '글을 만들지 못했어요.'; render(); return; }
                 var j = blParse(r.text);
                 if (!j) { bl.err = '글 모양이 이상하게 와서 읽지 못했어요. [다시 쓰기]를 한 번 더 눌러 주세요.'; bl.raw = String(r.text || '').slice(0, 4000); render(); return; }
                 bl.res = blNorm(j); bl.step = -1; bl.miniMsg = ''; blSave(); render(); blMiniRender(); toast('글이 완성됐어요. 고칠 곳만 고치고 [네이버에 올리기]를 눌러 주세요.');
                 setTimeout(function () { var el = document.querySelector('.bl-result'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
-            }, function (e) { bl.busy = false; bl.err = driveErrText(e); render(); });
+            }, function (e) { if (gen !== bl.gen) return; bl.busy = false; bl.err = driveErrText(e); render(); });
+        }
+        function blStop() {   // ⏹ 멈춤: 쓰는 중인 글을 기다리지 않음 (이미 만든 글·적은 내용은 그대로)
+            if (!bl.busy) return;
+            bl.gen = (bl.gen || 0) + 1; bl.busy = false; bl.err = '';
+            render(); toast('글쓰기를 멈췄어요. 적은 내용은 그대로예요. 다시 쓰려면 [AI로 블로그 글 만들기]를 눌러 주세요.');
+        }
+        function blReset() {   // 🆕 새로 쓰기: 주제·메모·꼭 넣을 말·사진·만든 글을 비움 (글 종류·길이·글쓴이·업체 해시태그 설정은 그대로)
+            var has = bl.topic.trim() || bl.memo.trim() || bl.extra.trim() || bl.photos.length || bl.res;
+            if (has && !confirm('지금 적은 주제 · 메모 · 사진 · 만든 글을 모두 비우고 새로 쓸까요?\n(글 종류 · 길이 · 글쓴이 · 업체 해시태그 설정은 그대로예요)')) return;
+            if (bl.busy) { bl.gen = (bl.gen || 0) + 1; bl.busy = false; }
+            bl.topic = ''; bl.memo = ''; bl.extra = ''; bl.photos = []; bl.res = null; bl.step = -1; bl.err = ''; bl.raw = ''; bl.miniMsg = '';
+            blSave(); render(); blMiniRender(); window.scrollTo(0, 0);
+            toast('새로 쓰기 — 주제부터 적어 주세요.');
+            setTimeout(function () { var t = document.querySelector('[data-fk="bl-topic"]'); if (t) try { t.focus(); } catch (e) { /* 무시 */ } }, 50);
         }
         function blEsc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
         function blSay(msg, W) { if (W && W !== window) { bl.miniMsg = msg; blMiniRender(); } else toast(msg); }
@@ -8789,7 +8808,7 @@
             grip.style.touchAction = 'none';
         }
         function renderBlog() {
-            var head = h('div', { class: 'page-head' }, h('h1', {}, '블로그 글쓰기'),
+            var head = h('div', { class: 'page-head' }, h('div', { class: 'bl-h1' }, h('h1', {}, '블로그 글쓰기'), isBoss() ? h('button', { type: 'button', class: 'btn btn-sm bl-reset', 'data-act': 'bl-reset', onclick: blReset }, '🆕 새로 쓰기') : null),
                 h('div', { class: 'actions' }, h('a', { class: 'btn', href: 'https://blog.naver.com/' + BLOG_ID, target: '_blank', rel: 'noopener' }, '내 블로그 보기 ↗')));
             if (!isBoss()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '블로그 글쓰기는 대표(관리자) 계정에서 쓸 수 있어요.')));
             var topic = h('input', { type: 'text', class: 'bl-in', 'data-fk': 'bl-topic', maxlength: '120', placeholder: '예) 안산 월피동 맛집 그냥냉삼집 2탄 / 갤럭시 S26 사전예약 안내', value: bl.topic });
@@ -8838,6 +8857,7 @@
                 })(),
                 h('div', { class: 'bl-go-row' },
                     h('button', { type: 'button', class: 'btn btn-primary bl-go', 'data-fk': 'bl-go', disabled: bl.busy ? true : null, onclick: blGen }, bl.busy ? '✍️ 우리 블로그 말투로 쓰는 중… (30초~1분)' : (bl.res ? '🔄 다시 쓰기' : '✍️ AI로 블로그 글 만들기')),
+                    bl.busy ? h('button', { type: 'button', class: 'btn bl-stop', 'data-act': 'bl-stop', onclick: blStop }, '⏹ 멈춤') : null,
                     h('span', { class: 'bl-hint' }, '우리 블로그 최근 글 말투 그대로, 사람이 쓴 것처럼 써요 · 사진은 글 쓰는 데만 쓰고 저장하지 않아요')),
                 bl.err ? h('div', { class: 'mode-note warn' }, bl.err, /키/.test(bl.err) ? h('div', {}, '설정 → [단가표 사진 변환 키]에 넣은 Claude 키를 블로그 글쓰기도 같이 써요.') : null) : null);
             var result = null;
