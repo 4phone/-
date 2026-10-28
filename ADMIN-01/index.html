@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KS23R3aujr47KRS4MYlko/fW9NJR4ClGWV1XOZBTWIo='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-LDLe7T0K/FLf65mJjTwBITK+vCRZHq3KkT68oT3vd6k='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1458,6 +1458,10 @@
         .bl-th { position: relative; border: 1px solid #DCE7E5; border-radius: 12px; overflow: hidden; background: #FFF; }
         .bl-th img { display: block; width: 100%; height: 120px; object-fit: cover; }
         .bl-th-n { position: absolute; top: 6px; left: 6px; min-width: 24px; height: 24px; border-radius: 12px; background: #134047; color: #F3DFA8; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+        .bl-th { cursor: grab; user-select: none; -webkit-user-select: none; transition: box-shadow .15s, outline-color .15s; }
+        .bl-th.dragging { cursor: grabbing; z-index: 5; box-shadow: 0 16px 34px rgba(0,0,0,0.28); opacity: .92; transition: none; }
+        .bl-th.over { outline: 3px solid #E2C27A; outline-offset: 2px; }
+        .bl-grip { cursor: grab; padding: 0 8px !important; min-width: 34px !important; height: 28px !important; font-size: 13px !important; }
         .bl-th-v { position: absolute; top: 6px; right: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,0.7); color: #FFF; font-size: 12px; font-weight: 800; }
         .bl-th-acts { display: flex; gap: 4px; padding: 6px; }
         .bl-th-acts .btn { flex: 1; padding: 4px 0; min-height: 30px; }
@@ -8225,10 +8229,17 @@
                 setTimeout(function () { var el = document.querySelector('.bl-result'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
             }, function (e) { bl.busy = false; bl.err = driveErrText(e); render(); });
         }
-        function blCopyText(t, msg) {
+        function blEsc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+        function blCopyText(t, msg, nl) {   // nl: 글·설명은 끝에 빈 줄 하나 더 → 붙여넣으면 커서가 다음 줄에서 시작
             var ok = function () { toast(msg || '복사했어요. 네이버 글쓰기 창에 Ctrl+V 로 붙여넣어 주세요.'); };
-            if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t).then(ok, function () { blFallbackCopy(t); ok(); });
-            blFallbackCopy(t); ok(); return Promise.resolve();
+            var plain = nl ? String(t).replace(/\s+$/, '') + '\n\n' : String(t);
+            if (nl && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {   // 네이버 편집기는 그림 글(html) 붙여넣기에서 줄바꿈을 그대로 살려 줌
+                var html = String(t).replace(/\s+$/, '').split('\n').map(function (l) { return '<p>' + (l.trim() ? blEsc(l) : '<br>') + '</p>'; }).join('') + '<p><br></p>';
+                return navigator.clipboard.write([new ClipboardItem({ 'text/plain': new Blob([plain], { type: 'text/plain' }), 'text/html': new Blob([html], { type: 'text/html' }) })])
+                    .then(ok, function () { return navigator.clipboard.writeText(plain).then(ok, function () { blFallbackCopy(plain); ok(); }); });
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(plain).then(ok, function () { blFallbackCopy(plain); ok(); });
+            blFallbackCopy(plain); ok(); return Promise.resolve();
         }
         function blFallbackCopy(t) { var ta = h('textarea', { style: 'position:fixed;left:-9999px;top:0' }); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) { /* 무시 */ } ta.remove(); }
         function blSaveOne(p, name) { var url = URL.createObjectURL(p.file), a = h('a', { href: url, download: name }); document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 5000); }
@@ -8273,8 +8284,8 @@
             var s = [{ k: 'title', label: '제목', run: function () { return blCopyText(bl.res.title, '제목을 복사했어요. 네이버 글쓰기 [제목] 칸에 Ctrl+V'); } }];
             bl.res.blocks.forEach(function (b, i) {
                 if (b.t === 'photo') s.push({ k: 'p' + i, label: blName(bl.photos[b.n - 1], b.n), n: b.n, run: function () { return blCopyPhoto(b.n); } });
-                if (b.t === 'photo' && b.cap) s.push({ k: 'c' + i, label: blName(bl.photos[b.n - 1], b.n) + ' 설명', run: function () { return blCopyText(b.cap, '사진 설명을 복사했어요. 사진 아래에 Ctrl+V'); } });
-                if (b.t === 'text') s.push({ k: 't' + i, label: '글 ' + (i + 1), run: function () { return blCopyText(b.v); } });
+                if (b.t === 'photo' && b.cap) s.push({ k: 'c' + i, label: blName(bl.photos[b.n - 1], b.n) + ' 설명', run: function () { return blCopyText(b.cap, '사진 설명을 복사했어요. 사진 아래에 Ctrl+V', true); } });
+                if (b.t === 'text') s.push({ k: 't' + i, label: '글 ' + (i + 1), run: function () { return blCopyText(b.v, '글을 복사했어요. Ctrl+V 하면 끝에 빈 줄까지 들어가서 다음 줄에서 바로 이어 붙일 수 있어요.', true); } });
             });
             if (bl.map) s.push({ k: 'map', label: '📍 매장 지도', run: function () { return blCopyText(BL_PLACE, '매장 지도 주소를 복사했어요. 글 끝에 Ctrl+V 하면 네이버 플레이스 지도 카드가 생겨요. (안 생기면 네이버 위쪽 [장소] 버튼 → "사거리인터넷" 검색 → 추가)'); } });
             if (bl.res.tags.length) s.push({ k: 'tags', label: '해시태그 ' + bl.res.tags.length + '개', run: function () { return blCopyText(bl.res.tags.map(function (t) { return '#' + t; }).join(' '), '해시태그를 복사했어요. 글 맨 아래에 Ctrl+V'); } });
@@ -8284,6 +8295,57 @@
             var s = blSteps(); if (!s.length) return;
             bl.step = Math.min(s.length - 1, bl.step + 1);
             s[bl.step].run(); render();
+        }
+        function blRemap(perm) {   // 사진 순서가 바뀌어도 이미 만든 글은 그대로 (사진 번호만 새 순서로)
+            if (!bl.res) return;
+            bl.res.blocks = bl.res.blocks.filter(function (b) { return b.t !== 'photo' || perm[b.n - 1] != null; }).map(function (b) { return b.t === 'photo' ? { t: 'photo', n: perm[b.n - 1] + 1, cap: b.cap } : b; });
+            blSave();
+        }
+        function blMove(from, to) {
+            var a = bl.photos; if (to < 0 || to >= a.length || from === to) return;
+            var order = a.map(function (x, k) { return k; }); order.splice(to, 0, order.splice(from, 1)[0]);
+            var perm = []; order.forEach(function (old, nw) { perm[old] = nw; });
+            bl.photos = order.map(function (k) { return a[k]; });
+            blRemap(perm); render();
+        }
+        function blRemove(i) {
+            var perm = bl.photos.map(function (x, k) { return k < i ? k : k === i ? null : k - 1; });
+            bl.photos.splice(i, 1); blRemap(perm); render();
+        }
+        function blDragable(card, grip, i) {   // 끌어서 순서 바꾸기: 마우스는 사진 아무 데나, 휴대폰은 왼쪽 위 ⠿ 손잡이
+            var st = null;
+            function targetAt(x, y) {
+                var els = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
+                for (var k = 0; k < els.length; k++) { var t = els[k].closest && els[k].closest('.bl-th'); if (t && t !== card && t.parentNode === card.parentNode) return t; }
+                return null;
+            }
+            function clear() { Array.prototype.forEach.call(card.parentNode ? card.parentNode.querySelectorAll('.bl-th.over') : [], function (t) { t.classList.remove('over'); }); }
+            function down(e) {
+                if (e.button > 0) return;
+                if (e.target.closest('button, input, textarea')) return;
+                if (e.pointerType !== 'mouse' && !e.target.closest('.bl-grip')) return;   // 휴대폰: 손잡이로만 (화면 스크롤 방해 안 하게)
+                st = { id: e.pointerId, x: e.clientX, y: e.clientY, on: false, over: null };
+                try { (e.pointerType === 'mouse' ? card : grip).setPointerCapture(e.pointerId); } catch (x) { /* 무시 */ }
+                if (e.pointerType !== 'mouse') e.preventDefault();
+            }
+            function move(e) {
+                if (!st || e.pointerId !== st.id) return;
+                var dx = e.clientX - st.x, dy = e.clientY - st.y;
+                if (!st.on && Math.abs(dx) + Math.abs(dy) < 6) return;
+                if (!st.on) { st.on = true; card.classList.add('dragging'); }
+                e.preventDefault();
+                card.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+                var t = targetAt(e.clientX, e.clientY); clear(); st.over = t; if (t) t.classList.add('over');
+            }
+            function up(e) {
+                if (!st || e.pointerId !== st.id) return;
+                var t = st.over, was = st.on; st = null; clear();
+                card.classList.remove('dragging'); card.style.transform = '';
+                if (was && t) blMove(i, Number(t.getAttribute('data-i')));
+            }
+            card.addEventListener('pointerdown', down); card.addEventListener('pointermove', move);
+            card.addEventListener('pointerup', up); card.addEventListener('pointercancel', up);
+            grip.style.touchAction = 'none';
         }
         function renderBlog() {
             var head = h('div', { class: 'page-head' }, h('h1', {}, '블로그 글쓰기'),
@@ -8309,12 +8371,15 @@
             var thumbs = bl.photos.map(function (p, i) {
                 var note = h('input', { type: 'text', class: 'bl-note', 'data-fk': 'bl-note-' + i, maxlength: '100', placeholder: blIsVid(p) ? '(선택) 어떤 영상인지 한마디' : '(선택) 이 사진 설명', value: p.note });
                 note.addEventListener('input', function () { p.note = this.value; });
-                return h('div', { class: 'bl-th' + (blIsVid(p) ? ' vid' : '') }, h('img', { src: p.th, alt: blName(p, i + 1) }), h('span', { class: 'bl-th-n' }, String(i + 1)), blIsVid(p) ? h('span', { class: 'bl-th-v' }, '▶ ' + blDur(p.dur)) : null,
+                var grip = h('span', { class: 'bl-th-n bl-grip', title: '끌어서 순서 바꾸기', 'aria-hidden': 'true' }, '⠿ ' + (i + 1));
+                var card = h('div', { class: 'bl-th' + (blIsVid(p) ? ' vid' : ''), 'data-i': String(i), title: '끌어서 순서를 바꿀 수 있어요' }, h('img', { src: p.th, alt: blName(p, i + 1), draggable: 'false' }), grip, blIsVid(p) ? h('span', { class: 'bl-th-v' }, '▶ ' + blDur(p.dur)) : null,
                     h('div', { class: 'bl-th-acts' },
-                        h('button', { type: 'button', class: 'btn btn-sm', disabled: i === 0 ? true : null, 'aria-label': '앞으로', onclick: function () { var a = bl.photos; a.splice(i - 1, 0, a.splice(i, 1)[0]); bl.res = null; render(); } }, '◀'),
-                        h('button', { type: 'button', class: 'btn btn-sm', disabled: i === bl.photos.length - 1 ? true : null, 'aria-label': '뒤로', onclick: function () { var a = bl.photos; a.splice(i + 1, 0, a.splice(i, 1)[0]); bl.res = null; render(); } }, '▶'),
-                        h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'aria-label': '빼기', onclick: function () { bl.photos.splice(i, 1); bl.res = null; render(); } }, '✕')),
+                        h('button', { type: 'button', class: 'btn btn-sm', disabled: i === 0 ? true : null, 'aria-label': '앞으로', onclick: function () { blMove(i, i - 1); } }, '◀'),
+                        h('button', { type: 'button', class: 'btn btn-sm', disabled: i === bl.photos.length - 1 ? true : null, 'aria-label': '뒤로', onclick: function () { blMove(i, i + 1); } }, '▶'),
+                        h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'aria-label': '빼기', onclick: function () { blRemove(i); } }, '✕')),
                     note);
+                blDragable(card, grip, i);
+                return card;
             });
             var form = h('div', { class: 'panel bl-form' },
                 h('div', { class: 'bl-row' }, h('label', { class: 'bl-lb' }, '① 주제'), topic),
