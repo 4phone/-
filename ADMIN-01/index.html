@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-fRICpux2R1Gh2rcolbAl+bhAf7PRb6FFADsCDzqGGpk='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-prYAMWEUCEZOlYbhhlifDmctrVhGhRUHftJnbxzgLJ8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1564,6 +1564,17 @@
         .cl-kind button[data-kind="rent"][aria-pressed="true"] { background: #13896F; border-color: #13896F; }
         /* 가입 확인서(유선): 렌탈을 고르면 렌탈에 필요한 칸만 */
         .mf-sheet.wired:not(.rent) .rent-only, .mf-sheet.wired.rent .net-only { display: none !important; }
+        .mf-paper-box { display: none; }
+        .mf-paper-box.on { display: block; flex-basis: 100%; border: 2px solid #E2C27A; background: #FFF9E6; border-radius: 12px; padding: 12px 14px; }
+        .mf-paper-box.scan { border-color: #13896F; background: #EEF8F4; }
+        .mf-paper-head b { display: block; font-size: 15.5px; color: #1F2416; margin-bottom: 2px; }
+        .mf-paper-head span { font-size: 13px; color: #5D6450; line-height: 1.5; }
+        .mf-paper-img { margin: 10px 0; text-align: center; }
+        .mf-paper-img img { max-width: 100%; max-height: 560px; border: 1px solid #CFD6C4; background: #fff; box-shadow: 0 2px 10px rgba(31, 36, 22, .12); }
+        .mf-paper-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .mf-scan-b { cursor: pointer; }
+        .btn-scan { background: #13896F; border-color: #13896F; color: #fff; }
+        .mf-miss-tip { font-weight: 700; color: #8A6418; margin-left: 4px; }
     </style>
 </head>
 <body>
@@ -1656,7 +1667,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-28.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-28.9';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -4735,7 +4746,10 @@
             }
 
             var tools = h('div', { class: 'mf-tools' },
-                h('p', { class: 'mf-tip' }, '다 쓰면 [드라이브/연락처 저장]으로 구글 드라이브 월별 폴더와 구글 연락처(휴대폰에서 바로 보임)에 보관하거나, [복사보고]로 카카오톡·텔레그램에 붙여넣거나, [인쇄]·[PDF 파일 받기]를 이용해 주세요. 태블릿에서 인쇄 창이 안 뜨면 [PDF 파일 받기] → 받은 파일 열기 → 인쇄로 하면 돼요. 이 화면의 작성 내용은 잠그거나 새로고침하면 지워져요.'),
+                M.paperBox = h('div', { class: 'mf-paper-box', role: 'status', 'aria-live': 'polite' }),
+                h('p', { class: 'mf-tip' }, M.kind === 'mobile'
+                    ? '다 쓰면 [드라이브/연락처 저장]으로 구글 드라이브 월별 폴더와 구글 연락처(휴대폰에서 바로 보임)에 보관하거나, [복사보고]로 카카오톡·텔레그램에 붙여넣거나, [PDF 파일 받기]를 이용해 주세요. 종이에 서명을 받을 때는 [✍ 서명 직접 받기]로 인쇄하고, 서명 받은 종이를 [📷 스캔]으로 넣으면 그 스캔본이 드라이브에 저장돼요. (스캐너 파일 JPG·PNG·PDF 또는 휴대폰 사진) 이 화면의 작성 내용은 잠그거나 새로고침하면 지워져요.'
+                    : '다 쓰면 [드라이브/연락처 저장]으로 구글 드라이브 월별 폴더와 구글 연락처(휴대폰에서 바로 보임)에 보관하거나, [복사보고]로 카카오톡·텔레그램에 붙여넣거나, [인쇄]·[PDF 파일 받기]를 이용해 주세요. 태블릿에서 인쇄 창이 안 뜨면 [PDF 파일 받기] → 받은 파일 열기 → 인쇄로 하면 돼요. 이 화면의 작성 내용은 잠그거나 새로고침하면 지워져요.'),
                 h('div', { class: 'actions' },
                     h('span', { class: 'mf-act mf-act-new' }, h('button', { type: 'button', class: 'btn', 'data-act': 'mf-new', onclick: function () {
                         if (!confirm('작성한 내용과 서명을 모두 지우고 새로 작성할까요?')) return;
@@ -4745,16 +4759,19 @@
                     mfAct('save', h('button', { type: 'button', class: 'btn btn-step', 'data-step': '7', 'data-act': 'mf-drive', onclick: function () { mfDriveSave(M, sheet, this); } }, '드라이브/연락처 저장')),
                     mfAct('copy', h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'mf-copy', onclick: function () {
                         if (!mfReady(M, '복사')) return;
-                        mfCopyReport(sheet, opt.file, function () { mfCount(M, 'copy'); });
+                        mfCopyReport(sheet, opt.file, function () { mfCount(M, 'copy'); }, M);
                     } }, '복사보고')),
                     mfAct('pdf', h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'mf-pdf', onclick: function () {
                         if (!mfReady(M, 'PDF로 저장')) return;
                         mfPdf(M, sheet, opt.file, function () { mfCount(M, 'pdf'); });
                     } }, 'PDF 파일 받기')),
-                    mfAct('print', h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-print', onclick: function () {
-                        if (!mfReady(M, '인쇄')) return;
-                        mfPrintImage(sheet, M, opt.file, function () { mfCount(M, 'print'); });
-                    } }, '인쇄'))));
+                    M.kind === 'mobile'
+                        ? mfAct('print', h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-print', title: '서명란을 비운 가입 확인서를 인쇄해요. 종이에 서명을 받은 뒤 [📷 스캔]으로 넣어 주세요.', onclick: function () { mfPaperPrint(M, sheet, opt.file); } }, '✍ 서명 직접 받기'))
+                        : mfAct('print', h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-print', onclick: function () {
+                            if (!mfReady(M, '인쇄')) return;
+                            mfPrintImage(sheet, M, opt.file, function () { mfCount(M, 'print'); });
+                        } }, '인쇄')),
+                    M.kind === 'mobile' ? h('span', { class: 'mf-act' }, mfScanBtn(M, '📷 스캔', 'btn btn-scan', 'mf-scan')) : null));
             M.sheet = sheet;
             M.el = h('div', { class: 'mf-wrap' }, sheet, tools);
             if (opt.gate) {   // 모바일·유선: 빈칸이 있으면 버튼을 끔
@@ -4835,6 +4852,7 @@
             if (!(y >= 2000 && y <= 2099 && m >= 1 && m <= 12 && d >= 1 && dt.getMonth() === m - 1 && dt.getDate() === d)) {
                 toast('가입 확인서 아래쪽의 날짜(년·월·일)를 확인해 주세요. 폴더와 파일 이름에 들어가요.'); var ye = q('y'); if (ye) { ye.focus(); ye.scrollIntoView({ block: 'center' }); } return;
             }
+            if (M.kind === 'mobile' && M.paper === 'wait' && !M.scan) { toast('서명 받은 종이를 [📷 스캔]으로 먼저 넣어 주세요.'); return; }   // 종이 서명: 스캔본이 들어와야 저장
             if (!mfReady(M, '저장')) return;
             if (M.saved) { mfAskReplace(M, sheet, btn); return; }   // 이미 저장한 확인서: 수정 저장 안내
             mfUpload(M, sheet, btn, y, m, d, name, '');
@@ -4902,7 +4920,7 @@
         }
         function mfUpload(M, sheet, btn, y, m, d, name, replaceId) {
             var b64;
-            try { b64 = mfSnapshot(sheet).toDataURL('image/png').split(',')[1]; } catch (e) { toast('가입 확인서 그림을 만들지 못했어요.'); return; }
+            try { b64 = mfImg(M, sheet).toDataURL('image/png').split(',')[1]; } catch (e) { toast('가입 확인서 그림을 만들지 못했어요.'); return; }
             var ct = ctInfo(M, sheet, y, m, d);
             btn.disabled = true; btn.setAttribute('data-busy', '1'); btn.textContent = '저장 중...';
             var folder = String(y % 100).padStart(2, '0') + '년' + m + '월';
@@ -4994,31 +5012,184 @@
             (M && M.kind === 'mobile' ? MF_REQ_MOBILE : MF_REQ_WIRED).forEach(function (r) {
                 if (r[3] && !cond(r[3])) return;   // 조건부: 해당될 때만
                 if (rentF && MF_RENT_LAB[r[0]]) r = [r[0], MF_RENT_LAB[r[0]]].concat(r.slice(2));   // 렌탈: 칸 이름도 렌탈로
-                if (r[0].charAt(0) === '#') { var k = r[0].slice(1); if (!(M && M.sig[k])) out.push({ t: r[1], el: M ? M.box[k] : null }); return; }   // 서명
+                if (r[0].charAt(0) === '#') { var k = r[0].slice(1); if (!(M && M.sig[k])) out.push({ t: r[1], el: M ? M.box[k] : null, sig: true }); return; }   // 서명
                 if (r[0].charAt(0) === '@') { var any = r[2].some(function (n) { var x = q(n); return x && x.checked; }); if (!any) out.push({ t: r[1], el: q(r[2][0]) }); return; }
                 var el = q(r[0]); if (el && !String(el.value || '').trim()) out.push({ t: r[1], el: el });
             });
             return out;
         }
+        /* ---------- 서명 직접 받기(종이) → 📷 스캔: 인쇄하면 [드라이브/연락처 저장]을 잠그고, 서명 받은 종이를 스캔해서 넣으면 그 스캔본으로 저장 ----------
+           스캔 파일: JPG·PNG 사진, 휴대폰 사진, 스캐너 PDF(안에 든 스캔 그림을 꺼냄) · 서버로 보내는 그림 모양(PNG)은 그대로라 Apps Script는 바꾸지 않아도 됨 */
+        function mfImg(M, sheet) { return M && M.scan ? M.scan : mfSnapshot(sheet); }
+        function mfPaperPrint(M, sheet, file) {
+            mfPrintImage(sheet, M, file, function () {
+                mfCount(M, 'print');
+                if (!M.scan) { M.paper = 'wait'; mfPaperPaint(M); }
+            });
+        }
+        function mfScanBtn(M, text, cls, act) {
+            return h('label', { class: cls + ' mf-scan-b', 'data-act': act, tabindex: '0', role: 'button', title: '서명 받은 가입 확인서 스캔 파일(JPG·PNG·PDF)이나 휴대폰 사진을 넣어요',
+                onkeydown: function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); var i = this.querySelector('input'); if (i) i.click(); } } }, text,
+                h('input', { type: 'file', accept: 'image/*,application/pdf,.pdf', hidden: true, onchange: function () { var f = this.files && this.files[0]; this.value = ''; mfScanLoad(M, f); } }));
+        }
+        function mfPaperPaint(M) {
+            var box = M.paperBox; if (!box) return;
+            box.textContent = ''; box.className = 'mf-paper-box';
+            if (M.scan) {
+                box.classList.add('on', 'scan');
+                box.appendChild(h('div', { class: 'mf-paper-head' }, h('b', {}, '✓ 서명 받은 스캔본이 들어갔어요'), h('span', {}, '[드라이브/연락처 저장]을 누르면 이 스캔본이 드라이브에 저장돼요. (복사보고 · PDF 파일 받기도 스캔본으로) 고객 이름 · 번호 · 날짜는 위 칸에 적은 그대로 연락처와 장부에 들어가요.')));
+                box.appendChild(h('div', { class: 'mf-paper-img' }, h('img', { src: M.scan.toDataURL('image/jpeg', 0.82), alt: '서명 받은 가입 확인서 스캔본' })));
+                box.appendChild(h('div', { class: 'mf-paper-btns' },
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mf-scan-rot', onclick: function () { M.scan = mfRot(M.scan); if (M.markDirty) M.markDirty(); mfPaperPaint(M); } }, '↻ 돌리기'),
+                    mfScanBtn(M, '다시 스캔', 'btn btn-sm', 'mf-scan-again'),
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mf-scan-del', onclick: function () { if (!confirm('넣은 스캔본을 뺄까요?')) return; M.scan = null; M.paper = 'wait'; if (M.markDirty) M.markDirty(); mfPaperPaint(M); toast('스캔본을 뺐어요.'); } }, '스캔본 빼기')));
+            } else if (M.paper === 'wait') {
+                box.classList.add('on', 'wait');
+                box.appendChild(h('div', { class: 'mf-paper-head' }, h('b', {}, '🖨 종이에 서명 받는 중이에요'), h('span', {}, '고객 서명을 받은 종이를 [📷 스캔]으로 넣으면 [드라이브/연락처 저장]이 켜져요. 스캐너 파일(JPG · PNG · PDF)이나 휴대폰으로 찍은 사진을 넣으면 돼요.')));
+                box.appendChild(h('div', { class: 'mf-paper-btns' },
+                    mfScanBtn(M, '📷 스캔본 넣기', 'btn btn-sm btn-scan', 'mf-scan-wait'),
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mf-paper-off', onclick: function () { M.paper = ''; mfPaperPaint(M); toast('화면에서 서명 받기로 돌아왔어요.'); } }, '화면에서 서명 받기로 돌아가기')));
+            }
+            mfGate(M);
+        }
+        function mfScanLoad(M, file) {
+            if (!file) return;
+            if (file.size > 40 * 1024 * 1024) { alert('스캔 파일이 너무 커요. (40MB까지)'); return; }
+            var pdf = /pdf$/i.test(file.type || '') || /\.pdf$/i.test(file.name || '');
+            if (!pdf && file.type && !/^image\//i.test(file.type)) { alert('스캔 파일(JPG · PNG · PDF)이나 사진을 넣어 주세요.'); return; }
+            toast('스캔본을 넣는 중이에요...');
+            (pdf ? mfPdfScan(file) : mfBitmap(file)).then(function (src) {
+                var cv = mfScanCanvas(src);
+                if (src && src.close) try { src.close(); } catch (x) { /* 무시 */ }
+                M.scan = cv; if (M.markDirty) M.markDirty();
+                mfPaperPaint(M);
+                if (M.paperBox && M.paperBox.scrollIntoView) M.paperBox.scrollIntoView({ block: 'nearest' });
+                toast('✓ 서명 받은 스캔본을 넣었어요. [드라이브/연락처 저장]을 누르면 이 스캔본이 저장돼요.');
+            }).catch(function (e) { alert(e && e.msg ? e.msg : '스캔 파일을 읽지 못했어요. JPG · PNG 사진이나 PDF로 다시 넣어 주세요. (아이폰 HEIC 사진은 [JPG로 저장]이나 화면 캡처로 넣어 주세요)'); });
+        }
+        function mfBitmap(blob) {   // 사진 → 그림 (휴대폰 사진 방향 그대로)
+            var viaImg = function () {
+                return new Promise(function (res, rej) {
+                    var fr = new FileReader();
+                    fr.onload = function () { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { rej(new Error('img')); }; im.src = fr.result; };
+                    fr.onerror = function () { rej(new Error('read')); };
+                    fr.readAsDataURL(blob);
+                });
+            };
+            if (!window.createImageBitmap) return viaImg();
+            try { return createImageBitmap(blob, { imageOrientation: 'from-image' }).catch(viaImg); } catch (e) { return viaImg(); }
+        }
+        function mfScanCanvas(src) {   // 세로 A4 모양으로 (가로로 찍힌 사진은 세워서) · 긴 쪽 2000px 이하
+            var w = src.naturalWidth || src.width, hh = src.naturalHeight || src.height;
+            if (!(w > 0 && hh > 0)) throw { msg: '스캔 그림이 비어 있어요. 다시 넣어 주세요.' };
+            var rot = w > hh * 1.08, f = Math.min(1, 2000 / Math.max(w, hh)), dw = Math.max(1, Math.round(w * f)), dh = Math.max(1, Math.round(hh * f));
+            var cv = document.createElement('canvas'); cv.width = rot ? dh : dw; cv.height = rot ? dw : dh;
+            var g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
+            if (rot) { g.translate(cv.width, 0); g.rotate(Math.PI / 2); }
+            g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, dw, dh);
+            return cv;
+        }
+        function mfRot(cv) {   // 시계 방향 90도
+            var o = document.createElement('canvas'); o.width = cv.height; o.height = cv.width;
+            var g = o.getContext('2d'); g.translate(o.width, 0); g.rotate(Math.PI / 2); g.drawImage(cv, 0, 0);
+            return o;
+        }
+        function mfPdfScan(file) {   // 스캐너 PDF → 안에 든 가장 큰 스캔 그림 (JPG 그대로 / 압축(Flate) 8비트 · 흑백 1비트)
+            var FAIL = { msg: '이 PDF에서 스캔 그림을 찾지 못했어요. 스캐너에서 JPG(사진)로 저장해서 넣거나, 휴대폰으로 찍어서 넣어 주세요.' };
+            return file.arrayBuffer().then(function (ab) {
+                var u = new Uint8Array(ab), s = new TextDecoder('latin1').decode(u), re = /\/Subtype\s*\/Image\b/g, m, best = null;
+                if (s.slice(0, 1024).indexOf('%PDF') < 0) throw FAIL;
+                while ((m = re.exec(s))) {
+                    var st = s.lastIndexOf(' obj', m.index), sp = s.indexOf('stream', m.index);
+                    if (st < 0 || sp < 0) continue;
+                    var d = s.slice(st, sp); if (/endobj/.test(d)) continue;
+                    var W = +((/\/Width\s+(\d+)/.exec(d) || [])[1] || 0), H = +((/\/Height\s+(\d+)/.exec(d) || [])[1] || 0);
+                    if (!(W > 0 && H > 0)) continue;
+                    var a = sp + 6; if (s.charAt(a) === '\r') a++; if (s.charAt(a) === '\n') a++;
+                    var L = /\/Length\s+(\d+)(\s+\d+\s+R)?/.exec(d), e;
+                    if (L && !L[2] && a + (+L[1]) <= u.length) e = a + (+L[1]);
+                    else { e = s.indexOf('endstream', a); if (e < 0) continue; while (e > a && (s.charAt(e - 1) === '\n' || s.charAt(e - 1) === '\r')) e--; }
+                    var fl = (/\/Filter\s*(\[[^\]]*\]|\/\w+)/.exec(d) || [])[1] || '', fs = fl.match(/\/\w+/g) || [];
+                    if (!best || W * H > best.W * best.H) best = { W: W, H: H, d: d, a: a, e: e, fs: fs };
+                }
+                if (!best) throw FAIL;
+                var data = u.subarray(best.a, best.e), F = best.fs.map(function (x) { return x.slice(1); });
+                if (F.length === 1 && F[0] === 'DCTDecode') return mfBitmap(new Blob([data], { type: 'image/jpeg' }));
+                if (F.length === 1 && F[0] === 'FlateDecode' && window.DecompressionStream) {
+                    return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate'))).arrayBuffer().then(function (raw) { return mfRawImg(new Uint8Array(raw), best); });
+                }
+                throw FAIL;
+            });
+        }
+        function mfRawImg(raw, b) {   // 압축 푼 그림 점 → 캔버스
+            var W = b.W, H = b.H, d = b.d, bpc = +((/\/BitsPerComponent\s+(\d+)/.exec(d) || [])[1] || 8);
+            var pred = +((/\/Predictor\s+(\d+)/.exec(d) || [])[1] || 1);
+            var n = /\/DeviceGray/.test(d) ? 1 : /\/DeviceRGB/.test(d) ? 3 : /\/DeviceCMYK/.test(d) ? 4 : 0;
+            if (bpc === 1) n = 1;
+            if (!n) { var per = raw.length / H - (pred >= 10 ? 1 : 0); n = Math.round(per * 8 / bpc / W); }   // 색 수를 크기로 짐작
+            if (!(bpc === 8 || bpc === 1) || [1, 3, 4].indexOf(n) < 0) throw { msg: '이 PDF의 스캔 그림 형식은 읽을 수 없어요. 스캐너에서 JPG(사진)로 저장해서 넣어 주세요.' };
+            var row = Math.ceil(W * n * bpc / 8), px = raw;
+            if (pred >= 10) {   // PNG 줄 필터 풀기
+                var bpp = Math.max(1, Math.ceil(n * bpc / 8)), out = new Uint8Array(row * H), prev = new Uint8Array(row), p = 0;
+                for (var y = 0; y < H; y++) {
+                    var ft = raw[p++], cur = out.subarray(y * row, y * row + row);
+                    for (var x = 0; x < row; x++) {
+                        var v = raw[p++] || 0, l = x >= bpp ? cur[x - bpp] : 0, up = prev[x], ul = x >= bpp ? prev[x - bpp] : 0;
+                        if (ft === 1) v += l; else if (ft === 2) v += up; else if (ft === 3) v += (l + up) >> 1;
+                        else if (ft === 4) { var pa = Math.abs(up - ul), pb = Math.abs(l - ul), pc = Math.abs(l + up - 2 * ul); v += pa <= pb && pa <= pc ? l : pb <= pc ? up : ul; }
+                        cur[x] = v & 255;
+                    }
+                    prev = cur;
+                }
+                px = out;
+            }
+            if (px.length < row * H) throw { msg: '이 PDF의 스캔 그림이 깨져 있어요. 다시 스캔해서 넣어 주세요.' };
+            var inv = /\/Decode\s*\[\s*1(\.0+)?\s+0/.test(d);
+            var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+            var g = cv.getContext('2d'), im = g.createImageData(W, H), o = im.data;
+            for (var yy = 0; yy < H; yy++) {
+                var r0 = yy * row;
+                for (var xx = 0; xx < W; xx++) {
+                    var k = (yy * W + xx) * 4, R, G, B;
+                    if (bpc === 1) { var bit = (px[r0 + (xx >> 3)] >> (7 - (xx & 7))) & 1; R = G = B = bit ? 255 : 0; }
+                    else if (n === 1) { R = G = B = px[r0 + xx]; }
+                    else if (n === 3) { var q = r0 + xx * 3; R = px[q]; G = px[q + 1]; B = px[q + 2]; }
+                    else { var c4 = r0 + xx * 4, K = 255 - px[c4 + 3]; R = (255 - px[c4]) * K / 255; G = (255 - px[c4 + 1]) * K / 255; B = (255 - px[c4 + 2]) * K / 255; }
+                    if (inv) { R = 255 - R; G = 255 - G; B = 255 - B; }
+                    o[k] = R; o[k + 1] = G; o[k + 2] = B; o[k + 3] = 255;
+                }
+            }
+            g.putImageData(im, 0, 0);
+            return cv;
+        }
         function mfGate(M) {   // 빈칸이 있으면 [드라이브/연락처 저장]·[복사보고]·[PDF 파일 받기]·[인쇄]를 끄고, 빠진 칸을 눌러 바로 갈 수 있게
             if (!M.gateOn || !M.el || !M.sheet) return;
-            var miss = mfMissing(M.sheet, M), box = M.el.querySelector('.mf-miss');
+            var all = mfMissing(M.sheet, M), box = M.el.querySelector('.mf-miss');
+            var mob = M.kind === 'mobile', noSig = all.filter(function (x) { return !x.sig; }), scan = mob && !!M.scan, wait = mob && M.paper === 'wait' && !M.scan;
+            var WAITT = '서명 받은 종이를 [📷 스캔]으로 넣으면 눌러져요';
             ['mf-drive', 'mf-copy', 'mf-pdf', 'mf-print'].forEach(function (a) {
                 var b = M.el.querySelector('[data-act="' + a + '"]'); if (!b) return;
-                b.disabled = !!miss.length || b.getAttribute('data-busy') === '1';
-                b.title = miss.length ? '빈칸을 모두 채우면 눌러져요' : (a === 'mf-drive' ? b.title : '');
+                var mm = scan || (mob && a === 'mf-print') ? noSig : all, lock = a === 'mf-drive' && wait;   // 서명 직접 받기: 서명 칸은 종이에 · 스캔본이 있으면 서명 칸은 스캔본으로
+                b.disabled = !!mm.length || lock || b.getAttribute('data-busy') === '1';
+                b.title = mm.length ? '빈칸을 모두 채우면 눌러져요' : lock ? WAITT : a === 'mf-drive' ? (b.title === WAITT || b.title === '빈칸을 모두 채우면 눌러져요' ? '' : b.title) : a === 'mf-print' && mob ? '서명란을 비운 가입 확인서를 인쇄해요. 종이에 서명을 받은 뒤 [📷 스캔]으로 넣어 주세요.' : '';
             });
             if (!box) return;
+            var miss = scan || wait ? noSig : all;
             box.textContent = ''; box.className = 'mf-miss' + (miss.length ? '' : ' ok');
-            if (!miss.length) { box.appendChild(h('b', {}, '✓ 모두 작성했어요.')); box.appendChild(h('span', {}, '저장 · 복사 · 파일 받기 · 인쇄를 할 수 있어요.')); return; }
+            if (!miss.length) {
+                box.appendChild(h('b', {}, '✓ 모두 작성했어요.'));
+                box.appendChild(h('span', {}, scan ? '서명 받은 스캔본으로 저장 · 복사 · 파일 받기를 할 수 있어요.' : wait ? '종이에 서명을 받은 뒤 [📷 스캔]으로 넣어 주세요. 그러면 [드라이브/연락처 저장]이 켜져요.' : mob ? '저장 · 복사 · 파일 받기를 할 수 있어요.' : '저장 · 복사 · 파일 받기 · 인쇄를 할 수 있어요.'));
+                return;
+            }
             box.appendChild(h('b', {}, '아직 안 쓴 곳 ' + miss.length + '개'));
+            if (mob && !noSig.length) box.appendChild(h('span', { class: 'mf-miss-tip' }, '서명만 남았어요 · 종이에 서명 받으려면 [✍ 서명 직접 받기]'));
             miss.slice(0, 14).forEach(function (m) {
                 box.appendChild(h('button', { type: 'button', onclick: function () { if (!m.el) return; try { m.el.focus({ preventScroll: true }); } catch (e) { m.el.focus(); } m.el.scrollIntoView({ block: 'center' }); } }, m.t));
             });
             if (miss.length > 14) box.appendChild(h('span', {}, '외 ' + (miss.length - 14) + '개'));
         }
         function mfReady(M, what) {   // 고객이 쓸 칸이 비었으면 한 번 더 확인
-            if (M.kind === 'wired') return true;   // 유선: 녹취 가입 (서명 없음) · 빈칸은 버튼이 꺼져서 막힘
+            if (M.kind === 'wired' || M.scan) return true;   // 유선: 녹취 가입 (서명 없음) · 스캔본: 서명은 종이에 · 빈칸은 버튼이 꺼져서 막힘
             var miss = [];
             if (!M.sig.agree) miss.push('"동의합니다." 따라 쓰기');
             if (!M.sig.apply) miss.push('신청인/가입자 서명');
@@ -5107,7 +5278,7 @@
         }
         function mfPdf(M, sheet, file, done) {
             var cv;
-            try { cv = mfSnapshot(sheet); } catch (e) { toast('PDF를 만들지 못했어요. 다시 눌러 주세요.'); return; }
+            try { cv = mfImg(M, sheet); } catch (e) { toast('PDF를 만들지 못했어요. 다시 눌러 주세요.'); return; }
             var v = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return el ? String(el.value || '').trim() : ''; };
             var nm = (v('name') || v('appName') || '고객').replace(/[\\/:*?"<>|]/g, '').slice(0, 20);
             var rentP = !!(sheet.querySelector('[data-mf="tRent"]') || {}).checked;
@@ -5216,9 +5387,9 @@
                 return mfA4(cv, W, H, S);
             } finally { sheet.classList.remove('mf-snap'); if (window.scrollY !== sy) window.scrollTo(0, sy); }
         }
-        function mfCopyReport(sheet, prefix, onDone) {
+        function mfCopyReport(sheet, prefix, onDone, M) {
             var cv;
-            try { cv = mfSnapshot(sheet); } catch (e) { toast('가입 확인서 이미지를 만들지 못했어요.'); return; }
+            try { cv = mfImg(M, sheet); } catch (e) { toast('가입 확인서 이미지를 만들지 못했어요.'); return; }
             var nm = (sheet.querySelector('[data-mf="name"]') || {}).value || '';
             var file = (prefix || '가입확인서') + '-' + (nm ? nm.replace(/[\\/:*?"<>|\s]+/g, '') + '-' : '') + ymd(new Date()) + '.png';
             var blobP = new Promise(function (res, rej) { cv.toBlob(function (b) { if (b) res(b); else rej(new Error('blob')); }, 'image/png'); });
