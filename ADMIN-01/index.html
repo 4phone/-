@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-AIZPCzdYtJV8bdV2bicyzWGuC7l0vDMUWUTbqqQ07SM='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-NCy1U3rQTYZoGw9skvbwyOj2Ent7zwdWCUkqL9xP+yc='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -272,6 +272,7 @@
         .act-dot { width: 11px; height: 11px; border-radius: 50%; background: #2F7D32; margin-right: 2px; animation: actBlink 1.6s ease-in-out infinite; }
         .act-bar.run { background: #E9F6E6; border-left-color: #2F7D32; box-shadow: inset 0 0 0 2px #9FD19A; animation: actGlow 2.4s ease-in-out infinite; }
         .act-bar.run .act-ttl { color: #1F5F23; }
+        .sch-ttl { padding: 10px 18px; font-size: 16px; font-weight: 900; color: #3E441E; letter-spacing: -0.2px; background: #F7F9EF; border-bottom: 1px solid var(--line); }
         @keyframes actBlink { 50% { opacity: .3; } }
         @keyframes actGlow { 0%, 100% { box-shadow: inset 0 0 0 2px #9FD19A; } 50% { box-shadow: inset 0 0 0 2px #2F7D32; } }
         @media (max-width: 700px) {
@@ -1698,7 +1699,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-28.11';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-28.12';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2702,7 +2703,7 @@
             var many = logs.some(function (a) { return a.sid !== logs[0].sid; });
             var top;
             if (run) top = h('div', { class: 'act-top run' },
-                h('span', { class: 'act-ttl' }, '⏱ 실시간 업무'),
+                h('span', { class: 'act-ttl' }, '⏱ 실시간업무(실업)'),
                 h('span', { class: 'act-now' }, h('i', { class: 'act-dot', 'aria-hidden': 'true' }), h('b', {}, run.k), ' ' + actHm(run.s) + ' 시작 · ', h('span', { class: 'act-el', 'data-s': String(run.s) }, actDur(Date.now() - run.s)), ' 진행 중'),
                 h('button', { type: 'button', class: 'btn btn-sm act-stop', 'data-act': 'act-stop', 'data-fk': 'act-stop', onclick: function () { actStop(actRunning(me)); } }, '■ 종료'));
             else {
@@ -2710,7 +2711,7 @@
                     oninput: function () { actUi.etc = this.value; var c = this.parentNode && this.parentNode.querySelector('.act-cnt'); if (c) c.textContent = this.value.length + '/50'; }, onkeydown: function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); actStart(); } } }) : null;
                 if (etc) etc = h('span', { class: 'act-etc-w' }, etc, h('small', { class: 'act-cnt', 'aria-hidden': 'true' }, actUi.etc.length + '/50'));
                 top = h('div', { class: 'act-top' },
-                    h('span', { class: 'act-ttl' }, '⏱ 실시간 업무'),
+                    h('span', { class: 'act-ttl' }, '⏱ 실시간업무(실업)'),
                     h('div', { class: 'act-chips', role: 'group', 'aria-label': '할 일 고르기' }, ACT_KINDS.concat(['기타']).map(function (k) {
                         return h('button', { type: 'button', class: 'act-chip', 'data-k': k, 'aria-pressed': actUi.pick === k ? 'true' : 'false', onclick: function () { actUi.pick = actUi.pick === k ? '' : k; render(); if (actUi.pick === '기타') setTimeout(function () { var el = document.querySelector('[data-fk="act-etc"]'); if (el) el.focus(); }, 0); } }, k);
                     })), etc,
@@ -2791,6 +2792,7 @@
                         h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-fk': 'report-doing', onclick: function () { captureReport(list, 'doing'); } }, '진행중보고'),
                         h('button', { type: 'button', class: 'btn btn-sm btn-close', 'data-fk': 'report', title: '하루 마감 순서: 마감1 상담리스트 → 마감2 실적장표 → 마감3 업무 마감보고', onclick: function () { openCloseReport(); } }, h('span', { class: 'rpt-step' }, '마감3'), '업무 마감보고'))),
                 h('div', { class: 'panel' }, actBar(),
+                    h('div', { class: 'sch-ttl', 'data-fk': 'sch-ttl' }, '📋 스케줄업무(스업)'),
                     rows.length ? [h('div', { class: 't-head' }, h('div', {}, '번호'), h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows]
                         : h('div', { class: 'empty' }, state.date ? '이 날(' + koDate(state.date) + ') 마감인 업무가 없어요. 담당·상태 필터를 걸어 두었다면 함께 확인해 보세요.' : (db.tasks.length ? '조건에 맞는 업무가 없어요. 필터를 바꿔 보세요.' : '아직 등록된 업무가 없어요. 오른쪽 위 [업무 추가]로 시작해 보세요.'))));
         }
@@ -3103,8 +3105,8 @@
                 return { t: t, n: closed(t) ? '' : String(++seq), lines: lines, memo: memo, tl: tl, h: Math.max(58, 20 + lines.length * 28 + memo.length * 22 + (memo.length ? 4 : 0), tl.length ? 56 + tl.length * 21 : 0) };
             });
             var AR = isDoing ? actForReport() : { run: [], logs: [] }, actLogs = AR.logs.slice(-14), actMore = AR.logs.length - actLogs.length;
-            var actH = AR.run.length || actLogs.length ? 62 + (AR.run.length || 1) * 32 + (actLogs.length ? 10 + actLogs.length * 26 : 0) + (actMore ? 24 : 0) + 18 : 0;
-            var headH = meta.filters ? 140 : 124, sumH = 70 + actH, thH = 46, rowsH = rows.length ? rows.reduce(function (a, r) { return a + r.h; }, 0) : 80, footH = extra ? 100 : 66, H = headH + sumH + thH + rowsH + footH;
+            var actH = AR.run.length || actLogs.length ? (AR.run.length ? 54 + AR.run.length * 58 : 94) + (actLogs.length ? 10 + actLogs.length * 26 : 0) + (actMore ? 24 : 0) + 18 : 0;
+            var headH = meta.filters ? 140 : 124, sumH = 70 + actH + 36, thH = 46, rowsH = rows.length ? rows.reduce(function (a, r) { return a + r.h; }, 0) : 80, footH = extra ? 100 : 66, H = headH + sumH + thH + rowsH + footH;
             var scale = 2; while (W * scale * H * scale > 14000000 && scale > 1) scale -= 0.25;
             var c = document.createElement('canvas'); c.width = Math.round(W * scale); c.height = Math.round(H * scale);
             var g = c.getContext('2d'); g.scale(scale, scale); g.textBaseline = 'alphabetic';
@@ -3125,16 +3127,24 @@
             if (lateN) pill('마감 지남 ' + lateN + '건', '#FDECEA', '#A33226');
             if (actH) {   // ⏱ 지금 하는 일 (진행중보고)
                 var ay = headH + 70, nm = function (a) { return AR.many ? staffName(a.sid) + ' · ' : ''; };
-                rrect(g, PAD, ay, 928, actH - 18, 14, '#F4F8EC'); g.strokeStyle = '#CFDAB6'; g.lineWidth = 1; g.strokeRect(PAD + 0.5, ay + 0.5, 927, actH - 19);
-                g.fillStyle = '#3E441E'; g.font = '800 20px ' + F; g.fillText('⏱ 실시간 업무', PAD + 20, ay + 36);
+                var live = AR.run.length > 0;
+                rrect(g, PAD, ay, 928, actH - 18, 14, live ? '#E6F4E2' : '#F4F8EC'); g.strokeStyle = live ? '#2F7D32' : '#CFDAB6'; g.lineWidth = live ? 3 : 1;
+                if (live) g.strokeRect(PAD + 1.5, ay + 1.5, 925, actH - 21); else g.strokeRect(PAD + 0.5, ay + 0.5, 927, actH - 19);
+                if (live) { g.fillStyle = '#2F7D32'; g.fillRect(PAD, ay, 8, actH - 18); }
+                g.fillStyle = live ? '#1F5F23' : '#3E441E'; g.font = '900 22px ' + F; g.fillText('⏱ 실시간업무(실업)', PAD + 22, ay + 36);
+                if (live) {   // 오른쪽 위: ● 진행 중 n건
+                    g.font = '800 17px ' + F; var lt = '● 진행 중 ' + AR.run.length + '건', lw = g.measureText(lt).width + 28;
+                    rrect(g, PAD + 928 - 18 - lw, ay + 12, lw, 32, 16, '#C62828'); g.fillStyle = '#FFFFFF'; g.fillText(lt, PAD + 928 - 18 - lw + 14, ay + 34);
+                }
                 var ly = ay + 72;
-                if (AR.run.length) AR.run.forEach(function (a) {
-                    g.beginPath(); g.arc(PAD + 28, ly - 7, 7, 0, Math.PI * 2); g.closePath(); g.fillStyle = '#2F7D32'; g.fill();
-                    g.fillStyle = '#1E2310'; g.font = '800 21px ' + F; var t1 = nm(a) + a.k; if (g.measureText(t1).width > 560) { while (t1.length > 2 && g.measureText(t1 + '…').width > 560) t1 = t1.slice(0, -1); t1 += '…'; } g.fillText(t1, PAD + 46, ly);
-                    var w1 = g.measureText(t1).width; g.font = '600 18px ' + F; g.fillStyle = '#2F7D32'; g.fillText(actHm(a.s) + ' 시작 · ' + actDur(Date.now() - a.s) + ' 진행 중', PAD + 58 + w1, ly);
-                    ly += 32;
-                });
-                else { g.fillStyle = '#7B8568'; g.font = '600 18px ' + F; g.fillText('실시간 업무 없음', PAD + 24, ly); ly += 32; }
+                if (live) { var bt = ay + 52; AR.run.forEach(function (a) {   // 진행 중 업무: 진한 초록 띠로 크게
+                    rrect(g, PAD + 20, bt, 888, 48, 12, '#2F7D32');
+                    g.beginPath(); g.arc(PAD + 44, bt + 24, 8, 0, Math.PI * 2); g.closePath(); g.fillStyle = '#FFE45C'; g.fill();
+                    g.fillStyle = '#FFFFFF'; g.font = '900 24px ' + F; var t1 = nm(a) + a.k; if (g.measureText(t1).width > 470) { while (t1.length > 2 && g.measureText(t1 + '…').width > 470) t1 = t1.slice(0, -1); t1 += '…'; } g.fillText(t1, PAD + 64, bt + 33);
+                    var w1 = g.measureText(t1).width; g.font = '800 19px ' + F; g.fillStyle = '#FFE45C'; g.fillText(fitText(g, actHm(a.s) + ' 시작 · ' + actDur(Date.now() - a.s) + ' 진행 중', 888 - 64 - w1 - 34), PAD + 64 + w1 + 18, bt + 32);
+                    bt += 58;
+                }); ly = bt + 10; }
+                else { g.fillStyle = '#7B8568'; g.font = '600 18px ' + F; g.fillText('실시간업무(실업) 없음', PAD + 24, ly); ly += 32; }
                 if (actLogs.length) { ly += 10; actLogs.forEach(function (a, i) {
                     g.font = '500 16px ' + F; g.fillStyle = '#66705A'; var pre = (actMore + i + 1) + '. ' + nm(a); g.fillText(pre, PAD + 28, ly);
                     var x2 = PAD + 28 + g.measureText(pre).width; g.font = '700 16px ' + F; g.fillStyle = '#3E441E'; var kk = a.k; if (g.measureText(kk).width > 520) { while (kk.length > 2 && g.measureText(kk + '…').width > 520) kk = kk.slice(0, -1); kk += '…'; } g.fillText(kk, x2, ly); x2 += g.measureText(kk).width + 12;
@@ -3145,6 +3155,8 @@
                 if (actMore) { g.font = '500 14px ' + F; g.fillStyle = '#8A937A'; g.fillText('앞의 ' + actMore + '건은 줄였어요 (최근 14건)', PAD + 28, ly); }
             }
 
+            // 📋 스케줄업무(스업) 제목
+            g.fillStyle = '#3E441E'; g.font = '900 22px ' + F; g.fillText('📋 스케줄업무(스업)', PAD + 4, headH + 70 + actH + 18);
             // 표 머리
             var top = headH + sumH, y = top;
             g.fillStyle = '#F1F4E6'; g.fillRect(PAD, y, 928, thH);
