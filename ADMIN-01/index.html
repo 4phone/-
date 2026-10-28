@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-t8y2Wa4Y3hC6w9dVeocX065RoeRtIJ1E1FmkeSmo1uo='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4CDKfY42OTtghAAzSaZG0RX5VlONVfSheNPPW873rJM='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1505,6 +1505,52 @@
         .bl-here > summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: #3D5A5E; padding: 6px 0; }
         .bl-here[open] > summary { margin-bottom: 8px; }
 </style>
+    <style>
+        /* ===== 렌탈 단가표 · 렌탈 상담 메모 · 렌탈 가입 확인서 ===== */
+        .rt-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 12px 0 8px; }
+        .rt-q { flex: 1 1 320px; min-width: 0; height: 44px; border: 1px solid #CFD6C4; border-radius: 10px; padding: 0 14px; font-size: 15px; background: #fff; font-family: inherit; }
+        .rt-count { font-size: 13px; color: #5D6450; font-weight: 700; }
+        .rt-cats { margin-bottom: 12px; }
+        .rt-card { background: #fff; border: 1px solid #DDE3D3; border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+        .rt-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 14px 16px 10px; border-bottom: 1px solid #EEF1E8; }
+        .rt-meta { font-size: 12.5px; color: #6A715D; font-weight: 700; margin-bottom: 2px; }
+        .rt-name { display: block; font-size: 16.5px; color: #1F2416; line-height: 1.35; word-break: keep-all; }
+        .rt-model { display: inline-block; margin-top: 4px; font-size: 12px; color: #5D6450; background: #F2F4EC; border-radius: 6px; padding: 2px 7px; font-weight: 700; }
+        .rt-low-b { white-space: nowrap; font-size: 13px; color: #5D6450; }
+        .rt-low-b b { font-size: 19px; color: #B4441C; }
+        .rt-tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .rt-tbl th { text-align: left; font-size: 12px; color: #6A715D; font-weight: 700; padding: 8px 12px; background: #FAFBF7; border-bottom: 1px solid #EEF1E8; white-space: nowrap; }
+        .rt-tbl td { padding: 10px 12px; border-bottom: 1px solid #F1F3EC; vertical-align: middle; }
+        .rt-row { cursor: pointer; }
+        .rt-row:hover td { background: #F7FAEF; }
+        .rt-row:focus-visible { outline: 3px solid #E2C27A; outline-offset: -3px; }
+        .rt-row.on td { background: #FFF6CC; }
+        .rt-fee { font-weight: 800; color: #1F2416; white-space: nowrap; }
+        .rt-low { margin-left: 6px; font-size: 11px; color: #8A6418; background: #FBF3DC; border-radius: 999px; padding: 1px 7px; font-weight: 800; }
+        .rt-gift { color: #B4441C; font-weight: 800; }
+        .rt-tbl td.dim { color: #9AA08E; }
+        .rt-go { text-align: right; white-space: nowrap; }
+        .rt-go-b { display: inline-block; font-size: 12.5px; font-weight: 800; color: #3E441E; border: 1px solid #CFD6C4; border-radius: 999px; padding: 5px 10px; background: #fff; }
+        .rt-row.on .rt-go-b { background: #3E441E; color: #fff; border-color: #3E441E; }
+        .rt-none { margin: 0; padding: 12px 16px; color: #6A715D; font-size: 13.5px; }
+        .rt-more { text-align: center; margin: 6px 0 20px; }
+        @media (max-width: 760px) {
+            .rt-head { padding: 12px; }
+            .rt-tbl thead { display: none; }
+            .rt-tbl, .rt-tbl tbody, .rt-tbl tr, .rt-tbl td { display: block; width: 100%; box-sizing: border-box; }
+            .rt-tbl tr { padding: 8px 12px; border-bottom: 1px solid #EEF1E8; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; }
+            .rt-tbl td { border: 0; padding: 2px 0; font-size: 13.5px; }
+            .rt-tbl td[data-l]::before { content: attr(data-l) ' '; color: #8A907D; font-weight: 600; font-size: 12px; }
+            .rt-go { grid-column: 1 / -1; text-align: left; padding-top: 4px !important; }
+        }
+        /* 상담 메모: 인터넷 · TV / 렌탈 */
+        .cl-kind { display: flex; gap: 6px; margin: 2px 0 8px; grid-column: 1 / -1; }
+        .cl-kind button { flex: 1; min-height: 40px; border-radius: 10px; border: 1.5px solid #CFD6C4; background: #fff; font-size: 14px; font-weight: 800; color: #3E441E; cursor: pointer; font-family: inherit; }
+        .cl-kind button[aria-pressed="true"] { background: #3E441E; border-color: #3E441E; color: #fff; }
+        .cl-kind button[data-kind="rent"][aria-pressed="true"] { background: #13896F; border-color: #13896F; }
+        /* 가입 확인서(유선): 렌탈을 고르면 렌탈에 필요한 칸만 */
+        .mf-sheet.wired:not(.rent) .rent-only, .mf-sheet.wired.rent .net-only { display: none !important; }
+    </style>
 </head>
 <body>
     <div id="boot-msg" class="boot-msg">관리자 화면을 불러오는 중입니다. 이 문구가 계속 보이면 자바스크립트가 꺼져 있거나, admin.html 파일 내용이 중간에 바뀐 것일 수 있어요. 브라우저를 최신으로 바꾸고 파일을 처음 받은 그대로 다시 올려 주세요.</div>
@@ -1571,7 +1617,7 @@
             var r = {}; Object.keys(r0 || {}).forEach(function (k) { r[k] = r0[k]; });
             if (r.kind === 'wired') {
                 if (!r.model || /\+전/.test(r.model)) r.model = regWiredModel(String(r.plan || '').split(/\s*\+\s*/).slice(1).join(' + '));
-                r.months = r.months || '36'; r.extra = '유선없음'; r.ins = '유선없음';
+                r.months = r.months || '36'; r.extra = r.type === '렌탈' ? '렌탈없음' : '유선없음'; r.ins = r.extra;
             }
             if (!r.plan2 || r.plan2 === '유지') { r.plan2 = '유지'; r.keep = '유지'; }
             else if (!r.keep) r.keep = /공시/.test(r.disc || '') ? '6' : /선약/.test(r.disc || '') ? '3' : '';
@@ -1596,7 +1642,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-28.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-28.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -4443,13 +4489,15 @@
             var MONEY = K.MONEY, BIRTH = K.BIRTH, TEL = K.TEL;
             var GIFT_LIST = [['없음']].concat([(function () { var a = []; for (var w = 10000; w <= 1000000; w += 10000) a.push(w.toLocaleString('ko-KR')); return a; })()]);
             var gift = function (name, label) { return h('span', { class: 'mf-giftc' }, K.combo(name, label, GIFT_LIST, { cls: 'gift', kind: 'money', mode: 'numeric', max: 11, click: true, ph: '선택' })); };
+            var kk = function (net, rent) { return h('span', { class: 'mf-k' }, h('span', { class: 'net-only' }, net), h('span', { class: 'rent-only' }, rent)); };   // 인터넷 / 렌탈 칸 이름
+            var NET_CAR = [['U+', 'SK', 'KT', '스카이라이프', 'LG헬로비전']], NET_PREV = [['U+', 'SK', 'KT', '스카이라이프', 'LG헬로비전', '신규']];
             var etc = [1, 2, 3, 4, 5].map(function (n) { return row(wcell(k('*', true), inp('etc' + n, '기타 정보 ' + n + '번째 줄', { max: 150 }))); });
             var sheet = h('div', { class: 'mf-sheet wired', 'data-form': 'wired' },
-                K.header('사거리인터넷', '_ 인터넷', [chk('tNew', '신규', 'type'), chk('tTrans', '동판', 'type'), chk('tRenew', '재약정', 'type')]),
+                K.header('사거리인터넷', [h('span', { class: 'net-only' }, '_ 인터넷'), h('span', { class: 'rent-only' }, '_ 렌탈')], [chk('tNew', '신규', 'type'), chk('tTrans', '동판', 'type'), chk('tRenew', '재약정', 'type'), chk('tRent', '렌탈', 'type')]),
 
                 sec('가입자 정보', 'green',
-                    row(cell(k('가입 통신사'), K.combo('carrier', '가입 통신사', [['U+', 'SK', 'KT', '스카이라이프', 'LG헬로비전']])),
-                        cell(k('(이전 통신사'), K.combo('prevCarrier', '이전 통신사', [['U+', 'SK', 'KT', '스카이라이프', 'LG헬로비전', '신규']]), k(')'))),
+                    row(cell(kk('가입 통신사', '제조사'), K.combo('carrier', '가입 통신사 (렌탈: 제조사)', NET_CAR)),
+                        cell(kk('(이전 통신사', '(렌탈사'), K.combo('prevCarrier', '이전 통신사 (렌탈: 렌탈사)', NET_PREV), k(')'))),
                     row(cell(k('가입자명'), inp('name', '가입자명', { max: 20 })), cell(k('생년월일'), inp('birth', '가입자 생년월일', BIRTH)), cell(k('휴대폰 번호'), inp('phone', '가입자 휴대폰 번호', TEL))),
                     row(wcell(k('주소'), inp('addr', '주소', { max: 150 })))),
                 info('[안내] 가입한 항목만 작성해 주세요.'),
@@ -4460,29 +4508,35 @@
                         row(cell(k('은행명(카드사명)'), inp('payBank', '은행명 또는 카드사명')), cell(k('계좌번호(카드번호)'), inp('payNo', '계좌번호 또는 카드번호', { mode: 'numeric', max: 30 }))))),
 
                 sec('약정 정보', '', grp('약정기간', row(cell(inp('term', '약정기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월'))))),
-                info('[안내] 요금제 변경은 자동으로 변경되지 않기 때문에 반드시 매장에 방문하시거나, 담당직원과 연락하여 변경하시기 바랍니다.', true),
+                h('div', { class: 'net-only' }, info('[안내] 요금제 변경은 자동으로 변경되지 않기 때문에 반드시 매장에 방문하시거나, 담당직원과 연락하여 변경하시기 바랍니다.', true)),
+                h('div', { class: 'rent-only' }, info('[안내] 월 렌탈료 · 약정 · 의무사용기간은 렌탈사 계약서 기준으로 적용됩니다.', true)),
 
                 sec('가입 내역', '',
-                    grp('요금제',
-                        row(cell(k('인터넷 요금제'), inp('netPlan', '인터넷 요금제')), tcell(k('유지기간'), inp('keepW', '요금제 유지기간(개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')), cell(k('청구금액'), inp('billW', '청구금액(원)', MONEY), k('원'))),
-                        row(cell(k('TV 요금제'), inp('tvPlan', 'TV 요금제')))),
-                    grp('추가 요금제',
+                    grp(kk('요금제', '렌탈 상품'),
+                        row(cell(kk('인터넷 요금제', '모델명'), inp('netPlan', '인터넷 요금제 (렌탈: 모델명)')), tcell(kk('유지기간', '의무사용'), inp('keepW', '요금제 유지기간 (렌탈: 의무사용 개월)', { mode: 'numeric', cls: 'short', max: 3 }), k('개월')), cell(kk('청구금액', '월 렌탈료'), inp('billW', '청구금액 (렌탈: 월 렌탈료, 원)', MONEY), k('원'))),
+                        row(cell(kk('TV 요금제', '렌탈 상품'), inp('tvPlan', 'TV 요금제 (렌탈: 렌탈 상품)')))),
+                    (function (g) { g.classList.add('net-only'); return g; })(grp('추가 요금제',
                         row(cell(chk('addY', '신청', 'add'), inp('addPlan', '추가 요금제 이름'), k('('), inp('addFee', '추가 요금제 금액(원)', { mode: 'numeric', kind: 'money', max: 15, cls: 'amt' }), k('원)')), tcell(chk('addN', '미신청', 'add'))),
-                        row(wcell(note('*개통 당일 내에만 신청이 가능합니다.'))))),
+                        row(wcell(note('*개통 당일 내에만 신청이 가능합니다.')))))),
 
                 K.cardSec(),
-                K.combSec(),
+                (function (g) { g.classList.add('net-only'); return g; })(K.combSec()),
                 info('[안내] 기타 정보에도 중요한 내용이 첨부되니 놓치지말고 확인해 주세요.', true),
 
                 sec('기타 정보', 'beige',
-                    row(wcell(note('*[중요] 요금제 변경은 자동으로 변경되지 않기 때문에 반드시 매장에 방문하시거나, 담당직원과 연락하여 변경하시기 바랍니다.'), chk('impOk', '확인'))),
+                    row(wcell(h('span', { class: 'net-only' }, note('*[중요] 요금제 변경은 자동으로 변경되지 않기 때문에 반드시 매장에 방문하시거나, 담당직원과 연락하여 변경하시기 바랍니다.')), h('span', { class: 'rent-only' }, note('*[중요] 월 렌탈료 · 약정 · 의무사용기간 · 위약금은 렌탈사 계약서 내용을 꼭 확인해 주세요.')), chk('impOk', '확인'))),
                     etc),
 
                 sec('고객 사은품', 'beige',
                     grp('사은품 선택', row(h('div', { class: 'mf-cell wide mf-giftrow' }, k('총'), gift('giftT', '사은품 총액(원)'), k('원 (상품권 :'), gift('giftV', '상품권(원)'), k('원 + 본사 :'), gift('giftH', '본사 지원(원)'), k('원 + 추가지원금 :'), gift('giftA', '추가지원금(원)'), k('원)')))),
                     grp('사은품 입금계좌', row(cell(k('은행'), inp('dpBank', '사은품 입금 은행', { max: 20 })), cell(k('계좌번호'), inp('dpNo', '사은품 입금 계좌번호', { mode: 'numeric', max: 30 })), scell(k('예금주'), inp('dpOwner', '사은품 입금 예금주', { max: 20 })), tcell(chk('dpSame', '납부 계좌와 동일'))))),
 
-                h('ol', { class: 'mf-terms' },
+                h('ol', { class: 'mf-terms rent-only' },
+                    h('li', {}, '렌탈 계약(월 렌탈료 · 약정 · 의무사용기간 · 소유권 이전)은 렌탈사 계약서 기준으로 적용됩니다.'),
+                    h('li', {}, '의무사용기간 안에 해지하시면 렌탈사 기준에 따라 위약금이 청구될 수 있습니다.'),
+                    h('li', {}, '제품 설치 · 배송 일정은 렌탈사(제조사)에서 따로 안내드립니다.'),
+                    h('li', { class: 'big' }, '본 가입확인서 내용과 상충되는 이면 계약이 존재하지 않는 사실을 확인하며, 본인은 이면 계약과 관련하여 사거리인터넷에게 어떠한 권리도 주장할 수 없고 사거리인터넷은 그에 대한 어떤 책임도 지지 않는다는 사실을 안내받았고, 이에 동의합니다.')),
+                h('ol', { class: 'mf-terms net-only' },
                     h('li', {}, '요금제 변경은 변경 자동변경 및 임의 변경이 불가능하며, 변경날짜이전에 변경하실 경우 위약금이 청구 될 수 있습니다.'),
                     h('li', {}, '일시정지나 해지는 개통일로부터 12개월 이후부터 가능합니다. 기간전에는 변경이 절대 불가능하니 필요하신분은 기간을 꼭 지켜주세요.'),
                     h('li', {}, '카드사를 통해 교체 및 신규 발급 후 카드번호, 유효기간을 꼭 알려주셔야 할인적용을 해드릴 수 있습니다. 적용은 개통일 포함 14일 이내 등록 가능 합니다.'),
@@ -4507,6 +4561,32 @@
             };
             sheet.addEventListener('input', instSync); sheet.addEventListener('change', instSync);
             M.instSync = instSync; instSync();
+            var setOpts = function (name, groups) {   // 목록 바꾸기 (인터넷 통신사 ↔ 렌탈 제조사·렌탈사)
+                var cb = sheet.querySelector('[data-combo="' + name + '"] .mf-ddlist'); if (!cb) return;
+                cb.textContent = '';
+                groups.forEach(function (g, gi) { cb.appendChild(h('div', { class: 'mf-ddgroup' + (gi ? ' sep' : '') }, g.map(function (v) { return h('button', { type: 'button', class: 'mf-opt', role: 'option', 'data-v': v, 'aria-selected': 'false' }, v); }))); });
+            };
+            var rentPaint = function () {   // [렌탈]을 고르면: 가입 통신사 → 제조사 · 이전 통신사 → 렌탈사 · 요금제 → 렌탈 상품 · 인터넷에만 있는 칸은 숨김
+                var on = !!(q('tRent') && q('tRent').checked), was = sheet.classList.contains('rent');
+                if (on === was) return;
+                sheet.classList.toggle('rent', on);
+                setOpts('carrier', on ? [MF_RT_MAKER] : NET_CAR);
+                setOpts('prevCarrier', on ? [MF_RT_CO] : NET_PREV);
+                var other = on ? NET_PREV[0] : MF_RT_MAKER.concat(MF_RT_CO);
+                ['carrier', 'prevCarrier'].forEach(function (n) { var el = q(n); if (el && other.indexOf(el.value.trim()) >= 0) el.value = ''; });
+                if (on) {
+                    ['addY', 'addN', 'cOld', 'cNew', 'cNone'].forEach(function (n) { var el = q(n); if (el) el.checked = false; });
+                    if (q('keepW').value === '12') q('keepW').value = '';
+                    if (q('term').value === '36') q('term').value = '';
+                } else {
+                    if (!q('keepW').value) q('keepW').value = '12';
+                    if (!q('term').value) q('term').value = '36';
+                }
+                instSync();
+                if (M.gateOn) mfGate(M);
+            };
+            sheet.addEventListener('change', function () { setTimeout(rentPaint, 0); });
+            M.rentPaint = rentPaint;
             return mfFinish(M, sheet, { keep: false, file: '사거리인터넷-유선가입확인서', gate: true });
         }
 
@@ -4717,10 +4797,12 @@
             var what = M.kind === 'mobile' ? (v('model') || (c('noBuy') ? '유심(비구매)' : ''))
                 : [v('netPlan'), v('tvPlan'), c('addY') ? v('addPlan') : ''].filter(Boolean).join(' + ');
             var when = String(y % 100).padStart(2, '0') + '년 ' + m + '월 ' + d + '일';
-            var hz = cr.heart + (M.kind === 'wired' ? '유선' : '');   // 유선 가입자는 하트 바로 뒤에 '유선' (예: 💙유선 SK. 홍길동. 500M. 26년 10월 14일)
+            var rentC = M.kind === 'wired' && c('tRent');
+            if (rentC) what = [v('tvPlan'), v('netPlan')].filter(Boolean).join(' · ');
+            var hz = cr.heart + (M.kind === 'wired' ? (rentC ? '렌탈' : '유선') : '');   // 유선 가입자는 하트 바로 뒤에 '유선' (예: 💙유선 SK. 홍길동. 500M. 26년 10월 14일) · 렌탈은 '렌탈'
             var label = (cr.tag ? hz + ' ' + cr.tag + '. ' : hz + ' ') + [name, what, cr.sub, when].filter(Boolean).join('. ');   // 통신사를 안 적었으면 하트 뒤에 바로 이름
             label = label.slice(0, 80);
-            var note = ['사거리인터넷 ' + (M.kind === 'mobile' ? '모바일' : '유선') + ' 가입', v('carrier'), v('seller') ? '담당 ' + v('seller') : '', v('netUse') ? '거래처 ' + v('netUse') : '', '가입 ' + y + '-' + pad(m) + '-' + pad(d)].filter(Boolean).join(' · ').slice(0, 200);
+            var note = ['사거리인터넷 ' + (M.kind === 'mobile' ? '모바일' : rentC ? '렌탈' : '유선') + ' 가입', v('carrier'), v('seller') ? '담당 ' + v('seller') : '', v('netUse') ? '거래처 ' + v('netUse') : '', '가입 ' + y + '-' + pad(m) + '-' + pad(d)].filter(Boolean).join(' · ').slice(0, 200);
             return { label: label, phone: digitsOnly(v('phone')), note: note };
         }
         function mfDriveSave(M, sheet, btn) {   // 완성한 가입 확인서 → 구글 드라이브 '26년10월' 폴더 (파일 이름: 20일 고객명 / 유선은 뒤에 '유선')
@@ -4830,9 +4912,13 @@
             });
         }
         /* 유선 기타 정보 첫 줄: 설치비 안내 (부가세 포함 · 각 통신사 공식 홈페이지 기준, 단가표 '설치비'와 같은 금액) */
+        var MF_RT_MAKER = ['코웨이', 'SK매직', '쿠쿠', 'LG전자', '삼성전자', '청호나이스', '교원웰스', '현대큐밍', '바디프랜드', '세라젬', '위니아'];   // 렌탈 가입 확인서: 제조사
+        var MF_RT_CO = ['코웨이', 'SK매직', '쿠쿠', 'LG전자', '삼성전자', '청호나이스', '교원웰스', '현대큐밍', '렌탈페이', '기타 렌탈사'];   // 렌탈 가입 확인서: 렌탈사 (계약하는 곳)
+        var MF_RENT_LAB = { carrier: '제조사', prevCarrier: '렌탈사', netPlan: '모델명', keepW: '의무사용', billW: '월 렌탈료', etc1: '기타 정보 첫 줄(설치 안내)' };
         function mfInstallLine(sheet) {
             var v = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return el ? String(el.value || '').trim() : ''; };
             var c = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return !!(el && el.checked); };
+            if (c('tRent')) return '렌탈 제품 설치 · 배송 일정은 렌탈사(제조사)에서 따로 안내드립니다. (설치비 · 추가 자재비는 렌탈사 기준)';
             var head = '설치비는 첫 달 요금 청구서에 함께 청구됩니다.';
             if (c('tRenew')) return '재약정은 새로 설치하지 않아 기본 설치비가 청구되지 않습니다. (장비 교체가 필요한 경우 별도 안내)';
             var raw = v('carrier'); if (!raw) return head;
@@ -4847,13 +4933,13 @@
             return head;
         }
         var MF_REQ_WIRED = [   // 유선 가입 확인서: 다 써야 저장·복사·파일 받기·인쇄가 켜짐 (TV 요금제·기타 정보 2~5줄은 선택)
-            ['custNo', '고객등록번호'], ['netUse', '접수처'], ['@type', '유형 선택', ['tNew', 'tTrans', 'tRenew']],
+            ['custNo', '고객등록번호'], ['netUse', '접수처'], ['@type', '유형 선택', ['tNew', 'tTrans', 'tRenew', 'tRent']],
             ['carrier', '가입 통신사'], ['prevCarrier', '이전 통신사'], ['name', '가입자명'], ['birth', '생년월일'], ['phone', '휴대폰 번호'], ['addr', '주소'],
             ['payOwner', '예금주'], ['payBirth', '예금주 생년월일'], ['payBank', '은행명(카드사명)'], ['payNo', '계좌번호(카드번호)'], ['term', '약정기간'],
             ['netPlan', '인터넷 요금제'], ['keepW', '유지기간'], ['billW', '청구금액'],
-            ['@add', '추가 요금제 신청/미신청', ['addY', 'addN']], ['addPlan', '추가 요금제 이름', null, 'addY'], ['addFee', '추가 요금제 금액', null, 'addY'],
+            ['@add', '추가 요금제 신청/미신청', ['addY', 'addN'], '!tRent'], ['addPlan', '추가 요금제 이름', null, 'addY'], ['addFee', '추가 요금제 금액', null, 'addY'],
             ['@card', '제휴 카드 신청/미신청', ['cardY', 'cardN']], ['cardDisc', '제휴카드 할인금액', null, 'cardY'], ['cardOwner', '제휴카드 명의자', null, 'cardY'], ['cardBirth', '제휴카드 생년월일', null, 'cardY'], ['cardPhone', '제휴카드 휴대폰', null, 'cardY'], ['cardCo', '카드사명', null, 'cardY'],
-            ['@comb', '결합 정보', ['cOld', 'cNew', 'cNone']], ['cOldN', '기존 결합 내용', null, 'cOld'], ['cNewN', '결합 내용', null, 'cNew'],
+            ['@comb', '결합 정보', ['cOld', 'cNew', 'cNone'], '!tRent'], ['cOldN', '기존 결합 내용', null, 'cOld'], ['cNewN', '결합 내용', null, 'cNew'],
             ['@imp', '기타 정보 [확인] 체크', ['impOk']], ['etc1', '기타 정보 첫 줄(설치비)'],
             ['giftT', '사은품 총액'], ['giftV', '상품권'], ['giftH', '본사 지원금'], ['giftA', '추가지원금'],
             ['dpBank', '사은품 입금 은행', null, '$giftT'], ['dpNo', '사은품 입금 계좌번호', null, '$giftT'], ['dpOwner', '사은품 입금 예금주', null, '$giftT'],
@@ -4886,8 +4972,10 @@
                 if (c.charAt(0) === '$') { var v = q(c.slice(1)); v = v ? String(v.value || '').trim() : ''; return !!v && v !== '없음' && !MF_XNONE.test(v); }
                 var on = q(c); return !!on && on.checked;
             };
+            var rentF = !!(M && M.kind === 'wired' && cond('tRent'));
             (M && M.kind === 'mobile' ? MF_REQ_MOBILE : MF_REQ_WIRED).forEach(function (r) {
                 if (r[3] && !cond(r[3])) return;   // 조건부: 해당될 때만
+                if (rentF && MF_RENT_LAB[r[0]]) r = [r[0], MF_RENT_LAB[r[0]]].concat(r.slice(2));   // 렌탈: 칸 이름도 렌탈로
                 if (r[0].charAt(0) === '#') { var k = r[0].slice(1); if (!(M && M.sig[k])) out.push({ t: r[1], el: M ? M.box[k] : null }); return; }   // 서명
                 if (r[0].charAt(0) === '@') { var any = r[2].some(function (n) { var x = q(n); return x && x.checked; }); if (!any) out.push({ t: r[1], el: q(r[2][0]) }); return; }
                 var el = q(r[0]); if (el && !String(el.value || '').trim()) out.push({ t: r[1], el: el });
@@ -5004,7 +5092,8 @@
             try { cv = mfSnapshot(sheet); } catch (e) { toast('PDF를 만들지 못했어요. 다시 눌러 주세요.'); return; }
             var v = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return el ? String(el.value || '').trim() : ''; };
             var nm = (v('name') || v('appName') || '고객').replace(/[\\/:*?"<>|]/g, '').slice(0, 20);
-            var name = (M.kind === 'wired' ? '유선' : '모바일') + '가입확인서-' + ymd(new Date()) + '-' + nm + '.pdf';
+            var rentP = !!(sheet.querySelector('[data-mf="tRent"]') || {}).checked;
+            var name = (M.kind === 'wired' ? (rentP ? '렌탈' : '유선') : '모바일') + '가입확인서-' + ymd(new Date()) + '-' + nm + '.pdf';
             cv.toBlob(function (jb) {
                 if (!jb) { toast('PDF를 만들지 못했어요. 다시 눌러 주세요.'); return; }
                 jb.arrayBuffer().then(function (ab) {
@@ -5220,6 +5309,15 @@
                 r.ins = c('insY') ? (v('insName') || '가입') : used ? '중고없음' : c('insN') ? '없음' : '';
                 if (v('spNo')) r.bank = [v('spBank'), v('spNo')].filter(Boolean).join(' ') + (v('spOwner') && v('spOwner') !== r.name ? ' (' + v('spOwner') + ')' : '');   // 지원금 입금계좌
                 r.pay = digitsOnly(v('payAmt')).replace(/^0+$/, ''); r.fre = digitsOnly(v('freAmt')).replace(/^0+$/, '');   // PAY → 유통망지원금 · FRE → 프리 (가입고객리스트에는 -로)
+            } else if (c('tRent')) {   // 렌탈: 통신사 = 제조사 · 이전 통신사 = 렌탈사 · 요금제 = 렌탈 상품 · 모델 = 모델명 · 청구금액 = 월 렌탈료
+                r.type = '렌탈';
+                r.plan = [v('tvPlan'), v('netPlan')].filter(Boolean).join(' · ');
+                r.model = v('netPlan') || '렌탈';
+                r.months = digitsOnly(v('term'));
+                r.bill1 = digitsOnly(v('billW'));
+                var gr = function (n) { var t = digitsOnly(v(n)); return +t ? t : ''; };
+                r.gv = gr('giftV'); r.gh = gr('giftH'); r.ga = gr('giftA');
+                if (v('dpNo')) r.bank = [v('dpBank'), v('dpNo')].filter(Boolean).join(' ') + (v('dpOwner') && v('dpOwner') !== r.name ? ' (' + v('dpOwner') + ')' : '');
             } else {   // 유선: 모바일에만 있는 칸(모델·일련번호·공시/선약·할부·보험 등)은 비워 둠
                 r.type = c('tNew') ? '신규' : c('tTrans') ? '동판' : c('tRenew') ? '재약정' : '';
                 r.plan = [v('netPlan'), v('tvPlan'), c('addY') ? v('addPlan') : ''].filter(Boolean).join(' + ');
@@ -5540,7 +5638,7 @@
                 var sub = [parseInt(r.date.slice(8), 10) + '일', r.dealer, r.carrier, r.kind === 'mobile' ? r.model : r.plan, r.seller ? '담당 ' + r.seller : ''].filter(Boolean).join(' · ');
                 return h('div', { class: 'reg-row', 'data-reg': r.id },
                     h('span', { class: 'reg-n' }, String(i + 1)),
-                    h('div', { class: 'reg-main' }, h('span', { class: 'reg-kind ' + r.kind }, r.kind === 'mobile' ? '모바일' : '유선'), h('b', {}, r.name || '(이름 없음)'), h('span', { class: 'reg-sub' }, sub)),
+                    h('div', { class: 'reg-main' }, h('span', { class: 'reg-kind ' + r.kind }, r.kind === 'mobile' ? '모바일' : r.type === '렌탈' ? '렌탈' : '유선'), h('b', {}, r.name || '(이름 없음)'), h('span', { class: 'reg-sub' }, sub)),
                     h('div', { class: 'reg-act' },
                         h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-act': 'reg-copy', onclick: function () { clip(regLine(r, i + 1), (r.name || '') + ' 한 줄을 복사했어요. 장부 엑셀에서 그 줄의 C열(모바일&유선) 칸을 누르고 붙여넣기(Ctrl+V) 하세요. (BG열 액면단가까지 채워지고, 뒤쪽 수식 칸은 그대로)'); } }, '한 줄 복사'),
                         h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editReg(r); } }, '수정'), regDelBtn(r)));
@@ -5562,7 +5660,7 @@
             return '[' + name + '] ' + ymLabel(state.regYm) + ' 개통 확인 (총 ' + list.length + '건)\n' + lines.join('\n');
         }
         function regSet(r, fn) { fn(r); stamp(r); commit(); }
-        function regDelText(r) { return '"' + (r.name || '(이름 없음)') + '" ' + mdText(r.date) + ' ' + (r.kind === 'mobile' ? '모바일' : '유선') + ' 줄을 지울까요?\n가입 장부와 거래처별 개통 확인에서 함께 지워져요. (드라이브에 저장된 확인서 파일은 그대로예요)' + delNote(); }
+        function regDelText(r) { return '"' + (r.name || '(이름 없음)') + '" ' + mdText(r.date) + ' ' + (r.kind === 'mobile' ? '모바일' : r.type === '렌탈' ? '렌탈' : '유선') + ' 줄을 지울까요?\n가입 장부와 거래처별 개통 확인에서 함께 지워져요. (드라이브에 저장된 확인서 파일은 그대로예요)' + delNote(); }
         function regRemove(r) {   // 장부 한 줄 삭제 (대표만)
             if (!isBoss()) { toast('가입 장부 삭제는 대표만 할 수 있어요.'); return; }
             var xd = regEvDrop(r, 'xev'), pd = regEvDrop(r, 'pev');
@@ -7703,10 +7801,188 @@
             });
             return h('thead', {}, h('tr', {}, r1), h('tr', {}, r2));
         }
-        function polModeSeg() {   // 인터넷상담: 유선 단가표 / 모바일 단가표
+        function polModeSeg() {   // 상담하기: 유선 단가표 / 모바일 단가표 / 렌탈 단가표
+            var md = state.pol.rent ? 'rent' : state.pol.mob ? 'mob' : 'net';
             return h('div', { class: 'gl-seg pol-mode', role: 'group', 'aria-label': '단가표 종류' },
-                h('button', { type: 'button', 'data-act': 'pol-mode-net', 'aria-pressed': state.pol.mob ? 'false' : 'true', onclick: function () { state.pol.mob = false; render(); } }, '🌐 유선 단가표'),
-                h('button', { type: 'button', 'data-act': 'pol-mode-mob', 'aria-pressed': state.pol.mob ? 'true' : 'false', onclick: function () { state.pol.mob = true; mpLoad(false); render(); } }, '📱 모바일 단가표'));
+                h('button', { type: 'button', 'data-act': 'pol-mode-net', 'aria-pressed': md === 'net' ? 'true' : 'false', onclick: function () { state.pol.mob = false; state.pol.rent = false; render(); } }, '🌐 유선 단가표'),
+                h('button', { type: 'button', 'data-act': 'pol-mode-mob', 'aria-pressed': md === 'mob' ? 'true' : 'false', onclick: function () { state.pol.mob = true; state.pol.rent = false; mpLoad(false); render(); } }, '📱 모바일 단가표'),
+                h('button', { type: 'button', 'data-act': 'pol-mode-rent', 'aria-pressed': md === 'rent' ? 'true' : 'false', onclick: function () { state.pol.rent = true; state.pol.mob = false; rtLoad(false); render(); } }, '🧴 렌탈 단가표'));
+        }
+        /* ---------- 렌탈 단가표 (상담하기 → 🧴 렌탈 단가표): 홈페이지 렌탈 페이지와 같은 상품 · 약정 · 월 렌탈료 · 사은품 ----------
+           수수료는 넣지 않음 (사이트에 넣지 않기로 한 값) · 사은품은 홈페이지와 같은 rental-gift.json 기준 · 줄을 누르면 상담 메모(렌탈)에 바로 */
+        var RT_FEED = 'https://modil.co.kr/api/feed/rental', RT_PAGE = 20;
+        var rt = { data: null, busy: false, err: '', q: '', cat: 'all', more: 0, pk: null, at: 0 };
+        function rtS(v, n) { return typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n || 200) : (typeof v === 'number' && isFinite(v) ? String(v) : ''); }
+        function rtN(v) { var n = typeof v === 'number' ? v : (typeof v === 'string' && /^\s*\d+(\.\d+)?\s*$/.test(v) ? +v : NaN); return isFinite(n) && n >= 0 ? Math.round(n) : null; }
+        function rtGiftTxt(v) { return v % 10000 === 0 ? (v / 10000) + '만원' : (Math.round(v / 1000) / 10) + '만원'; }
+        function rtNorm(j, G) {   // 홈페이지 렌탈 페이지와 같은 정리 (받은 값은 걸러서 사용)
+            if (!j || typeof j !== 'object' || !Array.isArray(j.products)) return null;
+            var out = [], seen = Object.create(null);
+            j.products.slice(0, 3000).forEach(function (p) {
+                if (!p || typeof p !== 'object') return;
+                var id = rtS(p.id, 80), name = rtS(p.name, 200), model = rtS(p.modelCode, 80);
+                if (!id || seen[id] || !(name || model)) return;
+                seen[id] = 1;
+                var cos = [];
+                (Array.isArray(p.companies) ? p.companies : []).slice(0, 10).forEach(function (c) {
+                    if (!c || typeof c !== 'object') return;
+                    var plans = [], cn = rtS(c.name, 40);
+                    (Array.isArray(c.plans) ? c.plans : []).slice(0, 24).forEach(function (x) {
+                        if (!x || typeof x !== 'object') return;
+                        var fee = rtN(x.monthlyFee); if (!fee) return;
+                        var k = cn + '|' + model + '|' + rtN(x.contractMonths) + '|' + fee, gw = Object.prototype.hasOwnProperty.call(G, k) && typeof G[k] === 'number' ? G[k] : null;
+                        var g = rtS(x.gift, 120); if (!g && gw > 0) g = rtGiftTxt(gw);
+                        plans.push({ m: rtN(x.contractMonths), mm: rtN(x.mandatoryMonths), fee: fee, pm: rtN(x.promoMonths), af: rtN(x.afterPromoMonthlyFee), g: g, gn: !g && gw === 0 });
+                    });
+                    if (plans.length) cos.push({ name: cn, plans: plans });
+                });
+                var low = rtN(p.lowestMonthlyFee);
+                out.push({ id: id, cat: rtS(p.category, 30) || '기타', kind: rtS(p.kind, 40), brand: rtS(p.brand, 40), name: name || model, model: model, low: low > 0 ? low : null, cos: cos });
+            });
+            return { at: rtS(j.updatedAt, 40), items: out };
+        }
+        function rtLoad(force) {
+            if (rt.busy || (rt.data && !force)) return;
+            rt.busy = true; rt.err = '';
+            var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
+            var feed = fetch(RT_FEED, { credentials: 'omit', cache: 'no-cache', signal: ctl ? ctl.signal : undefined }).then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); });
+            var gift = fetch('../rental-gift.json', { cache: 'no-cache', credentials: 'same-origin' }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; });
+            Promise.all([feed, gift]).then(function (a) {
+                clearTimeout(tm);
+                var d = rtNorm(a[0], a[1] && typeof a[1] === 'object' && !Array.isArray(a[1]) ? a[1] : {});
+                if (!d || !d.items.length) throw new Error('empty');
+                rt.data = d; rt.at = Date.now(); rt.busy = false;
+                if (state.view === 'policy' && state.pol.rent) render();
+            }).catch(function () {
+                clearTimeout(tm); rt.busy = false;
+                rt.err = '렌탈 상품 정보를 불러오지 못했어요. 인터넷 연결을 확인하고 [새로고침]을 눌러 주세요.';
+                if (state.view === 'policy' && state.pol.rent) render();
+            });
+        }
+        function rtWords(q) { return String(q || '').toLowerCase().split(/\s+/).filter(Boolean).slice(0, 6); }
+        function rtMatch(p, words) {
+            if (!words.length) return true;
+            var t = [p.cat, p.kind, p.brand, p.name, p.model].concat(p.cos.map(function (c) { return c.name; })).join(' ').toLowerCase(), t2 = t.replace(/\s+/g, '');
+            return words.every(function (w) { return t.indexOf(w) >= 0 || t2.indexOf(w) >= 0; });
+        }
+        function rtMon(n) { return n == null ? '-' : n + '개월'; }
+        function rtPick(p, ci, pi) {   // 렌탈 단가표 줄 → 상담 메모 (렌탈 상담으로)
+            var c = p.cos[ci], x = c && c.plans[pi]; if (!x) return;
+            rt.pk = { key: p.id + '|' + ci + '-' + pi, p: p, c: c, x: x };
+            [].forEach.call(document.querySelectorAll('.rt-row.on'), function (r) { r.classList.remove('on'); });
+            var tr = document.querySelector('.rt-row[data-key="' + rt.pk.key.replace(/"/g, '') + '"]'); if (tr) tr.classList.add('on');
+            clRtApply(rt.pk);
+        }
+        function renderRentPol() {
+            var head = h('div', { class: 'page-head' }, h('h1', {}, '상담하기'),
+                h('div', { class: 'actions' }, polModeSeg(),
+                    driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else clMemoOpen(); } }, '📝 상담 메모') : null,
+                    h('button', { type: 'button', class: 'btn', 'data-act': 'rt-refresh', onclick: function () { rt.busy = false; rtLoad(true); toast('렌탈 상품을 새로 받고 있어요.'); render(); } }, '새로고침')));
+            if (!rt.data && !rt.busy && !rt.err) setTimeout(function () { rtLoad(false); }, 0);
+            if (!rt.data) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, rt.err || '렌탈 상품을 불러오는 중이에요... (홈페이지 렌탈 페이지와 같은 정보)')));
+            var items = rt.data.items, words = rtWords(rt.q), cnt = Object.create(null);
+            items.forEach(function (p) { cnt[p.cat] = (cnt[p.cat] || 0) + 1; });
+            var cats = Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a] || a.localeCompare(b); });
+            if (rt.cat !== 'all' && !cnt[rt.cat]) rt.cat = 'all';
+            var q = h('input', { type: 'search', class: 'rt-q', 'data-fk': 'rt-q', placeholder: '렌탈 상품 찾기 (예: 코웨이 정수기, 공기청정기 LG, 모델명)', 'aria-label': '렌탈 상품 찾기', value: rt.q });
+            q.addEventListener('input', function () { rt.q = this.value; rt.more = 0; clearTimeout(renderRentPol.t); renderRentPol.t = setTimeout(render, 180); });
+            var catBar = h('div', { class: 'pol-cars rt-cats', role: 'group', 'aria-label': '렌탈 종류' },
+                h('button', { type: 'button', class: 'btn btn-sm', 'data-rtcat': 'all', 'aria-pressed': rt.cat === 'all' ? 'true' : 'false', onclick: function () { rt.cat = 'all'; rt.more = 0; render(); } }, '전체 ' + items.length),
+                cats.map(function (c) { return h('button', { type: 'button', class: 'btn btn-sm', 'data-rtcat': c, 'aria-pressed': rt.cat === c ? 'true' : 'false', onclick: function () { rt.cat = c; rt.more = 0; render(); } }, c + ' ' + cnt[c]); }));
+            var list = items.filter(function (p) { return (rt.cat === 'all' || p.cat === rt.cat) && rtMatch(p, words); });
+            list.sort(function (a, b) { return (a.low == null ? 1e9 : a.low) - (b.low == null ? 1e9 : b.low); });
+            var lim = RT_PAGE * (rt.more + 1), shown = list.slice(0, lim);
+            var cards = shown.map(function (p) {
+                var rows = [];
+                p.cos.forEach(function (c, ci) {
+                    c.plans.forEach(function (x, pi) {
+                        var key = p.id + '|' + ci + '-' + pi, on = rt.pk && rt.pk.key === key;
+                        rows.push(h('tr', { class: 'rt-row' + (on ? ' on' : '') + (x.fee === p.low ? ' low' : ''), 'data-key': key, tabindex: '0', title: '누르면 상담 메모(렌탈)에 바로 들어가요', onclick: function () { rtPick(p, ci, pi); }, onkeydown: function (e) { if (e.key === 'Enter') { e.preventDefault(); rtPick(p, ci, pi); } } },
+                            h('td', { 'data-l': '렌탈사' }, c.name || '렌탈사 상담 시 안내'),
+                            h('td', { 'data-l': '약정' }, rtMon(x.m)),
+                            h('td', { 'data-l': '의무' }, rtMon(x.mm)),
+                            h('td', { class: 'rt-fee', 'data-l': '월 렌탈료' }, '월 ' + won(x.fee), x.fee === p.low ? h('span', { class: 'rt-low' }, '최저') : null),
+                            h('td', { class: x.pm != null && x.af != null ? '' : 'dim', 'data-l': '할인 뒤' }, x.pm != null && x.af != null ? x.pm + '개월 뒤 월 ' + won(x.af) : '-'),
+                            h('td', { class: x.g ? 'rt-gift' : 'dim', 'data-l': '사은품' }, x.g || (x.gn ? '사은품 없음' : '상담 시 안내')),
+                            h('td', { class: 'rt-go' }, h('span', { class: 'rt-go-b' }, on ? '✓ 메모에 들어감' : '📝 메모에 넣기'))));
+                    });
+                });
+                return h('section', { class: 'rt-card', 'data-rtid': p.id },
+                    h('div', { class: 'rt-head' },
+                        h('div', {}, h('div', { class: 'rt-meta' }, [p.brand, p.cat + (p.kind ? ' · ' + p.kind : '')].filter(Boolean).join(' · ')), h('b', { class: 'rt-name' }, p.name), p.model ? h('span', { class: 'rt-model' }, p.model) : null),
+                        h('div', { class: 'rt-low-b' }, p.low != null ? ['월 ', h('b', {}, won(p.low)), '~'] : '월 렌탈료 상담 안내')),
+                    rows.length ? h('div', { class: 'pol-scroll' }, h('table', { class: 'rt-tbl' }, h('thead', {}, h('tr', {}, ['렌탈사', '약정', '의무사용', '월 렌탈료', '할인 뒤 요금', '사은품', ''].map(function (t) { return h('th', {}, t); }))), h('tbody', {}, rows)))
+                        : h('p', { class: 'rt-none' }, '렌탈사 · 약정 정보가 아직 없어요. 상담 때 안내해 주세요.'));
+            });
+            return h('div', {}, head,
+                h('div', { class: 'pol-meta' }, h('b', {}, '🧴 렌탈 단가표'), h('span', { class: 'pol-date' }, '홈페이지 렌탈 페이지와 같은 정보'), rt.data.at && !isNaN(new Date(rt.data.at)) ? h('span', { class: 'pol-date pol-date2' }, new Date(rt.data.at).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준') : null,
+                    h('small', {}, '줄을 누르면 상담 메모가 렌탈 상담으로 바뀌고 제품 · 렌탈사 · 약정 · 월 렌탈료 · 사은품이 바로 들어가요. 사은품은 홈페이지에 보이는 금액 그대로예요. (수수료는 표시하지 않아요)')),
+                h('div', { class: 'rt-tools' }, q, h('span', { class: 'rt-count' }, '상품 ' + list.length + '개')),
+                catBar,
+                cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, words.length ? '"' + rt.q + '"에 맞는 렌탈 상품이 없어요.' : '이 종류의 렌탈 상품이 없어요.')),
+                list.length > lim ? h('div', { class: 'rt-more' }, h('button', { type: 'button', class: 'btn', 'data-act': 'rt-more', onclick: function () { rt.more++; render(); } }, '더 보기 (' + (list.length - lim) + '개 남음)')) : null);
+        }
+
+        /* ---------- 상담 메모: 렌탈 상담 ---------- */
+        function clRtFill(t, pk) {   // 렌탈 상담 양식에 고른 제품 넣기
+            var p = pk.p, c = pk.c, x = pk.x;
+            if (!clIsRent(t)) t = clTplSwitch(t, true);
+            t = clTplPut(t, '렌탈 상담', [p.cat + (p.kind ? ' · ' + p.kind : ''), p.brand].filter(Boolean).join(' · '));
+            t = clTplPut(t, '상담 제품', p.name + (p.model && p.name.indexOf(p.model) < 0 ? ' (' + p.model + ')' : ''));
+            t = clTplPut(t, '렌탈사 · 약정', (c.name || '렌탈사 상담 시 안내') + ' · ' + rtMon(x.m) + ' 약정' + (x.mm != null ? ' (의무 ' + rtMon(x.mm) + ')' : ''));
+            t = clTplPut(t, '월 렌탈료', '월 ' + won(x.fee) + (x.pm != null && x.af != null ? ' (' + x.pm + '개월 뒤 월 ' + won(x.af) + ')' : ''));
+            t = clTplPut(t, '사은품', x.g || (x.gn ? '없음' : '상담 시 안내'));
+            return t;
+        }
+        function clRtApply(pk) {
+            if (!driveOn()) { toast('상담 메모는 공유 저장소를 연결한 기기에서 쓸 수 있어요.'); return; }
+            var M = cl.memo;
+            if (!M || !M.open) { clMemoOpen(); M = cl.memo; if (!M) return; }
+            else if (M.min) { M.min = false; M.built = ''; clMemoPaint(); }
+            M.kind = 'rent';
+            if (M.P && M.P.memoEl) {
+                M.P.setKind('rent');
+                var el = M.P.memoEl, v = clRtFill(el.value, pk);
+                if (v !== el.value) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); }
+                el.classList.remove('cl-flash'); void el.offsetWidth; el.classList.add('cl-flash');
+                toast(pk.p.name + ' · ' + (pk.c.name || '렌탈사') + ' ' + rtMon(pk.x.m) + ' 을(를) 상담 메모에 넣었어요.');
+            } else { M.rtPend = pk; toast('상담 메모를 여는 중이에요. 열리면 바로 들어가요.'); }
+        }
+        function clRtLine(memo, key) { var x = new RegExp('^■ ' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[^:\\n]*:[ \\t]*(.+)$', 'm').exec(String(memo || '')); return x ? x[1].trim() : ''; }
+        function rtToForm(memo, phone) {   // 렌탈 판매성공 → 가입 확인서(유선)를 렌탈로 열고 메모 내용으로 채움
+            var cur = mforms.wired;
+            if (cur && cur.sheet) {
+                var used = cur.saved || [].some.call(cur.sheet.querySelectorAll('[data-mf]'), function (el) {
+                    var n = el.getAttribute('data-mf'); if (['y', 'm', 'd', 'seller', 'shopPhone', 'sellerPhone', 'term', 'keepW'].indexOf(n) >= 0) return false;
+                    return el.type === 'checkbox' ? el.checked : !!String(el.value || '').trim();
+                });
+                if (used && !confirm('작성 중인 유선 가입 확인서가 있어요.\n지우고 이 렌탈 고객 내용으로 새로 작성할까요?')) return false;
+                delete mforms.wired;
+            }
+            state.view = 'forms'; state.form = 'wired'; render();
+            var M = mforms.wired; if (!M || !M.sheet) { toast('가입 확인서를 열지 못했어요.'); return false; }
+            var sh = M.sheet, q = function (n) { return sh.querySelector('[data-mf="' + n + '"]'); };
+            var rc = q('tRent'); if (rc && !rc.checked) { rc.checked = true; rc.dispatchEvent(new Event('change', { bubbles: true })); }
+            if (M.rentPaint) M.rentPaint();
+            var head = clRtLine(memo, '렌탈 상담').split('·').map(function (s) { return s.trim(); }).filter(Boolean);
+            var prod = clRtLine(memo, '상담 제품'), pm = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(prod);
+            var co = clRtLine(memo, '렌탈사'), cm = /^(.*?)\s*·\s*(\d+)\s*개월\s*약정(?:\s*\(의무\s*(\d+)\s*개월\))?/.exec(co);
+            var fee = (/월\s*([\d,]+)\s*원/.exec(clRtLine(memo, '월 렌탈료')) || [])[1] || '';
+            var gm = /([\d.]+)\s*만\s*원/.exec(clRtLine(memo, '사은품')), gw = gm ? Math.round(parseFloat(gm[1]) * 10000) : 0;
+            var set = {
+                carrier: head.length > 1 ? head[head.length - 1] : '',
+                prevCarrier: cm ? cm[1].trim() : '',
+                tvPlan: pm ? pm[1].trim() : prod, netPlan: pm ? pm[2].trim() : '',
+                term: cm ? cm[2] : '', keepW: cm && cm[3] ? cm[3] : '', billW: fee,
+                phone: phone ? mfPhone(phone) : ''
+            };
+            if (gw > 0) { set.giftT = gw.toLocaleString('ko-KR'); set.giftA = set.giftT; set.giftV = '없음'; set.giftH = '없음'; }
+            var n = 0;
+            Object.keys(set).forEach(function (k) { var el = q(k); if (!el || !set[k]) return; el.value = set[k]; el.dispatchEvent(new Event('input', { bubbles: true })); n++; });
+            if (M.appSync) M.appSync();
+            window.scrollTo(0, 0);
+            toast('상담 메모 내용으로 렌탈 가입 확인서 ' + n + '칸을 채웠어요. 가입자 정보 · 납부 정보 · 접수처를 마저 적어 주세요.');
+            return true;
         }
         function renderMobPol() {   // 모바일 단가표: 위에 모델별 비교(누르면 바로 펼침) · 아래에 거래처별 단가표·정책 — 한 화면
             var boss = isBoss();
@@ -7778,6 +8054,7 @@
                 cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '"' + mp.q + '"에 맞는 모델이 거래처 단가표에 없어요.')));
         }
         function renderPolicy() {
+            if (state.pol.rent) return renderRentPol();
             if (state.pol.mob) return renderMobPol();
             var P = polShown(), CUR = polCur(), S = state.pol, boss = isBoss(), viewing = !!(P && CUR && P !== CUR);
             var head = h('div', { class: 'page-head' }, h('h1', {}, '상담하기'),
@@ -8898,28 +9175,50 @@
         function clCols(s) { return s.cols.filter(function (c) { return !clHidden(c); }); }
         function clHead(c) { return clColKind(c) === 'no' ? '순번' : clShort(c.l); }   // '/' 열 → '순번'
         var CL_TPL = ['■ 상담 통신사 : ', '■ 기존 통신사 · 약정 : ', '■ 상담 상품 : ', '■ 휴대폰 결합 : ', '■ 안내 요금 : ', '■ 오퍼 (사은품·지원금) : ', '■ 설치비 : ', '■ 특이사항 : ', '■ 재케어 메모 (통화 가능 시간·설치 희망일 등) : '];
-        function clTplHead(i) { return CL_TPL[i].replace(/\s*:\s*$/, ''); }   // '■ 오퍼 (사은품·지원금)'
-        function clTplIdx(key) { for (var i = 0; i < CL_TPL.length; i++) if (CL_TPL[i].indexOf('■ ' + key) === 0) return i; return -1; }
+        var CL_TPL_R = ['■ 렌탈 상담 : ', '■ 사용 중인 제품 : ', '■ 상담 제품 : ', '■ 렌탈사 · 약정 : ', '■ 월 렌탈료 : ', '■ 사은품 : ', '■ 설치 · 관리 : ', '■ 특이사항 : ', '■ 재케어 메모 (통화 가능 시간·설치 희망일 등) : '];   // 렌탈 상담 양식
+        function clIsRent(t) { return /(^|\n)■ 렌탈 상담/.test(String(t || '')); }
+        function clTplArr(t, key) {   // 어느 양식인지: 그 양식에만 있는 줄이면 그 양식 · 아니면 메모 글로 판단
+            if (key) {
+                var inN = CL_TPL.some(function (x) { return x.indexOf('■ ' + key) === 0; }), inR = CL_TPL_R.some(function (x) { return x.indexOf('■ ' + key) === 0; });
+                if (inR && !inN) return CL_TPL_R; if (inN && !inR) return CL_TPL;
+            }
+            return clIsRent(t) ? CL_TPL_R : CL_TPL;
+        }
+        function clTplHead(i, A) { return (A || CL_TPL)[i].replace(/\s*:\s*$/, ''); }   // '■ 오퍼 (사은품·지원금)'
+        function clTplIdx(key, A) { A = A || CL_TPL; for (var i = 0; i < A.length; i++) if (A[i].indexOf('■ ' + key) === 0) return i; return -1; }
         function clTplPut(t, key, text) {   // 양식의 한 줄 채우기 (글자만 바꿔서 돌려줌) · 그 줄이 없으면 양식 순서 자리에 새로 넣음
             t = String(t == null ? '' : t);
-            if (t.indexOf('■ 상담 통신사') < 0) t = CL_TPL.join('\n') + (t.trim() ? '\n\n' + t.trim() : '');
+            var A = clTplArr(t, key);
+            if (t.indexOf(clTplHead(0, A)) < 0) t = A.join('\n') + (t.trim() ? '\n\n' + t.trim() : '');
             var lines = t.split('\n'), done = false;
             lines = lines.map(function (l) { if (!done && l.indexOf('■ ' + key) === 0) { done = true; return l.replace(/^(■ [^:]+:).*$/, '$1 ' + text); } return l; });
             if (!done) {
-                var i = clTplIdx(key), at = 0;
-                for (var j = i - 1; j >= 0 && !at; j--) { var hd = clTplHead(j); for (var x = lines.length - 1; x >= 0; x--) if (lines[x].indexOf(hd) === 0) { at = x + 1; break; } }
-                lines.splice(at, 0, (i >= 0 ? CL_TPL[i] : '■ ' + key + ' : ') + text);
+                var i = clTplIdx(key, A), at = 0;
+                for (var j = i - 1; j >= 0 && !at; j--) { var hd = clTplHead(j, A); for (var x = lines.length - 1; x >= 0; x--) if (lines[x].indexOf(hd) === 0) { at = x + 1; break; } }
+                lines.splice(at, 0, (i >= 0 ? A[i] : '■ ' + key + ' : ') + text);
             }
             return lines.join('\n');
         }
-        function clTplFull(t) {   // 빠진 양식 줄(예: 예전 메모에 없던 '설치비')을 제자리에 채워 넣음
-            t = String(t || '');
-            if (t.indexOf('■ 상담 통신사') < 0) return CL_TPL.join('\n') + (t.trim() ? '\n\n' + t.trim() : '');
-            CL_TPL.forEach(function (x, i) { var hd = clTplHead(i); if (!t.split('\n').some(function (l) { return l.indexOf(hd) === 0; })) t = clTplPut(t, hd.slice(2), ''); });
+        function clTplFull(t, A) {   // 빠진 양식 줄(예: 예전 메모에 없던 '설치비')을 제자리에 채워 넣음 · A: 쓸 양식 (없으면 메모 글로 판단)
+            t = String(t || ''); A = A || clTplArr(t);
+            if (t.indexOf(clTplHead(0, A)) < 0) return A.join('\n') + (t.trim() ? '\n\n' + t.trim() : '');
+            A.forEach(function (x, i) { var hd = clTplHead(i, A); if (!t.split('\n').some(function (l) { return l.indexOf(hd) === 0; })) t = clTplPut(t, hd.slice(2), ''); });
             return t;
         }
-        function clTplInsert(el) {   // 상담 내용에 메모 양식 넣기 (이미 있으면 빠진 줄만)
-            el.value = clTplFull(el.value);
+        function clTplSwitch(t, toRent) {   // 인터넷 ↔ 렌탈 양식 바꾸기: 같은 줄(특이사항·재케어 메모)은 그대로 · 다른 양식에만 있던 내용은 아래에 글로 남김 (지우지 않음)
+            var A = toRent ? CL_TPL_R : CL_TPL, keep = {}, moved = [], free = [];
+            String(t || '').split('\n').forEach(function (l) {
+                var m = /^■ ([^:\n]+?)\s*:[ \t]*(.*)$/.exec(l);
+                if (!m) { free.push(l); return; }
+                var hd = '■ ' + m[1].trim(), val = m[2].trim();
+                if (A.some(function (x) { return x.replace(/\s*:\s*$/, '') === hd; })) { if (val) keep[hd] = val; }
+                else if (val) moved.push(m[1].trim() + ': ' + val);
+            });
+            var rest = moved.concat(free).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+            return A.map(function (x) { return x + (keep[x.replace(/\s*:\s*$/, '')] || ''); }).join('\n') + (rest ? '\n\n' + rest : '');
+        }
+        function clTplInsert(el, A) {   // 상담 내용에 메모 양식 넣기 (이미 있으면 빠진 줄만)
+            el.value = clTplFull(el.value, A);
             el.dispatchEvent(new Event('input', { bubbles: true }));
             try { el.focus(); var p = el.value.indexOf('\n'); el.setSelectionRange(p < 0 ? el.value.length : p, p < 0 ? el.value.length : p); } catch (e) { /* 무시 */ }
         }
@@ -9010,7 +9309,7 @@
                 clStamp(cur); closeDlg(); clQueue(); render(); toast((isNew ? '상담을 추가했어요.' : '상담 내용을 고쳤어요.') + rcMsg);
                 if (isNew) clProspect(cur, s);   // 새 상담도 판매성공이 아니면 '가망' 연락처로
             } }, h('div', { class: 'dlg-head' }, (isNew ? '상담 추가' : '상담 고치기') + ' · ' + s.name),
-                h('div', { class: 'dlg-body' }, h('div', { class: 'cl-form' }, h('div', { class: 'cl-meta' }, '상태 (줄 색)'), pick, fields, meta)),
+                h('div', { class: 'dlg-body' }, h('div', { class: 'cl-form' }, P.kindSeg, h('div', { class: 'cl-meta' }, '상태 (줄 색)'), pick, fields, meta)),
                 h('div', { class: 'dlg-foot' }, ctBtn, !isNew && isBoss() ? h('button', { type: 'button', class: 'btn btn-danger left', 'data-act': 'cl-row-del', onclick: function () { if (confirm('이 상담 줄을 지울까요? 모든 직원 화면에서 사라져요.')) { clRemove(row.id); closeDlg(); } } }, '줄 삭제') : null,
                     h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), h('button', { type: 'submit', class: 'btn btn-primary', 'data-act': 'cl-save' }, isNew ? '추가' : '저장'))));
             showDlg(dlg);
@@ -9031,6 +9330,19 @@
             };
             P.paint();
             P.memoEl = null;
+            P.kind = row.k === 'rent' || row.k === 'net' ? row.k : (s.cols.some(function (c) { return clColKind(c) === 'wide' && /상담/.test(c.l.replace(/\s/g, '')) && clIsRent(row.v[c.k]); }) ? 'rent' : 'net');
+            P.kindSeg = h('div', { class: 'cl-kind', role: 'group', 'aria-label': '상담 종류' },
+                [['net', '🌐 인터넷 · TV 상담'], ['rent', '🧴 렌탈 상담']].map(function (x) { return h('button', { type: 'button', 'data-kind': x[0], 'data-act': 'cl-kind-' + x[0], 'aria-pressed': P.kind === x[0] ? 'true' : 'false', onclick: function () { P.setKind(x[0]); } }, x[1]); }));
+            P.setKind = function (k) {   // 인터넷 ↔ 렌탈: 메모 양식 · 현 통신사 버튼 · 칸 이름을 바꿈 (적은 내용은 지우지 않음)
+                if (k === P.kind) return;
+                P.kind = k;
+                [].forEach.call(P.kindSeg.querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-kind') === k ? 'true' : 'false'); });
+                if (P.memoEl) { var nv = clTplSwitch(P.memoEl.value, k === 'rent'); if (nv !== P.memoEl.value) { P.memoEl.value = nv; P.memoEl.dispatchEvent(new Event('input', { bubbles: true })); } }
+                if (P.telEl) { var other = k === 'rent' ? CL_TELCO : CL_MAKER; if (other.indexOf(P.telEl.value.trim()) >= 0) P.telEl.value = ''; }
+                if (P.paintTel) P.paintTel();
+                if (P.telEl && P.memoEl && P.telEl.value.trim()) clTelcoMemo(P.memoEl, P.telEl.value.trim(), '', k);
+                if (P.onKind) P.onKind(k);
+            };
             P.hide = {}; s.cols.forEach(function (c) { if (clHidden(c) && row.v[c.k]) P.hide[c.k] = row.v[c.k]; });   // 화면에서 뺀 열의 원래 값은 그대로 다시 저장
             P.fields = clCols(s).map(function (c) {
                 var kd = clColKind(c), val = row.v[c.k] || '', long = kd === 'wide' || kd === 'mid' || val.length > 40 || val.indexOf('\n') >= 0;
@@ -9040,7 +9352,7 @@
                 el.value = val;
                 P.inputs[c.k] = el;
                 if (isMemo && !P.memoEl) P.memoEl = el;
-                if (isMemo) return h('div', { class: 'cl-fld full' }, h('div', { class: 'cl-lab' }, h('span', {}, c.l || c.k), h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-tpl', onclick: function () { clTplInsert(el); } }, '메모 양식 넣기')), el);
+                if (isMemo) return h('div', { class: 'cl-fld full' }, h('div', { class: 'cl-lab' }, h('span', {}, c.l || c.k), h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-tpl', onclick: function () { clTplInsert(el, P.kind === 'rent' ? CL_TPL_R : CL_TPL); } }, '메모 양식 넣기')), el);
                 var body = el, tExtra = null;
                 if (kd === 'date') body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { el.value = ymd(new Date()); } }, '오늘'));
                 if (kd === 'date') body.appendChild(clCalBtn(el, 'ymd'));
@@ -9051,17 +9363,28 @@
                     el.readOnly = true; el.classList.add('cl-telco-in'); el.setAttribute('placeholder', '아래 버튼으로 고르기');
                     var lockIn = function () { el.readOnly = true; el.classList.remove('free'); };
                     el.addEventListener('blur', lockIn);
-                    var chips = h('div', { class: 'cl-telco', role: 'group', 'aria-label': '현 통신사 고르기' }, CL_TELCO.map(function (t) {
-                        return h('button', { type: 'button', class: 'cl-tchip', 'data-telco': t, 'aria-pressed': cur() === t ? 'true' : 'false', onclick: function () { lockIn(); el.value = cur() === t ? '' : t; el.dispatchEvent(new Event('input', { bubbles: true })); } }, t);
-                    }), h('button', { type: 'button', class: 'cl-tchip cl-tfree', 'data-act': 'cl-telco-free', onclick: function () { el.readOnly = false; el.classList.add('free'); if (CL_TELCO.indexOf(cur()) >= 0) { el.value = ''; el.dispatchEvent(new Event('input', { bubbles: true })); } try { el.focus(); } catch (e) { /* 무시 */ } } }, '✏ 직접입력'));
+                    var chips = h('div', { class: 'cl-telco', role: 'group', 'aria-label': '현 통신사 고르기' });
+                    var telLab = h('span', { class: 'cl-tlab' }), telName = c.l || c.k;
+                    P.telEl = el;
+                    P.paintTel = function () {   // 인터넷: 현 통신사 / 렌탈: 지금 쓰는 렌탈 제품 (제조사)
+                        var list = P.kind === 'rent' ? CL_MAKER : CL_TELCO;
+                        telLab.textContent = P.kind === 'rent' ? '사용 중인 렌탈 (제조사)' : telName;
+                        chips.setAttribute('aria-label', P.kind === 'rent' ? '사용 중인 렌탈 제조사 고르기' : '현 통신사 고르기');
+                        chips.textContent = '';
+                        list.forEach(function (t) {
+                            chips.appendChild(h('button', { type: 'button', class: 'cl-tchip', 'data-telco': t, 'aria-pressed': cur() === t ? 'true' : 'false', onclick: function () { lockIn(); el.value = cur() === t ? '' : t; el.dispatchEvent(new Event('input', { bubbles: true })); } }, t));
+                        });
+                        chips.appendChild(h('button', { type: 'button', class: 'cl-tchip cl-tfree', 'data-act': 'cl-telco-free', onclick: function () { el.readOnly = false; el.classList.add('free'); if (list.indexOf(cur()) >= 0) { el.value = ''; el.dispatchEvent(new Event('input', { bubbles: true })); } try { el.focus(); } catch (e) { /* 무시 */ } } }, '✏ 직접입력'));
+                    };
+                    P.paintTel();
                     el.addEventListener('input', function () {
                         chips.querySelectorAll('.cl-tchip[data-telco]').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-telco') === cur() ? 'true' : 'false'); });
-                        clTelcoMemo(P.memoEl, cur(), lastT); lastT = cur();
+                        clTelcoMemo(P.memoEl, cur(), lastT, P.kind); lastT = cur();
                     });
                     tExtra = chips;   // 버튼은 오른쪽 칸(위치 아래)에 따로
                 }
                 if (!kd && /청약/.test(c.l.replace(/\s/g, '')) && !long) body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-sub-today', onclick: function () { el.value = clMd(new Date()); } }, '오늘'), clCalBtn(el, 'md'));
-                var lab = h('label', { class: long || kd === 'ph' ? 'full' : '' }, kd === 'no' ? '순번' : (c.l || c.k), body);
+                var lab = h('label', { class: long || kd === 'ph' ? 'full' : '' }, kd === 'no' ? '순번' : tExtra ? telLab : (c.l || c.k), body);
                 if (kd === 'ph') P.phLab = lab;
                 return tExtra ? [lab, h('div', { class: 'cl-fld cl-telco-cell' }, tExtra)] : lab;
             });
@@ -9094,15 +9417,17 @@
             return v;
         }
         var CL_TELCO = ['SK', 'KT', 'U+', 'SKB', '헬로비전', '스카이라이프', '알뜰', '신규(없음)'];   // 현 통신사 버튼
-        function clTelcoMemo(memoEl, t, prev) {   // 상담 내용 '■ 기존 통신사 · 약정' 줄 맨 앞에 현 통신사 (약정 등 뒤에 적은 글은 그대로)
+        var CL_MAKER = ['코웨이', 'SK매직', '쿠쿠', 'LG', '삼성', '청호', '교원웰스', '현대큐밍', '없음(신규)'];   // 렌탈 상담: 지금 쓰는 렌탈 제조사 버튼
+        function clTelcoMemo(memoEl, t, prev, kind) {   // 상담 내용 '■ 기존 통신사 · 약정'(렌탈: '■ 사용 중인 제품') 줄 맨 앞에 현 통신사 (약정 등 뒤에 적은 글은 그대로)
             if (!memoEl) return;
-            var m = /^■ 기존 통신사[^:\n]*:[ \t]*(.*)$/m.exec(memoEl.value), rest = m ? m[1].trim() : '';
-            var known = CL_TELCO.concat(['SKT', 'LG', 'LGU+', 'LG U+', 'LG헬로비전', '헬로', '스카이']).sort(function (a, b) { return b.length - a.length; });
+            var rent = kind === 'rent' || (kind == null && clIsRent(memoEl.value)), key = rent ? '사용 중인 제품' : '기존 통신사';
+            var m = new RegExp('^■ ' + key + '[^:\\n]*:[ \\t]*(.*)$', 'm').exec(memoEl.value), rest = m ? m[1].trim() : '';
+            var known = (rent ? CL_MAKER.concat(['LG전자', '삼성전자', '청호나이스', 'SK', '웰스', '큐밍', '바디프랜드', '세라젬']) : CL_TELCO.concat(['SKT', 'LG', 'LGU+', 'LG U+', 'LG헬로비전', '헬로', '스카이'])).sort(function (a, b) { return b.length - a.length; });
             prev = String(prev || '').trim();
             if (prev && known.indexOf(prev) < 0) known.unshift(prev);   // 직접입력으로 적던 글자 (한 글자씩 바뀌어도 앞부분이 쌓이지 않게)
             for (var i = 0; i < known.length; i++) { var k = known[i]; if (rest === k || rest.indexOf(k + ' ') === 0 || rest.indexOf(k + '·') === 0) { rest = rest.slice(k.length).replace(/^\s*·?\s*/, ''); break; } }
             var v = t ? t + (rest ? ' · ' + rest : '') : rest;
-            var nv = clTplPut(memoEl.value, '기존 통신사', v);
+            var nv = clTplPut(memoEl.value, key, v);
             if (nv !== memoEl.value) { memoEl.value = nv; memoEl.dispatchEvent(new Event('input', { bubbles: true })); }
         }
         function clMd(d) { return (d.getMonth() + 1) + '/' + pad2(d.getDate()); }   // 청약일 표기 (예: 10/17)
@@ -9420,8 +9745,11 @@
            화면 내용을 가리지 않게 창 너비만큼 본문을 옆으로 비켜 줌 · 적던 내용은 화면 메모리에만 (잠그면 지움) */
         function clMemoOpen() {
             if (!driveOn()) { toast('상담 메모는 공유 저장소를 연결한 기기에서 쓸 수 있어요.'); return; }
-            if (!cl.memo) cl.memo = { open: false, min: false, sheet: '', el: null, P: null, built: '', vals: null, st: 'n', raw: null, sig: null };
-            if (!cl.memo.open) { cl.memo.sig = null; cl.memo.asig = null; }   // 새로 열면 지금 짚어 둔 상품 · 고른 추가 상품부터 넣음
+            if (!cl.memo) cl.memo = { open: false, min: false, sheet: '', el: null, P: null, built: '', vals: null, st: 'n', raw: null, sig: null, kind: 'net' };
+            if (!cl.memo.open) {
+                cl.memo.sig = null; cl.memo.asig = null;   // 새로 열면 지금 짚어 둔 상품 · 고른 추가 상품부터 넣음
+                if (state.view === 'policy' && state.pol.rent) { cl.memo.sig = clPkSig(); if (!cl.memo.P && cl.memo.raw == null) cl.memo.kind = 'rent'; }   // 렌탈 단가표에서 열면 렌탈 상담으로
+            }
             cl.memo.open = true; cl.memo.min = false;
             if (!cl.data && !cl.busy) clLoad(true);
             clMemoPaint();
@@ -9455,12 +9783,15 @@
             var M = cl.memo; if (!M || !M.open) return;
             var sig = clPkSig(); if (sig === M.sig) return;
             M.sig = sig; var pk = clPk(); if (!pk) return;   // 선택을 지우면 적어 둔 내용은 그대로 둠
+            if (M.P && M.P.kind === 'rent') M.P.setKind('net');   // 인터넷 단가표에서 상품을 누르면 인터넷 상담으로
+            else if (!M.P && M.raw && clIsRent(M.raw)) { M.raw = clTplSwitch(M.raw, false); M.kind = 'net'; }
             if (M.P && M.P.memoEl) { var el = M.P.memoEl, v = clPkFill(el.value, pk); if (v !== el.value) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } el.classList.remove('cl-flash'); void el.offsetWidth; el.classList.add('cl-flash'); }
             else if (M.min || !M.P) M.raw = clPkFill(M.raw, pk);
         }
         function clMemoPick() {   // [짚어 둔 상품 다시 넣기] (직접 고친 줄을 표 내용으로 되돌릴 때)
             var M = cl.memo, el = M && M.P && M.P.memoEl, pk = clPk();
             if (!el) { toast('이 시트에는 상담 내용 칸이 없어요.'); return; }
+            if (M.P.kind === 'rent') { if (!rt.pk) { toast('상담하기 → 🧴 렌탈 단가표에서 상품 줄을 먼저 눌러 주세요.'); return; } clRtApply(rt.pk); return; }
             if (!pk) { toast('인터넷상담 표에서 상담할 상품 줄이나 1·2·3차·가이드 금액을 먼저 눌러 주세요.'); return; }
             el.value = clPkFill(el.value, pk); el.dispatchEvent(new Event('input', { bubbles: true })); M.sig = clPkSig();
             toast(pk.c.name + ' · ' + pk.r.n + ' 을(를) 상담 메모에 넣었어요.');
@@ -9498,7 +9829,7 @@
             var sh = function (id) { var x = cl.data.sheets.filter(function (q) { return q.id === id; })[0]; return x || null; };
             var line = function (d) {
                 var s = sh(d.sh), col = function (kind, re) { return s ? clColBy(s, kind, re) : null; }, vv = function (c) { return c ? String(d.v[c.k] || '').trim() : ''; };
-                var ph = vv(col('ph')), loc = vv(col('', /위치/)), tel = vv(col('', /현통신사/)), prod = (/^■ 상담 상품 :[ \t]*(\S.*)$/m.exec(d.raw || '') || [])[1] || '';
+                var ph = vv(col('ph')), loc = vv(col('', /위치/)), tel = vv(col('', /현통신사/)), prod = (/^■ 상담 (?:상품|제품) :[ \t]*(\S.*)$/m.exec(d.raw || '') || [])[1] || '';
                 return [ph ? clMask(ph) : '', loc, tel, prod].filter(Boolean).join(' · ') || '(연락처·내용 없음)';
             };
             dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '📂 임시 저장한 상담 메모 (' + list.length + ')'),
@@ -9527,7 +9858,8 @@
             var om = /(\d)차[^\d\n]*([\d,]+)원/.exec(off), og = /가이드\s*([\d,]+)원/.exec(off);
             if (om) offS = om[1] + '차 ' + clMan(om[2]); else if (og) offS = '가이드 ' + clMan(og[1]);
             var cur = vv(clColBy(s, '', /현통신사/)), loc = vv(clColBy(s, '', /위치/)), parts;
-            if (tel || prod) parts = [(cur ? cur + '→' : '') + tel, prod, fee ? '월' + fee : '', offS, loc];
+            if (clIsRent(memo)) { var rf = (/월\s*([\d,]+원)/.exec(line('월 렌탈료')) || [])[1] || '', rg = line('사은품'), rb = line('렌탈 상담').split('·').pop().trim(); parts = ['렌탈', rb, line('상담 제품').replace(/\s*\([^)]*\)\s*$/, ''), rf ? '월' + rf : '', rg && !/없음|안내/.test(rg) ? '사은품 ' + rg : '', loc]; }
+            else if (tel || prod) parts = [(cur ? cur + '→' : '') + tel, prod, fee ? '월' + fee : '', offS, loc];
             else { var free = clTplClean(memo).replace(/^■[^\n]*$/mg, '').replace(/\s+/g, ' ').trim(); parts = [cur, free.split(/[.!?。]\s/)[0].slice(0, 34), loc]; }
             var label = ('가망 ' + day + ' ' + parts.filter(Boolean).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 80);
             var st = clStInfo(r.st), no = vv(clColBy(s, 'no')), staff = vv(clColBy(s, 'staff'));
@@ -9571,6 +9903,14 @@
             clStamp(row); cl.data.rows.push(row);
             if (M.draftId) { clDraftDrop(M.draftId); M.draftId = ''; }   // 이어 쓰던 임시 저장본은 완료했으니 지움
             clQueue();
+            var memoC = clColBy(s, '', /상담내용/), rentMemo = memoC ? String(row.v[memoC.k] || '') : '';
+            if (row.st === 'sale' && clIsRent(rentMemo) && confirm('렌탈 판매성공 — 상담 리스트 "' + s.name + '"에 저장했어요.\n\n렌탈 가입 확인서를 바로 열까요?\n(상담 메모의 제조사 · 렌탈사 · 상품 · 약정 · 월 렌탈료 · 사은품이 들어가요)\n\n[취소]를 누르면 신분증 요청으로 가요.')) {
+                var pcR = clColBy(s, 'ph'), digR = pcR ? digitsOnly(row.v[pcR.k] || '') : '';
+                M.open = false; clMemoBlank(M); clMemoPaint();
+                polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null;
+                rtToForm(rentMemo, /^01\d{8,9}$/.test(digR) ? digR : '');
+                return;
+            }
             if (row.st === 'sale') {   // 판매성공: 번호 저장 없이 신분증 요청으로 (번호는 가입 확인서 [드라이브/연락처 저장] 때)
                 var pc = clColBy(s, 'ph'), dig = pc ? digitsOnly(row.v[pc.k] || '') : '', U = idrUI();
                 if (/^01\d{8,9}$/.test(dig)) {
@@ -9584,7 +9924,7 @@
                 return;
             }
             M.open = false; clMemoBlank(M); clMemoPaint();
-            polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null);   // 상담 끝: 단가표 선택도 비워서 다음 고객은 새로 시작
+            polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null;   // 상담 끝: 단가표 선택도 비워서 다음 고객은 새로 시작
             state.view = 'consult'; cl.sheet = s.id; cl.st = 'all'; cl.q = ''; cl.hl = row.id;
             render();
             setTimeout(function () { var tr = document.querySelector('tr[data-row="' + row.id + '"]'); if (tr) tr.scrollIntoView({ block: 'center' }); }, 60);
@@ -9592,7 +9932,7 @@
             toast('상담 리스트 "' + s.name + '"에 저장했어요.' + rcMsg);
             clProspect(row, s);   // 판매성공이 아니면 '가망' 연락처로 번호 저장
         }
-        function clMemoPaint() { clMemoPaint0(); clMemoAuto(); clMemoAddon(); clTabsPos(); }
+        function clMemoPaint() { clMemoPaint0(); clMemoAuto(); clMemoAddon(); clTabsPos(); var M = cl.memo; if (M && M.rtPend && M.P && M.P.memoEl && M.open && !M.min) { var pk = M.rtPend; M.rtPend = null; clRtApply(pk); } }
         function clTabsPos() {   // 시트 탭: 처음엔 맨 뒤(최근 달)가 보이게, 그 뒤엔 보던 자리 그대로
             var t = document.querySelector('.cl-tabs'); if (!t) return;
             if (!t.getAttribute('data-sx')) { t.setAttribute('data-sx', '1'); t.addEventListener('scroll', function () { cl.tabX = t.scrollLeft; }, { passive: true }); }
@@ -9657,9 +9997,10 @@
                 if (from) { var fc = from.cols.filter(function (c) { return c.k === k; })[0], tc = fc && s.cols.filter(function (c) { return c.l.replace(/\s/g, '') === fc.l.replace(/\s/g, ''); })[0]; if (tc && clColKind(tc) !== 'no') vals[tc.k] = keep[k]; }
                 else if (s.cols.some(function (c) { return c.k === k && clColKind(c) !== 'no'; })) vals[k] = keep[k];
             });
-            var row = { v: vals, st: keepSt || 'n' };
-            var P = clFormParts(s, row); P.sheet = s;
-            if (P.memoEl) P.memoEl.value = clTplFull(keepRaw != null ? keepRaw : P.memoEl.value);   // 처음 열면 메모 양식부터 · 접었다 펴도 적던 그대로
+            if (keepRaw != null && /(^|\n)■ /.test(keepRaw)) M.kind = clIsRent(keepRaw) ? 'rent' : 'net';   // 적던 메모의 양식대로
+            var row = { v: vals, st: keepSt || 'n', k: M.kind === 'rent' ? 'rent' : 'net' };
+            var P = clFormParts(s, row); P.sheet = s; P.onKind = function (k) { M.kind = k; };
+            if (P.memoEl) P.memoEl.value = clTplFull(keepRaw != null ? keepRaw : P.memoEl.value, P.kind === 'rent' ? CL_TPL_R : CL_TPL);   // 처음 열면 메모 양식부터 · 접었다 펴도 적던 그대로
             M.P = P;
             M.el.appendChild(h('div', { class: 'cl-memo-h' }, h('b', {}, '📝 상담 메모'), sel, h('span', { class: 'cl-memo-sp' }), minBtn, closeBtn));
             M.el.appendChild(h('div', { class: 'cl-memo-b' },
@@ -9672,8 +10013,8 @@
                     } }, '💾 임시 저장'),
                     h('button', { type: 'button', class: 'btn btn-sm cl-draft-btn', 'data-act': 'cl-draft-open', onclick: clDraftList }, '📂 불러오기' + (cl.data && cl.data.drafts && cl.data.drafts.length ? ' (' + cl.data.drafts.length + ')' : ''))),
                 M.draftId ? h('p', { class: 'cl-memo-draft' }, '📂 임시 저장본을 이어서 쓰는 중 — [상담 완료]를 누르면 임시 저장본은 지워져요.') : null,
-                h('p', { class: 'cl-memo-live' }, '⚡ 인터넷상담 표에서 상품 줄이나 1·2·3차·가이드 금액을 누르면 상담 통신사 · 상품 · 안내 요금 · 오퍼 · 설치비가 바로 바뀌어요.'),
-                h('div', { class: 'cl-form' }, h('div', { class: 'cl-meta' }, '상태 (줄 색)'), P.pick, P.fields)));
+                h('p', { class: 'cl-memo-live' }, '⚡ 상담하기 유선 단가표에서 상품 줄·1·2·3차를 누르면 인터넷 상담으로, 🧴 렌탈 단가표에서 줄을 누르면 렌탈 상담으로 바로 들어가요.'),
+                h('div', { class: 'cl-form' }, P.kindSeg, h('div', { class: 'cl-meta' }, '상태 (줄 색)'), P.pick, P.fields)));
             M.el.appendChild(h('div', { class: 'cl-memo-f' }, h('small', {}, '🔒 저장하면 팀 키로 암호화돼요'), h('button', { type: 'button', class: 'btn btn-step', 'data-step': '2', 'data-act': 'cl-memo-save', onclick: clMemoSave }, '상담 완료 · 리스트에 저장')));
             var svb = M.el.querySelector('[data-act="cl-memo-save"]'), svUpd = function () { if (svb && M.P) svb.textContent = M.P.st === 'sale' ? '상담 완료 · 신분증 요청으로' : '상담 완료 · 리스트·번호 저장'; };
             P.pick.addEventListener('click', function () { setTimeout(svUpd, 0); }); svUpd();
@@ -11111,7 +11452,7 @@
                 var row = S.cv[r] || {};
                 if (H.no && typeof row[H.no] === 'number') maxNo = Math.max(maxNo, row[H.no]);
                 if (H.no && String(row[H.no] || '').toLowerCase() === 'ex') continue;
-                var same = mt.name && nameC && String(row[nameC] || '') === mt.name && phoneC && String(row[phoneC] || '') === String(mt.phone || '') && String(row[H.kind] || '').indexOf(mt.kind === 'wired' ? '유선' : '모바일') === 0;
+                var same = mt.name && nameC && String(row[nameC] || '') === mt.name && phoneC && String(row[phoneC] || '') === String(mt.phone || '') && (mt.kind === 'wired' ? /^(유선|렌탈)/ : /^모바일/).test(String(row[H.kind] || ''));
                 if (same) { target = r; break; }   // 같은 고객·같은 구분 줄이 이미 있으면 그 줄을 고침
             }
             if (!target && only) return -1;   // 장부에서 고친 칸만 보낸 경우: 같은 고객 줄이 없으면 새 줄을 만들지 않음 (받은 편지함에서는 지움)
@@ -11127,7 +11468,7 @@
             function put(c, v) { if (!c || v == null || v === '') return; var s = String(v); row2[c] = /^-?\d{1,3}(,\d{3})+$|^-?\d+$/.test(s) && !/^-?0\d/.test(s) && s.length < 13 ? +s.replace(/,/g, '') : s; E.edits.set(target + ',' + c, row2[c]); }
             Object.keys(GL_REG_COL).forEach(function (f) {
                 if (only && only.indexOf(f) < 0) return;
-                var v = f === 'kind' ? (reg.kind === 'wired' ? '유선' : '모바일') : reg[f]; if (f === 'birth' && /^\d{6}$/.test(String(v || ''))) v = String(v);
+                var v = f === 'kind' ? (reg.kind === 'wired' ? (reg.type === '렌탈' ? '렌탈' : '유선') : '모바일') : reg[f]; if (f === 'birth' && /^\d{6}$/.test(String(v || ''))) v = String(v);
                 if (GL_REG_NEG[f] && v) { var dn = String(v).replace(/\D/g, ''); v = +dn ? '-' + (+dn) : ''; }   // 유통망지원금·프리: -280000 처럼
                 put(colOf(GL_REG_COL[f]), v);
             });
