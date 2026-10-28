@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-LDLe7T0K/FLf65mJjTwBITK+vCRZHq3KkT68oT3vd6k='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-fQm32eKlyyIZ+Of1v2ooyHoyiu0kTSxE6gwWbsPWwGY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1498,7 +1498,13 @@
         .bl-mapck input { width: 18px; height: 18px; accent-color: #134047; }
         .bl-raw { white-space: pre-wrap; font-size: 12px; max-height: 300px; overflow: auto; }
         @media (max-width: 760px) { .bl-ths { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bl-b.photo { flex-direction: column; align-items: stretch; } .bl-b.photo img { width: 100%; height: 160px; } }
-    </style>
+            .bl-easy { display: grid; gap: 10px; margin-bottom: 12px; }
+        .bl-mini-go { min-height: 58px; font-size: 17px; font-weight: 800; }
+        .bl-easy-how { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: #24444A; }
+        .bl-here { margin-bottom: 10px; }
+        .bl-here > summary { cursor: pointer; font-size: 13.5px; font-weight: 700; color: #3D5A5E; padding: 6px 0; }
+        .bl-here[open] > summary { margin-bottom: 8px; }
+</style>
 </head>
 <body>
     <div id="boot-msg" class="boot-msg">관리자 화면을 불러오는 중입니다. 이 문구가 계속 보이면 자바스크립트가 꺼져 있거나, admin.html 파일 내용이 중간에 바뀐 것일 수 있어요. 브라우저를 최신으로 바꾸고 파일을 처음 받은 그대로 다시 올려 주세요.</div>
@@ -1590,7 +1596,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-28.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-28.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -8135,7 +8141,7 @@
         /* ---------- 화면: 블로그 글쓰기 (주제 · 한줄평 · 사진 → 우리 블로그 말투로 글 → 네이버에 올리기 도우미) ---------- */
         var BLOG_ID = '4phone_', BL_KEY = 'sg-blog-draft-v1', BL_TAGN = 25, BL_PLACE = 'https://naver.me/FKGAWVEI';
         var BL_BIZ_DEF = ['사거리인터넷', '사거리핸드폰', '안산인터넷', '안산휴대폰', '안산핸드폰', '안산휴대폰매장', '안산인터넷가입', '단원구휴대폰'];   // 우리 업체 해시태그 (항상 들어감 · 화면에서 바꿀 수 있음)
-        var bl = { topic: '', memo: '', extra: '', cat: '그 외 이야기', len: 'mid', who: 'boss', whoName: '', biz: BL_BIZ_DEF.join(' '), map: true, photos: [], res: null, busy: false, err: '', step: -1, raw: '' };
+        var bl = { topic: '', memo: '', extra: '', cat: '그 외 이야기', len: 'mid', who: 'boss', whoName: '', biz: BL_BIZ_DEF.join(' '), map: true, photos: [], res: null, busy: false, err: '', step: -1, raw: '', miniMsg: '', hereOpen: (window.innerWidth || 1000) < 760 };   // 휴대폰은 도우미 창 대신 이 화면에서
         (function () { try { var d = JSON.parse(lsGet(BL_KEY) || 'null'); if (d && typeof d === 'object') { ['topic', 'memo', 'extra', 'cat', 'len', 'who', 'whoName', 'biz'].forEach(function (k) { if (typeof d[k] === 'string') bl[k] = d[k]; }); if (typeof d.map === 'boolean') bl.map = d.map; if (d.res && typeof d.res.title === 'string' && Array.isArray(d.res.blocks)) bl.res = d.res; } } catch (e) { /* 새로 */ } })();
         function blSave() { lsSet(BL_KEY, JSON.stringify({ topic: bl.topic, memo: bl.memo, extra: bl.extra, cat: bl.cat, len: bl.len, who: bl.who, whoName: bl.whoName, biz: bl.biz, map: bl.map, res: bl.res })); }
         function blImg(file, max, q, type) {   // 사진 → 줄인 그림 (dataURL)
@@ -8225,31 +8231,35 @@
                 if (!r || !r.ok) { bl.err = (r && r.message) || '글을 만들지 못했어요.'; render(); return; }
                 var j = blParse(r.text);
                 if (!j) { bl.err = '글 모양이 이상하게 와서 읽지 못했어요. [다시 쓰기]를 한 번 더 눌러 주세요.'; bl.raw = String(r.text || '').slice(0, 4000); render(); return; }
-                bl.res = blNorm(j); bl.step = -1; blSave(); render(); toast('글이 완성됐어요. 고칠 곳만 고치고 [네이버에 올리기]를 눌러 주세요.');
+                bl.res = blNorm(j); bl.step = -1; bl.miniMsg = ''; blSave(); render(); blMiniRender(); toast('글이 완성됐어요. 고칠 곳만 고치고 [네이버에 올리기]를 눌러 주세요.');
                 setTimeout(function () { var el = document.querySelector('.bl-result'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
             }, function (e) { bl.busy = false; bl.err = driveErrText(e); render(); });
         }
         function blEsc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-        function blCopyText(t, msg, nl) {   // nl: 글·설명은 끝에 빈 줄 하나 더 → 붙여넣으면 커서가 다음 줄에서 시작
-            var ok = function () { toast(msg || '복사했어요. 네이버 글쓰기 창에 Ctrl+V 로 붙여넣어 주세요.'); };
-            var plain = nl ? String(t).replace(/\s+$/, '') + '\n\n' : String(t);
-            if (nl && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {   // 네이버 편집기는 그림 글(html) 붙여넣기에서 줄바꿈을 그대로 살려 줌
+        function blSay(msg, W) { if (W && W !== window) { bl.miniMsg = msg; blMiniRender(); } else toast(msg); }
+        function blCopyText(t, msg, nl, W) {   // nl: 글·설명은 끝에 빈 줄 하나 더 → 붙여넣으면 커서가 다음 줄에서 시작 · W: 복사 버튼을 누른 창 (도우미 창이면 그 창에서 복사)
+            W = W || window;
+            var ok = function () { blSay(msg || '복사했어요. 네이버 글쓰기 창에 Ctrl+V 로 붙여넣어 주세요.', W); };
+            var plain = nl ? String(t).replace(/\s+$/, '') + '\n\n' : String(t), nav = W.navigator, CI = W.ClipboardItem, BB = W.Blob || Blob;
+            if (nl && CI && nav.clipboard && nav.clipboard.write) {   // 네이버 편집기는 그림 글(html) 붙여넣기에서 줄바꿈을 그대로 살려 줌
                 var html = String(t).replace(/\s+$/, '').split('\n').map(function (l) { return '<p>' + (l.trim() ? blEsc(l) : '<br>') + '</p>'; }).join('') + '<p><br></p>';
-                return navigator.clipboard.write([new ClipboardItem({ 'text/plain': new Blob([plain], { type: 'text/plain' }), 'text/html': new Blob([html], { type: 'text/html' }) })])
-                    .then(ok, function () { return navigator.clipboard.writeText(plain).then(ok, function () { blFallbackCopy(plain); ok(); }); });
+                return nav.clipboard.write([new CI({ 'text/plain': new BB([plain], { type: 'text/plain' }), 'text/html': new BB([html], { type: 'text/html' }) })])
+                    .then(ok, function () { return nav.clipboard.writeText(plain).then(ok, function () { blFallbackCopy(plain, W); ok(); }); });
             }
-            if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(plain).then(ok, function () { blFallbackCopy(plain); ok(); });
-            blFallbackCopy(plain); ok(); return Promise.resolve();
+            if (nav.clipboard && nav.clipboard.writeText) return nav.clipboard.writeText(plain).then(ok, function () { blFallbackCopy(plain, W); ok(); });
+            blFallbackCopy(plain, W); ok(); return Promise.resolve();
         }
-        function blFallbackCopy(t) { var ta = h('textarea', { style: 'position:fixed;left:-9999px;top:0' }); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) { /* 무시 */ } ta.remove(); }
-        function blSaveOne(p, name) { var url = URL.createObjectURL(p.file), a = h('a', { href: url, download: name }); document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 5000); }
+        function blFallbackCopy(t, W) { var d = (W || window).document, ta = d.createElement('textarea'); ta.style.cssText = 'position:fixed;left:-9999px;top:0'; ta.value = t; d.body.appendChild(ta); ta.select(); try { d.execCommand('copy'); } catch (e) { /* 무시 */ } ta.remove(); }
+        function blSaveOne(p, name, W) { var d = (W || window).document, url = URL.createObjectURL(p.file), a = d.createElement('a'); a.href = url; a.download = name; d.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 8000); }
         function blExt(p) { return ((/\.([A-Za-z0-9]{2,5})$/.exec(p.file.name) || [, blIsVid(p) ? 'mp4' : 'jpg'])[1]).toLowerCase(); }
-        function blCopyPhoto(n) {   // 사진을 그림으로 복사 → 네이버 글쓰기에서 Ctrl+V 하면 사진이 바로 올라감 (동영상은 파일로 저장 → [동영상] 버튼으로)
-            var p = bl.photos[n - 1]; if (!p) return Promise.resolve(false);
-            if (blIsVid(p)) { blSaveOne(p, '동영상' + n + '_' + (bl.topic.replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 20) || '블로그') + '.' + blExt(p)); toast('동영상 ' + n + ' 파일을 저장했어요. 네이버 글쓰기 위쪽 [동영상] 버튼 → 방금 저장한 파일을 골라 주세요.'); return Promise.resolve(true); }
-            if (!(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write)) { toast('이 브라우저는 사진 복사를 못 해요. [사진 순서대로 저장]으로 받아서 끌어다 넣어 주세요.'); return Promise.resolve(false); }
+        function blCopyPhoto(n, W) {   // 사진을 그림으로 복사 → 네이버 글쓰기에서 Ctrl+V 하면 사진이 바로 올라감 (동영상은 파일로 저장 → [동영상] 버튼으로)
+            W = W || window;
+            var p = bl.photos[n - 1]; if (!p) { blSay('사진 ' + n + '이(가) 없어요. 위에서 사진을 다시 올려 주세요.', W); return Promise.resolve(false); }
+            if (blIsVid(p)) { blSaveOne(p, '동영상' + n + '_' + (bl.topic.replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 20) || '블로그') + '.' + blExt(p), W); blSay('동영상 ' + n + ' 파일을 저장했어요. 네이버 위쪽 [동영상] 버튼 → 방금 저장한 파일을 골라 주세요.', W); return Promise.resolve(true); }
+            var nav = W.navigator, CI = W.ClipboardItem;
+            if (!(CI && nav.clipboard && nav.clipboard.write)) { blSay('이 브라우저는 사진 복사를 못 해요. [사진 순서대로 저장]으로 받아서 끌어다 넣어 주세요.', W); return Promise.resolve(false); }
             var pr = blImg(p.file, 2000, 0.92, 'image/png').then(function (r) { return new Promise(function (ok) { r.canvas.toBlob(function (b) { ok(b); }, 'image/png'); }); });
-            return navigator.clipboard.write([new ClipboardItem({ 'image/png': pr })]).then(function () { toast('사진 ' + n + ' 복사했어요. 네이버 글쓰기 창에서 Ctrl+V 하면 사진이 올라가요.'); return true; }, function () { toast('사진 복사가 막혔어요. [사진 순서대로 저장]으로 받아서 끌어다 넣어 주세요.'); return false; });
+            return nav.clipboard.write([new CI({ 'image/png': pr })]).then(function () { blSay('사진 ' + n + ' 복사 완료 → 네이버 본문 클릭 → Ctrl+V', W); return true; }, function () { blSay('사진 복사가 막혔어요. [사진 순서대로 저장]으로 받아서 끌어다 넣어 주세요.', W); return false; });
         }
         var BL_AI_WORDS = ['알아보겠습니다', '알아보도록', '소개해 드리겠습니다', '소개해드리겠습니다', '결론적으로', '요약하자면', '정리하자면', '마무리하며', '총평', '한편', '뿐만 아니라', '를 통해', '을 통해', '다양한', '완벽한', '최적의', '효율적', '만족스러운 경험', '특별한 경험', '잊지 못할', '추천드립니다', '하는 것이 좋습니다', '살펴보겠습니다', '살펴보도록', '중요합니다', '필수적', '이상으로'];
         function blAiCheck(R) {   // 사람이 쓴 것처럼 보이게: AI가 자주 쓰는 말·모양 찾기
@@ -8279,22 +8289,105 @@
             });
             toast('글에 들어갈 순서대로 ' + order.length + '개를 저장해요 (01, 02 …). 사진은 끌어다 넣고, 동영상은 네이버 [동영상] 버튼으로 올려 주세요.');
         }
-        function blSteps() {   // 네이버에 순서대로 붙여넣을 것들
+        function blSteps() {   // 네이버에 순서대로 붙여넣을 것들 — 사진과 사진 사이의 글(사진 설명 포함)은 한 번에 붙여넣기
             if (!bl.res) return [];
-            var s = [{ k: 'title', label: '제목', run: function () { return blCopyText(bl.res.title, '제목을 복사했어요. 네이버 글쓰기 [제목] 칸에 Ctrl+V'); } }];
-            bl.res.blocks.forEach(function (b, i) {
-                if (b.t === 'photo') s.push({ k: 'p' + i, label: blName(bl.photos[b.n - 1], b.n), n: b.n, run: function () { return blCopyPhoto(b.n); } });
-                if (b.t === 'photo' && b.cap) s.push({ k: 'c' + i, label: blName(bl.photos[b.n - 1], b.n) + ' 설명', run: function () { return blCopyText(b.cap, '사진 설명을 복사했어요. 사진 아래에 Ctrl+V', true); } });
-                if (b.t === 'text') s.push({ k: 't' + i, label: '글 ' + (i + 1), run: function () { return blCopyText(b.v, '글을 복사했어요. Ctrl+V 하면 끝에 빈 줄까지 들어가서 다음 줄에서 바로 이어 붙일 수 있어요.', true); } });
+            var s = [{ k: 'title', kind: 'title', label: '제목', prev: bl.res.title, how: '네이버 [제목] 칸 클릭 → Ctrl+V', run: function (W) { return blCopyText(bl.res.title, '제목 복사 완료 → 네이버 [제목] 칸 클릭 → Ctrl+V', false, W); } }];
+            var buf = [], tn = 0;
+            function flush() {
+                if (!buf.length) return;
+                var txt = buf.join('\n\n'), k = ++tn; buf = [];
+                s.push({ k: 't' + k, kind: 'text', label: '글 ' + k, prev: txt, how: '네이버 본문 맨 아래 클릭 → Ctrl+V', run: function (W) { return blCopyText(txt, '글 ' + k + ' 복사 완료 → 네이버 본문 맨 아래 클릭 → Ctrl+V', true, W); } });
+            }
+            bl.res.blocks.forEach(function (b) {
+                if (b.t === 'text') { buf.push(String(b.v).replace(/\s+$/, '')); return; }
+                flush();
+                var p = bl.photos[b.n - 1], vid = blIsVid(p);
+                s.push({ k: 'p' + b.n, kind: vid ? 'video' : 'photo', label: blName(p, b.n), n: b.n, how: vid ? '네이버 위쪽 [동영상] 버튼 → 저장된 파일 고르기' : '네이버 본문 맨 아래 클릭 → Ctrl+V', run: function (W) { return blCopyPhoto(b.n, W); } });
+                if (b.cap && String(b.cap).trim()) buf.push(String(b.cap).trim());   // 사진 설명은 바로 다음 글과 함께
             });
-            if (bl.map) s.push({ k: 'map', label: '📍 매장 지도', run: function () { return blCopyText(BL_PLACE, '매장 지도 주소를 복사했어요. 글 끝에 Ctrl+V 하면 네이버 플레이스 지도 카드가 생겨요. (안 생기면 네이버 위쪽 [장소] 버튼 → "사거리인터넷" 검색 → 추가)'); } });
-            if (bl.res.tags.length) s.push({ k: 'tags', label: '해시태그 ' + bl.res.tags.length + '개', run: function () { return blCopyText(bl.res.tags.map(function (t) { return '#' + t; }).join(' '), '해시태그를 복사했어요. 글 맨 아래에 Ctrl+V'); } });
+            flush();
+            if (bl.map) s.push({ k: 'map', kind: 'map', label: '📍 매장 지도', prev: BL_PLACE, how: '본문 맨 아래 Ctrl+V → 지도 카드가 생겨요 (안 생기면 위쪽 [장소] → "사거리인터넷")', run: function (W) { return blCopyText(BL_PLACE, '지도 주소 복사 완료 → 본문 맨 아래 Ctrl+V 하면 지도 카드가 생겨요. (안 생기면 위쪽 [장소] 버튼 → "사거리인터넷" 검색)', false, W); } });
+            if (bl.res.tags.length) s.push({ k: 'tags', kind: 'tags', label: '해시태그 ' + bl.res.tags.length + '개', prev: bl.res.tags.map(function (t) { return '#' + t; }).join(' '), how: '본문 맨 아래 클릭 → Ctrl+V', run: function (W) { return blCopyText(bl.res.tags.map(function (t) { return '#' + t; }).join(' '), '해시태그 복사 완료 → 본문 맨 아래 Ctrl+V · 이제 네이버에서 [발행]만 누르면 끝!', false, W); } });
             return s;
         }
-        function blNext() {
+        function blGo(k, W) {   // k번째를 복사 (W: 누른 창)
             var s = blSteps(); if (!s.length) return;
-            bl.step = Math.min(s.length - 1, bl.step + 1);
-            s[bl.step].run(); render();
+            bl.step = Math.max(0, Math.min(s.length - 1, k));
+            bl.miniMsg = '';
+            s[bl.step].run(W);
+            render(); blMiniRender();
+        }
+        function blHere() {   // 접히는 '이 화면에서 하기' (다시 그려도 열린 채로)
+            var dt = h('details', { class: 'bl-here' }); Array.prototype.forEach.call(arguments, function (c) { if (c) dt.appendChild(c); });
+            dt.open = !!bl.hereOpen; dt.addEventListener('toggle', function () { bl.hereOpen = dt.open; }); return dt;
+        }
+        function blNext(W) { var s = blSteps(); if (!s.length) return; if (bl.step >= s.length - 1) { blSay('다 했어요! 네이버에서 [발행]을 눌러 주세요 🎉', W); return; } blGo(bl.step + 1, W); }
+
+        /* --- 옆에 띄우는 작은 도우미 창: 네이버 창 옆에 두고 [다음 복사] → 네이버에 Ctrl+V 만 반복 --- */
+        var blMini = null;
+        var BL_MINI_CSS = 'html,body{margin:0;background:#F3F7F6;color:#0E2A30;font-family:"Pretendard",-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}'
+            + 'body{padding:12px;box-sizing:border-box}*{box-sizing:border-box}'
+            + '.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.hd b{font-size:16px}.hd span{font-size:13px;color:#3D5A5E;font-weight:700}'
+            + '.bar{height:6px;border-radius:9px;background:#DCE7E5;overflow:hidden;margin-bottom:12px}.bar i{display:block;height:100%;background:#134047}'
+            + 'button{font-family:inherit;cursor:pointer}'
+            + '.nv{width:100%;min-height:42px;border-radius:12px;border:1.5px solid #03C75A;background:#fff;color:#03A04A;font-weight:800;font-size:14px;margin-bottom:10px}'
+            + '.go{width:100%;min-height:96px;border:0;border-radius:18px;background:#134047;color:#fff;font-size:21px;font-weight:800;line-height:1.35;box-shadow:0 8px 20px rgba(19,64,71,.25)}'
+            + '.go small{display:block;font-size:13px;font-weight:600;color:#F3DFA8;margin-top:4px}.go:active{transform:scale(.98)}.go.end{background:#1F6B4A}'
+            + '.msg{margin:10px 0;padding:10px 12px;border-radius:12px;background:#FFF7DD;border:1px solid #EAD9A6;font-size:14px;font-weight:700;line-height:1.45;min-height:20px}'
+            + '.cur{background:#fff;border:1px solid #DCE7E5;border-radius:14px;padding:10px;margin-bottom:10px}.cur .lb{font-size:12px;color:#62797C;font-weight:700;margin-bottom:6px}'
+            + '.cur img{display:block;max-width:100%;max-height:150px;border-radius:10px;margin:0 auto}.cur .tx{font-size:13px;line-height:1.5;max-height:120px;overflow:auto;white-space:pre-wrap;color:#24444A}'
+            + '.row{display:flex;gap:6px;margin-bottom:10px}.row button{flex:1;min-height:36px;border-radius:10px;border:1px solid #CFDCDA;background:#fff;font-size:13px;font-weight:700;color:#24444A}'
+            + 'ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}ol button{width:100%;text-align:left;min-height:32px;border-radius:9px;border:1px solid #E1EAE9;background:#fff;font-size:13px;padding:0 10px;color:#3D5A5E}'
+            + 'li.done button{background:#E7F3EF;color:#1F6B4A}li.now button{background:#134047;color:#fff;font-weight:800;border-color:#134047}'
+            + '.tip{font-size:12px;color:#62797C;line-height:1.5;margin-top:10px}';
+        function blMiniOpen() {
+            if (!bl.res) return;
+            var SW = screen.availWidth || 1366, SH = screen.availHeight || 768, w = 380, hgt = Math.min(820, SH - 20);
+            if (blMini && !blMini.closed) { blMini.focus(); blMiniRender(); return; }
+            var m = null; try { m = window.open('', 'sgBlogMini', 'popup=yes,width=' + w + ',height=' + hgt + ',left=' + Math.max(0, SW - w - 8) + ',top=0'); } catch (e) { m = null; }
+            if (!m) { toast('팝업이 막혔어요. 주소창 오른쪽의 팝업 차단 아이콘 → [항상 허용] 후 다시 눌러 주세요.'); return; }
+            blMini = m;
+            try {
+                m.document.open();
+                m.document.write('<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>블로그 붙여넣기 도우미</title><style>' + BL_MINI_CSS + '</st' + 'yle></he' + 'ad><bo' + 'dy></bo' + 'dy></ht' + 'ml>');
+                m.document.close();
+            } catch (e) { toast('도우미 창을 만들지 못했어요. 이 화면의 [다음 복사] 버튼으로 진행해 주세요.'); try { m.close(); } catch (x) { /* 무시 */ } blMini = null; return; }
+            m.document.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); blNext(m); } else if (e.key === 'ArrowLeft') { e.preventDefault(); if (bl.step > 0) blGo(bl.step - 1, m); } });
+            bl.miniMsg = bl.step < 0 ? '① 위 초록 버튼으로 네이버 글쓰기를 왼쪽에 여세요. ② 큰 버튼 누르고 → 네이버에 Ctrl+V. 이것만 반복하면 돼요.' : '';
+            blMiniRender(); m.focus(); render();
+        }
+        function blMiniRender() {
+            var m = blMini; if (!m || m.closed || !m.document || !m.document.body) return;
+            var d = m.document, steps = blSteps(), cur = Math.min(bl.step, steps.length - 1), nx = steps[cur + 1], now = steps[cur];
+            function E(tag, attrs, kids) {
+                var e = d.createElement(tag); Object.keys(attrs || {}).forEach(function (k) { if (k === 'text') e.textContent = attrs[k]; else if (k === 'on') e.addEventListener('click', attrs[k]); else if (attrs[k] != null) e.setAttribute(k, attrs[k]); });
+                (kids || []).forEach(function (c) { if (c) e.appendChild(typeof c === 'string' ? d.createTextNode(c) : c); }); return e;
+            }
+            var b = d.body; while (b.firstChild) b.removeChild(b.firstChild);
+            if (!steps.length) { b.appendChild(E('p', { text: '아직 만든 글이 없어요. 관리자 화면에서 글을 먼저 만들어 주세요.' })); return; }
+            var doneN = Math.max(0, cur + 1), SW = screen.availWidth || 1366, SH = screen.availHeight || 768;
+            b.appendChild(E('div', { class: 'hd' }, [E('b', { text: '📝 블로그 붙여넣기 도우미' }), E('span', { text: doneN + ' / ' + steps.length })]));
+            var bar = E('div', { class: 'bar' }, [E('i', { style: 'width:' + Math.round(doneN / steps.length * 100) + '%' })]); b.appendChild(bar);
+            b.appendChild(E('button', { type: 'button', class: 'nv', on: function () {
+                var url = 'https://blog.naver.com/' + BLOG_ID + '/postwrite', w2 = Math.max(700, SW - 400), nw = null;
+                try { nw = m.open(url, 'sgNaverWrite', 'width=' + w2 + ',height=' + SH + ',left=0,top=0'); } catch (e) { nw = null; }
+                if (!nw) { try { m.open(url, '_blank'); } catch (e) { /* 무시 */ } }
+                bl.miniMsg = '네이버 글쓰기가 열렸어요. 이제 아래 큰 버튼을 누르세요 👇'; blMiniRender();
+            } }, ['🟢 네이버 글쓰기 열기 (왼쪽에)']));
+            var go = E('button', { type: 'button', class: 'go' + (nx ? '' : ' end'), on: function () { blNext(m); } },
+                nx ? [(cur < 0 ? '▶ 시작: ' : '👉 다음: ') + nx.label + ' 복사', E('small', { text: '누른 뒤 → ' + nx.how })] : ['✅ 다 했어요!', E('small', { text: '네이버에서 [발행]만 누르면 끝' })]);
+            b.appendChild(go);
+            b.appendChild(E('div', { class: 'msg', text: bl.miniMsg || (now ? '방금 복사: ' + now.label + ' → ' + now.how : '') }));
+            if (now) {
+                var p = now.n ? bl.photos[now.n - 1] : null;
+                b.appendChild(E('div', { class: 'cur' }, [E('div', { class: 'lb', text: '방금 복사한 것: ' + now.label }), p ? E('img', { src: p.th, alt: now.label }) : E('div', { class: 'tx', text: String(now.prev || '').slice(0, 400) })]));
+            }
+            b.appendChild(E('div', { class: 'row' }, [
+                E('button', { type: 'button', on: function () { if (now) blGo(cur, m); }, disabled: now ? null : 'disabled' }, ['↺ 다시 복사']),
+                E('button', { type: 'button', on: function () { if (cur > 0) blGo(cur - 1, m); }, disabled: cur > 0 ? null : 'disabled' }, ['◀ 이전']),
+                E('button', { type: 'button', on: function () { bl.step = -1; bl.miniMsg = '처음부터 다시 해요. 큰 버튼을 누르세요.'; render(); blMiniRender(); } }, ['처음부터'])]));
+            b.appendChild(E('ol', {}, steps.map(function (s, k) { return E('li', { class: k < cur ? 'done' : k === cur ? 'now' : '' }, [E('button', { type: 'button', on: function () { blGo(k, m); } }, [(k < cur ? '✓ ' : k === cur ? '👉 ' : (k + 1) + '. ') + s.label])]); })));
+            b.appendChild(E('p', { class: 'tip', text: '💡 이 창은 화면 오른쪽에 두고, 네이버는 왼쪽에 두세요. 키보드 Enter(또는 →)를 눌러도 다음 것이 복사돼요. 동영상 차례에는 파일이 저장되니 네이버 [동영상] 버튼으로 올려 주세요.' }));
         }
         function blRemap(perm) {   // 사진 순서가 바뀌어도 이미 만든 글은 그대로 (사진 번호만 새 순서로)
             if (!bl.res) return;
@@ -8416,16 +8509,24 @@
                 });
                 var tags = h('input', { type: 'text', class: 'bl-in', 'data-fk': 'bl-tags', value: R.tags.map(function (t) { return '#' + t; }).join(' ') });
                 tags.addEventListener('input', function () { var o = []; this.value.split(/[\s,#]+/).map(blTagClean).forEach(function (t) { if (t && o.indexOf(t) < 0) o.push(t); }); R.tags = o.slice(0, 30); blSave(); var c = document.querySelector('.bl-tagn'); if (c) c.textContent = R.tags.length + '개'; });
-                var steps = blSteps(), cur = bl.step, nextLabel = cur < 0 ? '▶ 시작: 제목 복사' : cur >= steps.length - 1 ? '✅ 다 했어요' : '▶ 다음: ' + steps[cur + 1].label + ' 복사';
+                var steps = blSteps(); if (bl.step > steps.length - 1) bl.step = steps.length - 1;
+                var cur = bl.step, nextLabel = cur < 0 ? '▶ 시작: 제목 복사' : cur >= steps.length - 1 ? '✅ 다 했어요' : '▶ 다음: ' + steps[cur + 1].label + ' 복사';
+                var miniOn = !!(blMini && !blMini.closed);
                 var helper = h('div', { class: 'panel bl-up' },
-                    h('h2', {}, '🚀 네이버에 올리기'),
-                    h('p', { class: 'bl-sub' }, '네이버가 블로그 자동 글쓰기를 막아 둬서, 아래 버튼으로 순서대로 복사 → 네이버 창에 Ctrl+V 만 하면 돼요. 사진도 버튼 한 번에 복사돼서 붙여넣으면 바로 올라가요. 동영상 차례에는 파일이 저장되니 네이버 위쪽 [동영상] 버튼으로 그 파일을 올려 주세요.'),
+                    h('h2', {}, '🚀 네이버에 올리기 (' + steps.length + '번 붙여넣기면 끝)'),
+                    h('div', { class: 'bl-easy' },
+                        h('button', { type: 'button', class: 'btn btn-primary bl-mini-go', 'data-fk': 'bl-mini', onclick: blMiniOpen }, miniOn ? '🪟 도우미 창 다시 보기' : '🪟 쉬운 올리기 시작 (도우미 창 띄우기)'),
+                        h('ol', { class: 'bl-easy-how' },
+                            h('li', {}, '오른쪽에 작은 ', h('b', {}, '도우미 창'), '이 떠요 → 초록 버튼으로 ', h('b', {}, '네이버 글쓰기'), '를 왼쪽에 열어요.'),
+                            h('li', {}, '도우미 창의 ', h('b', {}, '큰 버튼 클릭'), ' → 네이버 본문 클릭 → ', h('b', {}, 'Ctrl+V'), '. 이것만 반복!'),
+                            h('li', {}, '사진 사이 글은 한 번에, 사진은 그림 그대로 붙어요. 동영상 차례엔 파일이 저장되니 네이버 [동영상] 버튼으로 올려 주세요.'))),
+                    blHere(h('summary', {}, '도우미 창 없이 이 화면에서 하기'),
                     h('div', { class: 'bl-up-acts' },
                         h('a', { class: 'btn btn-dark', href: 'https://blog.naver.com/' + BLOG_ID + '/postwrite', target: '_blank', rel: 'noopener' }, '1. 네이버 글쓰기 열기 ↗'),
-                        h('button', { type: 'button', class: 'btn btn-primary bl-next', disabled: cur >= steps.length - 1 ? true : null, onclick: blNext }, '2. ' + nextLabel),
+                        h('button', { type: 'button', class: 'btn btn-primary bl-next', disabled: cur >= steps.length - 1 ? true : null, onclick: function () { blNext(); } }, '2. ' + nextLabel),
                         cur >= 0 ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { if (steps[cur]) steps[cur].run(); } }, '↺ 방금 것 다시 복사') : null,
-                        cur >= 0 ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { bl.step = -1; render(); } }, '처음부터') : null),
-                    h('ol', { class: 'bl-steps' }, steps.map(function (s, k) { return h('li', { class: k < cur ? 'done' : k === cur ? 'now' : '' }, h('button', { type: 'button', class: 'bl-step', onclick: function () { bl.step = k; s.run(); render(); } }, (k < cur ? '✓ ' : k === cur ? '👉 ' : '') + s.label)); })),
+                        cur >= 0 ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { bl.step = -1; render(); blMiniRender(); } }, '처음부터') : null),
+                    h('ol', { class: 'bl-steps' }, steps.map(function (s, k) { return h('li', { class: k < cur ? 'done' : k === cur ? 'now' : '' }, h('button', { type: 'button', class: 'bl-step', onclick: function () { blGo(k); } }, (k < cur ? '✓ ' : k === cur ? '👉 ' : '') + s.label)); }))),
                     h('div', { class: 'bl-up-alt' }, h('span', {}, '다른 방법: '),
                         h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { blCopyText(blFullText(), '글 전체를 복사했어요 ([사진 N] 자리 표시 포함). 붙여넣고 그 자리에 사진을 넣어 주세요.'); } }, '글 전체 한 번에 복사'),
                         bl.photos.length ? h('button', { type: 'button', class: 'btn btn-sm', onclick: blSaveAll }, '사진·동영상 순서대로 저장 (' + bl.photos.length + '개)') : null));

@@ -4480,7 +4480,7 @@ var SGAI = (function () {
         m = /([한두세네])\s*(?:명|식구|가족)/.exec(c); if (m) return NUMKO[m[1]];
         m = /(\d)\s*식구/.exec(c); if (m) return parseInt(m[1], 10);
         if (rx(c, /다섯식구|여섯식구|다섯명|여섯명|5인|6인|대가족|식구많|삼대/)) return 5;
-        if (rx(c, /셋이|넷이|세식구|네식구|애가둘|애둘|아이둘|애들둘|자녀둘|애가셋|아이셋/)) return 4;
+        if (rx(c.replace(/인터넷/g, '인터'), /셋이|넷이|세식구|네식구|애가둘|애둘|아이둘|애들둘|자녀둘|애가셋|아이셋/)) return 4;
         if (rx(c, /혼자|자취|원룸|1인|혼삶|독거|고시원|기숙사|혼살|혼자살|싱글족|1인가구/)) return 1;
         if (rx(c, /둘이|신혼|부부|커플|2인|동거|와이프랑|남편이랑|아내랑|여친이랑|남친이랑|둘만/)) return 2;
         if (rx(c, /가족|애들|아이들|자녀|아기|아이있|애있|육아|학생|중학생|고등학생|초등학생/)) return 4;
@@ -4498,7 +4498,7 @@ var SGAI = (function () {
             t = t.replace(GA, ' '); c = sq(t) || ' ';
         }
         // 'KT 말고', '정수기 말고 공기청정기', 'TV는 빼고' → 바로 앞 낱말만 빼고 판단
-        var NEG = /(말고|빼고|제외하고|제외|아니고|아닌걸로|아닌거|싫고|싫어요|싫어|별로고)/;
+        var NEG = /(말고|빼고|제외하고|제외|아니고|아닌걸로|아닌거|싫고|싫어요|싫어|별로고|필요없고|필요없어요|필요없어|필요없음|필요없다|필요없(?!는)|필요가없(?!는)|안해도돼요|안해도돼|안해도되고|안해도되|안해도|안할래|됐고|됐어요|생략하고|생략|패스하고|패스|건너뛰고|빼줘|없어도돼|없어도되고|없어도되)/;
         if (NEG.test(t)) {
             var words = t.trim().split(/\s+/), keep = [], drop = [];
             for (var wi = 0; wi < words.length; wi++) {
@@ -4516,6 +4516,9 @@ var SGAI = (function () {
                 for (var ki = 0; ki < KINDS.length; ki++) if (any(dc, KINDS[ki][1])) { o.notKind = KINDS[ki][0]; break; }
                 var nb = []; BRANDS.forEach(function (bb) { if (any(dc, bb[1])) nb.push(bb[0]); }); if (nb.length && !o.notProv) o.notBrands = nb;
                 FEAT.forEach(function (f) { if (any(dc, f[1])) (o.notFeat = o.notFeat || []).push(f[0]); });
+                if (rx(dc, /주소|조회|지역|확인|설치가능|커버리지|이사/)) o.skipArea = true;   // '주소조회 필요없고 추천해줘' → 주소 안내 말고 바로 추천
+                if (rx(dc, /^(휴대폰|핸드폰|폰)?결합/)) o.mob = 'n';
+                if (rx(dc, /묶음|세트|패키지|번들/)) { o.type = '단독'; o.tvNeg = true; }
                 c = sq(keep.join(' ')); t = keep.join(' ');
                 if (!c) c = ' ';
             }
@@ -4535,7 +4538,7 @@ var SGAI = (function () {
         if (rx(c, /(사은품|현금|지원금|상품권|혜택|돈).{0,8}(언제|며칠|당일|입금|지급)|언제.{0,6}(입금|지급|받|들어와|줘|주)/)) o.qWhenGift = true;
         if (rx(c, /(설치|개통|기사).{0,8}(언제|며칠|빨리|당일|오늘|내일|주말|일요일|토요일|공휴일|걸려|가능한날|시간)|(주말|일요일|토요일|공휴일|오늘|내일|당일|저녁|밤).{0,6}(설치|개통)|설치비|설치비용/)) o.qInstall = true;
         if (rx(c, /위약금|해지|해약|중도|약정남|약정이남|약정이아직|남은약정|위약/)) o.qPenalty = true;
-        if (rx(c, /이사/)) o.qMove = true;
+        if (rx(c, /이사|입주|새집|새아파트|신축|전입|집을옮|집옮기|집옮겨/)) o.qMove = true;
         if (rx(c, /(우리|저희|이|그)(집|동네|지역|주소|아파트|건물).{0,8}(되|가능|설치|들어와|나와|돼)|설치(가능|되는|돼|되나)지역|지역확인|가능지역|커버리지|주소.{0,4}(확인|조회)/)) o.qArea = true;
         if (rx(c, /전화번호|연락처|번호알려|번호뭐|대표번호|상담시간|영업시간|몇시까지|몇시부터|운영시간|쉬는날|휴무|주말에도|주말도/)) o.qContact = true;
         if (rx(c, /매장|위치|주소알려|어디에있|어디있|찾아가|방문|오프라인|사무실어디/) && !rx(c, /설치|가능/)) o.qPlace = true;
@@ -4543,7 +4546,8 @@ var SGAI = (function () {
         if (rx(c, /결합(할인)?(이|은|이란|이라는게)?(뭐|무엇|뭔가|뭔지|어떻게되|설명)|가족결합(이|은)?(뭐|어떻게)/)) o.qBundle = true;
         if (rx(c, /아이폰|갤럭시|폴드|플립|휴대폰(을|도)?(사|구매|바꾸|개통|팔|싸게)|핸드폰(을|도)?(사|구매|바꾸|개통|팔|싸게)|폰(을)?바꾸|기기변경|기변|번호이동|자급제|유심|요금제바꾸/)) o.qPhone = true;
         if (rx(c, /믿을|사기|먹튀|안전한|신뢰|진짜줘|진짜주|정말주|후기|리뷰/)) o.qTrust = true;
-        if (rx(c, /비교|차이|뭐가나|뭐가좋|어디가좋|어디가나|어느게|어떤게좋|추천$|추천해|추천좀|추천부탁|추천받|추천요|추천바|골라|알아서/)) o.recommend = true;
+        if (rx(c, /비교|차이|뭐가나|뭐가좋|어디가좋|어디가나|어느게|어떤게좋|추천|추천좀|추천부탁|추천받|추천요|추천바|골라|알아서/)) o.recommend = true;
+        if (rx(c, /뭐가좋을|뭐가나을|뭐쓰면|뭘쓰면|뭘로하|뭐로하|뭐할까|뭘할까|어디로하|어디로할|어디가나을|괜찮은거|괜찮은곳|좋은거|좋은곳|알려줘|알려주세요|보여줘|보여주세요|찾아줘|찾아주세요|뭐있|뭐가있|어떤거있|어떤게있|인기|많이하는|많이쓰는|잘나가|베스트|best|순위|제일좋|젤좋|가장좋|맞는거|맞는걸|맞춰줘|골라줘|골라주세요|정해줘|봐줘|봐주세요|상품(뭐|좀|보여|알려)|얼마(에요|예요|야|임|정도|나해|나하|인가|인지|해요|하나요|$|\?)|가격|요금(이|은)?얼마|월요금|한달에얼마|월얼마/)) o.recommend = true;
         if (rx(c, /품질|속도느|끊기|끊겨|안터|느려|ping|핑|렉|버벅/)) o.qQuality = true;
         if (rx(c, /알뜰|요금할인형|저가형/)) o.alddeul = true;
         // 우선순위
@@ -4588,9 +4592,13 @@ var SGAI = (function () {
         if (rx(c, /라지킹/)) o.bed = 'LK'; else if (rx(c, /슈퍼싱글|ss사이즈/)) o.bed = 'SS'; else if (rx(c, /퀸/)) o.bed = 'Q'; else if (rx(c, /킹/)) o.bed = 'K'; else if (rx(c, /싱글/)) o.bed = 'S';
         // 인터넷
         o.net = !!any(c, NET) || rx(c, /\d+\s*(m|메가|기가|g)\b/);
+        var phoneBundle = rx(c, /(휴대폰|핸드폰|폰|가족폰)(이랑|하고|과|와|도|까지|을|를|이랑도)?(같이|묶|합쳐|세트|한번에)|(묶|합쳐)(서|어서)?(휴대폰|핸드폰|폰)/);
+        if (phoneBundle && !o.mob) o.mob = 'y';
+        var bundleW = rx(c, /묶음|묶어|묶은|묶는|세트상품|세트로|세트|패키지|번들|합쳐서|한번에가입|같이가입|같이신청|인터넷(이랑|하고|과|와|\+|&|에)?(tv|티비|티뷔|테레비)|(tv|티비)(이랑|하고|랑|와|과|\+|&)?인터넷/);
         var tvNo = rx(c, /인터넷만|tv(는|도)?(필요없|안|없|노|x)|티비(는|도)?(필요없|안|없|노|x)|tv빼|티비빼|단독|tv안봐|티비안봐|티비는안|tv는안|티비없이|tv없이/);
         var tvYes = !tvNo && rx(c, /tv|티비|티뷔|티부이|테레비|텔레비|iptv|채널|넷플|btv|지니|셋톱|셋탑|결합상품|인터넷이랑tv|인터넷이랑티비|인터넷\+tv|인터넷티비/) && o.kind !== 'TV';
-        if (tvNo) o.type = '단독'; else if (tvYes) o.type = '결합';
+        if (tvNo) o.type = '단독'; else if (tvYes) o.type = '결합'; else if (bundleW && !phoneBundle && !o.kind && !o.tvNeg) o.type = '결합';
+        if (bundleW && !o.kind) o.bundleWord = true;
         if (o.qTv2 && !tvNo) delete o.type;
         // 속도
         if (rx(c, /(1|일|한|2\.5|5|10|십)\s*(기가|g|gb|기가비트)|1000\s*(m|메가|mb)|기가인터넷|기가급|^기가$|기가$|기가로|기가요|기가짜리|기가면|기가가|제일빠른|가장빠른|최고속|최대속도|젤빠른|빠른걸로/)) o.speed = '1G';
@@ -4783,7 +4791,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
         if (q && String(q).trim()) send(q); else setTimeout(function () { try { input.focus({ preventScroll: true }); } catch (e) { } }, 60);
     }
     function reset() {
-        st.topic = ''; st.n = {}; st.r = {}; st.cards = []; st.hist = []; st.busy = false;
+        st.topic = ''; st.n = {}; st.r = {}; st.cards = []; st.hist = []; st.busy = false; st.noArea = false;
         log.textContent = ''; input.value = '';
         bot('대화를 지웠어요. 처음부터 다시 골라 볼게요 🙂'); greet();
         try { input.focus({ preventScroll: true }); } catch (e) { }
@@ -4813,6 +4821,9 @@ if (typeof module !== 'undefined') module.exports = SGAI;
         var o = A.parse(text);
         if (o.empty) return;
         var answered = false;
+        if (o.skipArea) { st.noArea = true; o.qArea = false; o.qMove = false; }
+        // 이사·입주 + 추천/조건 → 주소 안내는 한 줄만, 바로 추천으로
+        if (o.qMove && (o.recommend || o.type || o.prio || o.budget || o.prov || o.mob || o.speed || o.people || o.apply)) { o.qMove = false; o.qArea = false; o.moveNote = true; }
         // 카드 고르기 (1번, 두번째 …)
         if (o.pickN && st.cards.length) { var c = st.cards[o.pickN - 1]; if (c) { applyCard(c); return; } }
         // 자주 묻는 질문
@@ -4820,6 +4831,8 @@ if (typeof module !== 'undefined') module.exports = SGAI;
         if (o.qInstall) { bot('설치 날짜는 주소와 통신사 기사님 일정에 따라 정해져요. 신청해 주시면 가능한 가장 빠른 날로 잡아 드리고, 주말 설치도 가능한 지역이 많아요. 설치비는 통신사·상품마다 달라 상담 때 정확히 알려드려요.'); answered = true; }
         if (o.qPenalty) { bot('지금 쓰시는 통신사 약정이 남았다면 위약금이 생길 수 있어요. 남은 약정을 확인해서 바꾸는 게 이득인지(사은품으로 위약금이 메워지는지) 상담 때 정확히 계산해 드릴게요.'); answered = true; }
         if (o.qMove) { bot('이사하시는 곳에 새로 가입하시면 사은품을 받으실 수 있는 경우가 많아요. 새 주소에서 되는 통신사부터 확인해 볼까요?', h('button', { type: 'button', class: 'sga-link', onclick: function () { close(); if (window.openMapPopup) openMapPopup(); } }, '📍 새 주소 설치 가능 통신사 확인')); answered = true; }
+        if (o.moveNote && !st.noArea) bot('이사 가시는 곳도 대부분 설치돼요. 새 주소 설치 확인은 신청하시면 상담 때 같이 해 드릴게요. 먼저 맞는 상품부터 골라 드릴게요 👇');
+        if (o.qArea && st.noArea && (o.recommend || o.type || o.net)) o.qArea = false;
         if (o.qArea) { bot('주소만 넣으면 설치 가능한 통신사를 바로 확인할 수 있어요.', h('button', { type: 'button', class: 'sga-link', onclick: function () { close(); if (window.openMapPopup) openMapPopup(); } }, '📍 우리집 설치 가능 지역 확인')); answered = true; }
         if (o.qContact || o.qPlace) { bot('상담 전화 ' + TEL + ' · 상담 시간 오전 10시 ~ 오후 7시 30분이에요. 매장은 경기도 안산시 단원구 화정로1길 6, 1층에 있어요. 시간 밖에 남겨 주시면 다음 상담 시간에 순서대로 연락드려요.', h('a', { class: 'sga-link', href: 'tel:18332440' }, '📞 ' + TEL + ' 전화하기')); answered = true; }
         if (o.qKakao) { bot('카카오톡으로도 상담해 드려요.', h('a', { class: 'sga-link', href: KAKAO, target: '_blank', rel: 'noopener' }, '💬 카톡 상담 열기')); answered = true; }
