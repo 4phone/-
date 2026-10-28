@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-olNXHJ9GIA/9eY6WU94pop6TBFgBUji38ci1jKoc8zc='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-iSaQL/GuUMjih5b2dvIwD/L3IsnWvoQWdj6Uha2hzMk='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -1016,7 +1016,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             clear(grid); for (var i = 0; i < 8; i++) grid.appendChild(h('div', { class: 'skel', 'aria-hidden': 'true' }));
             $('count').textContent = '상품 정보를 불러오는 중이에요...'; $('more').hidden = true;
         }
-        getFeed().then(function () { renderList(); }, function () { $('count').textContent = ''; $('tabs').textContent = ''; $('facets').hidden = true; $('more').hidden = true; failed(grid); });
+        getFeed().then(function () { fixCart(); renderList(); }, function () { $('count').textContent = ''; $('tabs').textContent = ''; $('facets').hidden = true; $('more').hidden = true; failed(grid); });
     }
     function match(p, skip) {   // skip: 개수를 셀 때 그 칸 자신의 선택은 빼고 셈
         var q = key(st.q);
@@ -1137,7 +1137,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         $('list-view').hidden = true; var box = $('detail-view'); box.hidden = false;
         if (!DATA) { clear(box); box.appendChild(h('div', { class: 'state' }, h('b', {}, '상품 정보를 불러오는 중이에요...'))); }
         getFeed().then(function () {
-            var p = find(id);
+            fixCart(); var p = find(id);
             if (!p) { clear(box); box.appendChild(backBtn(null)); var w = h('div', { style: 'margin-top:14px' }); box.appendChild(w); showState(w, '상품을 찾을 수 없어요', '판매가 끝났거나 주소가 바뀐 상품이에요. 목록에서 다시 골라 주세요.', null); return; }
             st.type = p.cat; navMark();
             renderDetail(p);
@@ -1186,7 +1186,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                 h('div', { class: 'dact' },
                     h('button', { type: 'button', class: 'btn btn-gold btn-big', 'data-act': 'apply', onclick: function () { openForm(p, null); } }, '접수하기'),
                     h('a', { class: 'btn btn-big', href: 'tel:18332440' }, '전화 상담')),
-                h('div', { class: 'dcart' }, cartBtn(cartItem(p, null, null), '🛒 담기 (렌탈사 · 약정은 상담 때)', 'btn btn-big'), h('span', {}, '인터넷 · TV와 같이 담아서 한 번에 신청할 수 있어요. 원하는 약정이 있으면 아래 표에서 [담기]를 눌러 주세요.')))));
+                (function () { var b = bestPlan(p); return h('div', { class: 'dcart' }, cartBtn(b ? cartItem(p, b.ci, b.pi) : cartItem(p, null, null), b ? '🛒 담기 (월 ' + won(b.x.fee) + ' · ' + mon(b.x.m) + ' 약정' + (b.x.g ? ' · 사은품 ' + b.x.g : '') + ')' : '🛒 담기', 'btn btn-big'), h('span', {}, b ? '보이는 금액 조건 그대로 담겨요 (' + (b.c.name || '렌탈사') + ' · ' + mon(b.x.m) + ' 약정). 다른 약정을 원하면 아래 표에서 [담기]를 눌러 주세요. 인터넷 · TV와 같이 담아서 한 번에 신청할 수 있어요.' : '인터넷 · TV와 같이 담아서 한 번에 신청할 수 있어요.')); })())));
         if (window.sgCart) window.sgCart.paint();
         // 렌탈사별 요금표
         var plans = h('section', { class: 'plans', 'aria-label': '렌탈사별 요금' },
@@ -1227,6 +1227,33 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
     }
 
     /* ---------- 담기 (인터넷 · TV · 렌탈 한 번에 신청) ---------- */
+    function gWon(t) { var m = /([\d.,]+)\s*만\s*원/.exec(String(t || '')); return m ? parseFloat(m[1].replace(/,/g, '')) * 10000 : 0; }
+    function bestPlan(p) {   // 화면 맨 위에 보이는 금액(월 최저 렌탈료)의 조건 · 같은 금액이면 사은품 큰 쪽 → { ci, pi, c, x }
+        var b = null;
+        (p.cos || []).forEach(function (c, ci) { (c.plans || []).forEach(function (x, pi) {
+            if (x.fee == null) return;
+            if (!b || x.fee < b.x.fee || (x.fee === b.x.fee && gWon(x.g) > gWon(b.x.g))) b = { ci: ci, pi: pi, c: c, x: x };
+        }); });
+        return b;
+    }
+    function fixCart() {   // 예전에 '상담 때 정함'으로 담은 렌탈 → 보이는 금액 조건으로 바꿔서 합계가 맞게
+        var KEYC = 'sg-cart-v1', a; if (!DATA) return;
+        try { a = JSON.parse(localStorage.getItem(KEYC) || '[]'); } catch (e) { return; }
+        if (!Array.isArray(a)) return;
+        var have = {}, ch = false; a.forEach(function (x) { if (x && x.k) have[x.k] = 1; });
+        a = a.map(function (x) {
+            var m = x && typeof x.k === 'string' ? /^r\|(.+)\|none$/.exec(x.k) : null; if (!m) return x;
+            var p = null; DATA.items.forEach(function (q) { if (q.id === m[1]) p = q; });
+            var b = p ? bestPlan(p) : null; if (!b) return x;
+            var it = cartItem(p, b.ci, b.pi); ch = true;
+            if (have[it.k]) return null;   // 같은 조건이 이미 담겨 있으면 하나만
+            have[it.k] = 1; it.at = x.at || Date.now(); return it;
+        }).filter(Boolean);
+        if (!ch) return;
+        try { localStorage.setItem(KEYC, JSON.stringify(a)); } catch (e) { return; }
+        try { window.dispatchEvent(new StorageEvent('storage', { key: KEYC })); } catch (e) { /* 무시 */ }
+        if (window.sgCart) window.sgCart.paint();
+    }
     function cartItem(p, ci, pi) {
         var c = ci == null ? null : p.cos[ci], x = c ? c.plans[pi] : null;
         return { k: 'r|' + p.id + '|' + (x ? ci + '-' + pi : 'none'), t: 'rent', title: p.name, img: p.img[0] || '',
@@ -1252,8 +1279,9 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
     function openForm(p, pk) {
         formP = p;
         var body = $('m-body'); clear(body); $('m-title').textContent = '렌탈 상담 접수';
-        var sel = h('select', { id: 'f-plan', name: 'plan' }, h('option', { value: '' }, '상담 때 정할게요'));
-        p.cos.forEach(function (c, ci) { c.plans.forEach(function (x, pi) { var o = h('option', { value: ci + '-' + pi }, planText(c, x)); if (pk === ci + '-' + pi) o.selected = true; sel.appendChild(o); }); });
+        var sel = h('select', { id: 'f-plan', name: 'plan' }), bp = bestPlan(p), want = planOf(p, pk) ? pk : bp ? bp.ci + '-' + bp.pi : '';   // 고른 조건 없으면 보이는 금액 조건
+        p.cos.forEach(function (c, ci) { c.plans.forEach(function (x, pi) { var o = h('option', { value: ci + '-' + pi }, planText(c, x)); if (want === ci + '-' + pi) o.selected = true; sel.appendChild(o); }); });
+        if (!sel.options.length) sel.appendChild(h('option', { value: '' }, '렌탈 조건은 상담 때 안내'));   // 렌탈사 정보가 아직 없는 상품만
         var name = h('input', { id: 'f-name', type: 'text', autocomplete: 'name', maxlength: '20', placeholder: '홍길동' });
         var phone = h('input', { id: 'f-phone', type: 'tel', inputmode: 'numeric', autocomplete: 'tel', maxlength: '13', placeholder: '010-1234-5678' });
         var sido = h('select', { id: 'f-sido', autocomplete: 'off' }, h('option', { value: '' }, '시 · 도'), SIDO.map(function (s) { return h('option', { value: s }, s); }));
@@ -1273,7 +1301,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                         h('tr', {}, h('th', {}, '항목'), h('td', {}, '이름, 연락처, 설치 지역, 상담 가능 시간, 고른 상품 · 약정 조건')),
                         h('tr', {}, h('th', {}, '목적'), h('td', {}, '렌탈 가입 상담 · 설치 일정 안내 · 계약 진행')),
                         h('tr', {}, h('th', {}, '보유기간'), h('td', {}, h('b', {}, '렌탈 계약 상담이 끝날 때까지'), ' (계약하시면 ' + pl.c.name + '의 개인정보 처리방침과 관계 법령에 따름)')))),
-                    h('div', { class: 'cfoot' }, '동의하지 않으실 수 있어요. 다만 동의하지 않으시면 ' + pl.c.name + ' 조건으로 접수할 수 없어요 ([상담 때 정할게요]로 접수는 가능해요).')));
+                    h('div', { class: 'cfoot' }, '동의하지 않으실 수 있어요. 다만 동의하지 않으시면 ' + pl.c.name + ' 조건으로 접수할 수 없어요. (전화 상담은 가능해요)')));
             } else {
                 tpBox.appendChild(h('p', { class: 'cnote' }, pl ? '이 조건은 렌탈사가 상담 때 정해져요. ' : '', '렌탈사가 정해지면 고객님 정보를 렌탈사에 넘기기 전에 받는 곳을 알려 드리고 다시 동의를 받아요.'));
             }
