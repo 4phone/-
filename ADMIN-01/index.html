@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6nimqlUlhClLRX+ePbFkUK9qjhs35ZUmgSNAhg59dkw='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ye0kGErP8Tun0musZaPPM4WxVrud40hFjDkvY8g2H2I='; style-src 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1440,6 +1440,51 @@
         @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
         @media (max-width: 640px) { .nav { grid-template-columns: repeat(5, minmax(0, 1fr)); } .nav button { font-size: 12.5px; padding: 6px 2px; } }
     </style>
+    <style>
+        /* 블로그 글쓰기 */
+        .panel.bl-form, .bl-result .panel, .panel.bl-up { padding: 20px; box-sizing: border-box; }
+        @media (max-width: 760px) { .panel.bl-form, .bl-result .panel, .panel.bl-up { padding: 14px; } }
+        .bl-form .bl-row { margin-bottom: 16px; }
+        .bl-lb { display: block; font-size: 13px; font-weight: 800; color: #3D5A5E; margin: 0 0 6px; }
+        .bl-in { width: 100%; box-sizing: border-box; height: 46px; border-radius: 10px; border: 1px solid #CFDCDA; padding: 0 12px; font-size: 15px; font-family: inherit; background: #FFF; }
+        .bl-ta { width: 100%; box-sizing: border-box; border-radius: 10px; border: 1px solid #CFDCDA; padding: 10px 12px; font-size: 15px; line-height: 1.65; font-family: inherit; resize: vertical; background: #FFF; }
+        .bl-title { font-size: 18px; font-weight: 800; height: 52px; margin-bottom: 14px; }
+        .bl-drop { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 96px; border: 2px dashed #B9CCC9; border-radius: 14px; background: #F7FAFA; cursor: pointer; text-align: center; padding: 12px; }
+        .bl-drop.over { border-color: #134047; background: #EAF3F1; }
+        .bl-drop b { font-size: 16px; }
+        .bl-drop span { font-size: 12.5px; color: #62797C; }
+        .bl-file { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .bl-ths { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+        .bl-th { position: relative; border: 1px solid #DCE7E5; border-radius: 12px; overflow: hidden; background: #FFF; }
+        .bl-th img { display: block; width: 100%; height: 120px; object-fit: cover; }
+        .bl-th-n { position: absolute; top: 6px; left: 6px; min-width: 24px; height: 24px; border-radius: 12px; background: #134047; color: #F3DFA8; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+        .bl-th-acts { display: flex; gap: 4px; padding: 6px; }
+        .bl-th-acts .btn { flex: 1; padding: 4px 0; min-height: 30px; }
+        .bl-note { width: calc(100% - 12px); margin: 0 6px 6px; box-sizing: border-box; height: 32px; border-radius: 8px; border: 1px solid #DCE7E5; padding: 0 8px; font-size: 12.5px; font-family: inherit; }
+        .bl-opts { display: flex; gap: 24px; flex-wrap: wrap; }
+        .bl-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+        .bl-chip { min-height: 40px; padding: 0 14px; border-radius: 10px; border: 1.5px solid #CFDCDA; background: #FFF; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; color: #134047; }
+        .bl-chip.on { background: #134047; border-color: #134047; color: #FFF; }
+        .bl-go-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+        .bl-go { min-height: 54px; font-size: 16px; padding: 0 22px; }
+        .bl-hint { font-size: 12.5px; color: #62797C; }
+        .bl-result h2, .bl-up h2 { margin: 0 0 12px; font-size: 18px; }
+        .bl-blocks { display: grid; gap: 10px; margin-bottom: 14px; }
+        .bl-b.photo { display: flex; gap: 12px; align-items: center; padding: 8px; border: 1px dashed #B9CCC9; border-radius: 12px; background: #F7FAFA; }
+        .bl-b.photo img, .bl-nophoto { width: 120px; height: 90px; object-fit: cover; border-radius: 8px; flex: none; background: #E6EEEC; font-size: 12px; display: flex; align-items: center; justify-content: center; text-align: center; }
+        .bl-b-side { flex: 1; display: grid; gap: 6px; }
+        .bl-up { border: 2px solid #E2C27A; background: #FFFCF3; }
+        .bl-sub { margin: 0 0 12px; font-size: 13.5px; color: #3D5A5E; line-height: 1.6; }
+        .bl-up-acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+        .bl-next { min-height: 50px; font-size: 15.5px; }
+        .bl-steps { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 0 0 12px; padding: 0; }
+        .bl-step { min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #CFDCDA; background: #FFF; font-size: 13px; cursor: pointer; font-family: inherit; }
+        .bl-steps li.done .bl-step { background: #E7F3EF; color: #1F6B4A; border-color: #9CCDB8; }
+        .bl-steps li.now .bl-step { background: #134047; color: #FFF; border-color: #134047; font-weight: 800; }
+        .bl-up-alt { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 13px; color: #62797C; }
+        .bl-raw { white-space: pre-wrap; font-size: 12px; max-height: 300px; overflow: auto; }
+        @media (max-width: 760px) { .bl-ths { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bl-b.photo { flex-direction: column; align-items: stretch; } .bl-b.photo img { width: 100%; height: 160px; } }
+    </style>
 </head>
 <body>
     <div id="boot-msg" class="boot-msg">관리자 화면을 불러오는 중입니다. 이 문구가 계속 보이면 자바스크립트가 꺼져 있거나, admin.html 파일 내용이 중간에 바뀐 것일 수 있어요. 브라우저를 최신으로 바꾸고 파일을 처음 받은 그대로 다시 올려 주세요.</div>
@@ -1520,7 +1565,7 @@
             n = Math.min(n, 4);
             return '인' + new Array(n + 1).join('+티');
         }
-        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'policy', t: '상담하기' }, { v: 'idreq', t: '신분증 요청' }, { v: 'forms', t: '가입 확인서' }, { v: 'consult', t: '상담 리스트' }, { v: 'calls', t: '콜 인입' }, { v: 'visits', t: '홈페이지 인입' }, { v: 'gl', t: '가입고객리스트' }, { v: 'off', t: '휴무표' }, { v: 'settings', t: '설정' }];
+        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'calendar', t: '캘린더' }, { v: 'notices', t: '공지사항' }, { v: 'tasks', t: '업무' }, { v: 'policy', t: '상담하기' }, { v: 'idreq', t: '신분증 요청' }, { v: 'forms', t: '가입 확인서' }, { v: 'consult', t: '상담 리스트' }, { v: 'calls', t: '콜 인입' }, { v: 'visits', t: '홈페이지 인입' }, { v: 'gl', t: '가입고객리스트' }, { v: 'off', t: '휴무표' }, { v: 'blog', t: '블로그 글쓰기' }, { v: 'settings', t: '설정' }];
 
         // 공유 저장소 주소는 반드시 구글 Apps Script 웹 앱 주소여야 합니다 (그 밖의 주소로는 어떤 요청도 보내지 않음)
         var DRIVE_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,200}\/exec$/;
@@ -1531,7 +1576,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-27.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-28.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -8073,6 +8118,186 @@
                     rows.length ? rows : h('div', { class: 'empty' }, idr.items === null ? '불러오는 중이에요...' : '아직 보낸 요청이 없어요.')));
         }
 
+        /* ---------- 화면: 블로그 글쓰기 (주제 · 한줄평 · 사진 → 우리 블로그 말투로 글 → 네이버에 올리기 도우미) ---------- */
+        var BLOG_ID = '4phone_', BL_KEY = 'sg-blog-draft-v1';
+        var bl = { topic: '', memo: '', extra: '', cat: '그 외 이야기', len: 'mid', photos: [], res: null, busy: false, err: '', step: -1, raw: '' };
+        (function () { try { var d = JSON.parse(lsGet(BL_KEY) || 'null'); if (d && typeof d === 'object') { ['topic', 'memo', 'extra', 'cat', 'len'].forEach(function (k) { if (typeof d[k] === 'string') bl[k] = d[k]; }); if (d.res && typeof d.res.title === 'string' && Array.isArray(d.res.blocks)) bl.res = d.res; } } catch (e) { /* 새로 */ } })();
+        function blSave() { lsSet(BL_KEY, JSON.stringify({ topic: bl.topic, memo: bl.memo, extra: bl.extra, cat: bl.cat, len: bl.len, res: bl.res })); }
+        function blImg(file, max, q, type) {   // 사진 → 줄인 그림 (dataURL)
+            return new Promise(function (ok, no) {
+                var fr = new FileReader();
+                fr.onload = function () {
+                    var im = new Image();
+                    im.onload = function () {
+                        var w = im.naturalWidth, hh = im.naturalHeight, k = Math.min(1, max / Math.max(w, hh)), c = document.createElement('canvas');
+                        c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(hh * k));
+                        var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+                        ok({ url: c.toDataURL(type || 'image/jpeg', q || 0.82), canvas: c });
+                    };
+                    im.onerror = function () { no(new Error('img')); };
+                    im.src = fr.result;
+                };
+                fr.onerror = function () { no(new Error('read')); };
+                fr.readAsDataURL(file);
+            });
+        }
+        function blAdd(files) {
+            var list = Array.prototype.slice.call(files || []).filter(function (f) { return /^image\//.test(f.type) && f.size < 40 * 1024 * 1024; });
+            var room = 12 - bl.photos.length;
+            if (!list.length) { toast('사진 파일만 올릴 수 있어요.'); return; }
+            if (list.length > room) { toast('사진은 12장까지예요. 앞에서부터 ' + room + '장만 넣었어요.'); list = list.slice(0, room); }
+            Promise.all(list.map(function (f) { return Promise.all([blImg(f, 1024, 0.8), blImg(f, 260, 0.75)]).then(function (a) { return { file: f, ai: a[0].url.split(',')[1], th: a[1].url, note: '' }; }, function () { return null; }); }))
+                .then(function (arr) { arr.filter(Boolean).forEach(function (p) { bl.photos.push(p); }); if (arr.some(function (x) { return !x; })) toast('읽지 못한 사진은 빼고 넣었어요.'); render(); });
+        }
+        function blParse(text) { var t = String(text || ''), a = t.indexOf('{'), b = t.lastIndexOf('}'); if (a < 0 || b <= a) return null; try { var j = JSON.parse(t.slice(a, b + 1)); return j && typeof j.title === 'string' && Array.isArray(j.blocks) ? j : null; } catch (e) { return null; } }
+        function blNorm(j) {
+            var n = bl.photos.length, used = {};
+            var blocks = j.blocks.filter(function (b) { return b && (b.t === 'text' && typeof b.v === 'string' && b.v.trim()) || (b && b.t === 'photo' && Number(b.n) >= 1 && Number(b.n) <= n); }).map(function (b) {
+                if (b.t === 'photo') { used[Number(b.n)] = 1; return { t: 'photo', n: Number(b.n), cap: String(b.cap || '').slice(0, 200) }; }
+                return { t: 'text', v: String(b.v).slice(0, 4000) };
+            });
+            for (var i = 1; i <= n; i++) if (!used[i]) blocks.push({ t: 'photo', n: i, cap: '' });   // 빠진 사진은 끝에
+            var tags = (Array.isArray(j.tags) ? j.tags : []).map(function (x) { return String(x || '').replace(/^#+/, '').replace(/\s+/g, '').slice(0, 30); }).filter(Boolean).slice(0, 20);
+            return { title: String(j.title).slice(0, 100), blocks: blocks, tags: tags };
+        }
+        function blGen() {
+            if (bl.busy) return;
+            if (!bl.topic.trim()) { toast('주제를 먼저 적어 주세요.'); return; }
+            if (!driveOn()) { toast('구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요.'); return; }
+            bl.busy = true; bl.err = ''; render();
+            ibCall('blogAi', { topic: bl.topic, memo: bl.memo, extra: bl.extra, cat: bl.cat, len: bl.len, photos: bl.photos.map(function (p) { return p.ai; }), notes: bl.photos.map(function (p) { return p.note || ''; }) }, 170000).then(function (r) {
+                bl.busy = false;
+                if (!r || !r.ok) { bl.err = (r && r.message) || '글을 만들지 못했어요.'; render(); return; }
+                var j = blParse(r.text);
+                if (!j) { bl.err = '글 모양이 이상하게 와서 읽지 못했어요. [다시 쓰기]를 한 번 더 눌러 주세요.'; bl.raw = String(r.text || '').slice(0, 4000); render(); return; }
+                bl.res = blNorm(j); bl.step = -1; blSave(); render(); toast('글이 완성됐어요. 고칠 곳만 고치고 [네이버에 올리기]를 눌러 주세요.');
+                setTimeout(function () { var el = document.querySelector('.bl-result'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+            }, function (e) { bl.busy = false; bl.err = driveErrText(e); render(); });
+        }
+        function blCopyText(t, msg) {
+            var ok = function () { toast(msg || '복사했어요. 네이버 글쓰기 창에 Ctrl+V 로 붙여넣어 주세요.'); };
+            if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(t).then(ok, function () { blFallbackCopy(t); ok(); });
+            blFallbackCopy(t); ok(); return Promise.resolve();
+        }
+        function blFallbackCopy(t) { var ta = h('textarea', { style: 'position:fixed;left:-9999px;top:0' }); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) { /* 무시 */ } ta.remove(); }
+        function blCopyPhoto(n) {   // 사진을 그림으로 복사 → 네이버 글쓰기에서 Ctrl+V 하면 사진이 바로 올라감
+            var p = bl.photos[n - 1]; if (!p) return Promise.resolve(false);
+            if (!(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write)) { toast('이 브라우저는 사진 복사를 못 해요. [사진 순서대로 저장]으로 받아서 끌어다 넣어 주세요.'); return Promise.resolve(false); }
+            var pr = blImg(p.file, 2000, 0.92, 'image/png').then(function (r) { return new Promise(function (ok) { r.canvas.toBlob(function (b) { ok(b); }, 'image/png'); }); });
+            return navigator.clipboard.write([new ClipboardItem({ 'image/png': pr })]).then(function () { toast('사진 ' + n + ' 복사했어요. 네이버 글쓰기 창에서 Ctrl+V 하면 사진이 올라가요.'); return true; }, function () { toast('사진 복사가 막혔어요. [사진 순서대로 저장]으로 받아서 끌어다 넣어 주세요.'); return false; });
+        }
+        function blFullText() {
+            if (!bl.res) return '';
+            return bl.res.blocks.map(function (b) { return b.t === 'photo' ? '\n[사진 ' + b.n + ']' + (b.cap ? '\n' + b.cap : '') + '\n' : b.v; }).join('\n\n').replace(/\n{3,}/g, '\n\n').trim() + (bl.res.tags.length ? '\n\n' + bl.res.tags.map(function (t) { return '#' + t; }).join(' ') : '');
+        }
+        function blSaveAll() {
+            var safe = bl.topic.replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 30) || '블로그';
+            var order = bl.res ? bl.res.blocks.filter(function (b) { return b.t === 'photo'; }).map(function (b) { return b.n; }) : bl.photos.map(function (p, i) { return i + 1; });
+            order.forEach(function (n, k) {
+                var p = bl.photos[n - 1]; if (!p) return;
+                setTimeout(function () {
+                    var ext = (/\.(jpe?g|png|gif|webp|heic)$/i.exec(p.file.name) || [, 'jpg'])[1];
+                    var url = URL.createObjectURL(p.file), a = h('a', { href: url, download: String(k + 1).padStart(2, '0') + '_' + safe + '.' + ext });
+                    document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+                }, k * 400);
+            });
+            toast('글에 들어갈 순서대로 사진 ' + order.length + '장을 저장해요 (01, 02 …). 네이버 글쓰기에서 한꺼번에 끌어다 넣으면 돼요.');
+        }
+        function blSteps() {   // 네이버에 순서대로 붙여넣을 것들
+            if (!bl.res) return [];
+            var s = [{ k: 'title', label: '제목', run: function () { return blCopyText(bl.res.title, '제목을 복사했어요. 네이버 글쓰기 [제목] 칸에 Ctrl+V'); } }];
+            bl.res.blocks.forEach(function (b, i) {
+                if (b.t === 'photo') s.push({ k: 'p' + i, label: '사진 ' + b.n, n: b.n, run: function () { return blCopyPhoto(b.n); } });
+                if (b.t === 'photo' && b.cap) s.push({ k: 'c' + i, label: '사진 ' + b.n + ' 설명', run: function () { return blCopyText(b.cap, '사진 설명을 복사했어요. 사진 아래에 Ctrl+V'); } });
+                if (b.t === 'text') s.push({ k: 't' + i, label: '글 ' + (i + 1), run: function () { return blCopyText(b.v); } });
+            });
+            if (bl.res.tags.length) s.push({ k: 'tags', label: '해시태그', run: function () { return blCopyText(bl.res.tags.map(function (t) { return '#' + t; }).join(' '), '해시태그를 복사했어요. 글 맨 아래에 Ctrl+V'); } });
+            return s;
+        }
+        function blNext() {
+            var s = blSteps(); if (!s.length) return;
+            bl.step = Math.min(s.length - 1, bl.step + 1);
+            s[bl.step].run(); render();
+        }
+        function renderBlog() {
+            var head = h('div', { class: 'page-head' }, h('h1', {}, '블로그 글쓰기'),
+                h('div', { class: 'actions' }, h('a', { class: 'btn', href: 'https://blog.naver.com/' + BLOG_ID, target: '_blank', rel: 'noopener' }, '내 블로그 보기 ↗')));
+            if (!isBoss()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '블로그 글쓰기는 대표(관리자) 계정에서 쓸 수 있어요.')));
+            var topic = h('input', { type: 'text', class: 'bl-in', 'data-fk': 'bl-topic', maxlength: '120', placeholder: '예) 안산 월피동 맛집 그냥냉삼집 2탄 / 갤럭시 S26 사전예약 안내', value: bl.topic });
+            topic.addEventListener('input', function () { bl.topic = this.value; blSave(); });
+            var memo = h('textarea', { class: 'bl-ta', 'data-fk': 'bl-memo', rows: '4', maxlength: '2000', placeholder: '간단한 평이나 메모를 편하게 적어 주세요.\n예) 냉삼 두께 딱 좋고 껍데기 서비스 줬음. 된장찌개 진함. 사장님 친절. 웨이팅 20분. 2인 4만원 정도' });
+            memo.value = bl.memo; memo.addEventListener('input', function () { bl.memo = this.value; blSave(); });
+            var extra = h('input', { type: 'text', class: 'bl-in', 'data-fk': 'bl-extra', maxlength: '300', placeholder: '(선택) 꼭 넣을 말 — 예) 이번 주 토요일까지 사전예약 사은품 증정', value: bl.extra });
+            extra.addEventListener('input', function () { bl.extra = this.value; blSave(); });
+            var cats = ['핸드폰 이야기', '인터넷 이야기', '그 외 이야기'].map(function (c) { return h('button', { type: 'button', class: 'bl-chip' + (bl.cat === c ? ' on' : ''), 'aria-pressed': bl.cat === c ? 'true' : 'false', onclick: function () { bl.cat = c; blSave(); render(); } }, c); });
+            var lens = [['short', '짧게'], ['mid', '보통'], ['long', '길게']].map(function (x) { return h('button', { type: 'button', class: 'bl-chip' + (bl.len === x[0] ? ' on' : ''), 'aria-pressed': bl.len === x[0] ? 'true' : 'false', onclick: function () { bl.len = x[0]; blSave(); render(); } }, x[1]); });
+            var pick = h('input', { type: 'file', accept: 'image/*', multiple: true, class: 'bl-file', 'aria-label': '사진 고르기' });
+            pick.addEventListener('change', function () { blAdd(this.files); this.value = ''; });
+            var drop = h('label', { class: 'bl-drop' }, pick, h('b', {}, '📷 사진 올리기'), h('span', {}, '직접 찍은 사진을 여러 장 한 번에 골라 주세요 (최대 12장 · 끌어다 놓아도 돼요)'));
+            drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('over'); });
+            drop.addEventListener('dragleave', function () { drop.classList.remove('over'); });
+            drop.addEventListener('drop', function (e) { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer && e.dataTransfer.files) blAdd(e.dataTransfer.files); });
+            var thumbs = bl.photos.map(function (p, i) {
+                var note = h('input', { type: 'text', class: 'bl-note', 'data-fk': 'bl-note-' + i, maxlength: '100', placeholder: '(선택) 이 사진 설명', value: p.note });
+                note.addEventListener('input', function () { p.note = this.value; });
+                return h('div', { class: 'bl-th' }, h('img', { src: p.th, alt: '사진 ' + (i + 1) }), h('span', { class: 'bl-th-n' }, String(i + 1)),
+                    h('div', { class: 'bl-th-acts' },
+                        h('button', { type: 'button', class: 'btn btn-sm', disabled: i === 0 ? true : null, 'aria-label': '앞으로', onclick: function () { var a = bl.photos; a.splice(i - 1, 0, a.splice(i, 1)[0]); bl.res = null; render(); } }, '◀'),
+                        h('button', { type: 'button', class: 'btn btn-sm', disabled: i === bl.photos.length - 1 ? true : null, 'aria-label': '뒤로', onclick: function () { var a = bl.photos; a.splice(i + 1, 0, a.splice(i, 1)[0]); bl.res = null; render(); } }, '▶'),
+                        h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'aria-label': '빼기', onclick: function () { bl.photos.splice(i, 1); bl.res = null; render(); } }, '✕')),
+                    note);
+            });
+            var form = h('div', { class: 'panel bl-form' },
+                h('div', { class: 'bl-row' }, h('label', { class: 'bl-lb' }, '① 주제'), topic),
+                h('div', { class: 'bl-row' }, h('label', { class: 'bl-lb' }, '② 한줄평 · 메모'), memo),
+                h('div', { class: 'bl-row' }, h('label', { class: 'bl-lb' }, '③ 사진'), drop, thumbs.length ? h('div', { class: 'bl-ths' }, thumbs) : null),
+                h('div', { class: 'bl-row bl-opts' }, h('div', {}, h('label', { class: 'bl-lb' }, '글 종류'), h('div', { class: 'bl-chips' }, cats)), h('div', {}, h('label', { class: 'bl-lb' }, '길이'), h('div', { class: 'bl-chips' }, lens))),
+                h('div', { class: 'bl-row' }, h('label', { class: 'bl-lb' }, '꼭 넣을 말'), extra),
+                h('div', { class: 'bl-go-row' },
+                    h('button', { type: 'button', class: 'btn btn-primary bl-go', 'data-fk': 'bl-go', disabled: bl.busy ? true : null, onclick: blGen }, bl.busy ? '✍️ 우리 블로그 말투로 쓰는 중… (30초~1분)' : (bl.res ? '🔄 다시 쓰기' : '✍️ AI로 블로그 글 만들기')),
+                    h('span', { class: 'bl-hint' }, '최근 블로그 글 말투를 보고 써요 · 사진은 글 쓰는 데만 쓰고 저장하지 않아요')),
+                bl.err ? h('div', { class: 'mode-note warn' }, bl.err, /키/.test(bl.err) ? h('div', {}, '설정 → [단가표 사진 변환 키]에 넣은 Claude 키를 블로그 글쓰기도 같이 써요.') : null) : null);
+            var result = null;
+            if (bl.res) {
+                var R = bl.res;
+                var title = h('input', { type: 'text', class: 'bl-in bl-title', 'data-fk': 'bl-title', maxlength: '100', value: R.title });
+                title.addEventListener('input', function () { R.title = this.value; blSave(); });
+                var blocks = R.blocks.map(function (b, i) {
+                    if (b.t === 'photo') {
+                        var p = bl.photos[b.n - 1], cap = h('input', { type: 'text', class: 'bl-in', 'data-fk': 'bl-cap-' + i, maxlength: '200', placeholder: '사진 아래 설명 (없어도 돼요)', value: b.cap });
+                        cap.addEventListener('input', function () { b.cap = this.value; blSave(); });
+                        return h('div', { class: 'bl-b photo' }, p ? h('img', { src: p.th, alt: '사진 ' + b.n }) : h('div', { class: 'bl-nophoto' }, '사진 ' + b.n + ' (다시 올려 주세요)'), h('div', { class: 'bl-b-side' }, h('b', {}, '📷 사진 ' + b.n), cap));
+                    }
+                    var ta = h('textarea', { class: 'bl-ta', 'data-fk': 'bl-b-' + i, rows: String(Math.min(14, Math.max(3, Math.ceil(b.v.length / 46) + (b.v.match(/\n/g) || []).length))) });
+                    ta.value = b.v; ta.addEventListener('input', function () { b.v = this.value; blSave(); });
+                    return h('div', { class: 'bl-b' }, ta);
+                });
+                var tags = h('input', { type: 'text', class: 'bl-in', 'data-fk': 'bl-tags', value: R.tags.map(function (t) { return '#' + t; }).join(' ') });
+                tags.addEventListener('input', function () { R.tags = this.value.split(/[\s,#]+/).filter(Boolean).slice(0, 20); blSave(); });
+                var steps = blSteps(), cur = bl.step, nextLabel = cur < 0 ? '▶ 시작: 제목 복사' : cur >= steps.length - 1 ? '✅ 다 했어요' : '▶ 다음: ' + steps[cur + 1].label + ' 복사';
+                var helper = h('div', { class: 'panel bl-up' },
+                    h('h2', {}, '🚀 네이버에 올리기'),
+                    h('p', { class: 'bl-sub' }, '네이버가 블로그 자동 글쓰기를 막아 둬서, 아래 버튼으로 순서대로 복사 → 네이버 창에 Ctrl+V 만 하면 돼요. 사진도 버튼 한 번에 복사돼서 붙여넣으면 바로 올라가요.'),
+                    h('div', { class: 'bl-up-acts' },
+                        h('a', { class: 'btn btn-dark', href: 'https://blog.naver.com/' + BLOG_ID + '/postwrite', target: '_blank', rel: 'noopener' }, '1. 네이버 글쓰기 열기 ↗'),
+                        h('button', { type: 'button', class: 'btn btn-primary bl-next', disabled: cur >= steps.length - 1 ? true : null, onclick: blNext }, '2. ' + nextLabel),
+                        cur >= 0 ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { if (steps[cur]) steps[cur].run(); } }, '↺ 방금 것 다시 복사') : null,
+                        cur >= 0 ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { bl.step = -1; render(); } }, '처음부터') : null),
+                    h('ol', { class: 'bl-steps' }, steps.map(function (s, k) { return h('li', { class: k < cur ? 'done' : k === cur ? 'now' : '' }, h('button', { type: 'button', class: 'bl-step', onclick: function () { bl.step = k; s.run(); render(); } }, (k < cur ? '✓ ' : k === cur ? '👉 ' : '') + s.label)); })),
+                    h('div', { class: 'bl-up-alt' }, h('span', {}, '다른 방법: '),
+                        h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { blCopyText(blFullText(), '글 전체를 복사했어요 ([사진 N] 자리 표시 포함). 붙여넣고 그 자리에 사진을 넣어 주세요.'); } }, '글 전체 한 번에 복사'),
+                        bl.photos.length ? h('button', { type: 'button', class: 'btn btn-sm', onclick: blSaveAll }, '사진 순서대로 저장 (' + bl.photos.length + '장)') : null));
+                result = h('div', { class: 'bl-result' },
+                    h('div', { class: 'panel' }, h('h2', {}, '✍️ 완성된 글 (바로 고칠 수 있어요)'),
+                        h('label', { class: 'bl-lb' }, '제목'), title,
+                        h('div', { class: 'bl-blocks' }, blocks),
+                        h('label', { class: 'bl-lb' }, '해시태그'), tags),
+                    helper);
+            }
+            return h('div', {}, head, h('p', { class: 'forms-sub' }, '주제와 간단한 평, 직접 찍은 사진만 주시면 우리 블로그 말투 그대로 제목·본문·해시태그를 만들어요. 만든 글은 여기서 고치고 네이버에 순서대로 붙여넣으면 끝!'),
+                form, bl.raw && !bl.res ? h('details', { class: 'panel' }, h('summary', {}, 'AI가 보낸 원문 보기'), h('pre', { class: 'bl-raw' }, bl.raw)) : null, result);
+        }
+
         /* ---------- 화면: 설정 ---------- */
         function downloadFile(name, text) {
             var url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
@@ -11310,6 +11535,7 @@
             else if (view === 'gl') { content = glCan() ? renderGl() : renderToday(); if (!glCan()) state.view = 'today'; }
             else if (view === 'policy') { content = renderPolicy(); }
             else if (view === 'off') content = renderOff();
+            else if (view === 'blog') content = renderBlog();
             else if (view === 'settings') content = renderSettings();
             else content = renderToday();
             hdTick();   // 휴무표: 처음 한 번 + 5분마다 바뀐 게 있는지 (다음 근무일 계산에 씀)

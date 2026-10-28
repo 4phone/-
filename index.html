@@ -1204,6 +1204,9 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         .sga-ttl { flex: 1; min-width: 0; display: flex; flex-direction: column; }
         .sga-ttl b { font-size: 17px; font-weight: 800; }
         .sga-ttl small { font-size: 12.5px; color: #5C7376; }
+        .sga-reset { flex: none; display: inline-flex; align-items: center; gap: 5px; height: 42px; padding: 0 12px; border-radius: 12px; border: 1px solid #C9D9D7; background: #F7FAFA; color: #134047; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit; }
+        .sga-reset span:first-child { font-size: 17px; }
+        .sga-reset:hover { border-color: #134047; }
         .sga-x { width: 42px; height: 42px; border-radius: 12px; border: 1px solid #E3E8E6; background: #FFFFFF; font-size: 17px; cursor: pointer; color: #0E2A30; }
         .sga-log { flex: 1 1 auto; overflow-y: auto; padding: 18px 16px 8px; display: flex; flex-direction: column; gap: 12px; -webkit-overflow-scrolling: touch; }
         .sga-msg { max-width: 92%; display: flex; flex-direction: column; gap: 8px; animation: sgaIn .25s ease; }
@@ -1253,6 +1256,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             .sga-ask input { height: 44px; font-size: 15px; }
             .sga-ask-go { height: 44px; padding: 0 12px; font-size: 14px; }
             .sga-ask-hint { margin-left: 14px; }
+            .sga-ttl small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         }
     </style>
 </head>
@@ -4487,6 +4491,12 @@ var SGAI = (function () {
     function parse(text) {
         var t = low(text), c = sq(text), o = { raw: String(text || '') };
         if (!c) { o.empty = true; return o; }
+        // '가전사은품' 은 렌탈이 아니라 가입 사은품 이야기 (현금 대신 가전으로 받기)
+        var GA = /가전\s*사은품|사은품\s*(으로|은|는|을|를|도)?\s*가전|가전\s*(으로|도)\s*(받|주)|가전제품\s*(으로|사은품)|사은품\s*(으로|은|을)?\s*(tv|티비|청소기|공기청정기|냉장고|세탁기|노트북|태블릿|아이패드|에어프라이어)|(tv|티비|청소기|공기청정기|노트북|태블릿|아이패드|에어프라이어)\s*(를|을|로)?\s*(사은품|선물)\s*(으로)?/;
+        if (GA.test(t) || GA.test(c)) {
+            o.giftAppliance = true; o.prio = 'gift';
+            t = t.replace(GA, ' '); c = sq(t) || ' ';
+        }
         // 'KT 말고', '정수기 말고 공기청정기', 'TV는 빼고' → 바로 앞 낱말만 빼고 판단
         var NEG = /(말고|빼고|제외하고|제외|아니고|아닌걸로|아닌거|싫고|싫어요|싫어|별로고)/;
         if (NEG.test(t)) {
@@ -4555,7 +4565,8 @@ var SGAI = (function () {
         if (rx(c, /렌탈(이|은)?(뭐|뭘|어떤게|어떤거)|렌탈상품(뭐|목록)|뭐(빌릴|렌탈)|렌탈되는거|렌탈가능한/)) o.rentList = true;
         if (rx(c, /(조회|확인)(해|좀|부탁)|지금쓰는|현재쓰는|쓰고있는|사용중인/) && rx(c, /요금|약정|인터넷/)) o.qCurrent = true;
         if (rx(c, /렌탈(료)?(이|은)?(어떻게|방식|뭐에요|이란)|렌탈하면|의무사용|약정끝나면|소유권|내꺼되/)) o.qRentHow = true;
-        if (o.qInstall || o.qPenalty || o.qWhenGift || o.qArea) o.apply = false;
+        if (o.giftAppliance) o.qGiftKind = true;
+        if (o.qInstall || o.qPenalty || o.qWhenGift || o.qArea || o.giftAppliance) o.apply = false;
         if (rx(c, /요금|통신비|인터넷비|월정액/) && !any(c, ['렌탈', '렌털'])) o.netWord = true;
         // 업무
         var biz = any(c, BIZ); if (biz) o.biz = biz;
@@ -4754,6 +4765,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
                 h('div', { class: 'sga-head' },
                     h('span', { class: 'sga-av' }, h('img', { src: '털보아저씨국방색.png', alt: '' })),
                     h('div', { class: 'sga-ttl' }, h('b', { text: '사거리 AI 상담' }), h('small', { text: '인터넷·TV · 렌탈 추천부터 가입까지' })),
+                    h('button', { type: 'button', class: 'sga-reset', title: '대화를 지우고 처음부터 다시 시작해요', 'aria-label': '대화 초기화 · 처음부터 다시', onclick: reset }, h('span', { 'aria-hidden': 'true', text: '↺' }), h('span', { class: 'sga-reset-t', text: '처음부터' })),
                     h('button', { type: 'button', class: 'sga-x', 'aria-label': '닫기', onclick: close }, '✕')),
                 log = h('div', { class: 'sga-log', 'aria-live': 'polite' }),
                 chips = h('div', { class: 'sga-chips' }),
@@ -4770,6 +4782,12 @@ if (typeof module !== 'undefined') module.exports = SGAI;
         build(); ov.hidden = false; document.documentElement.classList.add('sga-lock');
         if (q && String(q).trim()) send(q); else setTimeout(function () { try { input.focus({ preventScroll: true }); } catch (e) { } }, 60);
     }
+    function reset() {
+        st.topic = ''; st.n = {}; st.r = {}; st.cards = []; st.hist = []; st.busy = false;
+        log.textContent = ''; input.value = '';
+        bot('대화를 지웠어요. 처음부터 다시 골라 볼게요 🙂'); greet();
+        try { input.focus({ preventScroll: true }); } catch (e) { }
+    }
     function close() { if (!ov) return; ov.hidden = true; document.documentElement.classList.remove('sga-lock'); }
     function scroll() { setTimeout(function () { log.scrollTop = log.scrollHeight; }, 30); }
     function bot() { var b = h('div', { class: 'sga-msg bot' }); for (var i = 0; i < arguments.length; i++) { var c = arguments[i]; if (c == null) continue; b.appendChild(typeof c === 'string' ? h('p', { text: c }) : c); } log.appendChild(b); scroll(); return b; }
@@ -4780,7 +4798,8 @@ if (typeof module !== 'undefined') module.exports = SGAI;
     }
     function greet() {
         bot('안녕하세요! 사거리인터넷 AI 상담이에요 😊', '인터넷·TV나 정수기·가전 렌탈, 편하게 말로 물어보세요. 딱 맞는 상품 골라서 바로 가입까지 도와드릴게요.',
-            h('p', { class: 'sga-ex', text: '예) "혼자 사는데 인터넷 싸게" · "KT 폰 쓰는데 인터넷+TV 사은품 많은 곳" · "얼음 정수기 추천"' }));
+            h('p', { class: 'sga-ex', text: '예) "혼자 사는데 인터넷 싸게" · "KT 폰 쓰는데 인터넷+TV 사은품 많은 곳" · "얼음 정수기 추천"' }),
+            h('p', { class: 'sga-ex', text: '💡 조건을 처음부터 다시 고르고 싶으면 위쪽 [↺ 처음부터]를 누르세요. 지금까지 대화가 지워지고 새로 시작해요.' }));
         setChips(['인터넷+TV 사은품 많은 곳', '혼자 살아요, 인터넷 싸게', '정수기 추천해줘', '공기청정기 렌탈', '사업장 인터넷·CCTV', '사은품 언제 줘요?']);
     }
 
@@ -4807,6 +4826,13 @@ if (typeof module !== 'undefined') module.exports = SGAI;
         if (o.qBundle) { bot('결합 할인은 같은 통신사의 휴대폰과 인터넷을 묶으면 매달 인터넷 요금이 내려가는 거예요. 휴대폰이 어느 통신사인지 알려주시면 결합 기준으로 계산해 드릴게요.'); answered = true; }
         if (o.qTrust) { bot('사거리인터넷은 안산에 매장이 있는 정식 사업자(사업자등록 603-54-00909)예요. 홈페이지의 "실시간 접수 현황"은 실제 장부 기준으로 올라가고, 사은품은 설치 당일 지급이 원칙이에요. 당근·네이버 플레이스에서 실제 후기도 보실 수 있어요.'); answered = true; }
         if (o.qQuality) { bot('속도가 느리거나 자주 끊기면 공유기·속도 상품이 맞지 않는 경우가 많아요. 가족 수와 주로 하는 것(영상·게임 등)을 알려주시면 맞는 속도로 추천해 드릴게요.'); answered = true; }
+        if (o.giftAppliance) {
+            bot('인터넷·TV 가입 사은품은 현금 대신 가전(TV·청소기·공기청정기 등)으로도 받으실 수 있어요. 사은품 금액이 클수록 고를 수 있는 가전도 좋아져요.', h('button', { type: 'button', class: 'sga-link', onclick: function () { close(); if (window.openGiftPopup) openGiftPopup(); } }, '🎁 가전사은품 라인업 보기'));
+            bot('사은품을 많이 주는 인터넷 상품으로 골라 드릴게요.');
+            if (st.topic !== 'net') { st.topic = 'net'; st.n = {}; }
+            A.merge(st, Object.assign({}, o, { net: true }));
+            st.n.prio = 'gift'; netReply(o); return;
+        }
         if (o.qGiftKind) { bot('사은품은 현금으로 받으시거나, 같은 금액 안에서 가전사은품(TV·청소기·공기청정기 등)으로 고르실 수 있어요.', h('button', { type: 'button', class: 'sga-link', onclick: function () { close(); if (window.openGiftPopup) openGiftPopup(); } }, '🎁 가전사은품 라인업 보기')); answered = true; }
         if (o.qContract) { bot('인터넷·TV는 보통 3년 약정이에요. 렌탈은 상품마다 약정(3~7년 등)이 달라서, 렌탈 상세 화면에서 약정별 월 요금을 비교해 보실 수 있어요.'); answered = true; }
         if (o.qNation) { bot('전국 어디든 가입·설치 가능해요. 설치는 그 지역 통신사 기사님이 방문해서 해 드려요.', h('button', { type: 'button', class: 'sga-link', onclick: function () { close(); if (window.openMapPopup) openMapPopup(); } }, '📍 우리집 설치 가능 통신사 확인')); answered = true; }
