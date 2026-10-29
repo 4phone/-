@@ -1166,16 +1166,50 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             .sgk-chip { min-height: 56px; padding: 7px 6px; font-size: 14.5px; }
             .sgk-chips[data-n="4"], .sgk-chips[data-k="prov"] { --c: 2 !important; }
             .sgk-chip small { font-size: 11px; }
-            .sgk-res { position: sticky; top: auto; bottom: calc(82px + env(safe-area-inset-bottom)); padding: 16px 16px 14px; border-radius: 18px; z-index: 5; }
-            .sgk-gift { font-size: 28px; }
-            .sgk-cmp { display: none; }
-            .sgk-res:not(.form-on) .sgk-call { display: none; }
-            .sgk-res:not(.form-on) .sgk-pick { margin-top: 4px; font-size: 12.5px; }
-            .sgk-res:not(.form-on) .sgk-row { margin-top: 10px; padding-top: 10px; }
-            .sgk-res:not(.form-on) .sgk-go { margin-top: 12px; min-height: 52px; }
+            .sgk-res { position: relative; top: auto; bottom: auto; padding: 20px 18px 18px; border-radius: 20px; z-index: auto; scroll-margin-top: 140px; }
+            .sgk-gift { font-size: 34px; }
+            .sgk-cmp li:nth-child(n+4) { display: none; }
+            .sgk-go { min-height: 60px; font-size: 18px; }
         }
     </style>
     <style>.sgk-res.form-on { position: relative; top: auto; bottom: auto; }</style>
+    <style>
+        /* 신청 버튼: 받을 금액이 보이게 · 살짝 반짝 */
+        .sgk-go { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; box-shadow: 0 10px 24px rgba(226,194,122,0.35); transition: transform .15s ease; }
+        .sgk-go[hidden] { display: none; }
+        .sgk-go:active { transform: scale(.98); }
+        .sgk-go .sgk-go-t { font-size: inherit; font-weight: 900; letter-spacing: -0.3px; }
+        .sgk-go .sgk-go-s { font-size: 12.5px; font-weight: 700; color: #4A5F4E; }
+        .sgk-go:not(.submit-btn)::after { content: ''; position: absolute; top: 0; left: -60%; width: 40%; height: 100%; background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.65) 50%, rgba(255,255,255,0) 100%); transform: skewX(-18deg); animation: sgkShine 3.2s ease-in-out infinite; }
+        @keyframes sgkShine { 0%, 55% { left: -60%; } 85%, 100% { left: 130%; } }
+        .sgk-cmp li:nth-child(n+4) { display: none; }   /* 비교는 상위 3곳만 (신청 버튼이 화면 안에 들어오게) */
+        .sgk-perks { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; font-size: 13px; font-weight: 700; color: rgba(244,250,248,0.88); }
+        .sgk-perks li::before { content: '✓ '; color: #F3DFA8; font-weight: 900; }
+        .sgk-res.form-on .sgk-perks { display: none; }
+        /* 휴대폰: 고르는 동안 아래에 얇은 바 (금액 + 신청) — 결과 카드가 보이면 숨김 */
+        .sgk-mini { display: none; }
+        @media (max-width: 900px) {
+            .sgk-mini { position: fixed; left: 10px; right: 10px; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 99990; display: flex; align-items: center; gap: 10px; padding: 9px 9px 9px 14px; border-radius: 16px; background: #0A2B32; color: #F4FAF8; box-shadow: 0 12px 28px rgba(5,18,21,0.38); transform: translateY(140%); opacity: 0; pointer-events: none; transition: transform .25s ease, opacity .25s ease; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif; }
+            .sgk-mini.on { transform: none; opacity: 1; pointer-events: auto; }
+            .sgk-mini-t { flex: 1; min-width: 0; line-height: 1.25; }
+            .sgk-mini-t small { display: block; font-size: 11.5px; font-weight: 600; color: rgba(244,250,248,0.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+            .sgk-mini-t b { font-size: 19px; font-weight: 900; color: #F3DFA8; letter-spacing: -0.4px; }
+            .sgk-mini-t span { font-size: 12.5px; font-weight: 700; color: #F4FAF8; margin-left: 6px; white-space: nowrap; }
+            .sgk-mini-go { flex: none; min-height: 46px; padding: 0 16px; border: 0; border-radius: 12px; background: linear-gradient(135deg, #F3DFA8, #E2C27A); color: #0E343B; font-size: 15px; font-weight: 900; cursor: pointer; font-family: inherit; }
+            body.sgk-mini-on .sga-fab, body.sgk-res-on .sga-fab { opacity: 0; pointer-events: none; transform: translateY(20px); }
+            .sga-fab { transition: opacity .2s ease, transform .2s ease; }
+        }
+        /* 요금표 카드: 스크롤해도 빈 카드가 오래 보이지 않게 등장을 빠르게 */
+        .sg-pv .plan-card { --d: calc(.06s + min(var(--i, 0), 3) * .07s); transition: opacity .55s var(--sgE) var(--d), transform .65s var(--sgE) var(--d), filter .55s var(--sgE) var(--d), clip-path .7s var(--sgE) var(--d); }
+        .sg-pv .plan-row { transition: opacity .4s ease calc(var(--d) + .16s + min(var(--j, 0), 4) * .05s), transform .5s var(--sgE) calc(var(--d) + .16s + min(var(--j, 0), 4) * .05s); }
+        .sg-js .sg-reveal { transition-duration: .55s, .55s; }
+        /* 휴대폰: 아래로 내리면 AI 상담 버튼을 작은 동그라미로 (요금표·버튼을 덜 가리게) */
+        @media (max-width: 900px) {
+            .sga-fab.mini { width: 52px; height: 52px; padding: 0; justify-content: center; gap: 0; font-size: 0; }
+            .sga-fab.mini b { font-size: 21px; }
+        }
+        @media (prefers-reduced-motion: reduce) { .sgk-go:not(.submit-btn)::after { animation: none; display: none; } .sgk-mini { transition: none; } }
+    </style>
     <style>
         /* 빠른상담 칸: 채널(청록) 영역 맨 아래 */
         #sg-channels .sg-consult { padding: 44px 0 10px; max-width: 1080px; text-align: left; }
@@ -1400,7 +1434,8 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                     <div class="sgk-row"><span class="sgk-res-k">월 요금</span><span class="sgk-fee" id="sgk-fee"></span></div>
                     <p class="sgk-pick" id="sgk-pick"></p>
                     <ul class="sgk-cmp" id="sgk-cmp" aria-label="통신사별 사은품 비교"></ul>
-                    <button type="button" class="sgk-go" id="sgk-go">이 조건으로 무료 상담받기</button>
+                    <button type="button" class="sgk-go" id="sgk-go"><span class="sgk-go-t" id="sgk-go-t">이 조건으로 무료 상담받기</span><span class="sgk-go-s">30초면 끝 · 번호만 남기면 바로 연락드려요</span></button>
+                    <ul class="sgk-perks" aria-label="상담 안내"><li>상담만 받아도 OK</li><li>설치 당일 사은품 지급</li><li>가입 강요 없음</li></ul>
                     <div class="sgk-form" id="sgk-form" hidden>
                         <input type="tel" id="sgk-phone" inputmode="numeric" autocomplete="tel" maxlength="13" placeholder="휴대폰 번호 (- 없이)" aria-label="휴대폰 번호">
                         <input type="text" id="sgk-name" autocomplete="name" maxlength="20" placeholder="성함 (선택)" aria-label="성함 (선택)">
@@ -1411,6 +1446,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                     <a class="sgk-call" href="tel:18332440">전화로 바로 물어보기 1833-2440</a>
                 </div>
             </div>
+            <div class="sgk-mini" id="sgk-mini" aria-hidden="true"><div class="sgk-mini-t"><small id="sgk-mini-k">예상 사은품</small><b id="sgk-mini-g">-</b><span id="sgk-mini-f"></span></div><button type="button" class="sgk-mini-go" id="sgk-mini-go" tabindex="-1">무료 상담받기 ›</button></div>
             <p class="sgk-foot">※ 예상 금액은 오늘 단가표 기준이에요. 설치 주소·결합 조건에 따라 달라질 수 있고, 최종 금액은 상담 때 확정해 드려요. 상담 시간(10:00~19:30) 밖에 남기시면 다음 상담 시간에 순서대로 연락드려요.</p>
         </div>
     </section>
@@ -3667,7 +3703,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                     requestAnimationFrame(function () { sec.classList.add('sg-on'); });
                     setTimeout(function () { sec.classList.add('sg-done'); }, 3200);   // 다 나타난 뒤에는 움직임 설정을 걷어 냄
                 });
-            }, { rootMargin: '0px 0px -12% 0px', threshold: 0 });
+            }, { rootMargin: '0px 0px 15% 0px', threshold: 0 });   // 화면에 들어오기 조금 전에 시작
             document.querySelectorAll('#best-plan-container .prov-section').forEach(function (sec) {
                 var k = sec.id.replace('prov-section-', '');
                 sec.setAttribute('data-mv', MV[k] || 'rise');
@@ -4368,7 +4404,32 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                 b.appendChild(a); b.appendChild(g); b.addEventListener('click', function () { st.prov = x.p; st.tv = ''; touched = true; paint(); }); li.appendChild(b); cmp.appendChild(li);
             });
             cur = { prov: pick.p, label: label, fee: pick.fee, mob: mob && num(pick.r[5]) > 0, gift: gt || '상담 시 안내' };
+            sell(gm, pick.fee, FULL[pick.p]);
         }
+        function sell(gm, fee, who) {   // 신청 버튼 · 아래 얇은 바에 받을 금액
+            $('sgk-go-t').textContent = gm ? '🎁 ' + gm + '만원 받고 무료 상담받기' : '이 조건으로 무료 상담받기';
+            $('sgk-mini-g').textContent = gm ? gm + '만원' : '상담 시 안내';
+            $('sgk-mini-f').textContent = fee ? '월 ' + fee.toLocaleString() + '원' : '';
+            $('sgk-mini-k').textContent = '예상 사은품 · ' + (who || '');
+            if (window.sgkMiniUpd) window.sgkMiniUpd();
+        }
+        /* 휴대폰: 고르는 칸이 보이고 결과 카드는 아직 안 보일 때만 아래 얇은 바 · 결과 카드가 보이면 AI 상담 버튼도 잠시 숨김 */
+        (function () {
+            var mini = $('sgk-mini'), opts = root.querySelector('.sgk-opts'), res = $('sgk-res'), inOpts = false, inRes = false;
+            function upd() {
+                var bar = document.querySelector('.mobile-bottom-bar'), bh = bar && bar.offsetParent !== null ? bar.getBoundingClientRect().height : 0;
+                if (bh) mini.style.bottom = Math.round(bh + 8) + 'px';
+                var on = inOpts && !inRes && !res.classList.contains('form-on') && !$('sgk-out').hidden;
+                mini.classList.toggle('on', on); mini.setAttribute('aria-hidden', on ? 'false' : 'true'); $('sgk-mini-go').tabIndex = on ? 0 : -1;
+                document.body.classList.toggle('sgk-mini-on', on); document.body.classList.toggle('sgk-res-on', inRes);
+            }
+            if (window.IntersectionObserver && opts && res) {
+                new IntersectionObserver(function (es) { es.forEach(function (e) { inOpts = e.isIntersecting; }); upd(); }, { rootMargin: '-120px 0px -160px 0px' }).observe(opts);
+                new IntersectionObserver(function (es) { es.forEach(function (e) { inRes = e.isIntersecting; }); upd(); }, { rootMargin: '0px 0px -170px 0px', threshold: 0.12 }).observe(res);
+            }
+            $('sgk-mini-go').addEventListener('click', function () { $('sgk-go').click(); });
+            window.sgkMiniUpd = upd;
+        })();
         var cur = null;
         $('sgk-go').addEventListener('click', function () {
             var res = $('sgk-res'); res.classList.add('form-on'); $('sgk-form').hidden = false; $('sgk-go').hidden = true;
@@ -4397,6 +4458,13 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
     })();
     </script>
     <button type="button" class="sga-fab" onclick="sgAiOpen(event)" aria-label="AI 상담 열기"><b>✨</b>AI 상담</button>
+    <script>
+    (function () {   /* 휴대폰: 첫 화면을 지나면 AI 상담 버튼을 작게 · 맨 위로 오면 다시 글자와 함께 */
+        var f = document.querySelector('.sga-fab'); if (!f) return;
+        var t = 0, run = function () { t = 0; f.classList.toggle('mini', window.scrollY > 520); };
+        window.addEventListener('scroll', function () { if (!t) t = requestAnimationFrame(run); }, { passive: true }); run();
+    })();
+    </script>
     <script>
 /* ===== 사거리 AI 상담: 말 알아듣기 (외부 AI 없이 이 안에서만) ===== */
 var SGAI = (function () {
