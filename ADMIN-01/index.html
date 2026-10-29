@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-YBtAo8Zpxid1UGmdioNkNAhPvTHaPwPR3EfTMhoS84s='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Ij8CRIsmMAb9k7so7xdK4VkjzmrF2vFzezhb86TGdZ8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -310,6 +310,12 @@
         .mg-by { flex-basis: 100%; padding-left: 28px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
         .mg-row.done { background: #F4F8EC; }
         .mg-row.done .mg-tx { text-decoration: line-through; color: #7B8568; }
+        .bl-biz-n { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
+        .qm-whow { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+        .qm-whow span { font-size: 12.5px; font-weight: 800; color: #3E441E; flex: none; }
+        .qm-who { flex: 1; min-width: 0; height: 34px; border: 1.5px solid #CDD3B4; border-radius: 8px; padding: 0 8px; font: inherit; font-size: 13.5px; background: #fff; }
+        .qm-grp { list-style: none; margin-top: 6px; padding: 4px 2px 0; font-size: 12.5px; font-weight: 900; color: #3E441E; border-top: 1px dashed #CDD3B4; }
+        .qm-grp:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
         .qm-empty { margin-top: 12px; padding: 14px 10px; border: 1px dashed #CDD3B4; border-radius: 8px; font-size: 13px; color: var(--muted); text-align: center; line-height: 1.5; }
         @media (min-width: 1600px) {   /* 넓은 화면: 업무 오른쪽 빈칸에 / 좁은 화면: 업무 아래에 */
             .tk-wrap { grid-template-columns: minmax(0, 1fr) 340px; }
@@ -1777,7 +1783,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-29.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-29.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2811,7 +2817,7 @@
         setInterval(function () { [].forEach.call(document.querySelectorAll('.act-el'), function (el) { el.textContent = actDur(Date.now() - (+el.getAttribute('data-s') || Date.now())); }); }, 15000);
 
         /* ---------- 자주 하는 업무 메모: 한 줄씩 적어 두고 [업무에 넣기]로 오늘 스케줄업무(스업)에 바로 추가 ---------- */
-        var QM_MAX = 60, QM_LEN = 100, qmUi = { add: '', edit: '', text: '' };   // edit: 고치는 중인 메모 id
+        var QM_MAX = 60, QM_LEN = 100, qmUi = { add: '', edit: '', text: '', who: '' };   // who: '' 내 메모 · 직원 id · 'all' 전체 (대표님만)   // edit: 고치는 중인 메모 id
         function qmMine() { return (db.qms || []).filter(function (x) { return x.sid === me; }).sort(function (a, b) { return (a.o - b.o) || (a.u - b.u); }); }
         function qmAdd() {
             var t = qmUi.add.replace(/\s+/g, ' ').trim().slice(0, QM_LEN), mine = qmMine();
@@ -2836,13 +2842,13 @@
             commit('메모를 지웠어요.');
         }
         function qmToTask(x) {
-            var today = ymd(new Date());
-            var dup = db.tasks.some(function (t) { return t.staffId === me && t.due === today && !closed(t) && t.title === x.t; });
-            if (dup && !confirm('"' + x.t + '"\n오늘 업무에 이미 있어요. 한 번 더 넣을까요?')) return;
-            var nt = { id: uid(), title: x.t, staffId: me, due: today, priority: 'normal', status: 'todo', memo: '', u: 0 };
+            var today = ymd(new Date()), sid = x.sid && staffById(x.sid) ? x.sid : me;   // 대표님이 직원 메모를 넣으면 그 직원 업무로
+            var dup = db.tasks.some(function (t) { return t.staffId === sid && t.due === today && !closed(t) && t.title === x.t; });
+            if (dup && !confirm('"' + x.t + '"\n' + (sid === me ? '' : staffName(sid) + ' 님 ') + '오늘 업무에 이미 있어요. 한 번 더 넣을까요?')) return;
+            var nt = { id: uid(), title: x.t, staffId: sid, due: today, priority: 'normal', status: 'todo', memo: '', u: 0 };
             taskToTop(nt); db.tasks.push(stamp(nt));
             var hidden = (state.date && state.date !== today) || (state.who !== 'all' && state.who !== 'me' && state.who !== me) || (state.status !== 'all' && state.status !== 'todo');
-            commit('"' + x.t + '" 오늘 스케줄업무(스업) 1번에 넣었어요.' + (hidden ? ' [오늘]·[내 업무만]으로 보면 보여요.' : ''));
+            commit('"' + x.t + '" ' + (sid === me ? '' : staffName(sid) + ' 님 ') + '오늘 스케줄업무(스업) 1번에 넣었어요.' + (hidden && sid === me ? ' [오늘]·[내 업무만]으로 보면 보여요.' : ''));
         }
         function qmFocus(fk) { setTimeout(function () { var el = document.querySelector('[data-fk="' + fk + '"]'); if (el) try { el.focus(); } catch (e) { /* 무시 */ } }, 0); }
         /* ---------- 한 달 주요 업무: 달마다 꼭 할 일 (팀 모두 보기) · 체크로 완료 · 지난달 남은 것 가져오기 ---------- */
@@ -2933,10 +2939,24 @@
                 list.length ? h('ol', { class: 'qm-list mg-list' }, rows) : h('div', { class: 'qm-empty' }, mgLabel(ym) + ' 주요 업무가 아직 없어요. 위 칸에 적고 Enter(또는 [추가])를 눌러 주세요.'));
         }
         function qmPanel() {
-            var mine = qmMine();
+            var boss = isBoss(); if (!boss) qmUi.who = '';
+            if (qmUi.who && qmUi.who !== 'all' && !staffById(qmUi.who)) qmUi.who = '';
+            var who = qmUi.who, others = who && who !== me, mine = !who || who === me ? qmMine() : (db.qms || []).filter(function (x) { return who === 'all' || x.sid === who; }).sort(function (a, b) { return a.sid === b.sid ? (a.o - b.o) || (a.u - b.u) : staffName(a.sid).localeCompare(staffName(b.sid), 'ko'); });
+            var cnt = Object.create(null); (db.qms || []).forEach(function (x) { cnt[x.sid] = (cnt[x.sid] || 0) + 1; });
+            var whoSel = boss ? h('select', { class: 'qm-who', 'data-fk': 'qm-who', 'aria-label': '누구 메모 보기' },
+                h('option', { value: '' }, '내 메모 (' + (cnt[me] || 0) + ')'),
+                db.staff.filter(function (st) { return st.id !== me; }).map(function (st) { return h('option', { value: st.id }, st.name + ' (' + (cnt[st.id] || 0) + ')'); }),
+                h('option', { value: 'all' }, '전체 직원 (' + (db.qms || []).length + ')')) : null;
+            if (whoSel) { whoSel.value = who; whoSel.addEventListener('change', function () { qmUi.who = this.value; qmUi.edit = ''; render(); }); }
+            var lastSid = null, num = 0;
             var addIn = h('input', { type: 'text', class: 'qm-in', 'data-fk': 'qm-add', maxlength: QM_LEN, placeholder: '자주 하는 업무 한 줄 (예: 개통 확인 전화)', 'aria-label': '자주 하는 업무 메모 적기 (' + QM_LEN + '자까지)', value: qmUi.add,
                 oninput: function () { qmUi.add = this.value; }, onkeydown: function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); qmAdd(); } } });
-            var rows = mine.map(function (x, i) {
+            var rows = [];
+            mine.forEach(function (x) {
+                if (who === 'all' && x.sid !== lastSid) { lastSid = x.sid; num = 0; rows.push(h('li', { class: 'qm-grp' }, '👤 ' + staffName(x.sid) + (x.sid === me ? ' (나)' : '') + ' · ' + (cnt[x.sid] || 0) + '개')); }
+                rows.push(qmRow(x, ++num));
+            });
+            function qmRow(x, n) {
                 if (qmUi.edit === x.id) {
                     var ed = h('input', { type: 'text', class: 'qm-in', 'data-fk': 'qm-edit', maxlength: QM_LEN, 'aria-label': '메모 고치기', value: qmUi.text,
                         oninput: function () { qmUi.text = this.value; },
@@ -2947,17 +2967,18 @@
                             h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { qmUi.edit = ''; qmUi.text = ''; render(); } }, '취소')));
                 }
                 return h('li', { class: 'qm-row', 'data-id': x.id },
-                    h('div', { class: 'qm-t' }, h('span', { class: 'qm-n' }, (i + 1) + '.'), h('span', {}, x.t)),
+                    h('div', { class: 'qm-t' }, h('span', { class: 'qm-n' }, n + '.'), h('span', {}, x.t)),
                     h('div', { class: 'qm-btns' },
-                        h('button', { type: 'button', class: 'btn btn-sm qm-go', 'data-act': 'qm-go', title: '오늘 스케줄업무(스업)에 바로 넣기', onclick: function () { qmToTask(x); } }, '＋ 업무에 넣기'),
+                        h('button', { type: 'button', class: 'btn btn-sm qm-go', 'data-act': 'qm-go', title: x.sid === me ? '오늘 스케줄업무(스업)에 바로 넣기' : staffName(x.sid) + ' 님 오늘 스케줄업무(스업)에 넣기', onclick: function () { qmToTask(x); } }, x.sid === me ? '＋ 업무에 넣기' : '＋ ' + staffName(x.sid) + ' 업무에'),
                         h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'qm-edit', onclick: function () { qmUi.edit = x.id; qmUi.text = x.t; render(); qmFocus('qm-edit'); } }, '수정'),
                         h('button', { type: 'button', class: 'btn btn-sm qm-del', 'data-act': 'qm-del', onclick: function () { qmDel(x); } }, '삭제')));
-            });
+            }
             return h('aside', { class: 'qm-panel', 'aria-label': '자주 하는 업무 메모' },
-                h('div', { class: 'qm-head' }, h('b', {}, '📝 자주 하는 업무'), h('small', {}, mine.length + '/' + QM_MAX)),
-                h('p', { class: 'qm-help' }, '한 줄씩 적어 두고 [업무에 넣기]를 누르면 오늘 스케줄업무(스업)에 바로 들어가요. 내 메모는 나만 보여요.'),
-                h('div', { class: 'qm-add' }, addIn, h('button', { type: 'button', class: 'btn btn-sm btn-dark', 'data-fk': 'qm-add-btn', onclick: qmAdd }, '추가')),
-                mine.length ? h('ol', { class: 'qm-list' }, rows) : h('div', { class: 'qm-empty' }, '아직 메모가 없어요. 위 칸에 적고 Enter(또는 [추가])를 눌러 주세요.'));
+                h('div', { class: 'qm-head' }, h('b', {}, '📝 자주 하는 업무'), h('small', {}, others ? mine.length + '개' : mine.length + '/' + QM_MAX)),
+                whoSel ? h('div', { class: 'qm-whow' }, h('span', {}, '보기'), whoSel) : null,
+                h('p', { class: 'qm-help' }, others ? (who === 'all' ? '전체 직원의 메모예요. [＋ ○○ 업무에]를 누르면 그 직원의 오늘 스케줄업무(스업)에 들어가요.' : staffName(who) + ' 님 메모예요. [＋ ' + staffName(who) + ' 업무에]를 누르면 그 직원의 오늘 스케줄업무(스업)에 들어가요.') : '한 줄씩 적어 두고 [업무에 넣기]를 누르면 오늘 스케줄업무(스업)에 바로 들어가요. ' + (boss ? '직원 메모는 대표님만 [보기]에서 볼 수 있어요.' : '내 메모는 나와 대표님만 볼 수 있어요.')),
+                others ? null : h('div', { class: 'qm-add' }, addIn, h('button', { type: 'button', class: 'btn btn-sm btn-dark', 'data-fk': 'qm-add-btn', onclick: qmAdd }, '추가')),
+                mine.length ? h('ol', { class: 'qm-list' }, rows) : h('div', { class: 'qm-empty' }, others ? '아직 적은 메모가 없어요.' : '아직 메모가 없어요. 위 칸에 적고 Enter(또는 [추가])를 눌러 주세요.'));
         }
         function renderTasks() {
             var today = ymd(new Date());
@@ -9072,11 +9093,12 @@
         }
 
         /* ---------- 화면: 블로그 글쓰기 (주제 · 한줄평 · 사진 → 우리 블로그 말투로 글 → 네이버에 올리기 도우미) ---------- */
-        var BLOG_ID = '4phone_', BL_KEY = 'sg-blog-draft-v1', BL_TAGN = 25, BL_PLACE = 'https://naver.me/FKGAWVEI';
-        var BL_BIZ_DEF = ['사거리인터넷', '사거리핸드폰', '안산인터넷', '안산휴대폰', '안산핸드폰', '안산휴대폰매장', '안산인터넷가입', '단원구휴대폰'];   // 우리 업체 해시태그 (항상 들어감 · 화면에서 바꿀 수 있음)
+        var BLOG_ID = '4phone_', BL_KEY = 'sg-blog-draft-v1', BL_TAGN = 30, BL_PLACE = 'https://naver.me/FKGAWVEI';
+        var BL_BIZ_ADD2 = ['인터넷가입', '인터넷가입현금', '인터넷가입사은품', '인터넷현금', '인터넷사은품', '인터넷설치', '인터넷TV결합', '렌탈', '가전렌탈', '가구렌탈', '정수기렌탈', '안산렌탈'];
+        var BL_BIZ_DEF = ['사거리인터넷', '사거리핸드폰', '안산인터넷', '안산휴대폰', '안산핸드폰', '안산휴대폰매장', '안산인터넷가입', '단원구휴대폰'].concat(BL_BIZ_ADD2);   // 우리 업체 해시태그 (항상 들어감 · 화면에서 바꿀 수 있음)
         var bl = { topic: '', memo: '', extra: '', cat: '그 외 이야기', len: 'mid', who: 'boss', whoName: '', biz: BL_BIZ_DEF.join(' '), map: true, photos: [], res: null, busy: false, err: '', step: -1, raw: '', miniMsg: '', hereOpen: (window.innerWidth || 1000) < 760 };   // 휴대폰은 도우미 창 대신 이 화면에서
-        (function () { try { var d = JSON.parse(lsGet(BL_KEY) || 'null'); if (d && typeof d === 'object') { ['topic', 'memo', 'extra', 'cat', 'len', 'who', 'whoName', 'biz'].forEach(function (k) { if (typeof d[k] === 'string') bl[k] = d[k]; }); if (typeof d.map === 'boolean') bl.map = d.map; if (d.res && typeof d.res.title === 'string' && Array.isArray(d.res.blocks)) bl.res = d.res; } } catch (e) { /* 새로 */ } })();
-        function blSave() { lsSet(BL_KEY, JSON.stringify({ topic: bl.topic, memo: bl.memo, extra: bl.extra, cat: bl.cat, len: bl.len, who: bl.who, whoName: bl.whoName, biz: bl.biz, map: bl.map, res: bl.res })); }
+        (function () { try { var d = JSON.parse(lsGet(BL_KEY) || 'null'); if (d && typeof d === 'object') { ['topic', 'memo', 'extra', 'cat', 'len', 'who', 'whoName', 'biz'].forEach(function (k) { if (typeof d[k] === 'string') bl[k] = d[k]; }); if (typeof d.map === 'boolean') bl.map = d.map; if (d.res && typeof d.res.title === 'string' && Array.isArray(d.res.blocks)) bl.res = d.res; if ((d.bizV || 0) < 2) { var have = bl.biz.split(/[\s,#]+/).filter(Boolean); BL_BIZ_ADD2.forEach(function (t) { if (have.indexOf(t) < 0) have.push(t); }); bl.biz = have.join(' '); } } } catch (e) { /* 새로 */ } })();   // 예전 기기: 새 업체 해시태그를 한 번 합쳐 넣음
+        function blSave() { lsSet(BL_KEY, JSON.stringify({ topic: bl.topic, memo: bl.memo, extra: bl.extra, cat: bl.cat, len: bl.len, who: bl.who, whoName: bl.whoName, biz: bl.biz, bizV: 2, map: bl.map, res: bl.res })); }
         function blImg(file, max, q, type) {   // 사진 → 줄인 그림 (dataURL)
             return new Promise(function (ok, no) {
                 var fr = new FileReader();
@@ -9137,8 +9159,9 @@
             })).then(function (arr) { arr.filter(Boolean).forEach(function (p) { bl.photos.push(p); }); if (arr.some(function (x) { return !x; })) toast('읽지 못한 사진은 빼고 넣었어요. (아이폰 HEIC 사진이면 JPG로 바꿔 올려 주세요)'); render(); });
         }
         function blTagClean(x) { return String(x || '').replace(/^#+/, '').replace(/[\s#,]+/g, '').replace(/[^0-9A-Za-z가-힣]/g, '').slice(0, 30); }
-        function blBizTags() { var o = []; String(bl.biz || '').split(/[\s,#]+/).map(blTagClean).forEach(function (t) { if (t && o.indexOf(t) < 0) o.push(t); }); return o.slice(0, 12); }
-        function blTags25(aiTags) {   // 글 관련(앞) + 우리 업체(뒤) = 25개, 겹치는 건 한 번만
+        function blBizTags() { var o = []; String(bl.biz || '').split(/[\s,#]+/).map(blTagClean).forEach(function (t) { if (t && o.indexOf(t) < 0) o.push(t); }); return o.slice(0, 24); }   // 업체 태그는 24개까지 (글 관련 태그 자리를 6개 이상 남김)
+        function blBizNote() { var n = blBizTags().length; return '업체 해시태그 ' + n + '개 + 글 관련 해시태그 ' + Math.max(0, BL_TAGN - n) + '개 = 총 ' + BL_TAGN + '개' + (String(bl.biz || '').split(/[\s,#]+/).filter(Boolean).length > 24 ? ' (업체 해시태그는 앞에서 24개까지만 들어가요)' : ''); }
+        function blTags25(aiTags) {   // 글 관련(앞) + 우리 업체(뒤) = 30개, 겹치는 건 한 번만
             var biz = blBizTags(), post = [];
             aiTags.map(blTagClean).forEach(function (t) { if (t && post.indexOf(t) < 0 && biz.indexOf(t) < 0) post.push(t); });
             return post.slice(0, Math.max(0, BL_TAGN - biz.length)).concat(biz).slice(0, BL_TAGN);
@@ -9430,10 +9453,10 @@
                 h('div', { class: 'bl-row bl-opts' }, h('div', {}, h('label', { class: 'bl-lb' }, '누가 쓴 글처럼'), h('div', { class: 'bl-chips' }, whos)), h('div', { class: 'bl-who-w' }, h('label', { class: 'bl-lb' }, '글쓴이 이름 (선택)'), whoName)),
                 h('div', { class: 'bl-row' }, h('label', { class: 'bl-lb' }, '꼭 넣을 말'), extra),
                 (function () {
-                    var bz = h('input', { type: 'text', class: 'bl-in', 'data-fk': 'bl-biz', maxlength: '300', value: bl.biz });
-                    bz.addEventListener('input', function () { bl.biz = this.value; blSave(); });
+                    var bz = h('input', { type: 'text', class: 'bl-in', 'data-fk': 'bl-biz', maxlength: '600', value: bl.biz });
+                    bz.addEventListener('input', function () { bl.biz = this.value; blSave(); var nEl = document.querySelector('[data-fk="bl-biz-n"]'); if (nEl) nEl.textContent = blBizNote(); });
                     var mp = h('input', { type: 'checkbox', 'data-fk': 'bl-map', checked: bl.map }); mp.addEventListener('change', function () { bl.map = this.checked; blSave(); render(); });
-                    return h('div', { class: 'bl-row' }, h('label', { class: 'bl-lb' }, '우리 업체 해시태그 (항상 들어가요 · 글 관련 해시태그와 합쳐 25개)'), bz,
+                    return h('div', { class: 'bl-row' }, h('label', { class: 'bl-lb' }, '우리 업체 해시태그 (항상 들어가요 · 글 관련 해시태그와 합쳐 30개)'), bz, h('small', { class: 'bl-biz-n', 'data-fk': 'bl-biz-n' }, blBizNote()),
                         h('label', { class: 'bl-mapck' }, mp, ' 📍 글 끝에 우리 매장 지도(네이버 플레이스) 넣기'));
                 })(),
                 h('div', { class: 'bl-go-row' },
