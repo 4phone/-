@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-yVKcXFTmZdn2Tp83BlGjGgHmQoEJy06hiMRiFpdTq44='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-vdxW9VDXiY/SLudEvgjc5imxkvMTqBf3i2C+lMS4gxw='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1578,6 +1578,34 @@
     <style>
         /* ===== 렌탈 단가표 · 렌탈 상담 메모 · 렌탈 가입 확인서 ===== */
         .rt-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 12px 0 8px; }
+        .rt-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+        .rt-tab { font: inherit; font-size: 15px; font-weight: 800; min-height: 42px; padding: 0 18px; border-radius: 999px; border: 1.5px solid #CFD6C4; background: #fff; color: #1F2416; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+        .rt-tab small { font-size: 12px; font-weight: 800; background: #F2F4EC; color: #5D6450; border-radius: 999px; padding: 1px 8px; }
+        .rt-tab[aria-selected="true"] { background: #13443D; border-color: #13443D; color: #fff; }
+        .rt-tab[aria-selected="true"] small { background: rgba(255,255,255,.18); color: #fff; }
+        .rt-sort { flex: 0 0 210px; width: 210px; max-width: 100%; height: 44px; border: 1px solid #CFD6C4; border-radius: 10px; padding: 0 10px; font: inherit; font-size: 14px; background: #fff; }
+        .rt-facets { background: #fff; border: 1px solid #DDE3D3; border-radius: 14px; padding: 10px 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
+        .rt-frow { display: flex; gap: 10px; align-items: flex-start; }
+        .rt-flab { flex: none; width: 64px; padding-top: 7px; font-size: 13px; font-weight: 900; color: #3E441E; }
+        .rt-fchips { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+        .rt-fchip { font: inherit; font-size: 13.5px; font-weight: 700; min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #CFD6C4; background: #fff; color: #1F2416; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+        .rt-fchip small { font-size: 11.5px; color: #8A907D; font-weight: 700; }
+        .rt-fchip:hover:not(:disabled) { border-color: #3E441E; }
+        .rt-fchip[aria-pressed="true"] { background: #13443D; border-color: #13443D; color: #fff; }
+        .rt-fchip[aria-pressed="true"] small { color: #CFE3DE; }
+        .rt-fchip.all[aria-pressed="true"] { background: #3E441E; border-color: #3E441E; }
+        .rt-fchip:disabled { opacity: .4; cursor: default; }
+        .rt-fchip.more { border-style: dashed; color: #5D6450; }
+        .rt-reset-w { display: flex; justify-content: flex-end; }
+        .rt-count { margin: 4px 2px 10px; font-size: 13.5px; color: #5D6450; }
+        .rt-count b { color: #1F2416; }
+        @media (max-width: 760px) {
+            .rt-frow { flex-direction: column; gap: 4px; }
+            .rt-flab { width: auto; padding-top: 0; }
+            .rt-fchips { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 4px; scrollbar-width: thin; }
+            .rt-fchip { flex: none; }
+            .rt-sort { flex: 1 1 100%; width: 100%; }
+        }
         .rt-q { flex: 1 1 320px; min-width: 0; height: 44px; border: 1px solid #CFD6C4; border-radius: 10px; padding: 0 14px; font-size: 15px; background: #fff; font-family: inherit; }
         .rt-count { font-size: 13px; color: #5D6450; font-weight: 700; }
         .rt-cats { margin-bottom: 12px; }
@@ -1733,7 +1761,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-29.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-29.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -8169,7 +8197,7 @@
         /* ---------- 렌탈 단가표 (상담하기 → 🧴 렌탈 단가표): 홈페이지 렌탈 페이지와 같은 상품 · 약정 · 월 렌탈료 · 사은품 ----------
            수수료는 넣지 않음 (사이트에 넣지 않기로 한 값) · 사은품은 홈페이지와 같은 rental-gift.json 기준 · 줄을 누르면 상담 메모(렌탈)에 바로 */
         var RT_FEED = 'https://modil.co.kr/api/feed/rental', RT_PAGE = 20;
-        var rt = { data: null, busy: false, err: '', q: '', cat: 'all', more: 0, pk: null, at: 0, only: '' };
+        var rt = { data: null, busy: false, err: '', q: '', cat: '', more: 0, pk: null, at: 0, kind: [], feat: [], brand: [], price: [], ben: [], sort: 'rec', kexp: false };
         var RT_BR = { 'LG': '엘지', 'LG전자': '엘지', '엘지': '엘지', '코웨이': '코웨이', '쿠쿠': '쿠쿠', 'SK매직': 'SK', '청호나이스': '청호', '청호': '청호', '현대큐밍': '현대큐밍', '현대유버스': '현대유버스', 'UBUS': '현대유버스', '세라젬': '세라젬', '세라잼': '세라젬' };   // 상품 브랜드 → 수수료표 브랜드 (수수료표 없는 렌탈사 줄에 참고 A단가)
         function rtS(v, n) { return typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n || 200) : (typeof v === 'number' && isFinite(v) ? String(v) : ''); }
         function rtN(v) { var n = typeof v === 'number' ? v : (typeof v === 'string' && /^\s*\d+(\.\d+)?\s*$/.test(v) ? +v : NaN); return isFinite(n) && n >= 0 ? Math.round(n) : null; }
@@ -8283,6 +8311,38 @@
             p.cos.forEach(function (c) { c.plans.forEach(function (x) { if (x.g) g = true; if (!FR) return; var f = rtFeeOf(c.name, p.model, x.m, x.fee, p.brand); if (f) { fk = Math.max(fk, f.ref ? 1 : 2); if (!f.ref && f.a > best) best = f.a; } }); });
             p._sk = key; p._s = { fk: fk, g: g, best: best }; return p._s;
         }
+        /* 렌탈 단가표 나눠 찾기: 홈페이지 렌탈 페이지와 같은 기준 (같은 줄은 '또는', 줄끼리는 '그리고') */
+        var RT_FEATS = ['냉온정', '냉온정+얼음', '냉정', '냉정+얼음', '정수전용'];
+        var RT_PRICES = [['u2', '월 2만원 미만', 0, 20000], ['2-3', '월 2~3만원', 20000, 30000], ['3-4', '월 3~4만원', 30000, 40000], ['4-5', '월 4~5만원', 40000, 50000], ['5u', '월 5만원 이상', 50000, Infinity]];
+        function rtFeatOf(p) {   // 정수기 기능: 상품명에 적힌 말로만 (홈페이지와 같음)
+            if (p.cat !== '정수기') return '';
+            var n = String(p.name || '').replace(/\s+/g, ''), ice = /얼음/.test(n);
+            if (!ice && /정수전용|\(정수\)|정수형$/.test(n)) return '정수전용';
+            if (/냉온|온냉/.test(n)) return ice ? '냉온정+얼음' : '냉온정';
+            if (/냉정|냉수/.test(n)) return ice ? '냉정+얼음' : '냉정';
+            return '';
+        }
+        function rtPriceOk(p, k) { for (var i = 0; i < RT_PRICES.length; i++) if (RT_PRICES[i][0] === k) return p.low != null && p.low >= RT_PRICES[i][2] && p.low < RT_PRICES[i][3]; return true; }
+        function rtOk(p, skip, words, FR) {   // skip: 그 줄의 개수를 셀 때는 그 줄 선택을 빼고
+            if (rt.cat && p.cat !== rt.cat) return false;
+            if (skip !== 'kind' && rt.kind.length && rt.kind.indexOf(p.kind) < 0) return false;
+            if (skip !== 'feat' && rt.feat.length && rt.feat.indexOf(rtFeatOf(p)) < 0) return false;
+            if (skip !== 'brand' && rt.brand.length && rt.brand.indexOf(p.brand) < 0) return false;
+            if (skip !== 'price' && rt.price.length && !rt.price.some(function (k) { return rtPriceOk(p, k); })) return false;
+            if (skip !== 'ben' && rt.ben.length) { var S = rtSum(p, FR); if (!rt.ben.some(function (b) { return b === 'gift' ? S.g : b === 'fee' ? S.fk === 2 : false; })) return false; }
+            return rtMatch(p, words);
+        }
+        function rtPick2(name, v) { if (!v) rt[name] = []; else { var a = rt[name].slice(), i = a.indexOf(v); if (i >= 0) a.splice(i, 1); else a.push(v); rt[name] = a; } rt.more = 0; render(); }
+        function rtRow(label, name, items, cur, extra) {   // [○○ 전체] [항목 n] … (개수 0이면 흐리게)
+            return h('div', { class: 'rt-frow', role: 'group', 'aria-label': label, 'data-rtrow': name },
+                h('span', { class: 'rt-flab' }, label),
+                h('div', { class: 'rt-fchips' },
+                    h('button', { type: 'button', class: 'rt-fchip all', 'aria-pressed': cur.length ? 'false' : 'true', onclick: function () { rtPick2(name, ''); } }, '전체'),
+                    items.map(function (it) {
+                        var on = cur.indexOf(it[0]) >= 0;
+                        return h('button', { type: 'button', class: 'rt-fchip', 'aria-pressed': on ? 'true' : 'false', disabled: !on && !it[2] ? true : null, 'data-v': it[0], onclick: function () { rtPick2(name, it[0]); } }, it[1], h('small', {}, String(it[2])));
+                    }), extra || null));
+        }
         function rtWords(q) { return String(q || '').toLowerCase().split(/\s+/).filter(Boolean).slice(0, 6); }
         function rtMatch(p, words) {
             if (!words.length) return true;
@@ -8305,28 +8365,63 @@
                     isBoss() ? h('label', { class: 'btn btn-primary', 'data-act': 'rf-import' }, '렌탈 수수료표 불러오기', h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: function () { rfImport(this.files && this.files[0]); this.value = ''; } })) : null));
             if (!rt.data && !rt.busy && !rt.err) setTimeout(function () { rtLoad(false); }, 0);
             if (!rt.data) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, rt.err || '렌탈 상품을 불러오는 중이에요... (홈페이지 렌탈 페이지와 같은 정보)')));
-            var items = rt.data.items, words = rtWords(rt.q), cnt = Object.create(null);
+            var items = rt.data.items, words = rtWords(rt.q), cnt = Object.create(null), FR = mp.data && mp.data.rent, hasFee = !!FR;
             items.forEach(function (p) { cnt[p.cat] = (cnt[p.cat] || 0) + 1; });
             var cats = Object.keys(cnt).sort(function (a, b) { return cnt[b] - cnt[a] || a.localeCompare(b); });
-            if (rt.cat !== 'all' && !cnt[rt.cat]) rt.cat = 'all';
-            var q = h('input', { type: 'search', class: 'rt-q', 'data-fk': 'rt-q', placeholder: '렌탈 상품 찾기 (예: 코웨이 정수기, 공기청정기 LG, 모델명)', 'aria-label': '렌탈 상품 찾기', value: rt.q });
+            if (rt.cat && !cnt[rt.cat]) rt.cat = '';
+            if (!hasFee) rt.ben = rt.ben.filter(function (x) { return x !== 'fee'; });
+            if (rt.sort === 'fee' && !hasFee) rt.sort = 'rec';
+            var clearAll = function () { rt.kind = []; rt.feat = []; rt.brand = []; rt.price = []; rt.ben = []; rt.kexp = false; rt.more = 0; };
+            // ① 정수기 / 가전렌탈 (홈페이지 맨 위 탭)
+            var catBar = h('div', { class: 'rt-tabs', role: 'tablist', 'aria-label': '렌탈 종류' },
+                [['', '전체', items.length]].concat(cats.map(function (c) { return [c, c, cnt[c]]; })).map(function (c) {
+                    return h('button', { type: 'button', role: 'tab', class: 'rt-tab', 'data-rtcat': c[0] || 'all', 'aria-selected': rt.cat === c[0] ? 'true' : 'false', onclick: function () { if (rt.cat === c[0]) return; rt.cat = c[0]; clearAll(); render(); } }, c[1], h('small', {}, String(c[2])));
+                }));
+            var q = h('input', { type: 'search', class: 'rt-q', 'data-fk': 'rt-q', placeholder: '상품명 · 모델코드 · 렌탈사 검색 (예: 코웨이 아이콘, CHP-7220N)', 'aria-label': '렌탈 상품 찾기', value: rt.q });
             q.addEventListener('input', function () { rt.q = this.value; rt.more = 0; clearTimeout(renderRentPol.t); renderRentPol.t = setTimeout(render, 180); });
-            var catBar = h('div', { class: 'pol-cars rt-cats', role: 'group', 'aria-label': '렌탈 종류' },
-                h('button', { type: 'button', class: 'btn btn-sm', 'data-rtcat': 'all', 'aria-pressed': rt.cat === 'all' ? 'true' : 'false', onclick: function () { rt.cat = 'all'; rt.more = 0; render(); } }, '전체 ' + items.length),
-                cats.map(function (c) { return h('button', { type: 'button', class: 'btn btn-sm', 'data-rtcat': c, 'aria-pressed': rt.cat === c ? 'true' : 'false', onclick: function () { rt.cat = c; rt.more = 0; render(); } }, c + ' ' + cnt[c]); }));
-            var FR = mp.data && mp.data.rent, hasFee = !!FR;
-            var list0 = items.filter(function (p) { return (rt.cat === 'all' || p.cat === rt.cat) && rtMatch(p, words); });
-            var nFee = 0, nGift = 0; list0.forEach(function (p) { var S = rtSum(p, FR); if (S.fk === 2) nFee++; if (S.g) nGift++; });
-            if (rt.only === 'fee' && !hasFee) rt.only = '';
-            var list = list0.filter(function (p) { var S = rtSum(p, FR); return rt.only === 'fee' ? S.fk === 2 : rt.only === 'gift' ? S.g : true; });
-            // 수수료(A) 있는 상품 → 사은품 있는 상품 → 참고 수수료 → 나머지, 같은 묶음 안에서는 월 렌탈료 낮은 순
+            var sortSel = h('select', { class: 'rt-sort', 'data-fk': 'rt-sort', 'aria-label': '정렬' },
+                [['rec', '수수료 · 사은품 먼저'], ['low', '렌탈료 낮은 순'], ['high', '렌탈료 높은 순']].concat(hasFee ? [['fee', '수수료 높은 순']] : []).map(function (o) { return h('option', { value: o[0] }, o[1]); }));
+            sortSel.value = rt.sort; sortSel.addEventListener('change', function () { rt.sort = this.value; rt.more = 0; render(); });
+            // ② 줄마다 나눠 찾기 — 개수는 다른 줄 조건을 적용한 상태에서 셈
+            var inCat = items.filter(function (p) { return !rt.cat || p.cat === rt.cat; });
+            var rows2 = [];
+            var kAll = Object.create(null), kc = Object.create(null);
+            inCat.forEach(function (p) { if (p.kind) kAll[p.kind] = (kAll[p.kind] || 0) + 1; });
+            items.forEach(function (p) { if (p.kind && kAll[p.kind] && rtOk(p, 'kind', words, FR)) kc[p.kind] = (kc[p.kind] || 0) + 1; });
+            rt.kind = rt.kind.filter(function (k) { return kAll[k]; });
+            var kinds = Object.keys(kAll).sort(function (a, b) { return kAll[b] - kAll[a] || a.localeCompare(b, 'ko'); });
+            if (kinds.length) {
+                var KS = 12, kOpen = rt.kexp || rt.kind.some(function (k) { return kinds.indexOf(k) >= KS; }), kShow = kOpen ? kinds : kinds.slice(0, KS);
+                rows2.push(rtRow(rt.cat === '정수기' ? '종류' : '어떤 가전', 'kind', kShow.map(function (k) { return [k, k, kc[k] || 0]; }), rt.kind,
+                    kinds.length > KS ? h('button', { type: 'button', class: 'rt-fchip more', 'data-act': 'rt-kmore', 'aria-expanded': kOpen ? 'true' : 'false', onclick: function () { rt.kexp = !kOpen; render(); } }, kOpen ? '줄이기' : '+' + (kinds.length - KS) + ' 더 보기') : null));
+            } else rt.kind = [];
+            if (rt.cat === '정수기') {
+                var fc = {}; RT_FEATS.forEach(function (f) { fc[f] = 0; });
+                items.forEach(function (p) { var f = rtFeatOf(p); if (f && rtOk(p, 'feat', words, FR)) fc[f]++; });
+                rows2.push(rtRow('기능', 'feat', RT_FEATS.map(function (f) { return [f, f, fc[f]]; }), rt.feat));
+            } else rt.feat = [];
+            var bAll = Object.create(null), bc = Object.create(null);
+            inCat.forEach(function (p) { if (p.brand) bAll[p.brand] = (bAll[p.brand] || 0) + 1; });
+            items.forEach(function (p) { if (p.brand && bAll[p.brand] && rtOk(p, 'brand', words, FR)) bc[p.brand] = (bc[p.brand] || 0) + 1; });
+            rt.brand = rt.brand.filter(function (x) { return bAll[x]; });
+            rows2.push(rtRow('제조사', 'brand', Object.keys(bAll).filter(function (x) { return bc[x] || rt.brand.indexOf(x) >= 0; }).sort(function (a, b) { return bAll[b] - bAll[a] || a.localeCompare(b, 'ko'); }).map(function (x) { return [x, x, bc[x] || 0]; }), rt.brand));
+            rows2.push(rtRow('가격', 'price', RT_PRICES.map(function (x) { var n = 0; items.forEach(function (p) { if (rtPriceOk(p, x[0]) && rtOk(p, 'price', words, FR)) n++; }); return [x[0], x[1], n]; }), rt.price));
+            var gy = 0, fy = 0; items.forEach(function (p) { if (!rtOk(p, 'ben', words, FR)) return; var S = rtSum(p, FR); if (S.g) gy++; if (S.fk === 2) fy++; });
+            rows2.push(rtRow('혜택', 'ben', [['gift', '🎁 사은품 받기', gy]].concat(hasFee ? [['fee', '💰 수수료(A) 있는 상품', fy]] : []), rt.ben));
+            var picked = rt.kind.length + rt.feat.length + rt.brand.length + rt.price.length + rt.ben.length;
+            var onlyBar = h('div', { class: 'rt-facets' }, rows2,
+                picked || rt.q ? h('div', { class: 'rt-reset-w' }, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'rt-reset', onclick: function () { clearAll(); rt.q = ''; render(); } }, '↺ 조건 초기화')) : null);
+            var list = items.filter(function (p) { return rtOk(p, '', words, FR); });
+            // 정렬: 수수료·사은품 먼저(같은 묶음은 렌탈료 낮은 순) · 렌탈료 낮은/높은 순 · 수수료 높은 순
             var rank = function (p) { var S = rtSum(p, FR); return (S.fk === 2 ? 4 : 0) + (S.g ? 2 : 0) + (S.fk === 1 ? 1 : 0); };
-            list.sort(function (a, b) { return rank(b) - rank(a) || (a.low == null ? 1e9 : a.low) - (b.low == null ? 1e9 : b.low); });
+            var lowOf = function (p) { return p.low == null ? 1e9 : p.low; };
+            list.sort(function (a, b) {
+                if (rt.sort === 'low') return lowOf(a) - lowOf(b) || a.name.localeCompare(b.name, 'ko');
+                if (rt.sort === 'high') return (b.low == null ? -1 : b.low) - (a.low == null ? -1 : a.low) || a.name.localeCompare(b.name, 'ko');
+                if (rt.sort === 'fee') return rtSum(b, FR).best - rtSum(a, FR).best || lowOf(a) - lowOf(b);
+                return rank(b) - rank(a) || lowOf(a) - lowOf(b);
+            });
             var lim = RT_PAGE * (rt.more + 1), shown = list.slice(0, lim);
-            var onlyBar = h('div', { class: 'pol-cars rt-only', role: 'group', 'aria-label': '수수료 · 사은품으로 보기' },
-                h('button', { type: 'button', class: 'btn btn-sm', 'data-rtonly': 'all', 'aria-pressed': !rt.only ? 'true' : 'false', onclick: function () { rt.only = ''; rt.more = 0; render(); } }, '모두 ' + list0.length),
-                hasFee ? h('button', { type: 'button', class: 'btn btn-sm rt-only-fee', 'data-rtonly': 'fee', 'aria-pressed': rt.only === 'fee' ? 'true' : 'false', onclick: function () { rt.only = rt.only === 'fee' ? '' : 'fee'; rt.more = 0; render(); } }, '💰 수수료(A) 있는 상품 ' + nFee) : null,
-                h('button', { type: 'button', class: 'btn btn-sm rt-only-gift', 'data-rtonly': 'gift', 'aria-pressed': rt.only === 'gift' ? 'true' : 'false', onclick: function () { rt.only = rt.only === 'gift' ? '' : 'gift'; rt.more = 0; render(); } }, '🎁 사은품 있는 상품 ' + nGift));
             if (!mp.data && !mp.busy && !mp.err && driveOn()) setTimeout(function () { mpLoad(false); }, 0);   // 수수료표는 모바일 단가표와 같은 곳에
             var cards = shown.map(function (p) {
                 var rows = [], S = rtSum(p, FR);
@@ -8362,9 +8457,11 @@
                     h('small', {}, '줄을 누르면 상담 메모가 렌탈 상담으로 바뀌고 제품 · 렌탈사 · 약정 · 월 렌탈료 · 사은품이 바로 들어가요. 사은품은 홈페이지에 보이는 금액 그대로예요.'),
                     h('small', { class: 'rt-feeinfo' }, FR ? '💰 수수료(A) = ' + (FR.date || '') + ' 렌탈 수수료표 A단가' + (FR.at ? ' · 넣은 날 ' + koDate(ymd(new Date(FR.at))) + (FR.by ? ' · ' + FR.by : '') : '') + ' · 수수료표가 있는 렌탈사: ' + Object.keys(FR.co2b).join(' · ') + ' · ≈ 표시는 월 렌탈료가 수수료표와 달라 같은 약정의 가장 낮은 A단가 · [참고]는 수수료표가 없는 렌탈사(KG이니렌탈 · 링크온 등) 줄에 같은 모델 직계약 A단가를 참고로 보여준 것 (확인 필요) · 사이트에는 들어가지 않아요'
                         : mp.busy ? '💰 수수료표 불러오는 중...' : isBoss() ? '💰 수수료(A) 칸을 보려면 오른쪽 위 [렌탈 수수료표 불러오기]로 Claude가 보낸 파일을 넣어 주세요.' : '💰 수수료(A)는 대표님이 렌탈 수수료표를 넣으면 보여요.')),
-                h('div', { class: 'rt-tools' }, q, h('span', { class: 'rt-count' }, '상품 ' + list.length + '개')),
-                catBar, onlyBar,
-                cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, rt.only ? '조건에 맞는 상품이 없어요. [모두]를 눌러 주세요.' : words.length ? '"' + rt.q + '"에 맞는 렌탈 상품이 없어요.' : '이 종류의 렌탈 상품이 없어요.')),
+                catBar,
+                h('div', { class: 'rt-tools' }, q, sortSel),
+                onlyBar,
+                h('div', { class: 'rt-count' }, (rt.cat || '전체') + ' ', h('b', {}, list.length.toLocaleString('ko-KR') + '개')),
+                cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, picked || words.length ? '조건에 맞는 상품이 없어요. 고른 조건을 줄이거나 [↺ 조건 초기화]를 눌러 주세요.' : '이 종류의 렌탈 상품이 없어요.')),
                 list.length > lim ? h('div', { class: 'rt-more' }, h('button', { type: 'button', class: 'btn', 'data-act': 'rt-more', onclick: function () { rt.more++; render(); } }, '더 보기 (' + (list.length - lim) + '개 남음)')) : null);
         }
 
