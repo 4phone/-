@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-NCy1U3rQTYZoGw9skvbwyOj2Ent7zwdWCUkqL9xP+yc='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-l/kCQV54hTuEv4nIUAzYUKK5cZ0tlw1W97mmDqAcW6I='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -556,13 +556,18 @@
         .cl-memo-tb.min { border-bottom: 0; }
         .cl-tabs-m { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
         .cl-tab-m { flex: none; display: inline-flex; align-items: center; border: 1.5px solid #CDD3B4; background: #fff; border-radius: 10px; font-size: 13px; font-weight: 800; color: #3E441E; }
-        .cl-tab-m.on { background: var(--olive-800); border-color: var(--olive-800); color: #fff; padding: 6px 10px; }
+        .cl-tab-m.on { background: #FFF3BF; border-color: var(--gold-edge); color: #2E3315; box-shadow: inset 0 0 0 1px var(--gold), 0 2px 6px rgba(227, 190, 0, .35); }
+        .cl-tab-m.on .cl-tab-go { cursor: default; padding-right: 10px; }
+        .cl-tab-m.on small { color: #7A5B00; }
+        .cl-tab-pen { font-style: normal; }
+        .cl-tab-lb { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .cl-tab-go { font: inherit; background: none; border: 0; color: inherit; cursor: pointer; padding: 6px 4px 6px 10px; display: inline-flex; gap: 6px; align-items: baseline; }
         .cl-tab-go small { font-size: 11px; font-weight: 600; color: #7B8568; }
         .cl-tab-x { font: inherit; background: none; border: 0; color: #9AA08E; cursor: pointer; padding: 4px 8px 4px 4px; font-size: 15px; line-height: 1; }
         .cl-tab-x:hover { color: #C62828; }
         .cl-tab-m:hover:not(.on) { border-color: #3E441E; }
         .cl-memo-auto { margin: 0 0 8px; font-size: 12px; color: #5D6450; background: #F4F8EC; border: 1px solid #DCE6C6; border-radius: 8px; padding: 6px 9px; }
+        .cl-draft-s { overflow-wrap: anywhere; line-height: 1.5; }
         .cl-draft-tag { margin-left: 6px; font-size: 11px; font-weight: 800; color: #1B5E8A; background: #E8F2F8; border-radius: 999px; padding: 1px 7px; }
         .cl-memo-sp { flex: 1 1 auto; }
         .cl-memo-b { flex: 1 1 auto; overflow: auto; padding: 12px; }
@@ -1699,7 +1704,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-28.12';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-28.13';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -10198,16 +10203,35 @@
             if (live.length !== T.length) clTabsSet(live);
             return live.filter(function (id) { return id !== cur; }).map(function (id) { return ds.filter(function (x) { return x.id === id; })[0]; });
         }
-        function clDraftLine(d) {   // 보관한 메모 한 줄 요약: 연락처(가림) · 위치 · 현 통신사 · 상담 상품
-            var s = cl.data.sheets.filter(function (q) { return q.id === d.sh; })[0] || null, col = function (kind, re) { return s ? clColBy(s, kind, re) : null; }, vv = function (c) { return c ? String((d.v || {})[c.k] || '').trim() : ''; };
-            var ph = vv(col('ph')), loc = vv(col('', /위치/)), tel = vv(col('', /현통신사/)), prod = (/^■ 상담 (?:상품|제품) :[ \t]*(\S.*)$/m.exec(d.raw || '') || [])[1] || '';
-            return [ph ? clMask(ph) : '', loc, tel, prod].filter(Boolean).join(' · ');
+        function clTabsAll() {   // 탭 순서 그대로 (지금 적는 상담도 제자리에) · 지금 상담이 아직 탭에 없으면 맨 뒤에
+            if (!cl.data) return [];
+            var M = cl.memo, ds = cl.data.drafts || [], cur = M && M.draftId;
+            if (cur && ds.some(function (x) { return x.id === cur; }) && clTabsGet().indexOf(cur) < 0) clTabsSet(clTabsGet().concat([cur]));
+            clTabsLive();   // 끝난·지워진 탭 정리
+            return clTabsGet().map(function (id) { return ds.filter(function (x) { return x.id === id; })[0]; }).filter(Boolean);
         }
-        function clTabName(d) {
+        function clDraftBits(d) {   // 보관한 메모에 적은 것: 연락처(가림) → 칸 순서대로 적은 값 → 상담 내용(양식 줄은 값만)
+            var s = cl.data.sheets.filter(function (q) { return q.id === d.sh; })[0] || null, v = d.v || {}, out = [], ph = '', base = s ? clNewRowVals(s) : {};
+            if (s) s.cols.forEach(function (c) {
+                var kd = clColKind(c), val = String(v[c.k] || '').replace(/\s+/g, ' ').trim();
+                if (!val || val === String(base[c.k] || '').trim() || /^\d{1,2}[\/.-]\d{1,2}$/.test(val) || kd === 'no' || kd === 'date' || kd === 'time' || kd === 'staff' || /상담내용/.test(c.l.replace(/\s/g, ''))) return;
+                if (kd === 'ph') { ph = clMask(val); return; }
+                out.push(val);
+            });
+            clTplClean(d.raw || '').split('\n').forEach(function (l) {
+                var m = /^■ [^:]+:[ \t]*(.*)$/.exec(l), t = (m ? m[1] : l).replace(/\s+/g, ' ').trim();
+                if (t) out.push(t);
+            });
+            return { ph: ph, bits: out };
+        }
+        function clDraftLine(d) {   // 보관한 메모 한 줄 요약 (불러오기 목록 · 탭 설명)
+            var b = clDraftBits(d);
+            return [b.ph].concat(b.bits).filter(Boolean).join(' · ').slice(0, 160);
+        }
+        function clTabName(d) {   // 탭 글자: 번호 뒷자리 + 적은 내용 앞부분 (최대 24자)
             var s = cl.data.sheets.filter(function (q) { return q.id === d.sh; })[0] || null, pc = s ? clColBy(s, 'ph') : null, ph = pc ? digitsOnly((d.v || {})[pc.k] || '') : '';
-            var tc = s ? clColBy(s, '', /현통신사/) : null, tel = tc ? String((d.v || {})[tc.k] || '').trim() : '';
-            var prod = (/^■ 상담 (?:통신사|상품|제품) :[ \t]*(\S.*)$/m.exec(d.raw || '') || [])[1] || '';
-            return (ph.length >= 4 ? '…' + ph.slice(-4) : tel || prod || '상담').slice(0, 14);
+            var t = [ph.length >= 4 ? '…' + ph.slice(-4) : ''].concat(clDraftBits(d).bits).filter(Boolean).join(' ');
+            return t ? (t.length > 24 ? t.slice(0, 23) + '…' : t) : '상담';
         }
         function clMemoNew() {   // ＋ 새 상담: 적던 상담은 탭으로 접어 두고 빈 메모
             var M = cl.memo; if (!M) return;
@@ -10223,27 +10247,38 @@
             var M = cl.memo; if (!M || !cl.data) return;
             var d = (cl.data.drafts || []).filter(function (x) { return x.id === id; })[0];
             if (!d) { clTabsSet(clTabsGet().filter(function (x) { return x !== id; })); M.built = ''; clMemoPaint(); toast('이미 완료했거나 지워진 상담 메모예요.'); return; }
-            var saved = clDraftSave(true), T = clTabsGet().filter(function (x) { return x !== id; });
+            var saved = clDraftSave(true), T = clTabsGet().slice();
             if (saved && M.draftId && M.draftId !== id && T.indexOf(M.draftId) < 0) T.push(M.draftId);
+            if (T.indexOf(id) < 0) T.push(id);
             clTabsSet(T);
             if (d.sh && cl.data.sheets.some(function (x) { return x.id === d.sh; })) M.sheet = d.sh;
             M.P = null; M.built = ''; M.vals = JSON.parse(JSON.stringify(d.v || {})); M.st = d.st || 'n'; M.raw = d.raw || null; M.sig = clPkSig(); M.asig = null; M.draftId = d.id; M.min = false; M.open = true;
             if (M.raw != null && /(^|\n)■ /.test(M.raw)) M.kind = clIsRent(M.raw) ? 'rent' : 'net';
             clMemoPaint();
         }
-        function clTabBar(M) {   // 탭: [지금 적는 상담] […1234 18:40] [SKB 18:52] …
-            var tabs = clTabsLive(); if (!tabs.length) return null;
-            return h('div', { class: 'cl-tabs-m', role: 'tablist', 'aria-label': '접어 둔 상담 메모' },
-                h('span', { class: 'cl-tab-m on', role: 'tab', 'aria-selected': 'true' }, '✏️ 지금 상담'),
-                tabs.map(function (d) {
-                    return h('span', { class: 'cl-tab-m', role: 'presentation' },
-                        h('button', { type: 'button', role: 'tab', 'aria-selected': 'false', class: 'cl-tab-go', 'data-act': 'cl-tab', 'data-id': d.id, title: (clDraftLine(d) || '내용 없음') + ' · ' + ibTime(d.at) + ' — 누르면 이 상담으로 (지금 상담은 탭으로 접혀요)', onclick: function () { clMemoSwitch(d.id); } }, clTabName(d), h('small', {}, actHm(d.at))),
-                        h('button', { type: 'button', class: 'cl-tab-x', 'data-act': 'cl-tab-x', 'aria-label': '탭에서 빼기', title: '탭에서만 빼요 (2일 동안 [📂 불러오기]에 남아요)', onclick: function () { clTabsSet(clTabsGet().filter(function (x) { return x !== d.id; })); M.built = ''; clMemoPaint(); toast('탭에서 뺐어요. 2일 동안 [📂 불러오기]에서 다시 불러올 수 있어요.'); } }, '×'));
-                }));
+        function clTabBar(M) {   // 탭: […2222 고객A 18:40] […4444 SKB 18:52] [✏️ 새 상담] — 지금 적는 상담은 노란색
+            var all = clTabsAll(), cur = M.draftId, curIn = !!cur && all.some(function (d) { return d.id === cur; });
+            if (all.length + (curIn ? 0 : 1) < 2) return null;   // 상담이 하나뿐이면 탭 없이
+            var chip = function (d) {
+                var on = d.id === cur;
+                return h('span', { class: 'cl-tab-m' + (on ? ' on' : ''), role: 'presentation', 'data-tab': d.id },
+                    h('button', { type: 'button', role: 'tab', 'aria-selected': on ? 'true' : 'false', class: 'cl-tab-go', 'data-act': 'cl-tab', 'data-id': d.id, title: (clDraftLine(d) || '내용 없음') + ' · ' + ibTime(d.at) + (on ? ' — 지금 적는 상담' : ' — 누르면 이 상담으로 (지금 상담은 그대로 보관돼요)'), onclick: function () { if (!on) clMemoSwitch(d.id); } },
+                        on ? h('i', { class: 'cl-tab-pen', 'aria-hidden': 'true' }, '✏️') : null, h('span', { class: 'cl-tab-lb' }, clTabName(d)), h('small', {}, actHm(d.at))),
+                    on ? null : h('button', { type: 'button', class: 'cl-tab-x', 'data-act': 'cl-tab-x', 'aria-label': '탭에서 빼기', title: '탭에서만 빼요 (2일 동안 [📂 불러오기]에 남아요)', onclick: function () { clTabsSet(clTabsGet().filter(function (x) { return x !== d.id; })); M.built = ''; clMemoPaint(); toast('탭에서 뺐어요. 2일 동안 [📂 불러오기]에서 다시 불러올 수 있어요.'); } }, '×'));
+            };
+            return h('div', { class: 'cl-tabs-m', role: 'tablist', 'aria-label': '상담 메모 탭' },
+                all.map(chip),
+                curIn ? null : h('span', { class: 'cl-tab-m on new', role: 'presentation' }, h('span', { role: 'tab', 'aria-selected': 'true', class: 'cl-tab-go' }, h('i', { class: 'cl-tab-pen', 'aria-hidden': 'true' }, '✏️'), h('span', { class: 'cl-tab-lb' }, '새 상담'))));
+        }
+        function clTabLabelNow() {   // 자동 보관할 때 지금 탭 글자만 바로 고침 (창을 다시 그리지 않음)
+            var M = cl.memo; if (!M || !M.el || !M.draftId || !cl.data) return;
+            var d = (cl.data.drafts || []).filter(function (x) { return x.id === M.draftId; })[0]; if (!d) return;
+            if (clTabsGet().indexOf(d.id) < 0) clTabsSet(clTabsGet().concat([d.id]));
+            var lb = M.el.querySelector('.cl-tab-m.on .cl-tab-lb'); if (lb) lb.textContent = clTabName(d);
         }
         /* 자동 보관: 적는 동안 3초 쉬면 · 다른 창으로 가거나 닫을 때 바로 (팀 키로 암호화해서 상담 리스트와 함께) */
         function clAutoKick() { clearTimeout(cl.autoT); cl.autoT = setTimeout(clAutoSave, 3000); }
-        function clAutoSave() { clearTimeout(cl.autoT); var M = cl.memo; if (!M || !M.open || !cl.data || !authed) return false; return clDraftSave(true); }
+        function clAutoSave() { clearTimeout(cl.autoT); var M = cl.memo; if (!M || !M.open || !cl.data || !authed) return false; var ok = clDraftSave(true); if (ok) clTabLabelNow(); return ok; }
         document.addEventListener('visibilitychange', function () { if (document.hidden && typeof cl !== 'undefined' && cl && clAutoSave()) { clearTimeout(cl.saveT); clSave(0); } });
         function clDraftDrop(id) { if (!cl.data || !cl.data.drafts || !id) return; cl.data.drafts = cl.data.drafts.filter(function (x) { return x.id !== id; }); cl.data.del[id] = Date.now(); clQueue(); }
         function clDraftLoad(d) {   // 📂 불러오기: 적던 메모가 있으면 먼저 임시 저장
@@ -10259,7 +10294,7 @@
             var sh = function (id) { var x = cl.data.sheets.filter(function (q) { return q.id === id; })[0]; return x || null; };
             var line = function (d) {
                 var s = sh(d.sh), col = function (kind, re) { return s ? clColBy(s, kind, re) : null; }, vv = function (c) { return c ? String(d.v[c.k] || '').trim() : ''; };
-                return clDraftLine(d) || '(연락처·내용 없음)';
+                return clDraftLine(d) || '(적은 내용 없음)';
             };
             var tabsNow = clTabsGet();
             dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '📂 보관 중인 상담 메모 (' + list.length + ')'),
@@ -10421,8 +10456,8 @@
             var newBtn = h('button', { type: 'button', class: 'btn btn-sm cl-new-b', 'data-act': 'cl-memo-new', title: '적던 상담은 탭으로 접어 두고 새 상담을 적어요', onclick: clMemoNew }, '＋ 새 상담');
             if (M.min) {
                 clMemoStash(); M.P = null;
-                var nT = clTabsLive().length, curHas = s && M.vals && clDraftHas(s, M.vals, M.raw || '');
-                M.el.appendChild(h('div', { class: 'cl-memo-h' }, h('b', {}, '📝 상담 메모'), (nT + (curHas ? 1 : 0)) > 0 ? h('span', { class: 'cl-memo-n' }, (nT + (curHas ? 1 : 0)) + '건') : null, h('span', { class: 'cl-memo-sp' }), newBtn, minBtn, closeBtn));
+                var allT = clTabsAll(), curHas = s && M.vals && clDraftHas(s, M.vals, M.raw || ''), curIn = !!M.draftId && allT.some(function (d) { return d.id === M.draftId; }), nAll = allT.length + (curHas && !curIn ? 1 : 0);
+                M.el.appendChild(h('div', { class: 'cl-memo-h' }, h('b', {}, '📝 상담 메모'), nAll > 0 ? h('span', { class: 'cl-memo-n' }, nAll + '건') : null, h('span', { class: 'cl-memo-sp' }), newBtn, minBtn, closeBtn));
                 var tb = clTabBar(M); if (tb) M.el.appendChild(h('div', { class: 'cl-memo-tb min' }, tb));
                 return;
             }
