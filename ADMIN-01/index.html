@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Ij8CRIsmMAb9k7so7xdK4VkjzmrF2vFzezhb86TGdZ8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-0vYsZDp1UgcoNC0raxFDUpDrXRCb/KVq8eesKMN/mAg='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -362,6 +362,21 @@
         .btn.t-pause { flex: none; min-height: 34px; padding: 0 9px; font-weight: 800; border-color: #E0A100; color: #8A6400; background: #FFF8DB; }
         .btn.t-pause.resume { border-color: var(--ok); color: #fff; background: var(--ok); }
         .t-paused { color: #B7791F; font-weight: 800; }
+        .t-pz { color: #8A6400; }
+        .t-over { color: #C62828; font-weight: 800; }
+        .est-al { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 2147483000; width: min(560px, calc(100vw - 24px)); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 16px; border-radius: 14px; background: #FFF4D6; border: 3px solid #E0A100; box-shadow: 0 18px 40px rgba(60, 40, 0, .35); animation: estIn .35s ease, estPulse 1.6s ease-in-out .35s 4; }
+        .est-al-ic { font-size: 34px; line-height: 1; animation: estRing 1s ease-in-out 3; }
+        .est-al-t { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+        .est-al-t b { font-size: 17px; font-weight: 900; color: #7A3E00; }
+        .est-al-n { font-size: 15.5px; font-weight: 800; color: #1F2416; word-break: break-all; }
+        .est-al-t small { font-size: 12.5px; color: #6A5A2A; font-weight: 700; }
+        .est-al-b { display: flex; gap: 6px; flex-wrap: wrap; }
+        .est-al-b .btn { min-height: 38px; font-weight: 800; }
+        .est-al-b .est-done { background: #2F7D32; border-color: #2F7D32; color: #fff; }
+        @keyframes estIn { from { opacity: 0; transform: translate(-50%, -20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        @keyframes estPulse { 50% { box-shadow: 0 0 0 8px rgba(224, 161, 0, .35), 0 18px 40px rgba(60, 40, 0, .35); } }
+        @keyframes estRing { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-14deg); } 75% { transform: rotate(14deg); } }
+        @media (prefers-reduced-motion: reduce) { .est-al, .est-al-ic { animation: none; } }
         .t-row select:disabled { opacity: 1; cursor: not-allowed; }
         .t-ext { display: inline-flex; align-items: center; gap: 4px; background: #E6EEFF; color: #2F55B8; font-weight: 800; font-size: 13px; border-radius: 6px; padding: 5px 9px; white-space: nowrap; }
         .t-from { display: inline-block; margin-top: 3px; font-size: 12px; font-weight: 700; color: #2F55B8; background: #EEF3FF; border-radius: 4px; padding: 1px 7px; }
@@ -1783,7 +1798,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-29.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-29.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1928,6 +1943,8 @@
                 if (str(t.est, 30).trim()) nt.est = str(t.est, 30).trim();
                 if (num(t.pa) > 0) nt.pa = Math.floor(num(t.pa));   // 중지했던 시간 합계
                 if (num(t.ps) > 0) nt.ps = Math.floor(num(t.ps));   // 지금 중지 중이면 중지한 시각
+                if (nt.ps && str(t.pr, 20).trim()) nt.pr = str(t.pr, 20).trim();   // 중지한 까닭 (실시간업무 이름)
+                if (Array.isArray(t.pl)) { var pl = t.pl.slice(-30).filter(function (p) { return Array.isArray(p) && num(p[0]) > 0 && num(p[1]) > num(p[0]); }).map(function (p) { return [Math.floor(num(p[0])), Math.floor(num(p[1])), str(p[2], 20).trim()]; }); if (pl.length) nt.pl = pl; }   // 중지 · 재시작 기록
                 if (isYmd(t.ext)) { nt.ext = t.ext; if (str(t.extId, 40)) nt.extId = str(t.extId, 40); }   // 내일업무로 연장한 원래 업무
                 if (str(t.from, 40)) { nt.from = str(t.from, 40); if (isYmd(t.fromDate)) nt.fromDate = t.fromDate; }   // 연장해서 새로 만든 업무
                 if (str(t.evId, 40)) nt.evId = str(t.evId, 40);   // 캘린더 일정과 연결된 할 일
@@ -2514,17 +2531,86 @@
         function setTaskStatus(t, s, now) {
             if (['todo', 'doing', 'done'].indexOf(s) < 0 || t.status === s) return false;
             now = now || Date.now();
-            if (s === 'todo') { delete t.st; delete t.fin; delete t.pa; delete t.ps; }
+            if (s === 'todo') { delete t.st; delete t.fin; delete t.pa; delete t.ps; delete t.pr; delete t.pl; }
             else if (s === 'doing') { if (!t.st) t.st = now; delete t.fin; }      // 완료 → 다시 진행 중: 처음 시작 시각은 그대로
-            else { if (t.ps) { t.pa = (t.pa || 0) + Math.max(0, now - t.ps); delete t.ps; } t.fin = now; }   // 중지 중에 완료하면 중지 시간까지 합산
+            else { pauseEnd(t, now); t.fin = now; }   // 중지 중에 완료하면 중지 시간까지 합산
             t.status = s;
             return true;
         }
         function togglePause(t) {   // 진행 중: [중지] ↔ [재시작] (중지한 시간은 소요시간에서 뺌)
             if (t.status !== 'doing') return;
             var now = Date.now();
-            if (t.ps) { t.pa = (t.pa || 0) + Math.max(0, now - t.ps); delete t.ps; stamp(t); commit('다시 시작했어요. (중지 ' + durText(t.pa) + ' 제외)'); }
-            else { t.ps = now; stamp(t); commit('업무를 잠시 중지했어요. 다시 할 때 [재시작]을 눌러 주세요.'); }
+            if (t.ps) { var p0 = t.ps; pauseEnd(t, now); stamp(t); commit('다시 시작했어요. ⏸ ' + clockText(p0) + ' → ▶ ' + clockText(now) + ' (' + durText(now - p0) + ' 쉰 시간은 빼고 계산해요)'); }
+            else { t.ps = now; delete t.pr; stamp(t); commit('업무를 잠시 중지했어요. (' + clockText(now) + ') 다시 할 때 [재시작]을 눌러 주세요.'); }
+        }
+        function pauseEnd(t, now) {   // 중지 끝: 쉰 시간 합계 + 중지·재시작 기록
+            if (!t.ps) return;
+            var d = Math.max(0, now - t.ps);
+            t.pa = (t.pa || 0) + d;
+            if (d >= 30000) t.pl = (t.pl || []).concat([[t.ps, now, t.pr || '']]).slice(-30);   // 30초 안에 다시 누른 것은 기록하지 않음
+            delete t.ps; delete t.pr;
+        }
+        function pauseLines(t, max) {   // ⏸ 18:02 식사 → ▶ 18:28 재시작 (26분)
+            var out = (t.pl || []).map(function (p) { return '⏸ ' + clockText(p[0]) + (p[2] ? ' ' + p[2] : '') + ' 중지 → ▶ ' + clockText(p[1]) + ' 재시작 (' + durText(p[1] - p[0]) + ')'; });
+            var listed = (t.pl || []).reduce(function (a, p) { return a + p[1] - p[0]; }, 0);
+            if ((t.pa || 0) - listed >= 60000) out.unshift('⏸ 그 전 중지 ' + durText(t.pa - listed));   // 기록이 생기기 전의 중지
+            if (max && out.length > max) out = ['⏸ 앞의 중지 ' + (out.length - max + 1) + '번은 줄였어요'].concat(out.slice(-(max - 1)));
+            return out;
+        }
+        function estMs(t) {   // 예상 소요시간 글 → ms ('30분' · '1시간' · '1시간 30분' · '1.5시간' · '45')
+            var v = String(t && t.est || '').replace(/\s+/g, ''), h0 = /(\d+(?:\.\d+)?)시간/.exec(v), m0 = /(\d+)분/.exec(v), n = (h0 ? parseFloat(h0[1]) * 60 : 0) + (m0 ? +m0[1] : 0);
+            if (!h0 && !m0 && /^\d{1,3}$/.test(v)) n = +v;
+            return n > 0 ? Math.round(n * 60000) : 0;
+        }
+        /* ---------- 예상 소요시간 알림: 내 진행 중 업무가 예상 시간을 넘으면 → 화면 위 알림창(누를 때까지) + 컴퓨터 알림 + 소리 + 탭 제목 깜빡임 ---------- */
+        var estAl = { el: null, ac: null, blink: 0, title: '' };
+        function estSeen() { try { return JSON.parse(localStorage.getItem('sg-estal') || '{}') || {}; } catch (e) { return {}; } }
+        function estMark(k) { var m = estSeen(), now = Date.now(); Object.keys(m).forEach(function (x) { if (now - m[x] > 3 * 86400000) delete m[x]; }); m[k] = now; try { localStorage.setItem('sg-estal', JSON.stringify(m)); } catch (e) { /* 이 기기에 못 남겨도 알림은 한 번 */ } estAl.mem = estAl.mem || {}; estAl.mem[k] = 1; }
+        function estKey(t) { return t.id + '|' + (t.st || 0) + '|' + (t.est || ''); }
+        function estBeep() {
+            try {
+                var C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+                var ac = estAl.ac || (estAl.ac = new C()); if (ac.state === 'suspended') ac.resume();
+                [0, 0.28, 0.56].forEach(function (d, i) { var o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = i === 2 ? 1175 : 880; g.gain.setValueAtTime(0.0001, ac.currentTime + d); g.gain.exponentialRampToValueAtTime(0.25, ac.currentTime + d + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + d + 0.24); o.connect(g); g.connect(ac.destination); o.start(ac.currentTime + d); o.stop(ac.currentTime + d + 0.26); });
+            } catch (e) { /* 소리를 못 내도 알림창은 보임 */ }
+        }
+        function estBlink(on) {   // 다른 창을 보고 있으면 탭 제목을 깜빡임
+            clearInterval(estAl.blink); estAl.blink = 0;
+            if (estAl.title) { document.title = estAl.title; estAl.title = ''; }
+            if (!on) return;
+            estAl.title = document.title; var k = 0;
+            estAl.blink = setInterval(function () { document.title = (k++ % 2) ? estAl.title : '⏰ 예상 시간이 됐어요'; }, 900);
+        }
+        function estClose() { if (estAl.el) { estAl.el.remove(); estAl.el = null; } estBlink(false); }
+        function estAlert(t) {
+            var em = estMs(t), wk = workMs(t, Date.now());
+            estClose();
+            var plus = function (min) { var n = Math.round(em / 60000) + min; t.est = n >= 60 ? Math.floor(n / 60) + '시간' + (n % 60 ? ' ' + n % 60 + '분' : '') : n + '분'; stamp(t); estClose(); commit('예상 시간을 ' + t.est + '로 늘렸어요. 그때 다시 알려 드릴게요.'); };
+            estAl.el = h('div', { class: 'est-al', role: 'alertdialog', 'aria-live': 'assertive', 'aria-label': '예상 소요시간 알림', 'data-fk': 'est-al' },
+                h('div', { class: 'est-al-ic', 'aria-hidden': 'true' }, '⏰'),
+                h('div', { class: 'est-al-t' }, h('b', {}, '예상 시간이 됐어요'), h('span', { class: 'est-al-n' }, t.title), h('small', {}, '예상 ' + (t.est || '') + ' · 일한 시간 ' + durText(wk) + ' · ' + clockText(t.st) + ' 시작')),
+                h('div', { class: 'est-al-b' },
+                    h('button', { type: 'button', class: 'btn btn-sm est-done', 'data-act': 'est-done', onclick: function () { if (!confirm('"' + t.title + '"\n이 업무를 완료 처리할까요?')) return; if (setTaskStatus(t, 'done')) { stamp(t); estClose(); commit('완료 처리했어요. 수고했어요! 👏'); } } }, '✓ 완료'),
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'est-p10', onclick: function () { plus(10); } }, '＋10분'),
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'est-p30', onclick: function () { plus(30); } }, '＋30분'),
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'est-close', onclick: estClose }, '계속 할게요')));
+            document.body.appendChild(estAl.el);
+            estBeep();
+            if (document.hidden) estBlink(true);
+            try { if (window.Notification && Notification.permission === 'granted') { var nn = new Notification('⏰ 예상 시간이 됐어요', { body: t.title + '\n예상 ' + (t.est || '') + ' · 일한 시간 ' + durText(wk), tag: 'sg-est-' + t.id, requireInteraction: true }); nn.onclick = function () { try { window.focus(); } catch (e) { /* 무시 */ } nn.close(); }; } } catch (e) { /* 컴퓨터 알림을 못 띄워도 화면 알림은 보임 */ }
+        }
+        function estCheck() {
+            if (!authed || !db || estAl.el) return;
+            var now = Date.now(), seen = estSeen(), mem = estAl.mem || {};
+            var due = db.tasks.filter(function (t) { var em = estMs(t); return t.staffId === me && t.status === 'doing' && !t.ps && !t.ext && t.st && em && workMs(t, now) >= em && !seen[estKey(t)] && !mem[estKey(t)]; });
+            if (!due.length) return;
+            estMark(estKey(due[0])); estAlert(due[0]);
+        }
+        setInterval(estCheck, 15000);
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) { estBlink(false); estCheck(); } });
+        document.addEventListener('pointerdown', function () { var C = window.AudioContext || window.webkitAudioContext; if (C && !estAl.ac) { try { estAl.ac = new C(); } catch (e) { /* 무시 */ } } else if (estAl.ac && estAl.ac.state === 'suspended') estAl.ac.resume(); }, { capture: true, passive: true });
+        function estAskNotify() {   // 업무를 '진행 중'으로 바꿀 때 한 번: 컴퓨터 알림 허용 묻기 (다른 창을 보고 있어도 알림이 뜨게)
+            try { if (window.Notification && Notification.permission === 'default' && !estAl.asked) { estAl.asked = true; Notification.requestPermission(); } } catch (e) { /* 무시 */ }
         }
         function workMs(t, end) { return Math.max(0, end - t.st - (t.pa || 0) - (t.ps ? Math.max(0, end - t.ps) : 0)); }   // 실제로 일한 시간
         function isBoss() { var m = staffById(me); return !!(m && m.adm) && isAdminUser(); }   // 대표(관리자)
@@ -2543,17 +2629,21 @@
         }
         function taskTimeLines(t, withElapsed) {   // 상태 아래에 보여 줄 짧은 줄들
             var L = [];
+            var now = Date.now(), em = estMs(t);
             if (t.status === 'doing' && t.st) {
-                if (t.ps) L.push('중지 중 (' + clockText(t.ps) + '부터)');
-                L.push('시작 ' + clockText(t.st));
-                if (withElapsed) L.push('일한 시간 ' + durText(workMs(t, Date.now())));
-                else if (t.pa) L.push('중지 ' + durText(t.pa) + ' 제외');
+                if (t.ps) L.push('⏸ 중지 중 · ' + clockText(t.ps) + (t.pr ? ' ' + t.pr : '') + '부터 (' + durText(now - t.ps) + ')');
+                L.push('▶ 시작 ' + clockText(t.st));
+                L = L.concat(pauseLines(t, withElapsed ? 4 : 3));
+                var wk = workMs(t, now), pz = (t.pa || 0) + (t.ps ? Math.max(0, now - t.ps) : 0);
+                L.push('일한 시간 ' + durText(wk) + (pz >= 60000 ? ' (쉰 ' + durText(pz) + ' 뺌)' : ''));
+                if (t.est) L.push(em && wk >= em ? '⏰ 예상 ' + t.est + ' · ' + durText(wk - em) + ' 넘음' : '예상 ' + t.est + (em ? ' · 남은 ' + durText(em - wk) : ''));
             }
             else if (t.status === 'done' && t.fin) {
-                if (t.st && t.fin >= t.st) { L.push(clockText(t.st) + ' → ' + clockText(t.fin)); L.push('총 소요 ' + durText(workMs(t, t.fin))); if (t.pa) L.push('(중지 ' + durText(t.pa) + ' 제외)'); }
+                if (t.st && t.fin >= t.st) { L.push('▶ ' + clockText(t.st) + ' → ✓ ' + clockText(t.fin)); L = L.concat(pauseLines(t, withElapsed ? 4 : 3)); L.push('총 소요 ' + durText(workMs(t, t.fin)) + (t.pa >= 60000 ? ' (쉰 ' + durText(t.pa) + ' 뺌)' : '')); }
                 else L.push('완료 ' + clockText(t.fin));
+                if (t.est) L.push('예상 ' + t.est);
             }
-            if (t.est) L.push('예상 ' + t.est);
+            else if (t.est) L.push('예상 ' + t.est);
             return L;
         }
         function taskTimeText(t) { return taskTimeLines(t).join(' · '); }
@@ -2765,7 +2855,7 @@
             if (!k) { toast(actUi.pick === '기타' ? '기타 칸에 할 일을 적어 주세요.' : '먼저 할 일을 골라 주세요.'); var el = document.querySelector('[data-fk="act-etc"]'); if (el) el.focus(); return; }
             if (!db.acts) db.acts = [];
             var now = Date.now(), held = db.tasks.filter(function (t) { return t.staffId === me && t.status === 'doing' && !t.ps && !t.ext; });   // 지금 하는 일은 즉시 하는 일 → 진행 중이던 내 업무는 중지
-            held.forEach(function (t) { t.ps = now; stamp(t); });
+            held.forEach(function (t) { t.ps = now; t.pr = k.slice(0, 20); stamp(t); });
             db.acts.push(stamp({ id: uid(), sid: me, k: k, s: now, e: 0, u: 0 }));
             commit(held.length ? '진행 중이던 업무 ' + held.length + '건을 중지했어요. (' + held.map(function (t) { return t.title; }).join(', ').slice(0, 60) + ')' : '');
         }
@@ -3012,6 +3102,7 @@
                     var v = this.value;
                     if (!canChangeStatus(t)) { this.value = t.status; toast('완료한 업무는 대표만 되돌릴 수 있어요.'); return; }
                     if (v === 'done' && !confirm('"' + t.title + '"\n이 업무를 정말 완료 처리할까요?' + (isBoss() ? '' : '\n완료한 뒤에는 대표만 되돌릴 수 있어요.'))) { this.value = t.status; return; }
+                    if (v === 'doing' && estMs(t)) estAskNotify();
                     if (setTaskStatus(t, v)) { stamp(t); commit(v === 'done' ? '완료 처리했어요.' : ''); }
                 });
                 var pauseBtn = t.status === 'doing' && !t.ext ? h('button', { type: 'button', class: 'btn btn-sm t-pause' + (t.ps ? ' resume' : ''), 'data-act': t.ps ? 'task-resume' : 'task-pause', 'data-fk': 'pz-' + t.id, title: t.ps ? '다시 시작하기' : '잠시 멈추기 (멈춘 시간은 소요시간에서 빠져요)', onclick: function () { togglePause(t); } }, t.ps ? '재시작' : '중지') : null;
@@ -3025,7 +3116,7 @@
                     h('div', { class: 't-cell', 'data-label': '마감' }, dueTag(t)),
                     h('div', { class: 't-cell', 'data-label': '우선순위' }, h('span', { class: 'pri ' + t.priority }, PRIORITY.filter(function (p) { return p.v === t.priority; })[0].t)),
                     h('div', { class: 't-cell', 'data-label': '상태' }, t.ext ? h('span', { class: 't-ext', title: koDate(t.ext) + ' 업무로 옮겼어요' }, '→ 내일업무로 연장') : h('div', { class: 't-st' }, pauseBtn, sel),
-                        t.ext ? h('div', { class: 't-time' }, h('b', {}, koDate(t.ext) + '로 이동')) : (tl.length ? h('div', { class: 't-time' }, tl.map(function (x, i) { return h('div', { class: t.ps && i === 0 ? 't-paused' : false }, i === 0 && t.status !== 'todo' ? h('b', {}, x) : x); })) : null)),
+                        t.ext ? h('div', { class: 't-time' }, h('b', {}, koDate(t.ext) + '로 이동')) : (tl.length ? h('div', { class: 't-time' }, tl.map(function (x, i) { return h('div', { class: t.ps && i === 0 ? 't-paused' : /^⏰/.test(x) ? 't-over' : /^⏸/.test(x) ? 't-pz' : false }, i === 0 && t.status !== 'todo' ? h('b', {}, x) : x); })) : null)),
                     h('div', { class: 't-actions' },   // 수정 · 순서 바꾸기 · (맨 뒤) 내일로 이동 / 연장 취소
                         h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editTask(t); } }, '수정'),
                         h('button', { type: 'button', class: 'btn btn-sm t-drag', 'data-fk': 'drag-' + t.id, title: '누른 채 위아래로 끌어서 순서 바꾸기', 'aria-label': t.title + ' 순서 바꾸기 (누른 채 끌기, 키보드는 위·아래 화살표)',
@@ -3358,8 +3449,8 @@
                 probe.font = '700 21px ' + F;
                 var lines = wrapLines(probe, t.title, cols[1].w - 22, 3), memo = [];
                 if (t.memo) { probe.font = '500 16px ' + F; memo = wrapLines(probe, t.memo.replace(/\s+$/, ''), cols[1].w - 22, 12); }
-                var tl = t.ext ? [(+t.ext.slice(5, 7)) + '/' + (+t.ext.slice(8, 10)) + ' 업무로 이동'] : taskTimeLines(t, true).slice(0, 3);
-                return { t: t, n: closed(t) ? '' : String(++seq), lines: lines, memo: memo, tl: tl, h: Math.max(58, 20 + lines.length * 28 + memo.length * 22 + (memo.length ? 4 : 0), tl.length ? 56 + tl.length * 21 : 0) };
+                var tl = t.ext ? [(+t.ext.slice(5, 7)) + '/' + (+t.ext.slice(8, 10)) + ' 업무로 이동'] : taskTimeLines(t, true).slice(0, 8);
+                return { t: t, n: closed(t) ? '' : String(++seq), lines: lines, memo: memo, tl: tl, h: Math.max(58, 20 + lines.length * 28 + memo.length * 22 + (memo.length ? 4 : 0) + (tl.length ? 10 + tl.length * 23 : 0)) };
             });
             var AR = isDoing ? actForReport() : { run: [], logs: [] }, actLogs = AR.logs.slice(-14), actMore = AR.logs.length - actLogs.length;
             var actH = AR.run.length || actLogs.length ? (AR.run.length ? 54 + AR.run.length * 58 : 94) + (actLogs.length ? 10 + actLogs.length * 26 : 0) + (actMore ? 24 : 0) + 18 : 0;
@@ -3442,7 +3533,8 @@
                 g.fillStyle = pri[1]; g.fillText(pri[0], xs[4] + 4, y + 36);
                 var st = t.ext ? ['내일로 연장', '#E6EEFF', '#2F55B8'] : t.status === 'done' ? ['완료', '#DDF0DD', '#1F6B2A'] : t.status === 'doing' ? (t.ps ? ['중지됨', '#FFE3DC', '#B3401F'] : ['진행 중', '#FFF3BF', '#7A5B00']) : ['할 일', '#F1F4E6', '#4A5240'];
                 g.font = '700 17px ' + F; var sw = g.measureText(st[0]).width + 26; rrect(g, xs[5], y + 14, sw, 30, 15, st[1]); g.fillStyle = st[2]; g.fillText(st[0], xs[5] + 13, y + 36);
-                for (i = 0; i < r.tl.length; i++) { g.font = (i === 0 && t.status !== 'todo' ? '700 15px ' : '500 15px ') + F; g.fillStyle = i === 0 && t.status !== 'todo' ? '#3E441E' : '#66705A'; g.fillText(fitText(g, r.tl[i], cols[5].w - 4), xs[5] + 2, y + 66 + i * 21); }
+                var ty0 = y + 34 + (r.lines.length - 1) * 28 + 28 + r.memo.length * 22 + (r.memo.length ? 6 : 0);
+                for (i = 0; i < r.tl.length; i++) { var tx0 = r.tl[i]; g.font = (i === 0 && t.status !== 'todo' || /^⏰/.test(tx0) ? '700 16px ' : '500 16px ') + F; g.fillStyle = /^⏰/.test(tx0) ? '#C62828' : /^⏸/.test(tx0) ? '#B7791F' : i === 0 && t.status !== 'todo' ? '#3E441E' : '#66705A'; g.fillText(fitText(g, tx0, cols[1].w + cols[2].w - 20), xs[1] + 12, ty0 + i * 23); }
                 y += r.h;
             });
             if (!rows.length) { g.textAlign = 'center'; g.fillStyle = '#7B8568'; g.font = '700 22px ' + F; g.fillText(isDoing ? '현재 진행 중인 업무가 없어요.' : '보고할 업무가 없어요.', PAD + 464, y + 50); g.textAlign = 'left'; y += 80; }
@@ -3596,7 +3688,7 @@
                 d.staff.slice().sort(function (a, b) { return (a.o - b.o) || byId(a, b); }).map(function (x) { return [x.id, x.name, x.role, x.u, x.o, x.adm ? 1 : 0]; }),
                 d.events.slice().sort(byId).map(function (x) { return [x.id, x.title, x.date, x.time, x.staffId, x.memo, x.u]; }),
                 d.notices.slice().sort(byId).map(function (x) { return [x.id, x.title, x.body, x.staffId, x.date, x.pinned ? 1 : 0, x.u]; }),
-                d.tasks.slice().sort(byId).map(function (x) { return [x.id, x.title, x.staffId, x.due, x.priority, x.status, x.memo, x.u, x.ord || 0, x.st || 0, x.fin || 0, x.est || '', x.ext || '', x.extId || '', x.from || '', x.fromDate || '', x.pa || 0, x.ps || 0]; }),
+                d.tasks.slice().sort(byId).map(function (x) { return [x.id, x.title, x.staffId, x.due, x.priority, x.status, x.memo, x.u, x.ord || 0, x.st || 0, x.fin || 0, x.est || '', x.ext || '', x.extId || '', x.from || '', x.fromDate || '', x.pa || 0, x.ps || 0, x.pr || '', JSON.stringify(x.pl || [])]; }),
                 Object.keys(d.del).sort().map(function (k) { return [k, d.del[k]]; }),
                 (d.regs || []).slice().sort(byId).map(function (x) { return Object.keys(x).filter(function (k) { return k !== 'b'; }).sort().map(function (k) { return [k, x[k]]; }); }),
                 (d.intakes || []).slice().sort(byId).map(function (x) { return [x.id, x.code, x.name, x.text, x.t, x.u]; }),
