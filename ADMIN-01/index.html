@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-cmU/D/vavoNBRZeSp8uNsRXajvmctp8Ilymznqd/ve0='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-cHMdKUEg0GnH8OmXcNffKMiRG5m3MYbolEz/X2EKjls='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1811,7 +1811,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-30.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-30.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -13150,9 +13150,11 @@
             Object.keys(cv).map(Number).filter(function (r) { return r > hr; }).forEach(function (r) {
                 var row = cv[r] || {}, v = function (k) { var x = col[k] ? row[col[k]] : ''; x = x == null ? '' : String(x).trim(); return x.charAt(0) === '=' ? '' : x; };
                 var kind = v('모바일&유선'), st0 = v('설치유무');
-                if (!/^유선/.test(kind) || /취소|렌탈/.test(kind) || /취소/.test(st0)) return;   // 유선(렌탈)은 인터넷 가입 현황에서 뺌
-                var nm = lvMask(v('고객명')), car = lvCar(v('통신사')), day = parseInt(v('가입날짜'), 10);
+                var rent = /렌탈/.test(kind);
+                if (!(/^유선/.test(kind) || /^렌탈/.test(kind)) || /취소/.test(kind) || /취소/.test(st0)) return;
+                var nm = lvMask(v('고객명')), car = rent ? ['렌탈', ''] : lvCar(v('통신사')), day = parseInt(v('가입날짜'), 10);
                 if (!nm || !car || !(day >= 1 && day <= last)) return;
+                if (rent) { out.push({ d: ym.y + '-' + pad(ym.m) + '-' + pad(day), nm: nm, car: '렌탈', pr: '렌탈', st: lvSt(st0, v('유선정산유무')), pay: '', amt: 0, k: r }); out[out.length - 1].pay = out[out.length - 1].st === 'done' ? lvPay(v('입금')) : ''; return; }   // 렌탈: 통신사 대신 '렌탈' · 상담 혜택은 맞춤 상담
                 var md = v('모델'), q = v('요금제'), mq = md + ' ' + q, speed = lvSpeed(q) || lvSpeed(md);
                 var tvN = (md.match(/티/g) || []).length || (/TV|티비/i.test(q) ? 1 : 0), net = /인/.test(md) || !!speed || !tvN, cctv = /CCTV/i.test(mq);
                 var parts = [];
@@ -13207,7 +13209,10 @@
             (force ? Promise.resolve(0) : lvAge()).then(function (at) {
                 if (!force && at && Date.now() - at < LV_EVERY - 5 * 60000) return null;
                 return lvBuild().then(function (items) {
-                    return ibCall('liveSet', { items: items }).then(function () { return items; }, function (e) {   // 예전 서버(25건까지)면 25건으로 다시
+                    return ibCall('liveSet', { items: items }).then(function () { return items; }, function (e) {
+                        if (e && e.code === 'invalid' && items.some(function (x) { return x.car === '렌탈'; })) { items = items.filter(function (x) { return x.car !== '렌탈'; }); return ibCall('liveSet', { items: items.slice(0, LV_MAX) }).then(function () { return items; }); }   // 서버가 아직 '렌탈'을 모르면 렌탈만 빼고
+                        throw e;
+                    }).then(function (x) { return x; }, function (e) {   // 예전 서버(25건까지)면 25건으로 다시
                         if (e && e.code === 'invalid' && items.length > 25) { var few = items.slice(0, 25); return ibCall('liveSet', { items: few }).then(function () { return few; }); }
                         if (e && e.code === 'invalid') e.serverMessage = '서버(Apps Script)가 예전 버전이에요. drive-storage.gs를 새 버전으로 배포해 주세요.';
                         throw e;
