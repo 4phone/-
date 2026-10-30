@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6SuDGkXg614Vpy3fzbezucqACLCIEWcQE6O1UTYlL0k='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dr/bqOtRJEl8+5+DS/EDS0Ce/SW3iowsPbqCJ3hfPrE='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -765,6 +765,9 @@
         .pol-ai p { margin: 0; font-size: 13px; color: #4D5A2A; line-height: 1.5; }
         .pol-ai .btn { justify-self: start; }
         .pol-ai-out { font-size: 13px; line-height: 1.5; }
+        .chg-pre { margin: 0; max-height: min(60vh, 560px); overflow: auto; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 13.5px; line-height: 1.6; background: #FBFCF6; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; user-select: text; -webkit-user-select: text; }
+        .chg-warn { margin: 0 0 6px; font-size: 13px; font-weight: 800; color: #A61F1F; }
+        .chg-tip { margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
         .pol-ai-out.busy { color: #8A6A00; font-weight: 700; }
         .pol-ai-out.err { color: #B42318; font-weight: 700; }
         .pol-ai-out ul { margin: 6px 0 0; padding-left: 18px; max-height: 220px; overflow: auto; }
@@ -1878,7 +1881,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-30.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-30.9';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -8161,6 +8164,188 @@
             showDlg(dlg);
             call({});
         }
+        /* ---------- 단가표 변동사항 요약: 올리면 이전 단가표와 비교해서 주요 변동을 글로 (복사해서 단톡방에) ---------- */
+        var CHG_MAX = 15;   // 표·통신사·브랜드마다 보여 줄 줄 수 (나머지는 '외 N개')
+        function chgNum(v) { var t = String(v == null ? '' : v).replace(/[,\s원]/g, '').replace(/만$/, ''); return /^[-+]?\d+(\.\d+)?$/.test(t) ? +t : null; }
+        function chgFmt(n) { return (Math.round(n * 100) / 100).toLocaleString('ko-KR'); }
+        function chgD(a, b) {   // '28→30 (+2)'
+            var x = chgNum(a), y = chgNum(b);
+            if (x !== null && y !== null) { var d = Math.round((y - x) * 100) / 100; return a + '→' + b + (d ? ' (' + (d > 0 ? '+' : '') + chgFmt(d) + ')' : ''); }
+            return (String(a || '').trim() || '없음') + '→' + (String(b || '').trim() || '없음');
+        }
+        function chgDelta(a, b) { var x = chgNum(a), y = chgNum(b); return x !== null && y !== null ? y - x : 0; }
+        function chgDay(s) { var m = /(\d{4})[-.년\s]*(\d{1,2})[-.월\s]*(\d{1,2})?/.exec(String(s || '')); return m ? (+m[2]) + '/' + (m[3] ? +m[3] : '') : ''; }
+        function chgTop(lines, n) { return lines.length > n ? lines.slice(0, n).concat(['  … 외 ' + (lines.length - n) + '개']) : lines; }
+        function chgAgg() {   // 같은 변동끼리 묶어서 세기 → '기변 +5 (25개)'
+            var m = Object.create(null), order = [];
+            return {
+                add: function (k) { if (!m[k]) { m[k] = 0; order.push(k); } m[k]++; },
+                lines: function (n) { var ks = order.slice().sort(function (a, b) { return m[b] - m[a]; }); return ks.slice(0, n).map(function (k) { return k + ' (' + m[k] + '개)'; }).concat(ks.length > n ? ['그 외 ' + (ks.length - n) + '가지'] : []); }
+            };
+        }
+        function chgSgn(d) { return (d > 0 ? '+' : '') + chgFmt(d); }
+        function chgTxtList(label, a, b) {   // 글 목록 (추가 정책·주의사항 등): 새로 생긴 줄 · 빠진 줄
+            var A = (a || []).map(function (x) { return String(x).trim(); }).filter(Boolean), B = (b || []).map(function (x) { return String(x).trim(); }).filter(Boolean), out = [];
+            B.forEach(function (x) { if (A.indexOf(x) < 0) out.push('  + ' + label + ': ' + x); });
+            A.forEach(function (x) { if (B.indexOf(x) < 0) out.push('  - ' + label + ' 빠짐: ' + x); });
+            return out;
+        }
+        function chgObjList(label, a, b, key, vals) {   // 이름으로 맞춰 보는 정책 목록 (추가·차감·부가서비스·유지조건)
+            var out = [], A = Object.create(null), B = Object.create(null);
+            (a || []).forEach(function (o) { A[o[key]] = o; }); (b || []).forEach(function (o) { B[o[key]] = o; });
+            (b || []).forEach(function (o) {
+                var p = A[o[key]], txt = vals.map(function (k) { return o[k]; }).filter(Boolean).join(' · ');
+                if (!p) { out.push('  + ' + label + ' 새로: ' + o[key] + (txt ? ' (' + txt + ')' : '')); return; }
+                var d = vals.filter(function (k) { return String(p[k] || '') !== String(o[k] || ''); }).map(function (k) { return chgD(p[k], o[k]); });
+                if (d.length) out.push('  * ' + label + ' 바뀜: ' + o[key] + ' ' + d.join(', '));
+            });
+            (a || []).forEach(function (o) { if (!B[o[key]]) out.push('  - ' + label + ' 없어짐: ' + o[key]); });
+            return out;
+        }
+        function chgMobile(prev, dealers) {   // prev: 넣기 전 모바일 단가표 {dealers}, dealers: 새로 넣은 거래처들
+            var out = [], sum = [], tot = { rows: 0, up: 0, down: 0 }, pd = Object.create(null);
+            (prev && prev.dealers || []).forEach(function (x) { pd[x.name] = x; });
+            dealers.forEach(function (x) {
+                var p = pd[x.name], L = [], ag = chgAgg(), pol = 0;
+                out.push('■ ' + x.name + (x.carrier ? ' (' + x.carrier + ')' : '') + (x.date ? ' · ' + x.date : ''));
+                if (!p) { out.push('  새 거래처 (표 ' + x.tables.length + '개)'); out.push(''); sum.push('• ' + x.name + ': 새 거래처'); return; }
+                var seenT = Object.create(null), pt = Object.create(null);
+                p.tables.forEach(function (t) { var k = t.name + '#' + (seenT[t.name] = (seenT[t.name] || 0) + 1); pt[k] = t; });
+                var seenN = Object.create(null), used = Object.create(null);
+                x.tables.forEach(function (t) {
+                    var k = t.name + '#' + (seenN[t.name] = (seenN[t.name] || 0) + 1), o = pt[k]; used[k] = 1;
+                    if (!o) { L.push('· [새 표] ' + t.name + ' (' + t.rows.length + '줄)'); ag.add('새 표'); return; }
+                    var li = t.cols.indexOf('펫네임'); if (li < 0) li = t.cols.length > 1 && chgNum(t.rows[0] && t.rows[0][1]) === null ? 1 : 0;
+                    var rk = function (rows) { var m = Object.create(null), c = Object.create(null); rows.forEach(function (r) { var kk = (r[0] || '') + '#' + (c[r[0]] = (c[r[0]] || 0) + 1); m[kk] = r; }); return m; };
+                    var om = rk(o.rows), nm = rk(t.rows), chg = [], add = [], gone = [];
+                    Object.keys(nm).forEach(function (kk) {
+                        var r = nm[kk], q = om[kk]; if (!q) { add.push(r[li] || r[0]); return; }
+                        var d = [], sum = 0, big = 0;
+                        t.cols.forEach(function (c, i) { var oi = o.cols.indexOf(c); if (i === li || i === 0 || oi < 0) return; if (String(q[oi] || '') !== String(r[i] || '')) { var dd = chgDelta(q[oi], r[i]); sum += dd; ag.add(dd ? c + ' ' + chgSgn(dd) : c + ' 바뀜'); big = Math.max(big, Math.abs(dd)); d.push(c + ' ' + chgD(q[oi], r[i])); } });
+                        if (d.length) chg.push({ t: (sum > 0 ? '▲ ' : sum < 0 ? '▼ ' : '* ') + (r[li] || r[0]) + ': ' + d.join(', '), s: sum, b: big });
+                    });
+                    Object.keys(om).forEach(function (kk) { if (!nm[kk]) gone.push(om[kk][li] || om[kk][0]); });
+                    add.forEach(function () { ag.add('새 모델'); }); gone.forEach(function () { ag.add('빠진 모델'); });
+                    if (!chg.length && !add.length && !gone.length) return;
+                    tot.rows += chg.length; chg.forEach(function (c) { if (c.s > 0) tot.up++; else if (c.s < 0) tot.down++; });
+                    L.push('· ' + t.name + (t.unit ? ' [' + t.unit + ']' : '') + ' — 바뀐 모델 ' + chg.length + '개' + (add.length ? ' · 새 모델 ' + add.length : '') + (gone.length ? ' · 빠진 모델 ' + gone.length : ''));
+                    chg.sort(function (a, b) { return b.b - a.b; });
+                    L = L.concat(chgTop(chg.map(function (c) { return '  ' + c.t; }), CHG_MAX));
+                    if (add.length) L.push('  + 새 모델: ' + add.slice(0, 20).join(', ') + (add.length > 20 ? ' 외 ' + (add.length - 20) : ''));
+                    if (gone.length) L.push('  - 빠진 모델: ' + gone.slice(0, 20).join(', ') + (gone.length > 20 ? ' 외 ' + (gone.length - 20) : ''));
+                });
+                Object.keys(pt).forEach(function (k) { if (!used[k]) L.push('· [빠진 표] ' + pt[k].name); });
+                var P = [].concat(chgObjList('추가정책', p.adds, x.adds, 'name', ['cond', 'amount']), chgObjList('차감정책', p.deducts, x.deducts, 'name', ['cond', 'amount']),
+                    chgObjList('부가서비스', p.addons, x.addons, 'name', ['add', 'miss', 'keep', 'note']), chgObjList('유지조건', p.keep, x.keep, 'item', ['period', 'note']), chgTxtList('안내', p.notes, x.notes));
+                if (P.length) { L.push('· 정책 변동'); L = L.concat(P); }
+                out = out.concat(L.length ? L : ['  변동 없음']); out.push('');
+                var al = ag.lines(4); sum.push('• ' + x.name + ': ' + (al.length ? al.join(' · ') : '단가 변동 없음') + (P.length ? ' · 정책 변동 ' + P.length + '건' : ''));
+            });
+            return { head: '바뀐 모델 ' + tot.rows + '개 (▲ 오름 ' + tot.up + ' · ▼ 내림 ' + tot.down + ')', sum: sum, body: out };
+        }
+        function chgWired(prev, next) {   // 유선(인터넷·TV·CCTV) 단가표: 통신사 → 묶음 → 상품
+            var out = [], tot = { rows: 0, up: 0, down: 0 }, pc = Object.create(null);
+            if (!prev) return { head: '이전 단가표가 없어서 비교할 수 없어요.', sum: [], body: [] };
+            var sum = [];
+            prev.carriers.forEach(function (c) { pc[c.id] = c; });
+            next.carriers.forEach(function (c) {
+                var p = pc[c.id], L = [], ag = chgAgg();
+                if (!p) { out.push('■ ' + c.name + ' (새로 추가)', ''); sum.push('• ' + c.name + ': 새로 추가'); return; }
+                if (!!p.closed !== !!c.closed) L.push(c.closed ? '  ⛔ 접수 중단' : '  ✅ 접수 재개');
+                var pr = Object.create(null); p.groups.forEach(function (g) { g.rows.forEach(function (r) { pr[g.name + '|' + r.n] = r; }); });
+                var nr = Object.create(null), chg = [], add = [];
+                c.groups.forEach(function (g) { g.rows.forEach(function (r) {
+                    var k = g.name + '|' + r.n, q = pr[k]; nr[k] = 1;
+                    if (!q) { add.push(g.name + ' ' + r.n + ' (합계 ' + r.t + '만)'); return; }
+                    var d = [];
+                    if (q.t !== r.t) { d.push('합계 ' + chgD(q.t + '만', r.t + '만')); ag.add(g.name + ' 합계 ' + chgSgn(r.t - q.t) + '만'); }
+                    if (q.g !== r.g) { d.push('상품권 ' + chgD(q.g + '만', r.g + '만')); ag.add('상품권 ' + chgSgn(r.g - q.g) + '만'); }
+                    if (q.p !== r.p) { d.push('월요금 ' + chgD(won(q.p), won(r.p))); ag.add('월요금 ' + chgSgn(r.p - q.p) + '원'); }
+                    if ((q.dc || 0) !== (r.dc || 0)) { d.push('결합할인 ' + chgD(won(q.dc || 0), won(r.dc || 0))); ag.add('결합할인 변경'); }
+                    if (d.length) chg.push({ t: (r.t > q.t ? '▲ ' : r.t < q.t ? '▼ ' : '* ') + g.name + ' · ' + r.n + ': ' + d.join(', '), s: r.t - q.t });
+                }); });
+                var gone = Object.keys(pr).filter(function (k) { return !nr[k]; }).map(function (k) { return k.replace('|', ' '); });
+                tot.rows += chg.length; chg.forEach(function (x) { if (x.s > 0) tot.up++; else if (x.s < 0) tot.down++; });
+                chg.sort(function (a, b) { return Math.abs(b.s) - Math.abs(a.s); });
+                L = L.concat(chgTop(chg.map(function (x) { return '  ' + x.t; }), CHG_MAX));
+                if (add.length) L.push('  + 새 상품: ' + add.slice(0, 15).join(', ') + (add.length > 15 ? ' 외 ' + (add.length - 15) : ''));
+                if (gone.length) L.push('  - 빠진 상품: ' + gone.slice(0, 15).join(', ') + (gone.length > 15 ? ' 외 ' + (gone.length - 15) : ''));
+                Object.keys(c.guide).forEach(function (k) { var a = p.guide[k], b = c.guide[k]; if (!a) L.push('  + 사은품 가이드 ' + b[0] + ': ' + won(b[1]) + '~' + won(b[2])); else if (a[1] !== b[1] || a[2] !== b[2]) L.push('  * 사은품 가이드 ' + b[0] + ': ' + won(a[1]) + '~' + won(a[2]) + ' → ' + won(b[1]) + '~' + won(b[2])); });
+                if (p.penalty !== c.penalty) L.push('  * 위약금: ' + chgD(p.penalty, c.penalty));
+                if (p.comb !== c.comb) L.push('  * 결합 안내: ' + (c.comb || '없음'));
+                L = L.concat(chgTxtList('추가·차감 정책', p.extra, c.extra), chgTxtList('환수', p.refund, c.refund), chgTxtList('주의사항', p.notes, c.notes));
+                if (L.length) { out.push('■ ' + c.name + (chg.length ? ' — 바뀐 상품 ' + chg.length + '개' : '')); out = out.concat(L); out.push(''); }
+                var etc = L.length - Math.min(chg.length, CHG_MAX + 1) - (add.length ? 1 : 0) - (gone.length ? 1 : 0);
+                if (add.length) ag.add('새 상품'); if (gone.length) ag.add('빠진 상품');
+                if (L.length) sum.push('• ' + c.name + ': ' + ag.lines(4).join(' · ') + (etc > 0 ? (ag.lines(1).length ? ' · ' : '') + '정책·안내 변동 ' + etc + '건' : ''));
+            });
+            prev.carriers.forEach(function (c) { if (!next.carriers.some(function (x) { return x.id === c.id; })) { out.push('■ ' + c.name + ' (단가표에서 빠짐)', ''); sum.push('• ' + c.name + ': 단가표에서 빠짐'); } });
+            if (!out.length) out.push('변동 없음 (날짜만 바뀜)');
+            return { head: '바뀐 상품 ' + tot.rows + '개 (▲ 오름 ' + tot.up + ' · ▼ 내림 ' + tot.down + ')', sum: sum, body: out };
+        }
+        function chgRent(prev, next) {   // 렌탈 수수료표(A단가): 브랜드 → 모델 → 개월·월요금
+            if (!prev) return { head: '이전 수수료표가 없어서 비교할 수 없어요.', sum: [], body: [] };
+            var sum = [], out = [], tot = { rows: 0, up: 0, down: 0 }, by = Object.create(null);
+            var map = function (F) { var m = Object.create(null); F.rows.forEach(function (r) { r[2].forEach(function (q) { m[r[0] + '|' + r[1][0] + '|' + q[0] + '|' + q[1].join('/')] = q[2]; }); }); return m; };
+            var models = function (F) { var m = Object.create(null); F.rows.forEach(function (r) { m[r[0] + '|' + r[1][0]] = 1; }); return m; };
+            var A = map(prev), B = map(next), MA = models(prev), MB = models(next);
+            var g = function (b) { return by[b] || (by[b] = { chg: [], add: [], gone: [], ag: chgAgg() }); };
+            Object.keys(B).forEach(function (k) {
+                var p = k.split('|'), lab = p[1] + ' ' + p[2] + '개월 ' + p[3].split('/').map(function (n) { return (+n).toLocaleString('ko-KR'); }).join('/') + '원';
+                if (A[k] === undefined) return;
+                if (A[k] !== B[k]) { var d = B[k] - A[k]; g(p[0]).ag.add('수수료 ' + chgSgn(d) + '원'); g(p[0]).chg.push({ t: (d > 0 ? '▲ ' : '▼ ') + lab + ': ' + chgD(A[k].toLocaleString('ko-KR'), B[k].toLocaleString('ko-KR')), s: d }); tot.rows++; if (d > 0) tot.up++; else tot.down++; }
+            });
+            Object.keys(MB).forEach(function (k) { if (!MA[k]) { var p = k.split('|'); g(p[0]).add.push(p[1]); } });
+            Object.keys(MA).forEach(function (k) { if (!MB[k]) { var p = k.split('|'); g(p[0]).gone.push(p[1]); } });
+            Object.keys(by).sort().forEach(function (b) {
+                var x = by[b]; if (!x.chg.length && !x.add.length && !x.gone.length) return;
+                out.push('■ ' + b + (x.chg.length ? ' — 수수료 바뀜 ' + x.chg.length + '건' : ''));
+                x.chg.sort(function (p, q) { return Math.abs(q.s) - Math.abs(p.s); });
+                out = out.concat(chgTop(x.chg.map(function (c) { return '  ' + c.t; }), CHG_MAX));
+                if (x.add.length) out.push('  + 새 모델 ' + x.add.length + '개: ' + x.add.slice(0, 15).join(', ') + (x.add.length > 15 ? ' 외 ' + (x.add.length - 15) : ''));
+                if (x.gone.length) out.push('  - 빠진 모델 ' + x.gone.length + '개: ' + x.gone.slice(0, 15).join(', ') + (x.gone.length > 15 ? ' 외 ' + (x.gone.length - 15) : ''));
+                out.push('');
+                var al = x.ag.lines(3); if (x.add.length) al.push('새 모델 ' + x.add.length + '개'); if (x.gone.length) al.push('빠진 모델 ' + x.gone.length + '개');
+                sum.push('• ' + b + ': ' + al.join(' · '));
+            });
+            if (!out.length) out.push('변동 없음');
+            return { head: '수수료 바뀐 줄 ' + tot.rows + '개 (▲ 오름 ' + tot.up + ' · ▼ 내림 ' + tot.down + ')', sum: sum, body: out };
+        }
+        function chgText(icon, title, nowD, prevD, R, short) {   // short: 핵심만 (단톡방용)
+            var t = icon + ' ' + title + ' 변동사항' + (nowD ? ' (' + nowD + ' 기준' + (prevD ? ' · 이전 ' + prevD : '') + ')' : '');
+            var L = [t, '▶ ' + R.head];
+            if (R.sum && R.sum.length) L = L.concat(['', '[핵심]'], R.sum);
+            if (!short) L = L.concat(['', '[자세히]'], R.body);
+            return L.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+        }
+        var chgLast = { net: null, mob: null, rent: null };   // 이 기기에서 마지막으로 본 변동사항 (다시 보기)
+        function chgOpen(kind, icon, title, nowD, prevD, Rz) {
+            chgLast[kind] = { full: chgText(icon, title, nowD, prevD, Rz), short: chgText(icon, title, nowD, prevD, Rz, true) };
+            chgShow(kind); render();
+        }
+        function chgShow(kind) {
+            var C = chgLast[kind];
+            if (!C && kind === 'net') {   // 유선은 보관된 단가표(최근 10개)로 언제든 비교
+                var l = (db.policies || []).slice().sort(function (a, b) { return polCurAt(b) - polCurAt(a) || b.at - a.at; });
+                if (l.length < 2) { toast('비교할 이전 유선 단가표가 없어요.'); return; }
+                C = chgLast.net = { full: chgText('🌐', '유선 단가표', chgDay(l[0].data.date), chgDay(l[1].data.date), chgWired(l[1].data, l[0].data)), short: chgText('🌐', '유선 단가표', chgDay(l[0].data.date), chgDay(l[1].data.date), chgWired(l[1].data, l[0].data), true) };
+            }
+            if (!C) { toast('이 기기에서 단가표를 올린 뒤에 볼 수 있어요.'); return; }
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide';
+            var pre = h('pre', { class: 'chg-pre', 'data-chg': kind, tabindex: '0', 'aria-label': '변동사항 내용' }, C.full);
+            var form = h('form', { novalidate: true, class: 'chg-dlg' }, h('div', { class: 'dlg-head' }, '📋 단가표 변동사항'),
+                h('div', { class: 'dlg-body' },
+                    h('p', { class: 'chg-warn' }, '🔒 수수료가 들어 있어요. 직원 단톡방 등 내부에서만 쓰고, 고객·홈페이지에는 올리지 마세요.'),
+                    h('p', { class: 'chg-tip' }, '[핵심만 복사]는 통신사·거래처별로 묶은 요약만, [전체 복사]는 바뀐 상품 하나하나까지 복사해요.'),
+                    pre),
+                h('div', { class: 'dlg-foot' },
+                    h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'),
+                    h('button', { type: 'button', class: 'btn', 'data-act': 'chg-copy-all', onclick: function () { clip(C.full, '변동사항 전체를 복사했어요.'); } }, '전체 복사'),
+                    h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'chg-copy', onclick: function () { clip(C.short, '변동사항 핵심을 복사했어요. 단톡방에 붙여넣기 하세요.'); } }, '핵심만 복사')));
+            form.addEventListener('submit', function (e) { e.preventDefault(); });
+            dlg.appendChild(form); showDlg(dlg);
+        }
+        function chgBtn(kind) { return isBoss() && (chgLast[kind] || (kind === 'net' && (db.policies || []).length >= 2)) ? h('button', { type: 'button', class: 'btn', 'data-act': 'chg-open-' + kind, title: '이전 단가표와 비교한 변동사항 (복사용)', onclick: function () { chgShow(kind); } }, '📋 변동사항') : null; }
         function polImport() {   // 대표만: 단가표 사진(바로 변환) · 파일 · 붙여넣기로 바꾸기 → 모든 직원 화면에 바로 반영
             var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide';
             var file = h('input', { type: 'file', accept: '.json,.txt,application/json,text/plain', 'aria-label': '단가표 파일 선택' });
@@ -8180,6 +8365,7 @@
             var save = h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'pol-apply', onclick: function () {
                 if (!parsed) { check(area.value); if (!parsed) return; }
                 if (!db.policies) db.policies = [];
+                var prevCur = polCur(), prevD = prevCur ? JSON.parse(JSON.stringify(prevCur.data)) : null, newD = parsed;
                 var it = stamp({ id: uid(), at: Date.now(), by: staffName(me), data: parsed, u: 0 });
                 db.policies.push(it);
                 var keep = db.policies.slice().sort(function (a, b) { return b.at - a.at; }).slice(0, 10), ok = Object.create(null);   // 최근 10개 보관 (날짜별 보기)
@@ -8187,6 +8373,7 @@
                 db.policies.forEach(function (x) { if (!ok[x.id]) tomb(x.id); });
                 db.policies = db.policies.filter(function (x) { return ok[x.id]; });
                 state.pol.view = ''; closeDlg(); commit('단가표를 바꿨어요. (' + (parsed.date || '') + ' 기준) 모든 직원 화면에 바로 반영돼요.');
+                if (prevD) { try { chgOpen('net', '🌐', '유선 단가표', chgDay(newD.date), chgDay(prevD.date), chgWired(prevD, newD)); } catch (ce) { toast('변동사항을 만들지 못했어요.'); } }
                 setTimeout(hpAuto, 400);   // 홈페이지 요금도 자동으로 (반영을 꺼 둔 경우는 그대로)
             } }, '이 단가표로 바꾸기');
             var photo = h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true, 'aria-label': '단가표 사진 고르기' });
@@ -8577,7 +8764,7 @@
                 var d; try { d = JSON.parse(txt); } catch (e) { d = null; }
                 if (!d || d.kind !== 'sageori-mobile') { alert('모바일 단가표 변환 파일이 아니에요. Claude가 보낸 .json 파일을 골라 주세요.'); return; }
                 if (mp.hist) mphBack(true); if (mp.rentHist) rfhBack(true);   // 지난 단가표를 보는 중이면 지금 단가표로 돌아와서 넣음
-                var inn = mpNorm(d), now = Date.now(), hday = mphDay(d);
+                var inn = mpNorm(d), now = Date.now(), hday = mphDay(d), prevM = mp.data ? JSON.parse(JSON.stringify(mp.data)) : null;
                 if (!inn.dealers.length) { alert('파일 안에 단가표가 없어요.'); return; }
                 var names = inn.dealers.map(function (x) { return x.name + ' (표 ' + x.tables.length + '개)'; });
                 if (!confirm('모바일 단가표를 넣을까요?\n\n' + names.join('\n') + '\n\n파일에 있는 거래처만 새 단가표로 바뀌고, 다른 거래처는 그대로예요. 모든 직원 화면에 바로 보여요.')) return;
@@ -8595,6 +8782,7 @@
                     return (e.reply.blob ? ensureTeam().then(function (t) { return decryptText(t.encKey, e.reply.blob, MP_AAD); }).then(function (x) { return mpNorm(JSON.parse(x)); }) : Promise.resolve({ v: 1, dealers: [] })).then(function (base) { return mpPut(merge(base)); });
                 }).then(function () {
                     mp.dealer = inn.dealers[0].name; render(); toast('모바일 단가표 ' + inn.dealers.length + '곳을 넣었어요. (' + inn.dealers.map(function (x) { return x.name; }).join(', ') + ')');
+                    try { var pd0 = prevM && prevM.dealers.filter(function (x) { return x.name === inn.dealers[0].name; })[0]; chgOpen('mob', '📱', '모바일 단가표', chgDay(inn.dealers[0].date) || chgDay(hday), pd0 ? chgDay(pd0.date) : '', chgMobile(prevM, inn.dealers)); } catch (ce) { toast('변동사항을 만들지 못했어요.'); }
                     if (glCan()) mphSave(hday, inn.dealers).then(function () { toast(koDate(hday) + ' 모바일 단가표를 날짜별 기록에도 남겼어요.'); }, function (e) { toast('날짜별 기록은 남기지 못했어요. ' + driveErrText(e)); });
                 },
                     function (e) { alert('모바일 단가표를 저장하지 못했어요.\n' + driveErrText(e)); });
@@ -9123,7 +9311,7 @@
                 if (!d || d.kind !== 'sageori-rentfee') { alert('렌탈 수수료표 파일이 아니에요. Claude가 보낸 렌탈수수료표_….json 파일을 골라 주세요.'); return; }
                 var f = rfNorm(d); if (!f) { alert('파일 안에 수수료가 없어요.'); return; }
                 if (mp.rentHist) rfhBack(true); if (mp.hist) mphBack(true);   // 지난 기록을 보는 중이면 지금 단가표로 돌아와서 넣음
-                f.at = Date.now(); f.by = staffName(me);
+                f.at = Date.now(); f.by = staffName(me); var prevR = mp.data && mp.data.rent ? JSON.parse(JSON.stringify(mp.data.rent)) : null;
                 if (!confirm('렌탈 수수료표를 넣을까요?\n\n' + (f.date || '') + ' · 모델 ' + f.rows.length + '개\n' + (f.src || '') + '\n\n렌탈 단가표의 [수수료(A)] 칸에 보여요. 모든 직원 화면에 바로 보이고, 사이트(홈페이지)에는 들어가지 않아요.')) return;
                 toast('암호화해서 저장하는 중이에요...');
                 var put = function (base) { var next = { v: 1, dealers: base && base.dealers ? base.dealers : [], rent: f }; return mpPut(next); };
@@ -9133,6 +9321,7 @@
                     return (e.reply.blob ? ensureTeam().then(function (t) { return decryptText(t.encKey, e.reply.blob, MP_AAD); }).then(function (x) { return mpNorm(JSON.parse(x)); }) : Promise.resolve({ v: 1, dealers: [] })).then(put);
                 }).then(function () {
                     render(); toast('렌탈 수수료표를 넣었어요. (모델 ' + f.rows.length + '개)');
+                    try { chgOpen('rent', '🧴', '렌탈 수수료(A)', f.date, prevR ? prevR.date : '', chgRent(prevR, f)); } catch (ce) { toast('변동사항을 만들지 못했어요.'); }
                     if (glCan()) { var rd = ymd(new Date()); mphSave(rd, [], 0, f).then(function () { toast(koDate(rd) + ' 렌탈 수수료표를 날짜별 기록에도 남겼어요.'); }, function (e) { toast('날짜별 기록은 남기지 못했어요. ' + driveErrText(e)); }); }
                 }, function (e) { alert('렌탈 수수료표를 저장하지 못했어요.\n' + driveErrText(e)); });
             });
@@ -9202,7 +9391,7 @@
                     driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else clMemoOpen(); } }, '📝 상담 메모') : null,
                     h('button', { type: 'button', class: 'btn', 'data-act': 'rt-refresh', onclick: function () { rt.busy = false; rtLoad(true); mp.busy = false; mpLoad(true); toast('렌탈 상품을 새로 받고 있어요.'); render(); } }, '새로고침'),
                     h('button', { type: 'button', class: 'btn', 'data-act': 'rfh-open', title: '유선 · 모바일 · 렌탈 단가표를 날짜별로 (달력)', onclick: phOpen }, '📅 날짜별 단가표'),
-                    isBoss() && !mp.rentHist ? h('label', { class: 'btn btn-primary', 'data-act': 'rf-import' }, '렌탈 수수료표 불러오기', h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: function () { rfImport(this.files && this.files[0]); this.value = ''; } })) : null));
+                    chgBtn('rent'), isBoss() && !mp.rentHist ? h('label', { class: 'btn btn-primary', 'data-act': 'rf-import' }, '렌탈 수수료표 불러오기', h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: function () { rfImport(this.files && this.files[0]); this.value = ''; } })) : null));
             if (mp.rentHist) head = h('div', {}, head, h('div', { class: 'ph-viewbar', role: 'status', 'data-rfh-bar': '1' },
                 h('span', {}, '📅 ', h('b', {}, koDate(mp.rentHist)), ' 기준 렌탈 수수료표(A단가)를 보는 중이에요 — ', mp.rentSrc ? +mp.rentSrc.slice(5, 7) + '월 ' + +mp.rentSrc.slice(8) + '일에 넣은 수수료표' : '', ' · 이 기기에서만'),
                 h('div', { class: 'ph-btns' }, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'rfh-day', onclick: rfhDialog }, '다른 날짜'),
@@ -9410,7 +9599,7 @@
                     driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else { clMemoOpen(); if (cl.memo && cl.memo.P && cl.memo.P.kind !== 'mob' && !clHasText(clMemoSheet() || { cols: [] }, cl.memo.P.values())) cl.memo.P.setKind('mob'); } } }, '📝 상담 메모') : null,
                     h('button', { type: 'button', class: 'btn', 'data-act': 'mp-refresh', onclick: function () { mp.busy = false; mpLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침'),
                     h('button', { type: 'button', class: 'btn', 'data-act': 'mph-open', title: '유선 · 모바일 · 렌탈 단가표를 날짜별로 (달력)', onclick: phOpen }, '📅 날짜별 단가표'),
-                    boss && !mp.hist ? h('label', { class: 'btn btn-primary', 'data-act': 'mp-import' }, '모바일 단가표 불러오기', file) : null));
+                    chgBtn('mob'), boss && !mp.hist ? h('label', { class: 'btn btn-primary', 'data-act': 'mp-import' }, '모바일 단가표 불러오기', file) : null));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '모바일 단가표는 공유 저장소를 연결한 기기에서 볼 수 있어요.')));
             var histBar = mp.hist ? h('div', { class: 'ph-viewbar', role: 'status', 'data-mph-bar': '1' },
                 h('span', {}, '📅 ', h('b', {}, koDate(mp.hist)), ' 기준 모바일 단가표를 보는 중이에요 — 거래처마다 그날까지 넣은 마지막 단가표 (',
@@ -9486,7 +9675,7 @@
             var head = h('div', { class: 'page-head' }, h('h1', {}, '상담하기'),
                 h('div', { class: 'actions' }, polModeSeg(), driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else clMemoOpen(); } }, '📝 상담 메모') : null, refreshBtn(),
                     (db.policies || []).length ? h('button', { type: 'button', class: 'btn', 'data-act': 'pol-history', title: '유선 · 모바일 · 렌탈 단가표를 날짜별로 (달력)', onclick: polHistory }, '📅 날짜별 단가표') : null,
-                    boss ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'pol-import', onclick: polImport }, '단가표 불러오기') : null));
+                    chgBtn('net'), boss ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'pol-import', onclick: polImport }, '단가표 불러오기') : null));
             if (!P) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, boss ? '아직 단가표가 없어요. 오른쪽 위 [단가표 불러오기]로 Claude가 보낸 단가표 파일을 넣어 주세요.' : '아직 단가표가 없어요. 대표님이 단가표를 넣으면 여기에 보여요.')));
             var D = P.data, at = new Date(P.at), ageDays = Math.floor((Date.now() - P.at) / 86400000);
             var meta = h('div', { class: 'pol-meta' + (ageDays >= 1 && !viewing ? ' pol-old' : '') },
