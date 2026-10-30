@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+70PNZTFjx+Pb6ENZZ/bgCoQEt+d45c9tpQrtIISFv8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lTQrLDKIMncgcbDecOLezPZqQgjcwzB0Br+08H/OFGw='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1185,6 +1185,17 @@
         .mf-done-li.warn { background: #FFF6DD; border-color: #EBD9A6; } .mf-done-li.warn b { color: #7A5200; }
         .mf-done-li.info { background: #F4F5F6; border-color: #DDE0E3; } .mf-done-li.info b { color: #4A535C; }
         .mf-done-li.bad { background: #FDECEA; border-color: #F1C2BD; } .mf-done-li.bad b { color: #B3261E; }
+        .mf-done-li.img { background: #F3F7FA; border-color: #D6E0E8; }
+        .mf-done-li.qc-on { box-shadow: inset 4px 0 0 #2F855A; }
+        .mf-qc { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+        .mf-qc-in { flex: none; width: 22px; height: 22px; margin: 1px 0 0; accent-color: #2F855A; cursor: pointer; }
+        .mf-qc-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .mf-done-img { display: block; margin: 8px auto 0; max-width: 100%; max-height: 220px; border: 1px solid #C9D3DB; border-radius: 6px; background: #fff; cursor: zoom-in; }
+        .mf-done-img.big { max-height: none; width: 100%; cursor: zoom-out; }
+        .mf-qc-tip { margin: 0 0 10px; font-size: 13px; color: #5B6670; word-break: keep-all; }
+        .mf-qc-foot { flex-wrap: wrap; align-items: center; gap: 8px; }
+        .mf-qc-prog { margin-right: auto; font-weight: 800; color: #9A4D00; font-size: 14px; } .mf-qc-prog.all { color: #146B3A; }
+        @media (pointer: coarse) { .mf-qc-in { width: 26px; height: 26px; } }
         @media print { .mf-xpol { display: none !important; } }
         .mf-info { color: var(--mf-green); font-size: 12.5px; margin-top: 4px; } .mf-info.red { color: var(--mf-red); }
         .mf-note { color: var(--mf-red); font-size: 12.5px; }
@@ -1789,6 +1800,21 @@
         .mf-paper-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
         .mf-scan-b { cursor: pointer; }
         .btn-scan { background: #13896F; border-color: #13896F; color: #fff; }
+        .btn-up { background: #fff; border-color: #13896F; color: #0F6E59; }
+        .btn-qc.need { background: #FFF3E0; border-color: #E8912D; color: #9A4D00; font-weight: 800; }
+        .btn-qc.did { background: #2F855A; border-color: #2F855A; color: #fff; }
+        .scan-dlg { max-width: 520px; }
+        .scan-dlg .dlg-body p { margin: 0 0 10px; line-height: 1.55; word-break: keep-all; }
+        .scan-steps { margin: 0 0 12px; padding-left: 22px; line-height: 1.6; word-break: keep-all; } .scan-steps li { margin-bottom: 4px; }
+        .scan-safe { font-size: 13px; color: #34505A; background: #EEF7F4; border: 1px solid #CDE6DD; border-radius: 10px; padding: 9px 11px; }
+        .scan-err { font-weight: 700; color: #8A2018; }
+        .scan-hr { color: #6B7480; }
+        .scan-tip { color: #44505B; font-size: 14px; }
+        .scan-devs { display: flex; flex-direction: column; gap: 8px; } .scan-devs .btn { text-align: left; justify-content: flex-start; }
+        .scan-foot { flex-wrap: wrap; gap: 8px; }
+        .scan-spin { width: 34px; height: 34px; margin: 4px auto 12px; border-radius: 50%; border: 4px solid #CDE6DD; border-top-color: #13896F; animation: scanspin 0.9s linear infinite; }
+        @keyframes scanspin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) { .scan-spin { animation-duration: 3s; } }
         .mf-miss-tip { font-weight: 700; color: #8A6418; margin-left: 4px; }
     </style>
 </head>
@@ -1884,7 +1910,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-30.11';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-30.12';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -5329,7 +5355,7 @@
             var tools = h('div', { class: 'mf-tools' },
                 M.paperBox = h('div', { class: 'mf-paper-box', role: 'status', 'aria-live': 'polite' }),
                 h('p', { class: 'mf-tip' }, M.kind === 'mobile'
-                    ? '다 쓰면 [드라이브/연락처 저장]으로 구글 드라이브 월별 폴더와 구글 연락처(휴대폰에서 바로 보임)에 보관하거나, [복사보고]로 카카오톡·텔레그램에 붙여넣거나, [PDF 파일 받기]를 이용해 주세요. 종이에 서명을 받을 때는 [✍ 서명 직접 받기]로 인쇄하고, 서명 받은 종이를 [📷 스캔]으로 넣으면 그 스캔본이 드라이브에 저장돼요. (스캐너 파일 JPG·PNG·PDF 또는 휴대폰 사진) 이 화면의 작성 내용은 잠그거나 새로고침하면 지워져요.'
+                    ? '다 쓰면 [드라이브/연락처 저장]으로 구글 드라이브 월별 폴더와 구글 연락처(휴대폰에서 바로 보임)에 보관하거나, [복사보고]로 카카오톡·텔레그램에 붙여넣거나, [PDF 파일 받기]를 이용해 주세요. 종이에 서명을 받을 때는 [✍ 서명 직접 받기]로 인쇄하고, 서명 받은 종이를 [🖨 스캔]으로 넣으면 그 스캔본이 드라이브에 저장돼요. ([🖨 스캔]은 이 PC에 연결된 스캐너로 바로 스캔 · 스캔 파일(JPG·PNG·PDF)이나 휴대폰 사진은 [📁 파일로 업로드]) 이 화면의 작성 내용은 잠그거나 새로고침하면 지워져요.'
                     : '다 쓰면 [드라이브/연락처 저장]으로 구글 드라이브 월별 폴더와 구글 연락처(휴대폰에서 바로 보임)에 보관하거나, [복사보고]로 카카오톡·텔레그램에 붙여넣거나, [인쇄]·[PDF 파일 받기]를 이용해 주세요. 태블릿에서 인쇄 창이 안 뜨면 [PDF 파일 받기] → 받은 파일 열기 → 인쇄로 하면 돼요. 이 화면의 작성 내용은 잠그거나 새로고침하면 지워져요.'),
                 h('div', { class: 'actions' },
                     h('span', { class: 'mf-act mf-act-new' }, h('button', { type: 'button', class: 'btn', 'data-act': 'mf-new', onclick: function () {
@@ -5347,12 +5373,14 @@
                         mfPdf(M, sheet, opt.file, function () { mfCount(M, 'pdf'); });
                     } }, 'PDF 파일 받기')),
                     M.kind === 'mobile'
-                        ? mfAct('print', h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-print', title: '서명란을 비운 가입 확인서를 인쇄해요. 종이에 서명을 받은 뒤 [📷 스캔]으로 넣어 주세요.', onclick: function () { mfPaperPrint(M, sheet, opt.file); } }, '✍ 서명 직접 받기'))
+                        ? mfAct('print', h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-print', title: '서명란을 비운 가입 확인서를 인쇄해요. 종이에 서명을 받은 뒤 [🖨 스캔]으로 넣어 주세요.', onclick: function () { mfPaperPrint(M, sheet, opt.file); } }, '✍ 서명 직접 받기'))
                         : mfAct('print', h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-print', onclick: function () {
                             if (!mfReady(M, '인쇄')) return;
                             mfPrintImage(sheet, M, opt.file, function () { mfCount(M, 'print'); });
                         } }, '인쇄')),
-                    M.kind === 'mobile' ? h('span', { class: 'mf-act' }, mfScanBtn(M, '📷 스캔', 'btn btn-scan', 'mf-scan')) : null));
+                    M.kind === 'mobile' ? h('span', { class: 'mf-act' }, mfDirectBtn(M, '🖨 스캔', 'btn btn-scan', 'mf-scan')) : null,
+                    M.kind === 'mobile' ? h('span', { class: 'mf-act' }, mfScanBtn(M, '📁 파일로 업로드', 'btn btn-up', 'mf-scan-file')) : null,
+                    M.kind === 'mobile' ? h('span', { class: 'mf-act mf-act-qc' }, h('button', { type: 'button', class: 'btn btn-qc', 'data-act': 'mf-qc', hidden: true, title: '드라이브 저장 결과를 다시 열어 하나씩 검수해요', onclick: function () { if (M.doneArgs) mfDonePopup(M, M.doneArgs[0], M.doneArgs[1]); } }, '🔍 검수'), h('small', { class: 'mf-cnt', 'data-qc-st': '1', 'aria-live': 'polite' })) : null));
             M.sheet = sheet;
             M.el = h('div', { class: 'mf-wrap' }, sheet, tools);
             if (opt.gate) {   // 모바일·유선: 빈칸이 있으면 버튼을 끔
@@ -5433,7 +5461,7 @@
             if (!(y >= 2000 && y <= 2099 && m >= 1 && m <= 12 && d >= 1 && dt.getMonth() === m - 1 && dt.getDate() === d)) {
                 toast('가입 확인서 아래쪽의 날짜(년·월·일)를 확인해 주세요. 폴더와 파일 이름에 들어가요.'); var ye = q('y'); if (ye) { ye.focus(); ye.scrollIntoView({ block: 'center' }); } return;
             }
-            if (M.kind === 'mobile' && M.paper === 'wait' && !M.scan) { toast('서명 받은 종이를 [📷 스캔]으로 먼저 넣어 주세요.'); return; }   // 종이 서명: 스캔본이 들어와야 저장
+            if (M.kind === 'mobile' && M.paper === 'wait' && !M.scan) { toast('서명 받은 종이를 [🖨 스캔]으로 먼저 넣어 주세요.'); return; }   // 종이 서명: 스캔본이 들어와야 저장
             if (!mfReady(M, '저장')) return;
             if (M.saved) { mfAskReplace(M, sheet, btn); return; }   // 이미 저장한 확인서: 수정 저장 안내
             mfUpload(M, sheet, btn, y, m, d, name, '');
@@ -5458,9 +5486,15 @@
             showDlg(dlg);
             var ok = dlg.querySelector('[data-act="mf-replace-ok"]'); if (ok) ok.focus();
         }
-        function mfDonePopup(M, regOk, cr) {   // 모바일 확인서 저장 결과를 팝업으로 한 번 더 (부가서비스·요금제 캘린더 등록을 다시 읽어서 확인)
+        function mfDonePopup(M, regOk, cr) {   // 모바일 확인서 저장 결과를 팝업으로 한 번 더 (부가서비스·요금제 캘린더 등록을 다시 읽어서 확인) · 줄마다 체크하며 검수
             var dlg = document.getElementById('dlg'), rows = [];
-            var line = function (lv, head, text, sub) { rows.push(h('li', { class: 'mf-done-li ' + lv }, h('b', {}, (lv === 'ok' ? '✓ ' : lv === 'info' ? '· ' : '⚠ ') + head), h('span', {}, text), sub ? h('small', {}, sub) : null)); };
+            if (!M.qcChk) M.qcChk = [];
+            var qcBox = function (i) { return h('input', { type: 'checkbox', class: 'mf-qc-in', 'data-qc': String(i), checked: !!(M.qc || M.qcChk[i]), 'aria-label': '검수 확인', onchange: function () { M.qcChk[i] = this.checked; qcPaint(); } }); };
+            var line = function (lv, head, text, sub) { var i = rows.length; rows.push(h('li', { class: 'mf-done-li ' + lv }, h('label', { class: 'mf-qc' }, qcBox(i), h('span', { class: 'mf-qc-t' }, h('b', {}, (lv === 'ok' ? '✓ ' : lv === 'info' ? '· ' : '⚠ ') + head), h('span', {}, text), sub ? h('small', {}, sub) : null)))); };
+            if (M.savedImg) {   // 저장된 가입 확인서 그림 (눌러서 크게)
+                var im = h('img', { src: M.savedImg, alt: '드라이브에 저장된 가입 확인서', class: 'mf-done-img', title: '누르면 크게 · 다시 누르면 작게', onclick: function () { this.classList.toggle('big'); } });
+                rows.push(h('li', { class: 'mf-done-li img' }, h('label', { class: 'mf-qc' }, qcBox(0), h('span', { class: 'mf-qc-t' }, h('b', {}, '🔍 저장된 가입 확인서'), h('span', {}, '이름 · 번호 · 요금제 · 서명이 맞게 들어갔는지 그림을 보고 체크해 주세요.'), h('small', {}, '그림을 누르면 크게 보여요'))), im));
+            }
             line('ok', '드라이브', (M.savedFolder ? M.savedFolder + ' / ' : '') + M.saved);
             line(regOk ? 'ok' : 'bad', '가입 장부', regOk ? '정리했어요' : '정리하지 못했어요 (가입 장부에서 확인해 주세요)');
             var FR = M.feeRes; if (regOk && FR) {
@@ -5481,13 +5515,38 @@
             });
             line(cr && cr.ok ? 'ok' : 'warn', '구글 연락처', cr && cr.ok ? '저장했어요' : '아직 저장 안 됨 (안내 창을 확인해 주세요)');
             var bad = rows.some(function (li) { return /\bbad\b/.test(li.className); });
+            var prog = h('span', { class: 'mf-qc-prog', 'aria-live': 'polite' });
+            var fin = h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-qc-ok', onclick: function () {
+                M.qc = { by: me && staffById(me) ? staffName(me) : '', at: Date.now() }; closeDlg(); mfQcPaint(M); toast('✓ 검수 완료했어요.');
+            } }, '✓ 검수 완료');
+            function qcPaint() {
+                var bx = dlg.querySelectorAll('.mf-qc-in'), n = 0;
+                Array.prototype.forEach.call(bx, function (b) { if (b.checked) n++; var li = b.closest('.mf-done-li'); if (li) li.classList.toggle('qc-on', b.checked); });
+                prog.textContent = M.qc ? '✓ 검수 완료' + (M.qc.by ? ' · ' + M.qc.by : '') + ' · ' + mfQcTime(M.qc.at) : '검수 ' + n + ' / ' + bx.length;
+                prog.classList.toggle('all', n === bx.length);
+                fin.disabled = n !== bx.length; fin.title = n === bx.length ? '' : '모든 줄을 체크하면 눌러져요';
+                if (M.qc && n !== bx.length) { M.qc = null; mfQcPaint(M); }   // 검수 완료 뒤 체크를 풀면 다시 검수 대기
+            }
             dlg.textContent = ''; dlg.className = 'mf-done-dlg';
             dlg.appendChild(h('div', { 'data-dlg': 'mf-done' },
-                h('div', { class: 'dlg-head' }, bad ? '⚠ 저장 결과 확인이 필요해요' : '✓ 업로드 완료'),
-                h('div', { class: 'dlg-body' }, h('p', { class: 'mf-done-who' }, (M.sheet.querySelector('[data-mf="name"]') || {}).value || ''), h('ul', { class: 'mf-done-list' }, rows)),
-                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-done-ok', onclick: function () { closeDlg(); } }, '확인'))));
+                h('div', { class: 'dlg-head' }, bad ? '⚠ 저장 결과 확인이 필요해요' : '✓ 업로드 완료 · 하나씩 검수해 주세요'),
+                h('div', { class: 'dlg-body' }, h('p', { class: 'mf-done-who' }, (M.sheet.querySelector('[data-mf="name"]') || {}).value || ''),
+                    h('p', { class: 'mf-qc-tip' }, '줄마다 내용을 확인하고 왼쪽 칸을 체크해 주세요. 모두 체크하면 [✓ 검수 완료]가 눌러져요.'),
+                    h('ul', { class: 'mf-done-list' }, rows)),
+                h('div', { class: 'dlg-foot mf-qc-foot' }, prog,
+                    h('button', { type: 'button', class: 'btn', 'data-act': 'mf-done-ok', title: '창을 닫고 나중에 [🔍 검수]로 다시 열어요', onclick: function () { closeDlg(); mfQcPaint(M); if (!M.qc) toast('[🔍 검수]를 누르면 저장 결과를 다시 열어 검수할 수 있어요.'); } }, '나중에 검수'),
+                    fin)));
             showDlg(dlg);
-            var ok = dlg.querySelector('[data-act="mf-done-ok"]'); if (ok) ok.focus();
+            qcPaint();
+            var f1 = dlg.querySelector('.mf-qc-in'); if (f1) f1.focus();
+        }
+        function mfQcTime(t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+        function mfQcPaint(M) {   // [🔍 검수] 버튼: 저장한 뒤에 보임 · 검수 전엔 주황 · 검수 완료면 초록
+            var b = M.el ? M.el.querySelector('[data-act="mf-qc"]') : null, st = M.el ? M.el.querySelector('[data-qc-st]') : null; if (!b) return;
+            b.hidden = !(M.saved && M.doneArgs);
+            b.classList.toggle('need', !M.qc); b.classList.toggle('did', !!M.qc);
+            b.textContent = M.qc ? '✓ 검수 완료' : '🔍 검수';
+            if (st) st.textContent = M.qc ? (M.qc.by ? M.qc.by + ' · ' : '') + mfQcTime(M.qc.at) : M.saved && M.doneArgs ? '검수 전' : '';
         }
         function ctOkMsg(cr, ct) {   // 판매 고객 연락처 저장 결과 문구
             return (cr.updated ? (cr.fromProspect ? '재케어(가망) 연락처를 판매 고객 "' + ct.label + '"(으)로 바꿨어요.' : '같은 번호의 구글 연락처를 "' + ct.label + '"(으)로 바꿨어요.') : '구글 연락처에 "' + ct.label + '"(으)로 저장했어요.')
@@ -5527,7 +5586,7 @@
                 mfCount(M, 'save'); mfGate(M);
                 if (replaceId) toast((res.replaced ? '이전 파일은 지우고 수정본을 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' : '이전 파일을 찾지 못해서(이미 지웠거나 옮긴 경우) 수정본만 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.') + regMsg);
                 else toast('구글 드라이브 "' + M.savedFolder + '" 폴더에 "' + M.saved + '"(으)로 저장했어요.' + regMsg);
-                if (M.kind === 'mobile') { try { mfDonePopup(M, regOk, cr); } catch (pe) { /* 알림은 이미 띄움 */ } }
+                if (M.kind === 'mobile') { M.doneArgs = [regOk, cr]; M.qc = null; M.qcChk = []; M.savedImg = 'data:image/png;base64,' + b64; mfQcPaint(M); try { mfDonePopup(M, regOk, cr); } catch (pe) { /* 알림은 이미 띄움 */ } }
             }, function (e) {
                 btn.disabled = false; btn.removeAttribute('data-busy'); mfSaveBtn(M); mfGate(M);
                 if (e && e.name === 'AbortError') toast('드라이브 응답이 늦어요. 이미 저장됐을 수 있으니 드라이브의 "' + folder + '" 폴더를 확인한 뒤 다시 시도해 주세요.');
@@ -5614,10 +5673,116 @@
                 if (!M.scan) { M.paper = 'wait'; mfPaperPaint(M); }
             });
         }
-        function mfScanBtn(M, text, cls, act) {
+        function mfScanBtn(M, text, cls, act, after) {
             return h('label', { class: cls + ' mf-scan-b', 'data-act': act, tabindex: '0', role: 'button', title: '서명 받은 가입 확인서 스캔 파일(JPG·PNG·PDF)이나 휴대폰 사진을 넣어요',
                 onkeydown: function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); var i = this.querySelector('input'); if (i) i.click(); } } }, text,
-                h('input', { type: 'file', accept: 'image/*,application/pdf,.pdf', hidden: true, onchange: function () { var f = this.files && this.files[0]; this.value = ''; mfScanLoad(M, f); } }));
+                h('input', { type: 'file', accept: 'image/*,application/pdf,.pdf', hidden: true, onchange: function () { var f = this.files && this.files[0]; this.value = ''; if (f && after) after(); mfScanLoad(M, f); } }));
+        }
+        /* ---------- 🖨 스캔: 이 PC에 연결된 스캐너(프린터)로 바로 스캔 ----------
+           PC의 '사거리 스캐너 연결 프로그램'(Windows 스캔 기능 WIA 사용)이 127.0.0.1에서만 · 사거리 사이트에만 대답해요. 스캔한 그림은 이 화면으로만 와요 (다른 곳에 저장·전송 안 함). */
+        var SCAN_URL = 'http://127.0.0.1:47615', SCAN_SETUP = "@echo off\r\nrem Sageori scanner bridge - setup (installs to %LOCALAPPDATA%\\SageoriScan, runs at Windows start)\r\nrem Run again to update. \"sageori-scan-setup.cmd uninstall\" turns it off.\r\nsetlocal\r\nset \"SG_SELF=%~f0\"\r\nset \"SG_DIR=%LOCALAPPDATA%\\SageoriScan\"\r\nif not exist \"%SG_DIR%\" mkdir \"%SG_DIR%\"\r\npowershell -NoProfile -ExecutionPolicy Bypass -Command \"$t=[IO.File]::ReadAllText($env:SG_SELF,[Text.Encoding]::UTF8);$m=':'+'::PS1';$i=$t.LastIndexOf($m);if($i -lt 0){exit 1};[IO.File]::WriteAllText((Join-Path $env:SG_DIR 'scan.ps1'),$t.Substring($i+$m.Length).TrimStart(),(New-Object Text.UTF8Encoding $true))\"\r\nif errorlevel 1 (echo Setup failed. & pause & exit /b 1)\r\nif /i \"%~1\"==\"uninstall\" (powershell -NoProfile -ExecutionPolicy Bypass -File \"%SG_DIR%\\scan.ps1\" -Uninstall) else (powershell -NoProfile -ExecutionPolicy Bypass -File \"%SG_DIR%\\scan.ps1\" -Install)\r\nexit /b 0\r\n:::PS1\r\n# Sageori scanner bridge (v1)\r\n# Lets the Sageori ADMIN page scan from a scanner/printer connected to THIS PC.\r\n# - Listens ONLY on 127.0.0.1:47615 (not reachable from other PCs or the internet).\r\n# - Answers ONLY the Sageori site (Origin check). Other web sites cannot start a scan.\r\n# - The scanned image goes straight back to the ADMIN page on this PC. Nothing is saved or sent elsewhere.\r\n# Uses Windows Image Acquisition (WIA), built into Windows.\r\nparam([switch]$Install, [switch]$Uninstall, [switch]$Mock)\r\n\r\n$PORT = 47615\r\n$VER = '1'\r\n$ALLOW = @('https://www.xn--v69aq4gtzi0phw6is8o.com', 'https://xn--v69aq4gtzi0phw6is8o.com')\r\n$JPEG = '{B96B3CAE-0728-11D3-9D7B-0000F81EF32E}'\r\n$base = $env:LOCALAPPDATA; if (-not $base) { $base = [IO.Path]::GetTempPath() }\r\n$DIR = Join-Path $base 'SageoriScan'\r\n$ME = Join-Path $DIR 'scan.ps1'\r\n\r\nfunction Show-Msg([string]$text) {\r\n    try { Add-Type -AssemblyName System.Windows.Forms; [void][System.Windows.Forms.MessageBox]::Show($text, 'Sageori Scan') } catch { Write-Host $text }\r\n}\r\nfunction Stop-Old {\r\n    try {\r\n        Get-CimInstance Win32_Process -Filter \"Name='powershell.exe'\" -ErrorAction SilentlyContinue |\r\n            Where-Object { $_.CommandLine -and $_.CommandLine -like '*SageoriScan*scan.ps1*' -and $_.ProcessId -ne $PID } |\r\n            ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }\r\n    } catch { }\r\n}\r\nfunction Get-StartupLink { Join-Path ([Environment]::GetFolderPath('Startup')) 'SageoriScan.lnk' }\r\n\r\nif ($Install) {\r\n    Stop-Old\r\n    $lnk = Get-StartupLink\r\n    try {\r\n        $ws = New-Object -ComObject WScript.Shell\r\n        $sc = $ws.CreateShortcut($lnk)\r\n        $sc.TargetPath = (Join-Path $env:SystemRoot 'System32\\WindowsPowerShell\\v1.0\\powershell.exe')\r\n        $sc.Arguments = '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File \"' + $ME + '\"'\r\n        $sc.WindowStyle = 7\r\n        $sc.Description = 'Sageori scanner bridge'\r\n        $sc.Save()\r\n    } catch { }\r\n    Start-Process -FilePath 'powershell.exe' -ArgumentList @('-NoProfile', '-WindowStyle', 'Hidden', '-ExecutionPolicy', 'Bypass', '-File', ('\"' + $ME + '\"')) -WindowStyle Hidden\r\n    Show-Msg \"사거리 스캐너 연결 프로그램을 켰어요.`r`n`r`nADMIN 가입 확인서의 [🖨 스캔]을 누르면 이 PC에 연결된 스캐너(프린터)로 바로 스캔돼요.`r`nPC를 켤 때마다 자동으로 켜져요.`r`n`r`n(크롬에서 '로컬 네트워크의 기기에 액세스' 허용을 물으면 [허용]을 눌러 주세요)\"\r\n    exit 0\r\n}\r\nif ($Uninstall) {\r\n    Stop-Old\r\n    $lnk = Get-StartupLink\r\n    if (Test-Path -LiteralPath $lnk) { Remove-Item -LiteralPath $lnk -Force -ErrorAction SilentlyContinue }\r\n    Show-Msg '사거리 스캐너 연결 프로그램을 끄고, 자동 실행에서도 뺐어요.'\r\n    exit 0\r\n}\r\n\r\nfunction Get-Devs {\r\n    $out = @()\r\n    if ($Mock) { return @(@{ id = 'mock-1'; name = 'Mock Scanner' }) }\r\n    $dm = New-Object -ComObject WIA.DeviceManager\r\n    foreach ($d in $dm.DeviceInfos) {\r\n        if ($d.Type -eq 1) {\r\n            $nm = ''\r\n            try { $nm = [string]$d.Properties.Item('Name').Value } catch { }\r\n            $out += @{ id = [string]$d.DeviceID; name = $nm }\r\n        }\r\n    }\r\n    return $out\r\n}\r\nfunction Set-Prop($props, [int]$id, $val) {\r\n    foreach ($p in $props) { if ($p.PropertyID -eq $id) { try { $p.Value = $val } catch { }; return } }\r\n}\r\nfunction Get-Max($props, [int]$id) {\r\n    foreach ($p in $props) { if ($p.PropertyID -eq $id) { try { return [int]$p.SubTypeMax } catch { return 0 } } }\r\n    return 0\r\n}\r\nfunction Invoke-Scan([string]$devId, [int]$dpi, [string]$mode) {\r\n    if ($Mock) {\r\n        if ($devId -eq 'busy') { throw (New-Object System.Runtime.InteropServices.COMException('busy', -2145320954)) }\r\n        Start-Sleep -Milliseconds 300\r\n        return [Convert]::FromBase64String('/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=')\r\n    }\r\n    $dm = New-Object -ComObject WIA.DeviceManager\r\n    $info = $null\r\n    foreach ($d in $dm.DeviceInfos) {\r\n        if ($d.Type -eq 1 -and (-not $devId -or [string]$d.DeviceID -eq $devId)) { $info = $d; break }\r\n    }\r\n    if (-not $info) { throw (New-Object System.Runtime.InteropServices.COMException('no device', -2145320939)) }\r\n    $dev = $info.Connect()\r\n    $item = $dev.Items.Item(1)\r\n    $props = $item.Properties\r\n    $intent = 1; if ($mode -eq 'gray') { $intent = 2 }\r\n    Set-Prop $props 6146 $intent          # current intent (color / gray)\r\n    Set-Prop $props 6147 $dpi             # horizontal resolution\r\n    Set-Prop $props 6148 $dpi             # vertical resolution\r\n    Set-Prop $props 6149 0                # x start\r\n    Set-Prop $props 6150 0                # y start\r\n    $w = [int](8.27 * $dpi); $h = [int](11.69 * $dpi)    # A4\r\n    $mw = Get-Max $props 6151; if ($mw -gt 0 -and $w -gt $mw) { $w = $mw }\r\n    $mh = Get-Max $props 6152; if ($mh -gt 0 -and $h -gt $mh) { $h = $mh }\r\n    Set-Prop $props 6151 $w               # width (pixels)\r\n    Set-Prop $props 6152 $h               # height (pixels)\r\n    $img = $item.Transfer($JPEG)\r\n    if ([string]$img.FormatID -ne $JPEG) {\r\n        $ip = New-Object -ComObject WIA.ImageProcess\r\n        $ip.Filters.Add($ip.FilterInfos.Item('Convert').FilterID)\r\n        $ip.Filters.Item(1).Properties.Item('FormatID').Value = $JPEG\r\n        $ip.Filters.Item(1).Properties.Item('Quality').Value = 88\r\n        $img = $ip.Apply($img)\r\n    }\r\n    return [byte[]]$img.FileData.BinaryData\r\n}\r\nfunction Get-ErrCode($ex) {\r\n    $hr = 0\r\n    try { $hr = [int]$ex.HResult } catch { }\r\n    $inner = $ex\r\n    while ($inner.InnerException) { $inner = $inner.InnerException; try { if ($inner.HResult) { $hr = [int]$inner.HResult } } catch { } }\r\n    $x = '{0:X8}' -f $hr\r\n    switch ($x) {\r\n        '80210003' { return @('paper', $x) }     # feeder empty\r\n        '80210002' { return @('jam', $x) }       # paper jam\r\n        '80210006' { return @('busy', $x) }      # device busy\r\n        '80210005' { return @('offline', $x) }   # device offline\r\n        '8021000A' { return @('offline', $x) }   # communication error\r\n        '80210009' { return @('warm', $x) }      # warming up\r\n        '80210016' { return @('cover', $x) }     # cover open\r\n        '80210015' { return @('nodev', $x) }     # no device\r\n        '80210064' { return @('cancel', $x) }    # cancelled\r\n        '80040154' { return @('nowia', $x) }     # WIA not available\r\n        default { return @('fail', $x) }\r\n    }\r\n}\r\nfunction Esc([string]$s) { if ($null -eq $s) { return '' }; $s.Replace('\\', '\\\\').Replace('\"', '\\\"').Replace(\"`r\", ' ').Replace(\"`n\", ' ') }\r\nfunction Send($stream, [int]$code, [string]$ctype, [byte[]]$body, [string]$origin, [bool]$pre) {\r\n    $reason = @{ 200 = 'OK'; 204 = 'No Content'; 400 = 'Bad Request'; 403 = 'Forbidden'; 404 = 'Not Found' }[$code]\r\n    $hd = \"HTTP/1.1 $code $reason`r`nConnection: close`r`nCache-Control: no-store`r`nX-Content-Type-Options: nosniff`r`nVary: Origin`r`n\"\r\n    if ($origin) { $hd += \"Access-Control-Allow-Origin: $origin`r`n\" }\r\n    if ($pre) { $hd += \"Access-Control-Allow-Methods: GET`r`nAccess-Control-Allow-Headers: *`r`nAccess-Control-Allow-Private-Network: true`r`nAccess-Control-Max-Age: 600`r`n\" }\r\n    if ($ctype) { $hd += \"Content-Type: $ctype`r`n\" }\r\n    $n = 0; if ($body) { $n = $body.Length }\r\n    $hd += \"Content-Length: $n`r`n`r`n\"\r\n    $hb = [Text.Encoding]::ASCII.GetBytes($hd)\r\n    $stream.Write($hb, 0, $hb.Length)\r\n    if ($n) { $stream.Write($body, 0, $n) }\r\n    $stream.Flush()\r\n}\r\nfunction SendJson($stream, [string]$json, [string]$origin) { Send $stream 200 'application/json; charset=utf-8' ([Text.Encoding]::UTF8.GetBytes($json)) $origin $false }\r\n\r\nfunction Read-Head($stream) {\r\n    $buf = New-Object byte[] 1\r\n    $ms = New-Object IO.MemoryStream\r\n    $last4 = 0\r\n    while ($ms.Length -lt 16384) {\r\n        $r = $stream.Read($buf, 0, 1)\r\n        if ($r -le 0) { break }\r\n        $ms.WriteByte($buf[0])\r\n        $last4 = (($last4 -shl 8) -bor $buf[0]) -band 0xFFFFFFFF\r\n        if ($last4 -eq 0x0D0A0D0A) { break }\r\n    }\r\n    return [Text.Encoding]::ASCII.GetString($ms.ToArray())\r\n}\r\nfunction Handle($client) {\r\n    $client.ReceiveTimeout = 5000\r\n    $client.SendTimeout = 30000\r\n    $stream = $client.GetStream()\r\n    $head = Read-Head $stream\r\n    $lines = $head -split \"`r`n\"\r\n    $first = $lines[0] -split ' '\r\n    if ($first.Count -lt 2) { return }\r\n    $method = $first[0].ToUpperInvariant(); $target = $first[1]\r\n    $origin = ''\r\n    foreach ($l in $lines) { if ($l -match '^(?i)origin:\\s*(.+)$') { $origin = $Matches[1].Trim() } }\r\n    $okOrigin = $ALLOW -contains $origin\r\n    if (-not $okOrigin) { Send $stream 403 'text/plain' ([Text.Encoding]::ASCII.GetBytes('forbidden')) '' $false; return }\r\n    if ($method -eq 'OPTIONS') { Send $stream 204 '' $null $origin $true; return }\r\n    if ($method -ne 'GET') { Send $stream 400 'text/plain' $null $origin $false; return }\r\n    $path = $target; $query = ''\r\n    $qi = $target.IndexOf('?'); if ($qi -ge 0) { $path = $target.Substring(0, $qi); $query = $target.Substring($qi + 1) }\r\n    $q = @{}\r\n    foreach ($kv in ($query -split '&')) { if ($kv) { $p = $kv -split '=', 2; $v = ''; if ($p.Count -gt 1) { $v = [Uri]::UnescapeDataString($p[1].Replace('+', ' ')) }; $q[$p[0]] = $v } }\r\n    if ($path -eq '/ping') {\r\n        try {\r\n            $devs = Get-Devs\r\n            $arr = (@($devs) | Where-Object { $_ -and $_.id } | ForEach-Object { '{\"id\":\"' + (Esc $_.id) + '\",\"name\":\"' + (Esc $_.name) + '\"}' }) -join ','\r\n            SendJson $stream ('{\"ok\":true,\"app\":\"sageori-scan\",\"ver\":\"' + $VER + '\",\"devs\":[' + $arr + ']}') $origin\r\n        } catch {\r\n            $c = Get-ErrCode $_.Exception\r\n            SendJson $stream ('{\"ok\":true,\"app\":\"sageori-scan\",\"ver\":\"' + $VER + '\",\"devs\":[],\"code\":\"' + $c[0] + '\",\"hr\":\"' + $c[1] + '\"}') $origin\r\n        }\r\n        return\r\n    }\r\n    if ($path -eq '/scan') {\r\n        $dpi = 200; try { $dpi = [int]$q['dpi'] } catch { }\r\n        if ($dpi -lt 100 -or $dpi -gt 300) { $dpi = 200 }\r\n        $mode = 'color'; if ($q['mode'] -eq 'gray') { $mode = 'gray' }\r\n        try {\r\n            $bytes = Invoke-Scan ([string]$q['dev']) $dpi $mode\r\n            if (-not $bytes -or $bytes.Length -lt 100) { SendJson $stream '{\"ok\":false,\"code\":\"empty\"}' $origin; return }\r\n            Send $stream 200 'image/jpeg' $bytes $origin $false\r\n        } catch {\r\n            $c = Get-ErrCode $_.Exception\r\n            SendJson $stream ('{\"ok\":false,\"code\":\"' + $c[0] + '\",\"hr\":\"' + $c[1] + '\",\"msg\":\"' + (Esc ([string]$_.Exception.Message).Substring(0, [Math]::Min(160, ([string]$_.Exception.Message).Length))) + '\"}') $origin\r\n        }\r\n        return\r\n    }\r\n    Send $stream 404 'text/plain' $null $origin $false\r\n}\r\n\r\n$listener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, $PORT)\r\ntry { $listener.Start() } catch { exit 0 }    # already running\r\nwhile ($true) {\r\n    $client = $null\r\n    try {\r\n        $client = $listener.AcceptTcpClient()\r\n        Handle $client\r\n    } catch { } finally { if ($client) { try { $client.Close() } catch { } } }\r\n}\r\n";
+        var SCAN_ERR = {
+            paper: '급지대(종이 넣는 곳)에 종이가 없어요. 종이를 넣거나 유리판에 엎어 놓고 다시 눌러 주세요.',
+            jam: '종이가 걸렸어요. 걸린 종이를 빼고 다시 눌러 주세요.',
+            busy: '스캐너가 다른 작업 중이에요. 잠시 뒤 다시 눌러 주세요.',
+            offline: '스캐너와 연결이 끊겼어요. 프린터 전원과 USB · Wi-Fi 연결을 확인해 주세요.',
+            warm: '스캐너가 아직 준비 중이에요. 잠시 뒤 다시 눌러 주세요.',
+            cover: '스캐너 뚜껑이 열려 있어요. 닫고 다시 눌러 주세요.',
+            nodev: '이 PC에 연결된 스캐너를 찾지 못했어요. 프린터 전원과 USB · Wi-Fi 연결을 확인해 주세요. (프린터 회사 스캐너 드라이버가 깔려 있어야 해요)',
+            cancel: '스캔을 취소했어요.',
+            nowia: '이 PC에서 Windows 스캔 기능을 쓸 수 없어요. 프린터 회사 홈페이지에서 스캐너 드라이버를 설치해 주세요.',
+            empty: '스캔 그림이 비어 있어요. 다시 눌러 주세요.',
+            slow: '스캔이 3분 넘게 걸려서 멈췄어요. 프린터 화면에 오류가 있는지 보고 다시 눌러 주세요.',
+            lost: '스캔하는 중에 스캐너 연결 프로그램과 연결이 끊겼어요. 다시 눌러 주세요.',
+            fail: '스캔하지 못했어요. 프린터 전원 · 연결을 확인하고 다시 눌러 주세요.'
+        };
+        function scanFetch(path, ms) {
+            var ac = window.AbortController ? new AbortController() : null, tm = ac ? setTimeout(function () { ac.abort(); }, ms) : 0;
+            var o = { method: 'GET', cache: 'no-store', mode: 'cors', credentials: 'omit', referrerPolicy: 'no-referrer' }; if (ac) o.signal = ac.signal;
+            return fetch(SCAN_URL + path, o).then(function (r) { clearTimeout(tm); return r; }, function (e) { clearTimeout(tm); throw e; });
+        }
+        function mfDirectBtn(M, text, cls, act) {
+            return h('button', { type: 'button', class: cls, 'data-act': act, title: '이 PC에 연결된 스캐너(프린터)로 바로 스캔해서 넣어요', onclick: function () { mfDirectScan(M, this); } }, text);
+        }
+        function mfDirectScan(M, btn) {
+            if (M.scanBusy) { toast('스캔하는 중이에요. 잠시만 기다려 주세요.'); return; }
+            M.scanBusy = true;
+            var old = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = '스캐너 찾는 중...'; }
+            var done = function () { M.scanBusy = false; if (btn) { btn.disabled = false; btn.textContent = old; } };
+            scanFetch('/ping', 4000).then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); }).then(function (p) {
+                done();
+                if (!p || p.app !== 'sageori-scan') { scanSetupDlg(M); return; }
+                var devs = Array.isArray(p.devs) ? p.devs : [];
+                if (!devs.length) { scanFailDlg(M, p.code && SCAN_ERR[p.code] && p.code !== 'fail' ? p.code : 'nodev'); return; }
+                var pick = lsGet('sg-scandev'), d = devs.filter(function (x) { return x.id === pick; })[0];
+                if (d || devs.length === 1) mfScanRun(M, d || devs[0]); else scanPickDlg(M, devs);
+            }).catch(function () { done(); scanSetupDlg(M); });
+        }
+        function mfScanRun(M, dev) {
+            var dlg = document.getElementById('dlg');
+            dlg.textContent = ''; dlg.className = 'scan-dlg';
+            dlg.appendChild(h('div', { 'data-dlg': 'scan-busy' },
+                h('div', { class: 'dlg-head' }, '🖨 스캔하는 중이에요'),
+                h('div', { class: 'dlg-body' },
+                    h('div', { class: 'scan-spin', 'aria-hidden': 'true' }),
+                    h('p', {}, h('b', {}, String(dev.name || '연결된 스캐너').slice(0, 60))),
+                    h('p', { class: 'scan-tip' }, '서명 받은 가입 확인서를 스캐너 유리판에 엎어 놓고(또는 급지대에 넣고) 뚜껑을 닫아 주세요. 다 되면 이 창은 저절로 닫히고 스캔본이 들어가요. (보통 10~40초)'))));
+            showDlg(dlg);
+            M.scanBusy = true;
+            var close = function () { if (dlg.querySelector('[data-dlg="scan-busy"]')) closeDlg(); };
+            scanFetch('/scan?dev=' + encodeURIComponent(dev.id || '') + '&dpi=200&mode=color', 180000).then(function (r) {
+                var ct = (r.headers.get('content-type') || '').toLowerCase();
+                if (r.ok && ct.indexOf('image/jpeg') === 0) return r.blob().then(function (b) { M.scanBusy = false; close(); mfScanLoad(M, b); });
+                return r.json().then(function (j) { throw { code: (j && j.code) || 'fail', hr: j && j.hr }; }, function () { throw { code: 'fail' }; });
+            }).catch(function (e) {
+                M.scanBusy = false; close();
+                var code = e && e.code ? e.code : e && e.name === 'AbortError' ? 'slow' : 'lost';
+                if (code === 'nodev') try { localStorage.removeItem('sg-scandev'); } catch (x) { /* 무시 */ }
+                scanFailDlg(M, code, e && e.hr);
+            });
+        }
+        function scanDlg(head, body, foot) {
+            var dlg = document.getElementById('dlg');
+            dlg.textContent = ''; dlg.className = 'scan-dlg';
+            dlg.appendChild(h('div', { 'data-dlg': 'scan' }, h('div', { class: 'dlg-head' }, head), h('div', { class: 'dlg-body' }, body), h('div', { class: 'dlg-foot scan-foot' }, foot)));
+            showDlg(dlg);
+            return dlg;
+        }
+        function scanUpBtn(M) { return mfScanBtn(M, '📁 파일로 업로드', 'btn btn-up', 'scan-dlg-file', closeDlg); }
+        function scanFailDlg(M, code, hr) {
+            if (code === 'cancel') { toast(SCAN_ERR.cancel); return; }
+            scanDlg('⚠ 스캔하지 못했어요', [h('p', { class: 'scan-err' }, SCAN_ERR[code] || SCAN_ERR.fail), hr ? h('small', { class: 'scan-hr' }, '오류 번호 ' + String(hr).slice(0, 12)) : null], [
+                h('button', { type: 'button', class: 'btn', 'data-act': 'scan-dlg-close', onclick: closeDlg }, '닫기'),
+                scanUpBtn(M),
+                h('button', { type: 'button', class: 'btn btn-scan', 'data-act': 'scan-dlg-retry', onclick: function () { closeDlg(); mfDirectScan(M, null); } }, '🖨 다시 스캔')]);
+        }
+        function scanPickDlg(M, devs) {
+            scanDlg('🖨 어느 스캐너로 스캔할까요?', [h('p', {}, '이 PC에 스캐너가 ' + devs.length + '대 연결되어 있어요. 고른 스캐너는 다음부터 바로 써요.'),
+                h('div', { class: 'scan-devs' }, devs.slice(0, 8).map(function (d) {
+                    return h('button', { type: 'button', class: 'btn', 'data-act': 'scan-dev', onclick: function () { lsSet('sg-scandev', String(d.id || '')); closeDlg(); mfScanRun(M, d); } }, '🖨 ' + String(d.name || '스캐너').slice(0, 60));
+                }))], [h('button', { type: 'button', class: 'btn', 'data-act': 'scan-dlg-close', onclick: closeDlg }, '닫기')]);
+        }
+        function scanSetupDl() {
+            var b = new Blob([SCAN_SETUP], { type: 'application/octet-stream' }), u = URL.createObjectURL(b), a = h('a', { href: u, download: 'sageori-scan-setup.cmd' });
+            document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 8000);
+            toast('받은 파일(sageori-scan-setup.cmd)을 열어 주세요. 크롬이 물으면 [유지] → 파일 열기.');
+        }
+        function scanSetupDlg(M) {
+            var win = /Windows/i.test(navigator.userAgent || '') && !/Android|iPhone|iPad/i.test(navigator.userAgent || '');
+            scanDlg('🖨 스캐너로 바로 스캔하려면', win ? [
+                h('p', {}, '이 PC에서 "사거리 스캐너 연결 프로그램"이 꺼져 있거나 아직 설치하지 않았어요. 스캐너(프린터)가 연결된 PC에서 처음 한 번만 설치하면, PC를 켤 때마다 저절로 켜져요.'),
+                h('ol', { class: 'scan-steps' },
+                    h('li', {}, '[연결 프로그램 받기]를 누르고 받은 파일(sageori-scan-setup.cmd)을 열어 주세요. 크롬이 "위험할 수 있는 파일"이라고 하면 [유지]를 눌러 주세요.'),
+                    h('li', {}, '파란 "Windows의 PC 보호" 창이 뜨면 [추가 정보] → [실행]을 눌러 주세요.'),
+                    h('li', {}, '"스캐너 연결 프로그램을 켰어요" 창이 뜨면 [확인] → 여기서 [🖨 다시 스캔]'),
+                    h('li', {}, '크롬이 "로컬 네트워크의 기기에 액세스"를 물으면 [허용]을 눌러 주세요.')),
+                h('p', { class: 'scan-safe' }, '🔒 이 프로그램은 이 PC 안에서만 동작하고 사거리 ADMIN 화면에만 대답해요. 스캔한 그림은 이 화면으로만 오고, 다른 곳에 저장하거나 보내지 않아요. 이미 설치했다면 PC를 다시 켜거나 받은 파일을 한 번 더 열면 켜져요.')
+            ] : [h('p', {}, '[🖨 스캔]은 스캐너(프린터)가 연결된 Windows PC에서 쓸 수 있어요.'), h('p', {}, '휴대폰 · 태블릿에서는 [📁 파일로 업로드]를 눌러 서명 받은 종이를 사진으로 찍어 넣어 주세요.')], [
+                h('button', { type: 'button', class: 'btn', 'data-act': 'scan-dlg-close', onclick: closeDlg }, '닫기'),
+                scanUpBtn(M),
+                win ? h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'scan-setup-dl', onclick: scanSetupDl }, '연결 프로그램 받기') : null,
+                win ? h('button', { type: 'button', class: 'btn btn-scan', 'data-act': 'scan-dlg-retry', onclick: function () { closeDlg(); mfDirectScan(M, null); } }, '🖨 다시 스캔') : null]);
         }
         function mfPaperPaint(M) {
             var box = M.paperBox; if (!box) return;
@@ -5628,13 +5793,15 @@
                 box.appendChild(h('div', { class: 'mf-paper-img' }, h('img', { src: M.scan.toDataURL('image/jpeg', 0.82), alt: '서명 받은 가입 확인서 스캔본' })));
                 box.appendChild(h('div', { class: 'mf-paper-btns' },
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mf-scan-rot', onclick: function () { M.scan = mfRot(M.scan); if (M.markDirty) M.markDirty(); mfPaperPaint(M); } }, '↻ 돌리기'),
-                    mfScanBtn(M, '다시 스캔', 'btn btn-sm', 'mf-scan-again'),
+                    mfDirectBtn(M, '🖨 다시 스캔', 'btn btn-sm', 'mf-scan-again'),
+                    mfScanBtn(M, '📁 파일로 다시 넣기', 'btn btn-sm', 'mf-scan-again-file'),
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mf-scan-del', onclick: function () { if (!confirm('넣은 스캔본을 뺄까요?')) return; M.scan = null; M.paper = 'wait'; if (M.markDirty) M.markDirty(); mfPaperPaint(M); toast('스캔본을 뺐어요.'); } }, '스캔본 빼기')));
             } else if (M.paper === 'wait') {
                 box.classList.add('on', 'wait');
-                box.appendChild(h('div', { class: 'mf-paper-head' }, h('b', {}, '🖨 종이에 서명 받는 중이에요'), h('span', {}, '고객 서명을 받은 종이를 [📷 스캔]으로 넣으면 [드라이브/연락처 저장]이 켜져요. 스캐너 파일(JPG · PNG · PDF)이나 휴대폰으로 찍은 사진을 넣으면 돼요.')));
+                box.appendChild(h('div', { class: 'mf-paper-head' }, h('b', {}, '🖨 종이에 서명 받는 중이에요'), h('span', {}, '고객 서명을 받은 종이를 스캐너에 올리고 [🖨 스캔]을 누르면 [드라이브/연락처 저장]이 켜져요. 스캔 파일(JPG · PNG · PDF)이나 휴대폰으로 찍은 사진은 [📁 파일로 업로드]로 넣어 주세요.')));
                 box.appendChild(h('div', { class: 'mf-paper-btns' },
-                    mfScanBtn(M, '📷 스캔본 넣기', 'btn btn-sm btn-scan', 'mf-scan-wait'),
+                    mfDirectBtn(M, '🖨 스캔', 'btn btn-sm btn-scan', 'mf-scan-wait'),
+                    mfScanBtn(M, '📁 파일로 업로드', 'btn btn-sm btn-up', 'mf-scan-wait-file'),
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mf-paper-off', onclick: function () { M.paper = ''; mfPaperPaint(M); toast('화면에서 서명 받기로 돌아왔어요.'); } }, '화면에서 서명 받기로 돌아가기')));
             }
             mfGate(M);
@@ -5753,19 +5920,19 @@
             if (!M.gateOn || !M.el || !M.sheet) return;
             var all = mfMissing(M.sheet, M), box = M.el.querySelector('.mf-miss');
             var mob = M.kind === 'mobile', noSig = all.filter(function (x) { return !x.sig; }), scan = mob && !!M.scan, wait = mob && M.paper === 'wait' && !M.scan;
-            var WAITT = '서명 받은 종이를 [📷 스캔]으로 넣으면 눌러져요';
+            var WAITT = '서명 받은 종이를 [🖨 스캔]으로 넣으면 눌러져요';
             ['mf-drive', 'mf-copy', 'mf-pdf', 'mf-print'].forEach(function (a) {
                 var b = M.el.querySelector('[data-act="' + a + '"]'); if (!b) return;
                 var mm = scan || (mob && a === 'mf-print') ? noSig : all, lock = a === 'mf-drive' && wait;   // 서명 직접 받기: 서명 칸은 종이에 · 스캔본이 있으면 서명 칸은 스캔본으로
                 b.disabled = !!mm.length || lock || b.getAttribute('data-busy') === '1';
-                b.title = mm.length ? '빈칸을 모두 채우면 눌러져요' : lock ? WAITT : a === 'mf-drive' ? (b.title === WAITT || b.title === '빈칸을 모두 채우면 눌러져요' ? '' : b.title) : a === 'mf-print' && mob ? '서명란을 비운 가입 확인서를 인쇄해요. 종이에 서명을 받은 뒤 [📷 스캔]으로 넣어 주세요.' : '';
+                b.title = mm.length ? '빈칸을 모두 채우면 눌러져요' : lock ? WAITT : a === 'mf-drive' ? (b.title === WAITT || b.title === '빈칸을 모두 채우면 눌러져요' ? '' : b.title) : a === 'mf-print' && mob ? '서명란을 비운 가입 확인서를 인쇄해요. 종이에 서명을 받은 뒤 [🖨 스캔]으로 넣어 주세요.' : '';
             });
             if (!box) return;
             var miss = scan || wait ? noSig : all;
             box.textContent = ''; box.className = 'mf-miss' + (miss.length ? '' : ' ok');
             if (!miss.length) {
                 box.appendChild(h('b', {}, '✓ 모두 작성했어요.'));
-                box.appendChild(h('span', {}, scan ? '서명 받은 스캔본으로 저장 · 복사 · 파일 받기를 할 수 있어요.' : wait ? '종이에 서명을 받은 뒤 [📷 스캔]으로 넣어 주세요. 그러면 [드라이브/연락처 저장]이 켜져요.' : mob ? '저장 · 복사 · 파일 받기를 할 수 있어요.' : '저장 · 복사 · 파일 받기 · 인쇄를 할 수 있어요.'));
+                box.appendChild(h('span', {}, scan ? '서명 받은 스캔본으로 저장 · 복사 · 파일 받기를 할 수 있어요.' : wait ? '종이에 서명을 받은 뒤 [🖨 스캔]으로 넣어 주세요. 그러면 [드라이브/연락처 저장]이 켜져요.' : mob ? '저장 · 복사 · 파일 받기를 할 수 있어요.' : '저장 · 복사 · 파일 받기 · 인쇄를 할 수 있어요.'));
                 return;
             }
             box.appendChild(h('b', {}, '아직 안 쓴 곳 ' + miss.length + '개'));
