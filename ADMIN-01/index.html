@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-PcsSYGbvHxU+B8Pt8rBg37ZF/l6pT2bChxZs5G8MmHY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-CN9rOasGRPhTHHts5Ngi+FIP4W6nADl2YRWdC/GeM9w='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1269,6 +1269,23 @@
         .ph-viewbar b { color: #1D4F94; }
         .ph-btns { display: flex; gap: 6px; flex-wrap: wrap; }
         .ph-tip { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+        .phc { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; background: #FCFDF8; }
+        .phc-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; } .phc-h b { font-size: 16px; }
+        .phc-w, .phc-g { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; }
+        .phc-w span { font-size: 12px; font-weight: 800; color: var(--muted); }
+        .phc-d { min-height: 46px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; font-size: 13px; color: #B5B8A8; }
+        .phc-d.empty { visibility: hidden; }
+        .phc-d.on { border: 1.5px solid #9DBB6E; background: #EEF6E2; color: #2E4A12; font: inherit; cursor: pointer; padding: 2px; }
+        .phc-d.on b { font-size: 15px; } .phc-d.on small { font-size: 10.5px; font-weight: 700; color: #4F7A20; white-space: nowrap; }
+        .phc-d.on:hover { background: #E0EFCB; }
+        .phc-d.sel { background: #3E441E; border-color: #3E441E; color: #fff; } .phc-d.sel small { color: #E9F2D8; }
+        .phc-d.today { box-shadow: inset 0 0 0 2px #E2B33C; }
+        .phc-d.sun:not(.on) { color: #E3A3A3; } .phc-d.sat:not(.on) { color: #9FB3D9; }
+        .phc-w .sun { color: #D04848; } .phc-w .sat { color: #3B6CC0; }
+        .phc-tip { margin: 8px 0 0; font-size: 12.5px; color: var(--muted); }
+        .ph-cap { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; }
+        .mph-day { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
+        .mph-day .ph-tip { flex-basis: 100%; margin: 4px 0; }
         .ph-list { display: grid; gap: 8px; }
         .ph-row { display: flex; align-items: center; justify-content: space-between; gap: 10px 14px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
         .ph-row.cur { border-color: var(--olive-700); box-shadow: inset 4px 0 0 var(--olive-700); }
@@ -1828,7 +1845,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-30.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-30.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -7395,10 +7412,31 @@
             commit('"' + polLabel(P) + '"을(를) 지금 단가표로 바꿨어요.');
             setTimeout(hpAuto, 400);
         }
-        function polHistory() {   // [이전 단가표]: 날짜별 목록 → 보기(이 기기만) / 대표는 지금 단가표로 바꾸기
+        function phCal(ym, marks, sel, onDay, onMonth) {   // 달력: marks { 'YYYY-MM-DD': 표시 글자 } 인 날만 눌러짐 · sel 고른 날
+            var y = +ym.slice(0, 4), m = +ym.slice(5, 7), first = new Date(y, m - 1, 1), dim = new Date(y, m, 0).getDate(), today = ymd(new Date()), cells = [];
+            for (var i = 0; i < first.getDay(); i++) cells.push(h('span', { class: 'phc-d empty' }));
+            for (var d = 1; d <= dim; d++) (function (d) {
+                var k = ym + '-' + pad(d), mk = marks[k], dow = new Date(y, m - 1, d).getDay();
+                cells.push(mk ? h('button', { type: 'button', class: 'phc-d on' + (sel === k ? ' sel' : '') + (k === today ? ' today' : '') + (dow === 0 ? ' sun' : dow === 6 ? ' sat' : ''), 'data-day': k, 'aria-pressed': sel === k ? 'true' : 'false', title: k + ' 단가표 보기', onclick: function () { onDay(k); } }, h('b', {}, String(d)), h('small', {}, mk))
+                    : h('span', { class: 'phc-d' + (k === today ? ' today' : '') + (dow === 0 ? ' sun' : dow === 6 ? ' sat' : '') }, String(d)));
+            })(d);
+            var mv = function (n) { var t = new Date(y, m - 1 + n, 1); return t.getFullYear() + '-' + pad(t.getMonth() + 1); };
+            return h('div', { class: 'phc' },
+                h('div', { class: 'phc-h' }, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'phc-prev', 'aria-label': '이전 달', onclick: function () { onMonth(mv(-1)); } }, '◀'),
+                    h('b', {}, y + '년 ' + m + '월'), h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'phc-next', 'aria-label': '다음 달', onclick: function () { onMonth(mv(1)); } }, '▶')),
+                h('div', { class: 'phc-w' }, WEEK.map(function (w, i) { return h('span', { class: i === 0 ? 'sun' : i === 6 ? 'sat' : '' }, w); })),
+                h('div', { class: 'phc-g' }, cells),
+                h('p', { class: 'phc-tip' }, Object.keys(marks).some(function (k) { return k.slice(0, 7) === ym; }) ? '색이 있는 날이 단가표가 바뀐(넣은) 날이에요. 눌러서 그날 단가표를 보세요.' : '이 달에는 넣은 단가표가 없어요. ◀ ▶로 달을 바꿔 보세요.'));
+        }
+        var phSt = { ym: '', day: '' };
+        function polHistory() {   // [이전 단가표]: 달력(단가표가 있는 날만) → 그날 단가표 목록 → 보기(이 기기만) / 대표는 지금 단가표로 바꾸기
             var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide';
             var cur = polCur(), shown = polShown(), boss = isBoss();
-            var list = ((db && db.policies) || []).slice().sort(function (a, b) { return polWhen(b).t - polWhen(a).t || b.at - a.at; });
+            var all = ((db && db.policies) || []).slice().sort(function (a, b) { return polWhen(b).t - polWhen(a).t || b.at - a.at; }), marks = {};
+            all.forEach(function (P) { var k = polWhen(P).day; marks[k] = marks[k] ? (+marks[k].replace(/\D/g, '') + 1) + '번' : '●'; });
+            Object.keys(marks).forEach(function (k) { if (marks[k] !== '●') marks[k] = marks[k] + ' 바뀜'; });
+            if (!phSt.ym) phSt.ym = (shown ? polWhen(shown).day : ymd(new Date())).slice(0, 7);
+            var list = all.filter(function (P) { var k = polWhen(P).day; return phSt.day ? k === phSt.day : k.slice(0, 7) === phSt.ym; });
             var rows = list.map(function (P) {
                 var at = new Date(P.at), isCur = P === cur, isShown = P === shown;
                 return h('div', { class: 'ph-row' + (isCur ? ' cur' : ''), 'data-ph': P.id },
@@ -7412,10 +7450,12 @@
                         h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ph-view', onclick: function () { state.pol.view = isCur ? '' : P.id; polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); closeDlg(); render(); try { window.scrollTo(0, 0); } catch (e) { /* 무시 */ } } }, isCur ? '지금 단가표 보기' : '보기'),
                         boss && !isCur ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'ph-set', onclick: function () { polSetCur(P); } }, '이 단가표로 바꾸기') : null));
             });
-            var form = h('form', { novalidate: true }, h('div', { class: 'dlg-head' }, '단가표 날짜별 보기'),
-                h('div', { class: 'dlg-body' },
+            var cal = phCal(phSt.ym, marks, phSt.day, function (k) { phSt.day = phSt.day === k ? '' : k; polHistory(); }, function (ym) { phSt.ym = ym; phSt.day = ''; polHistory(); });
+            var form = h('form', { novalidate: true }, h('div', { class: 'dlg-head' }, '단가표 날짜별 보기 (달력)'),
+                h('div', { class: 'dlg-body' }, cal,
+                    h('div', { class: 'ph-cap' }, phSt.day ? h('b', {}, koDate(phSt.day) + ' 단가표') : h('b', {}, +phSt.ym.slice(5) + '월 단가표 ' + list.length + '개'), phSt.day ? h('button', { type: 'button', class: 'link-btn', 'data-act': 'ph-day-all', onclick: function () { phSt.day = ''; polHistory(); } }, '이 달 전체 보기') : null),
                     h('p', { class: 'ph-tip' }, '날짜를 눌러 그날 단가표를 볼 수 있어요. 하루에 두 번 이상 바뀌면 "15:00 이후 변경건"처럼 시간이 붙어요. [보기]는 이 기기에서만 보이고 다른 직원 화면은 그대로예요.' + (boss ? ' [이 단가표로 바꾸기]는 모든 직원 화면과 홈페이지에 반영돼요.' : '')),
-                    h('div', { class: 'ph-list' }, rows)),
+                    h('div', { class: 'ph-list' }, rows.length ? rows : h('div', { class: 'pol-empty' }, '이 달에는 단가표가 없어요.'))),
                 h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기')));
             form.addEventListener('submit', function (e) { e.preventDefault(); });
             dlg.appendChild(form); showDlg(dlg);
@@ -8250,8 +8290,8 @@
             mp.busy = true; mp.err = '';
             ibCall('mpGet', { rev: force ? -1 : mp.rev }).then(function (res) {
                 if (res.same) return null;
-                if (!res.blob) { mp.data = { v: 1, dealers: [] }; mp.rev = res.rev || 0; return null; }
-                return ensureTeam().then(function (t) { return decryptText(t.encKey, res.blob, MP_AAD); }).then(function (txt) { mp.data = mpNorm(JSON.parse(txt)); mp.rev = res.rev; });
+                if (!res.blob) { if (mp.hist) mp.live = { v: 1, dealers: [] }; else mp.data = { v: 1, dealers: [] }; mp.rev = res.rev || 0; return null; }
+                return ensureTeam().then(function (t) { return decryptText(t.encKey, res.blob, MP_AAD); }).then(function (txt) { var nd = mpNorm(JSON.parse(txt)); if (mp.hist) mp.live = nd; else mp.data = nd; mp.rev = res.rev; });
             }).then(function () { mp.busy = false; mp.at = Date.now(); if (state.view === 'policy' && (state.pol.mob || state.pol.rent)) render(); mfXRefresh(); },
                 function (e) { mp.busy = false; mp.at = Date.now(); mp.err = driveErrText(e); if (state.view === 'policy' && (state.pol.mob || state.pol.rent)) render(); mfXRefresh(); });
         }
@@ -8260,13 +8300,102 @@
                 return ibCall('mpPut', { baseRev: Math.max(0, mp.rev), blob: blob });
             }).then(function (res) { mp.rev = res.rev; mp.data = next; return next; });
         }
+        var mph = { cache: {}, view: null };   // cache[ym] = { rev, days: { 'YYYY-MM-DD': { 거래처: 단가표 } } } · view: { ym, day }
+        function mphId(ym) { return 'mph_' + ym; }
+        function mphLoad(ym, force) {   // 그 달 모바일 단가표 기록 받기
+            if (!force && mph.cache[ym]) return Promise.resolve(mph.cache[ym]);
+            return glCall('glGet', { id: mphId(ym), rev: -1 }).then(function (res) {
+                if (!res.blob) return { rev: res.rev || 0, days: {} };
+                return glDec(res.blob, GL_AAD + mphId(ym)).then(function (x) {
+                    var days = {}; Object.keys(x && x.days || {}).forEach(function (k) { if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) return; var o = {}; Object.keys(x.days[k] || {}).slice(0, 30).forEach(function (nm) { var n = mpNorm({ dealers: [x.days[k][nm]] }).dealers[0]; if (n) o[n.name] = n; }); days[k] = o; });
+                    return { rev: res.rev, days: days };
+                });
+            }).then(function (d) { mph.cache[ym] = d; return d; });
+        }
+        function mphSave(day, dealers, tries) {   // 대표님: 그날 넣은 거래처 단가표를 기록에 더함 (같은 날 같은 거래처는 나중 것으로)
+            var ym = day.slice(0, 7);
+            return mphLoad(ym, true).then(function (d) {
+                var next = { v: 1, ym: ym, days: JSON.parse(JSON.stringify(d.days)) };
+                next.days[day] = next.days[day] || {};
+                dealers.forEach(function (x) { next.days[day][x.name] = x; });
+                return glEnc(next, GL_AAD + mphId(ym)).then(function (blob) { return glCall('glPut', { id: mphId(ym), baseRev: d.rev, blob: blob }, 120000); })
+                    .then(function (res) { mph.cache[ym] = { rev: res.rev, days: next.days }; return true; });
+            }).catch(function (e) {
+                if (e && e.code === 'conflict' && (tries || 0) < 2) return mphSave(day, dealers, (tries || 0) + 1);
+                throw e;
+            });
+        }
+        function mphDay(d) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(d && d.date || '')); return m ? m[0] : ymd(new Date()); }   // 변환 파일의 단가표 날짜 (없으면 오늘)
+        function mphOld(files) {   // 대표님: 지난 모바일 단가표 변환 파일들을 기록에만 넣기 (지금 단가표는 그대로)
+            if (!isBoss() || !files || !files.length) return;
+            var arr = [].slice.call(files, 0, 40), ok = 0, bad = [];
+            toast('지난 단가표 ' + arr.length + '개를 기록에 넣는 중이에요...');
+            arr.reduce(function (p, f) {
+                return p.then(function () { return f.text(); }).then(function (txt) {
+                    var d; try { d = JSON.parse(txt); } catch (e) { d = null; }
+                    if (!d || d.kind !== 'sageori-mobile') { bad.push(f.name); return; }
+                    var inn = mpNorm(d); if (!inn.dealers.length) { bad.push(f.name); return; }
+                    var at = new Date(mphDay(d) + 'T12:00:00').getTime(); inn.dealers.forEach(function (x) { x.at = x.at || at; x.by = x.by || staffName(me); });
+                    return mphSave(mphDay(d), inn.dealers).then(function () { ok++; });
+                }).catch(function (e) { bad.push(f.name + ' (' + driveErrText(e) + ')'); });
+            }, Promise.resolve()).then(function () {
+                toast('지난 모바일 단가표 ' + ok + '개를 날짜별 기록에 넣었어요.' + (bad.length ? ' (' + bad.length + '개는 못 넣음)' : ''));
+                if (bad.length) alert('못 넣은 파일\n\n' + bad.join('\n'));
+                if (document.getElementById('dlg').open && document.querySelector('#dlg [data-mph]')) mphDialog();
+            });
+        }
+        function mphAsOf(day) {   // 그날 기준 거래처마다 '그날까지 넣은 마지막 단가표' (그 달 + 지난달 기록에서)
+            var ym = day.slice(0, 7), t = new Date(+ym.slice(0, 4), +ym.slice(5) - 2, 1), pv = t.getFullYear() + '-' + pad(t.getMonth() + 1);
+            return Promise.all([mphLoad(pv).catch(function () { return { days: {} }; }), mphLoad(ym)]).then(function (a) {
+                var days = Object.assign({}, a[0].days, a[1].days), out = {}, src = {};
+                Object.keys(days).sort().forEach(function (k) { if (k > day) return; Object.keys(days[k]).forEach(function (nm) { out[nm] = days[k][nm]; src[nm] = k; }); });
+                return { dealers: Object.keys(out).map(function (nm) { var x = JSON.parse(JSON.stringify(out[nm])); x.hday = src[nm]; return x; }), src: src };
+            });
+        }
+        function mphView(day) {   // 그날 단가표로 보기 (이 기기에서만 · 다른 화면으로 가면 지금 단가표로 돌아옴)
+            return mphAsOf(day).then(function (r) {
+                if (!r.dealers.length) { toast(koDate(day) + ' 이전에 넣은 모바일 단가표 기록이 없어요.'); return; }
+                if (!mp.hist) mp.live = mp.data;
+                r.dealers.sort(function (a, b) { var ia = DEALERS.indexOf(a.name), ib = DEALERS.indexOf(b.name); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+                mp.data = { v: 1, dealers: r.dealers, rent: mp.live && mp.live.rent }; mp.hist = day; mp.idx = null; mp.dealer = '*';
+                closeDlg(); render(); try { window.scrollTo(0, 0); } catch (e) { /* 무시 */ }
+            }, function (e) { toast('기록을 불러오지 못했어요. ' + driveErrText(e)); });
+        }
+        function mphBack(quiet) { if (!mp.hist) return; mp.data = mp.live || mp.data; mp.live = null; mp.hist = ''; mp.idx = null; if (!quiet) { render(); toast('지금 모바일 단가표로 돌아왔어요.'); } }
+        function mphDialog() {   // 📅 날짜별 모바일 단가표: 달력 (기록이 있는 날만)
+            if (!glCan()) { toast('날짜별 모바일 단가표는 대표님과 가입고객리스트 권한이 있는 계정만 볼 수 있어요.'); return; }
+            var dlg = document.getElementById('dlg'), V = mph.view || (mph.view = { ym: (mp.hist || ymd(new Date())).slice(0, 7), day: '' });
+            var paint = function (d, err) {
+                dlg.textContent = ''; dlg.className = 'wide';
+                var marks = {}; if (d) Object.keys(d.days).forEach(function (k) { var n = Object.keys(d.days[k]).length; marks[k] = n + '곳'; });
+                var cal = d ? phCal(V.ym, marks, V.day, function (k) { V.day = V.day === k ? '' : k; paint(d); }, function (ym) { V.ym = ym; V.day = ''; go(); }) : h('div', { class: 'pol-empty' }, err || '기록을 불러오는 중이에요...');
+                var dayBox = null;
+                if (d && V.day) {
+                    var names = Object.keys(d.days[V.day] || {});
+                    dayBox = h('div', { class: 'mph-day' }, h('b', {}, koDate(V.day) + ' 넣은 단가표: '), names.map(function (nm) { var x = d.days[V.day][nm]; return h('span', { class: 'ph-chip view' }, nm + (x.date ? ' · ' + String(x.date).slice(0, 24) : '')); }),
+                        h('p', { class: 'ph-tip' }, '그날 넣지 않은 거래처는 그 전에 넣은 마지막 단가표로 보여요.'),
+                        h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mph-view', onclick: function () { mphView(V.day); } }, '📅 ' + koDate(V.day) + ' 단가표로 보기'));
+                }
+                var old = isBoss() ? h('label', { class: 'btn btn-sm', 'data-act': 'mph-old', title: 'Claude가 보낸 지난 날짜 모바일단가표_….json 파일들을 한 번에 골라 기록에만 넣어요 (지금 단가표는 그대로)' }, '지난 단가표 파일 기록에 넣기',
+                    h('input', { type: 'file', accept: '.json,application/json', multiple: true, hidden: true, onchange: function () { mphOld(this.files); this.value = ''; } })) : null;
+                var form = h('form', { novalidate: true, 'data-mph': '1' }, h('div', { class: 'dlg-head' }, '모바일 단가표 날짜별 보기 (달력)'),
+                    h('div', { class: 'dlg-body' }, cal, dayBox,
+                        h('p', { class: 'ib-help' }, '모바일 단가표를 넣을 때마다 그날 단가표가 자동으로 기록돼요 (가입고객리스트처럼 팀 키로 암호화해서 드라이브에 보관). 한 달 정산 때 그날 단가를 확인하세요. 보기는 이 기기에서만이고, 다른 화면으로 가면 지금 단가표로 돌아와요.')),
+                    h('div', { class: 'dlg-foot' }, old, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기')));
+                form.addEventListener('submit', function (e) { e.preventDefault(); });
+                dlg.appendChild(form); if (!dlg.open) showDlg(dlg);
+            };
+            var go = function () { paint(null); mphLoad(V.ym, true).then(function (d) { if (dlg.querySelector('[data-mph]')) paint(d); }, function (e) { paint(null, '기록을 불러오지 못했어요. ' + driveErrText(e)); }); };
+            go();
+        }
         function mpImport(file) {
             if (!isBoss() || !file) return;
             if (file.size > 3 * 1024 * 1024) { toast('파일이 너무 커요.'); return; }
             file.text().then(function (txt) {
                 var d; try { d = JSON.parse(txt); } catch (e) { d = null; }
                 if (!d || d.kind !== 'sageori-mobile') { alert('모바일 단가표 변환 파일이 아니에요. Claude가 보낸 .json 파일을 골라 주세요.'); return; }
-                var inn = mpNorm(d), now = Date.now();
+                if (mp.hist) mphBack(true);   // 지난 단가표를 보는 중이면 지금 단가표로 돌아와서 넣음
+                var inn = mpNorm(d), now = Date.now(), hday = mphDay(d);
                 if (!inn.dealers.length) { alert('파일 안에 단가표가 없어요.'); return; }
                 var names = inn.dealers.map(function (x) { return x.name + ' (표 ' + x.tables.length + '개)'; });
                 if (!confirm('모바일 단가표를 넣을까요?\n\n' + names.join('\n') + '\n\n파일에 있는 거래처만 새 단가표로 바뀌고, 다른 거래처는 그대로예요. 모든 직원 화면에 바로 보여요.')) return;
@@ -8282,12 +8411,16 @@
                     if (!(e && e.code === 'conflict' && e.reply)) throw e;
                     mp.rev = e.reply.rev;   // 다른 기기에서 먼저 저장 → 최신 내용에 다시 얹음
                     return (e.reply.blob ? ensureTeam().then(function (t) { return decryptText(t.encKey, e.reply.blob, MP_AAD); }).then(function (x) { return mpNorm(JSON.parse(x)); }) : Promise.resolve({ v: 1, dealers: [] })).then(function (base) { return mpPut(merge(base)); });
-                }).then(function () { mp.dealer = inn.dealers[0].name; render(); toast('모바일 단가표 ' + inn.dealers.length + '곳을 넣었어요. (' + inn.dealers.map(function (x) { return x.name; }).join(', ') + ')'); },
+                }).then(function () {
+                    mp.dealer = inn.dealers[0].name; render(); toast('모바일 단가표 ' + inn.dealers.length + '곳을 넣었어요. (' + inn.dealers.map(function (x) { return x.name; }).join(', ') + ')');
+                    if (glCan()) mphSave(hday, inn.dealers).then(function () { toast(koDate(hday) + ' 모바일 단가표를 날짜별 기록에도 남겼어요.'); }, function (e) { toast('날짜별 기록은 남기지 못했어요. ' + driveErrText(e)); });
+                },
                     function (e) { alert('모바일 단가표를 저장하지 못했어요.\n' + driveErrText(e)); });
             });
         }
         function mpRemove(name) {
             if (!isBoss() || !mp.data) return;
+            if (mp.hist) { toast('지난 단가표를 보는 중이에요. [지금 단가표로 돌아가기]를 먼저 눌러 주세요.'); return; }
             if (!confirm('"' + name + '" 모바일 단가표를 지울까요? 모든 직원 화면에서 사라져요.')) return;
             var next = { v: 1, dealers: mp.data.dealers.filter(function (x) { return x.name !== name; }) };
             if (mp.data.rent) next.rent = mp.data.rent;
@@ -9085,8 +9218,14 @@
                 h('div', { class: 'actions' }, polModeSeg(),
                     driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else { clMemoOpen(); if (cl.memo && cl.memo.P && cl.memo.P.kind !== 'mob' && !clHasText(clMemoSheet() || { cols: [] }, cl.memo.P.values())) cl.memo.P.setKind('mob'); } } }, '📝 상담 메모') : null,
                     h('button', { type: 'button', class: 'btn', 'data-act': 'mp-refresh', onclick: function () { mp.busy = false; mpLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침'),
-                    boss ? h('label', { class: 'btn btn-primary', 'data-act': 'mp-import' }, '모바일 단가표 불러오기', file) : null));
+                    glCan() ? h('button', { type: 'button', class: 'btn', 'data-act': 'mph-open', title: '모바일 단가표를 넣은 날을 달력으로 보고, 그날 단가표로 볼 수 있어요', onclick: mphDialog }, '📅 날짜별 단가표') : null,
+                    boss && !mp.hist ? h('label', { class: 'btn btn-primary', 'data-act': 'mp-import' }, '모바일 단가표 불러오기', file) : null));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '모바일 단가표는 공유 저장소를 연결한 기기에서 볼 수 있어요.')));
+            var histBar = mp.hist ? h('div', { class: 'ph-viewbar', role: 'status', 'data-mph-bar': '1' },
+                h('span', {}, '📅 ', h('b', {}, koDate(mp.hist)), ' 기준 모바일 단가표를 보는 중이에요 — 거래처마다 그날까지 넣은 마지막 단가표 (',
+                    (mp.data.dealers || []).map(function (x) { return x.name + ' ' + (x.hday ? +x.hday.slice(5, 7) + '/' + +x.hday.slice(8) : ''); }).join(' · '), ') · 이 기기에서만'),
+                h('div', { class: 'ph-btns' }, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mph-day', onclick: mphDialog }, '다른 날짜'),
+                    h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'mph-back', onclick: function () { mphBack(); } }, '지금 단가표로 돌아가기'))) : null;
             if (!mp.data && !mp.busy && !mp.err) setTimeout(function () { mpLoad(false); }, 0);
             if (!mp.data) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, mp.err || '불러오는 중이에요...')));
             var list = mp.data.dealers;
@@ -9138,7 +9277,7 @@
                     tbls.length ? tbls : h('div', { class: 'p-none', style: 'padding:12px' }, '표가 없어요.'));
             }).filter(Boolean);
             var countTxt = (mp.cmp ? '모델 ' + cmpRows.length + '개 · ' + tyName + ' · ' + MP_BANDS.filter(function (b) { return b[0] === mp.band; })[0][1] + ' · 단위 만원' : '') + (words.length ? (mp.cmp ? ' · ' : '') + '거래처 표에서 찾은 줄 ' + total + '개' : '');
-            return h('div', {}, head,
+            return h('div', {}, head, histBar,
                 h('div', { class: 'mp-top' }, cmpBtn, mpCmpBar()),
                 h('div', { class: 'mp-tools' }, q, countTxt ? h('span', { class: 'mp-count' }, countTxt) : null),
                 mp.cmp ? h('section', { class: 'mp-cmp', id: 'mp-cmp', 'aria-label': '모델별 비교' },
@@ -13414,6 +13553,7 @@
         /* ---------- 전체 화면 ---------- */
         function render() {
             if (taskDrag && authed && db) return;   // 업무를 끄는 중: 놓으면 바로 다시 그림
+            if (mp.hist && !(state.view === 'policy' && state.pol.mob)) mphBack(true);   // 지난 모바일 단가표 보기는 그 화면에서만
             var app = document.getElementById('app');
             var ae = document.activeElement, fk = ae && ae.getAttribute ? ae.getAttribute('data-fk') : null, fkSel = null;
             if (fk && (ae.tagName === 'TEXTAREA' || (ae.tagName === 'INPUT' && /^(text|search|tel)$/.test(ae.type)))) { try { fkSel = [ae.selectionStart, ae.selectionEnd]; } catch (e) { fkSel = null; } }
