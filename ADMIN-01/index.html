@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dr/bqOtRJEl8+5+DS/EDS0Ce/SW3iowsPbqCJ3hfPrE='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-SixXHxc7P7JRUV6Bg70/LHriZFcdRfiFGAdjC0lgodQ='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1881,7 +1881,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-30.9';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-30.10';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -6356,12 +6356,17 @@
            모바일: 모바일 단가표의 거래처 · 모델(용량) · 요금제 구간 · 가입 유형(010/MNP/기변) · 공시/선약 → 단가 / 부가서비스 유치·미유치 → 추가·차감
            확실하지 않으면 넣지 않고 이유를 알려 줌 (장부에 직접 적은 값은 덮지 않음) */
         function feeNorm(t) { return String(t || '').toLowerCase().replace(/\s+/g, ''); }
-        function regFeeWired(rec) {
-            var P = polCur(); if (!P || !P.data) return { why: '유선 단가표가 없어요' };
+        function polAt(day) {   // 그 날짜에 쓰던 유선 단가표 (보관된 최근 10개 중) — 없으면 지금 단가표
+            var l = ((db && db.policies) || []).filter(function (p) { return p.data && polWhen(p).day <= day; }).sort(function (a, b) { return polWhen(b).t - polWhen(a).t || polCurAt(b) - polCurAt(a); });
+            return l[0] || polCur();
+        }
+        function regFeeWired(rec, Pin) {
+            var P = Pin || polCur(); if (!P || !P.data) return { why: '유선 단가표가 없어요' };
             var co = ctCarrier(rec.carrier, 'wired').tag, raw = String(rec.carrier || '').toUpperCase(), plan = String(rec.plan || ''), soho = /소호/.test(plan) || /안모/.test(rec.dealer || '');
             var comb = /결합하기|기결합/.test(rec.comb || '');
             var ids = co === 'U+' ? (soho ? ['lgsoho'] : ['lgu']) : co === 'KT' ? ['kt'] : co === '스카이라이프' ? ['sky'] : co === '헬로비전' ? ['hello']
-                : co === 'SK' ? (soho ? ['skbsoho'] : /SKB|브로드/.test(raw) ? ['skb'] : comb ? ['skt'] : ['skb']) : [];
+                : co === 'SK' ? (soho ? ['skbsoho'] : /SKB|브로드/.test(raw) ? ['skb'] : /SKT/.test(raw) ? ['skt'] : []) : [];   // SKT → SKT 단가표 · SKB → SKB 단가표 (절대 섞지 않음)
+            if (!ids.length && co === 'SK') return { why: '통신사가 "' + (rec.carrier || 'SK') + '"로만 적혀 있어요. SKT인지 SKB인지 통신사 칸을 고쳐 주세요 (단가가 달라요)' };
             if (!ids.length) return { why: '통신사(' + (rec.carrier || '없음') + ')를 단가표에서 찾지 못했어요' };
             if (rec.dealer && mp.data && (mp.data.dealers || []).some(function (x) { return x.name === rec.dealer; })) return { why: rec.dealer + ' 유선(동판)은 거래처 동판 단가라 직접 적어 주세요' };
             var c = P.data.carriers.filter(function (x) { return x.id === ids[0]; })[0]; if (!c) return { why: ids[0] + ' 단가표가 없어요' };
@@ -6561,7 +6566,31 @@
             commit(ok ? '액면단가 ' + ok + '줄을 채웠어요.' + (miss.length ? ' ' + miss.length + '줄은 직접 적어 주세요.' : '') : '');
             if (miss.length) alert('직접 적어야 하는 줄 (' + miss.length + ')\n\n' + miss.slice(0, 20).join('\n') + (miss.length > 20 ? '\n…' : ''));
         }
+        function regSkBad(r) { var c = String(r.carrier || '').toUpperCase().replace(/\s/g, ''); return r.kind === 'wired' && r.type !== '렌탈' && !!r.fee && /^단가표 자동: SKB (?!소호)/.test(r.fa || '') && /SKT/.test(c) && !/SKB|브로드/.test(c); }
+        var regSkBusy = false;
+        function regSkFix() {   // SKT인데 SKB 단가로 자동 계산된 줄 → 가입 날짜의 단가표로 다시 계산 (직접 적은 값은 건드리지 않음)
+            if (regSkBusy || !db || !isBoss()) return;
+            var bad = (db.regs || []).filter(regSkBad); if (!bad.length) return;
+            regSkBusy = true;
+            var done = [], miss = [];
+            bad.forEach(function (r) {
+                var rec = JSON.parse(JSON.stringify(r)); delete rec.fee;
+                var a; try { a = regFeeWired(rec, polAt(r.date)); } catch (e) { a = null; }
+                if (!a || !a.fee) { miss.push((r.name || '(이름 없음)') + ' — ' + (a && a.why ? a.why : '계산 못 함')); r.fa = '⚠ SKT인데 SKB 단가로 계산됐던 값 — 직접 확인해 주세요 (' + String(r.fa || '').replace(/^단가표 자동: /, '') + ')'; r.fa = r.fa.slice(0, 200); stamp(r); return; }
+                var old = +r.fee, og = /\(상품권 ([\d.]+)만\)/.exec(r.fa || ''), fix = { fee: old }, only = ['fee'];
+                if (og && String(r.gv || '') === String(Math.round(+og[1] * 10000))) { fix.gv = +r.gv; only.push('gv'); if (a.gv) r.gv = String(a.gv); else delete r.gv; }
+                r.fee = String(a.fee); r.fa = ('단가표 자동: ' + a.src).slice(0, 200); stamp(r);
+                done.push((r.name || '(이름 없음)') + ' ' + (+r.date.slice(5, 7)) + '/' + (+r.date.slice(8)) + ' · ' + (old / 10000) + '만 → ' + (a.fee / 10000) + '만');
+                if (r.name) glQueueReg(r, { only: only, match: { name: r.name, phone: r.phone || '', kind: r.kind }, fix: fix });
+            });
+            commit('');
+            regSkBusy = false;
+            setTimeout(function () {
+                alert('SKT 가입인데 SKB 단가로 자동 계산됐던 줄을 SKT 단가표로 고쳤어요.\n(가입 날짜에 쓰던 단가표 기준 · 가입고객리스트 액면단가도 같이 고쳐요)\n\n' + (done.length ? '고친 줄 ' + done.length + '\n' + done.slice(0, 30).join('\n') : '') + (miss.length ? '\n\n직접 확인할 줄 ' + miss.length + '\n' + miss.slice(0, 20).join('\n') : ''));
+            }, 50);
+        }
         function regLedger() {   // 모바일 확인서 아래: 가입 장부 (모바일·유선)
+            if (isBoss() && !regSkBusy && (db.regs || []).some(regSkBad)) setTimeout(regSkFix, 0);
             var list = regMonth(''), noFee = list.filter(function (r) { return !r.fee; }).length;
             var rows = list.map(function (r, i) {
                 var sub = [parseInt(r.date.slice(8), 10) + '일', r.dealer, r.carrier, r.kind === 'mobile' ? r.model : r.plan, r.seller ? '담당 ' + r.seller : ''].filter(Boolean).join(' · ');
@@ -13292,6 +13321,7 @@
             var body = { v: 1, ym: ymName, day: d.getDate(), reg: {} };
             REG_FIELDS.concat(['kind']).forEach(function (f) { if (rec[f] && (!upd || f === 'kind' || upd.only.indexOf(f) >= 0)) body.reg[f] = String(rec[f]).slice(0, 300); });
             if (upd) { body.only = upd.only.slice(0, 40); body.match = { name: String(upd.match.name || '').slice(0, 40), phone: String(upd.match.phone || '').slice(0, 20), kind: upd.match.kind === 'wired' ? 'wired' : 'mobile' }; }
+            if (upd && upd.fix) { body.fix = {}; Object.keys(upd.fix).forEach(function (k) { if (GL_REG_COL[k] && isFinite(+upd.fix[k])) body.fix[k] = +upd.fix[k]; }); }   // 잘못 계산됐던 값: 시트가 그 값(또는 빈칸)일 때만 고침
             glEnc(body, GL_IN_AAD).then(function (blob) { return glCall('glAdd', { blob: blob, key: String(rec.id + '-' + (rec.u || 0)).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) }); })
                 .then(function () { if (glCan() && gl.idx) glInboxPull(); }, function () { /* 가입 장부에는 이미 저장됨 — 가입고객리스트는 다음 저장 때 */ });
         }
@@ -13342,6 +13372,7 @@
             function put(c, v) { if (!c || v == null || v === '') return; var s = String(v); row2[c] = /^-?\d{1,3}(,\d{3})+$|^-?\d+$/.test(s) && !/^-?0\d/.test(s) && s.length < 13 ? +s.replace(/,/g, '') : s; E.edits.set(target + ',' + c, row2[c]); }
             Object.keys(GL_REG_COL).forEach(function (f) {
                 if (only && only.indexOf(f) < 0) return;
+                if (x.fix && x.fix[f] != null) { var fc = colOf(GL_REG_COL[f]), fv = fc ? row2[fc] : null; if (fv != null && fv !== '' && (String(fv).charAt(0) === '=' || Math.abs(+String(fv).replace(/,/g, '')) !== Math.abs(+x.fix[f]))) return; }   // 시트를 직접 고친 값은 그대로
                 var v = f === 'kind' ? regKindText(reg) : reg[f]; if (f === 'birth' && /^\d{6}$/.test(String(v || ''))) v = String(v);
                 if (GL_REG_NEG[f] && v) { var dn = String(v).replace(/\D/g, ''); v = +dn ? '-' + (+dn) : ''; }   // 유통망지원금·프리: -280000 처럼
                 if ((f === 'fee' || f === 'adj') && reg.fa) { var cc = colOf(GL_REG_COL[f]); if (cc && row2[cc] != null && row2[cc] !== '' && String(row2[cc]).charAt(0) !== '=') return; }   // 단가표로 자동 계산한 값은 장부에 직접 적은 값을 덮지 않음
