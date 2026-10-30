@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-jzAF8yAMq+fITKlJsZaZjCkWHyBQve0j2LcgRt+bOoc='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-cmU/D/vavoNBRZeSp8uNsRXajvmctp8Ilymznqd/ve0='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -140,6 +140,9 @@
         .reg-kind { display: inline-block; font-size: 11.5px; font-weight: 800; border-radius: 4px; padding: 0 6px; margin-right: 6px; vertical-align: 1px; }
         .reg-kind.mobile { background: #E6EEFF; color: #2F55B8; } .reg-kind.wired { background: #E5F3E6; color: #1F6B2A; }
         .reg-sub { display: block; font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+        .reg-fee { display: inline-block; margin-top: 4px; padding: 2px 9px; border-radius: 999px; border: 1px solid #CFE3C4; background: #F1F8EC; color: #2E5A1E; font: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+        .reg-fee.none { border-color: #F2B8A8; background: #FFF1EC; color: #B3361B; }
+        .reg-fill { border-color: #E2B33C; background: #FFF6D8; font-weight: 800; }
         .reg-act { display: flex; gap: 6px; }
         .reg-empty { padding: 18px 4px; color: var(--muted); font-size: 13.5px; border-top: 1px solid var(--line); }
         .dl-grp { border-top: 2px solid var(--olive-100); padding-top: 8px; margin-top: 6px; }
@@ -1381,6 +1384,14 @@
         .pol-row1 .pol-cars { flex: 1 1 auto; min-width: 0; }
         .pol-acts { display: flex; gap: 6px; flex: none; }
         .pol-acts .btn[aria-pressed="true"] { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .pol-tvx { display: none; align-items: center; gap: 4px 6px; flex-wrap: wrap; margin-top: 6px; padding: 5px 8px; border-radius: 8px; background: #EEF6FF; border: 1px solid #BCD6F2; font-size: 12.5px; font-weight: 700; }
+        .pol-row.on .pol-tvx, .pol-tvx.has { display: flex; }
+        .pol-tvx .btn-sm { padding: 2px 8px; min-height: 28px; font-size: 12.5px; }
+        .pol-tvx .tv-d { border-color: #3B7BD0; }
+        .pol-tvx .tv-sum { color: #1D4F91; }
+        .pol-tvadd { background: #EEF6FF; border-color: #BCD6F2; }
+        .pol-tvadd .tv-d { border-color: #3B7BD0; font-weight: 800; }
+        .pol-tvadd .tv-sum { font-weight: 700; }
         .pol-picknote { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; background: #FFF8DB; border: 1px solid #F0DC8A; border-radius: 8px; padding: 7px 12px; font-size: 13.5px; }
         .pol-tbl td.p-stage { cursor: pointer; }
         .pol-tbl td.p-stage:hover { outline: 2px dashed #C9B458; outline-offset: -3px; }
@@ -1761,7 +1772,7 @@
         var REG_NEGF = function (k) { return function (r) { var d = String(r[k] || '').replace(/\D/g, ''); return +d ? '-' + (+d) : ''; }; };   // 가입고객리스트처럼 -(마이너스)
         var REG_DAY = function (r) { return parseInt(r.date.slice(8), 10) + '일'; };
         var REG_COLS = [   // 장부 엑셀 C열(모바일&유선) ~ BG열(액면단가) 순서 그대로 · ''는 직접 적는 칸 (비워서 붙여넣음)
-            ['모바일&유선', function (r) { return r.kind === 'mobile' ? '모바일' : '유선'; }], ['담당자', 'seller'], ['거래처', 'dealer'], ['통신사', 'carrier'], ['가입날짜', REG_DAY], ['모델', 'model'], ['일련번호', 'serial'], ['번호', 'phone'], ['고객명', 'name'], ['생년월일', 'birth'],
+            ['모바일&유선', function (r) { return regKindText(r); }], ['담당자', 'seller'], ['거래처', 'dealer'], ['통신사', 'carrier'], ['가입날짜', REG_DAY], ['모델', 'model'], ['일련번호', 'serial'], ['번호', 'phone'], ['고객명', 'name'], ['생년월일', 'birth'], ['복지여부', ''],
             ['공시&선약(프약)', 'disc'], ['공시금액', 'subsidy'], ['할부원금', 'price'], ['할부개월', 'months'], ['요금제', 'plan'], ['부가서비스', 'extra'], ['보험가입여부(종류)', 'ins'],
             ['결합종류', 'combKind'], ['결합여부', 'comb'], ['요금제유지개월', 'keep'], ['변경요금제', 'plan2'], ['가입후요금', 'bill1'], ['3개월후 요금', 'bill2'], ['이전사업자', 'prev'], ['가입유형', 'type'],
             ['출고가', ''], ['제휴카드사', ''], ['금액', ''], ['검수유무', ''], ['제휴수수료', ''], ['중고폰반납여부', ''], ['중고폰모델', ''], ['중고폰 상태', ''], ['중고폰 금액', ''], ['중고 순마진', ''], ['상품권반납', ''],
@@ -1769,6 +1780,8 @@
             ['고객약속 및 수납 유형', function (r) { return r.kind === 'wired' ? (r.addr || '') : ''; }], ['추가변수스케줄', ''],
             ['지원금', REG_NEGF('ga')], ['입금', function (r) { return +String(r.ga || '').replace(/\D/g, '') ? '입금하기' : ''; }], ['수납건', ''], ['선납내용', ''], ['입금계좌', 'bank'],
             ['유통망지원금', REG_NEGF('pay')], ['프리', REG_NEGF('fre')], ['부가 추가&차감', 'adj'], ['판지&추가히든', ''], ['유선직정산', REG_NEGF('gh')], ['유선상품권', REG_NEGF('gv')], ['유선10%추가', ''], ['액면단가', 'fee']];
+        function regKindText(r) { return r.kind === 'mobile' ? '모바일' : r.type === '렌탈' ? '유선(렌탈)' : '유선'; }   // 장부 C열 (렌탈은 유선(렌탈))
+        var REG_WELFARE_FROM = '2026-10';   // 이 달 장부부터 M열 '복지여부' 칸이 있음 (그 전 달 장부에는 없음)
         function regDerive(r0) {   // 장부 규칙: 유선 = 할부 36 · 부가서비스/보험 '유선없음' · 모델 '인(+티)(+전)' / 변경요금제가 없으면 유지개월·변경요금제 '유지' / 미결합이면 결합종류도 '미결합'
             var r = {}; Object.keys(r0 || {}).forEach(function (k) { r[k] = r0[k]; });
             if (r.kind === 'wired') {
@@ -1798,7 +1811,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-29.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-30.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -5354,7 +5367,7 @@
                 var regMsg = '';
                 var regOk = false; M.calRes = [];
                 try { regOk = regUpsert(M, y, m, d); regMsg = regOk ? ' 가입 장부에도 정리했어요.' + (M.xMsg || '') : ''; } catch (re) { regMsg = ' (가입 장부 정리는 실패했어요)'; }
-                if (regOk && M.feeRes && M.kind === 'wired') regMsg += M.feeRes.fee ? ' 액면단가 ' + M.feeRes.fee.toLocaleString('ko-KR') + '원 자동 입력.' : M.feeRes.why ? ' (액면단가 자동 입력 안 됨: ' + M.feeRes.why + ')' : '';
+                if (regOk && M.feeRes && M.kind === 'wired') regMsg += M.feeRes.fee ? ' 액면단가 ' + M.feeRes.fee.toLocaleString('ko-KR') + '원 ' + (M.feeRes.src === '상담에서 고른 상품 수수료' ? '(상담에서 고른 값) 입력.' : '자동 입력' + (M.feeRes.chk ? ' — 확인 필요' : '') + '.') : M.feeRes.why ? ' (액면단가 자동 입력 안 됨: ' + M.feeRes.why + ' — 가입 장부 [수정]에서 적어 주세요)' : '';
                 var cr = res.contact;   // 구글 연락처 결과 (그림 저장과 따로)
                 if (cr && cr.ok) { M.contactId = String(cr.id || ''); regMsg += ' ' + ctOkMsg(cr, ct); }
                 var ctWarn = cr && !cr.ok ? String(cr.msg || '저장하지 못했어요').slice(0, 160) : !cr ? '서버 프로그램(Apps Script)이 예전 버전이라 연락처는 저장하지 않았어요. 새 코드로 바꾸고 "새 버전"으로 배포해 주세요.' : '';
@@ -6220,8 +6233,9 @@
                 });
             });
             if (!best) return { why: c.name + ' · ' + sp + (tvW ? ' + ' + parts : '') + ' 상품을 단가표에서 찾지 못했어요' };
-            var f = polFee(best.r);
-            return { fee: f.fee, gv: best.r.g > 0 ? Math.round(best.r.g * 10000) : 0, src: c.name + ' ' + best.r.n + ' 합계 ' + (f.fee / 10000) + '만' + (best.r.g > 0 ? ' (상품권 ' + best.r.g + '만)' : '') + ' · ' + polLabel(P) };
+            var f = polFee(best.r), tvN = Math.max(0, (String(rec.model || '').match(/티/g) || []).length - 1), add = 0, addTxt = '';
+            if (tvN && tvW) { var o = polTvOpts(c, best.r).filter(function (x) { return x.d; })[0]; if (o) { add = Math.round(o.a * 10000) * tvN; addTxt = ' + TV 추가 ' + tvN + '대(' + (o.l === 'TV 추가' ? '추가셋탑' : o.l) + ' +' + o.a + '만)'; } else addTxt = ' · TV 추가 ' + tvN + '대 수수료는 직접 확인'; }
+            return { fee: f.fee + add, chk: !!(tvN && !add && tvW), gv: best.r.g > 0 ? Math.round(best.r.g * 10000) : 0, src: c.name + ' ' + best.r.n + ' 합계 ' + (f.fee / 10000) + '만' + addTxt + (best.r.g > 0 ? ' (상품권 ' + best.r.g + '만)' : '') + ' · ' + polLabel(P) };
         }
         function feeMdlKey(t) {   // 모델 이름 → 비교용 (아이폰18프로 512 → iphone18pro / Z Fold8 → fold8)
             return String(t || '').toLowerCase().replace(/\(dp\s*진열\)|\(.*?\)/g, '').replace(/갤럭시|galaxy/g, '').replace(/아이폰/g, 'iphone').replace(/프로/g, 'pro').replace(/맥스/g, 'max').replace(/에어/g, 'air')
@@ -6305,10 +6319,24 @@
             });
             return { fee: fee, adj: adj, src: dl.name + ' ' + model + (cap ? '' : '(256G)') + ' · ' + tyK + (dc ? '·' + dc : '') + ' · ' + tierTxt + ' ' + hit.v + '만' + (notes.length ? ' · 부가 ' + notes.join(', ') : '') + (warn.length ? ' · ' + warn.join(' / ') : '') };
         }
+        function regFeeRent(rec) {   // 렌탈: 렌탈 수수료표 A단가 (렌탈사 · 모델 · 약정 · 월 렌탈료) — 렌탈사 표가 없으면 같은 브랜드 직계약 표를 참고로
+            var F = mp.data && mp.data.rent; if (!F) return { why: '렌탈 수수료표가 아직 없어요 (상담하기 → 렌탈 단가표 → 렌탈 수수료표 불러오기)' };
+            var model = String(rec.model || '').trim(), m = +digitsOnly(rec.months), fee = +digitsOnly(rec.bill1), co = String(rec.prev || '').trim();
+            if (!model || model === '렌탈') return { why: '렌탈 모델명이 없어요' };
+            if (!m) return { why: '약정 개월이 없어요' };
+            if (!fee) return { why: '월 렌탈료가 없어요' };
+            var brand = '', bt = String(rec.carrier || '').replace(/\s/g, '');
+            if (rt.data) rt.data.items.some(function (p) { if (p.model === model) { brand = p.brand || ''; return true; } return false; });
+            if (!brand) Object.keys(RT_BR).some(function (k) { if (bt && (bt === k || bt.indexOf(k) >= 0)) { brand = k; return true; } return false; });
+            var f = rtFeeOf(co, model, m, fee, brand || undefined);
+            if (!f) return { why: '렌탈 수수료표에서 ' + (co ? co + ' ' : '') + model + ' · ' + m + '개월을 찾지 못했어요' };
+            var chk = f.ref || !f.exact;
+            return { fee: f.a, chk: chk, src: (co || '렌탈') + ' ' + model + ' · ' + m + '개월 · 월 ' + fee.toLocaleString('ko-KR') + '원 → A단가 ' + (f.a / 10000) + '만' + (f.ref ? ' (참고: ' + f.b + ' 직계약 표 · 확인 필요)' : f.exact ? '' : ' (같은 월 렌탈료가 없어 같은 약정 가장 낮은 A단가 · 확인 필요)') };
+        }
         function regFeeAuto(M, rec) {   // 상담에서 고른 수수료가 없을 때만
-            if (M.fee && +M.fee) return { src: '상담에서 고른 상품 수수료' };
-            if (rec.type === '렌탈' || rec.fee) return null;
-            var a; try { a = rec.kind === 'wired' ? regFeeWired(rec) : regFeeMobile(rec); } catch (e) { a = { why: '자동 계산 중 문제가 생겼어요' }; }
+            if (M.fee && +M.fee) return { fee: +M.fee, src: '상담에서 고른 상품 수수료' };
+            if (rec.fee) return null;
+            var a; try { a = rec.type === '렌탈' ? regFeeRent(rec) : rec.kind === 'wired' ? regFeeWired(rec) : regFeeMobile(rec); } catch (e) { a = { why: '자동 계산 중 문제가 생겼어요' }; }
             if (a && a.fee) { rec.fee = String(a.fee); if (a.adj) rec.adj = String(a.adj); if (a.gv && !(M.pg && +M.pg)) rec.gv = String(a.gv); rec.fa = ('단가표 자동: ' + a.src).slice(0, 200); }
             return a;
         }
@@ -6339,8 +6367,8 @@
             return true;
         }
         function regLine(r0, n) {   // 장부 엑셀에 붙여넣을 한 줄 (칸 사이는 Tab · C열부터)
-            var r = regDerive(r0);
-            return REG_COLS.map(function (c) {
+            var r = regDerive(r0), oldYm = String(r.date || '').slice(0, 7) < REG_WELFARE_FROM;
+            return REG_COLS.filter(function (c) { return !(oldYm && c[0] === '복지여부'); }).map(function (c) {
                 var v = c[1] === null ? String(n) : typeof c[1] === 'function' ? c[1](r) : (r[c[1]] || '');
                 return String(v).replace(/[\t\r\n]+/g, ' ');
             }).join('\t');
@@ -6367,22 +6395,40 @@
                 return h('button', { type: 'button', class: 'btn btn-sm', 'aria-pressed': on ? 'true' : 'false', 'data-ym': ym, onclick: function () { state.regYm = ym; render(); } }, ymLabel(ym));
             }));
         }
+        function regFeeChip(r) {   // 장부 줄 아래: 액면단가 · 부가 추가&차감 (눌러서 고치기) — 비어 있으면 빨간 표시
+            var adj = +String(r.adj || '').replace(/[^\d-]/g, '') || 0, man = function (v) { return (Math.round(v / 1000) / 10).toLocaleString('ko-KR') + '만'; };
+            var t = r.fee ? '💰 액면단가 ' + man(+r.fee) + (adj ? ' · 부가 ' + (adj > 0 ? '+' : '') + man(adj) : '') + (r.fa ? ' · 자동' : '') : '⚠ 액면단가 비어 있음';
+            return h('button', { type: 'button', class: 'reg-fee' + (r.fee ? '' : ' none'), 'data-act': 'reg-fee', title: r.fa ? String(r.fa) : r.fee ? '직접 적은 값 (눌러서 고치기)' : '눌러서 액면단가 적기', onclick: function () { editReg(r); } }, t);
+        }
+        function regFeeFill(list) {   // 액면단가가 빈 줄 → 지금 단가표로 계산해서 채움 (장부에 직접 적은 값은 그대로)
+            var need = list.filter(function (r) { return !r.fee; }); if (!need.length) { toast('액면단가가 빈 줄이 없어요.'); return; }
+            if (!confirm('액면단가가 빈 ' + need.length + '줄을 지금 단가표로 계산해서 채울까요?\n\n· 가입 날짜와 단가표 날짜가 다르면 금액이 다를 수 있어요 — 채운 뒤 줄마다 💰 금액을 눌러 확인해 주세요.\n· 가입고객리스트에도 같은 고객 줄에 들어가요 (직접 적은 값은 덮지 않음).')) return;
+            var ok = 0, miss = [];
+            need.forEach(function (r) {
+                var rec = JSON.parse(JSON.stringify(r)), a = regFeeAuto({}, rec);
+                if (a && a.fee && rec.fee) { r.fee = rec.fee; if (rec.adj) r.adj = rec.adj; r.fa = rec.fa; stamp(r); ok++; if (r.name) glQueueReg(r, { only: ['fee', 'adj'].filter(function (f) { return r[f]; }), match: { name: r.name, phone: r.phone || '', kind: r.kind } }); }
+                else miss.push((r.name || '(이름 없음)') + ' — ' + (a && a.why ? a.why : '계산 못 함'));
+            });
+            commit(ok ? '액면단가 ' + ok + '줄을 채웠어요.' + (miss.length ? ' ' + miss.length + '줄은 직접 적어 주세요.' : '') : '');
+            if (miss.length) alert('직접 적어야 하는 줄 (' + miss.length + ')\n\n' + miss.slice(0, 20).join('\n') + (miss.length > 20 ? '\n…' : ''));
+        }
         function regLedger() {   // 모바일 확인서 아래: 가입 장부 (모바일·유선)
-            var list = regMonth('');
+            var list = regMonth(''), noFee = list.filter(function (r) { return !r.fee; }).length;
             var rows = list.map(function (r, i) {
                 var sub = [parseInt(r.date.slice(8), 10) + '일', r.dealer, r.carrier, r.kind === 'mobile' ? r.model : r.plan, r.seller ? '담당 ' + r.seller : ''].filter(Boolean).join(' · ');
                 return h('div', { class: 'reg-row', 'data-reg': r.id },
                     h('span', { class: 'reg-n' }, String(i + 1)),
-                    h('div', { class: 'reg-main' }, h('span', { class: 'reg-kind ' + r.kind }, r.kind === 'mobile' ? '모바일' : r.type === '렌탈' ? '렌탈' : '유선'), h('b', {}, r.name || '(이름 없음)'), h('span', { class: 'reg-sub' }, sub)),
+                    h('div', { class: 'reg-main' }, h('span', { class: 'reg-kind ' + r.kind }, r.kind === 'mobile' ? '모바일' : r.type === '렌탈' ? '렌탈' : '유선'), h('b', {}, r.name || '(이름 없음)'), h('span', { class: 'reg-sub' }, sub), regFeeChip(r)),
                     h('div', { class: 'reg-act' },
-                        h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-act': 'reg-copy', onclick: function () { clip(regLine(r, i + 1), (r.name || '') + ' 한 줄을 복사했어요. 장부 엑셀에서 그 줄의 C열(모바일&유선) 칸을 누르고 붙여넣기(Ctrl+V) 하세요. (BG열 액면단가까지 채워지고, 뒤쪽 수식 칸은 그대로)'); } }, '한 줄 복사'),
+                        h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-act': 'reg-copy', onclick: function () { clip(regLine(r, i + 1), (r.name || '') + ' 한 줄을 복사했어요. 장부 엑셀에서 그 줄의 C열(모바일&유선) 칸을 누르고 붙여넣기(Ctrl+V) 하세요. (BH열 액면단가 · BC열 부가 추가&차감까지 채워지고, 뒤쪽 수식 칸은 그대로)' + (r.fee ? '' : ' ⚠ 이 줄은 액면단가가 비어 있어요.')); } }, '한 줄 복사'),
                         h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editReg(r); } }, '수정'), regDelBtn(r)));
             });
             return h('section', { class: 'reg-box', 'data-ledger': 'all' },
                 h('div', { class: 'reg-head' }, h('h2', {}, '가입 장부'), h('small', {}, ymLabel(state.regYm) + ' ' + list.length + '건'),
                     list.length ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'reg-copy-all', onclick: function () {
                         clip(list.map(function (r, i) { return regLine(r, i + 1); }).join('\n'), ymLabel(state.regYm) + ' ' + list.length + '줄을 한 번에 복사했어요. 장부 엑셀에 붙여넣기(Ctrl+V) 하세요.');
-                    } }, '이 달 전체 복사') : null),
+                    } }, '이 달 전체 복사') : null,
+                    noFee ? h('button', { type: 'button', class: 'btn btn-sm reg-fill', 'data-act': 'reg-fee-fill', title: '액면단가가 빈 줄을 지금 단가표로 계산해서 채워요', onclick: function () { regFeeFill(list); } }, '💰 빈 액면단가 채우기 (' + noFee + ')') : null),
                 regMonthsBar(),
                 rows.length ? rows : h('div', { class: 'reg-empty' }, ymLabel(state.regYm) + '에 드라이브 저장한 가입 확인서가 없어요.'));
         }
@@ -6479,7 +6525,8 @@
                 { key: 'bank', label: '입금계좌 (사은품)', value: r.bank || '', half: true, max: 80, hint: '예: 국민 123456789012 (예금주가 다르면 괄호)' },
                 { key: 'pay', label: '유통망지원금 (PAY)', value: r.pay || '', half: true, max: 12, hint: '숫자만 · 가입고객리스트에는 -로 들어가요' },
                 { key: 'fre', label: '프리 (FRE)', value: r.fre || '', half: true, max: 12, hint: '숫자만 · 가입고객리스트에는 -로 들어가요' },
-                { key: 'fee', label: '액면단가 (수수료)', value: r.fee || '', half: true, max: 12, hint: '숫자만 (원) · 상담에서 고른 상품이면 자동' },
+                { key: 'fee', label: '액면단가 (수수료)', value: r.fee || '', half: true, max: 12, hint: r.fa ? String(r.fa).slice(0, 160) : '숫자만 (원) · 상담에서 고른 상품·단가표로 자동' },
+                { key: 'adj', label: '부가 추가&차감', value: r.adj || '', half: true, max: 12, hint: '원 · 차감은 앞에 - (예: -20000)' },
                 { key: 'gv', label: '유선상품권 (확인서 상품권)', value: r.gv || '', half: true, max: 12, hint: '숫자만 · 리스트에는 -로' },
                 { key: 'gh', label: '유선직정산 (확인서 본사)', value: r.gh || '', half: true, max: 12, hint: '숫자만 · 리스트에는 -로' },
                 { key: 'ga', label: '지원금 (확인서 추가지원금)', value: r.ga || '', half: true, max: 12, hint: '숫자만 · 리스트에는 -로, 입금 칸은 "입금하기"' },
@@ -6493,6 +6540,8 @@
                 onSave: function (v) {
                     var before = JSON.parse(JSON.stringify(r));
                     ['pay', 'fre', 'fee', 'gv', 'gh', 'ga'].forEach(function (f) { if (v.hasOwnProperty(f)) v[f] = digitsOnly(v[f]).replace(/^0+$/, ''); });
+                    if (v.hasOwnProperty('adj')) { var an = String(v.adj || '').replace(/[^\d-]/g, ''), neg = /^\s*-/.test(String(v.adj || '')) || /^-/.test(an); an = an.replace(/-/g, '').replace(/^0+/, ''); v.adj = an ? (neg ? '-' : '') + an : ''; }
+                    if (v.hasOwnProperty('fee') && (v.fee || '') !== (r.fee || '')) delete r.fa;   // 직접 고친 값 → 자동 표시 지움
                     r.kind = v.kind === 'wired' ? 'wired' : 'mobile'; r.date = v.date;
                     REG_FIELDS.forEach(function (f) { if (!v.hasOwnProperty(f)) return; var x = String(v[f] || '').trim().slice(0, REG_LONG[f] || 60); if (x) r[f] = x; else delete r[f]; });
                     var ch = Object.keys(GL_REG_COL).concat(['addr']).filter(function (f) { return f !== 'kind' && (r[f] || '') !== (before[f] || '') && r[f]; });
@@ -7403,6 +7452,69 @@
            인터넷 상품처럼 '짚어 두기'(상담 통신사·상품·요금·오퍼 줄)는 건드리지 않고,
            누르면 상담 메모의 '재케어 메모' 줄 아래에 따로 줄을 넣어요. 다시 누르면 빠져요. (CCTV 1개 · 보험 1개까지) */
         var polAdd = Object.create(null);   // { cctv: {key,c,r,g}, ins: {...} }
+        var polTv = { key: '', n: {} };   // TV 추가(추가셋탑): 고른 상품 줄 key · { 옵션 이름: 대수 }
+        function polTvOpts(c, r) {   // 통신사 '추가 정책'의 추가셋탑·TV추가 줄 → [{ l: 이름, a: 만원, d: 기본(이 상품 TV와 맞음) }]
+            var line = (c && c.extra || []).filter(function (l) { return /추가\s*셋탑|셋탑\s*추가|추가\s*TV|TV\s*추가|추가\s*IPTV/i.test(l) && !/유심|IOT/i.test(l); })[0];
+            if (!line) return [];
+            var ci = line.lastIndexOf(':'), body = ci >= 0 ? line.slice(ci + 1) : line, out = [];
+            body.split(/\s*\/\s*/).forEach(function (p) {
+                if (/원스톱|차감/.test(p)) return;
+                var am = (p.match(/\+\s*\d+(\.\d+)?(?![\d,])/g) || []).map(function (x) { return parseFloat(x.replace(/[+\s]/g, '')); });
+                if (!am.length) return;
+                var lab = p.replace(/\(.*?\)/g, ' ').replace(/\+\s*\d+(\.\d+)?/g, ' ').replace(/[|]/g, ' ').replace(/TV\s*추가\s*셋탑|추가\s*셋탑|셋탑\s*추가|TV\s*추가|추가\s*TV|추가\s*IPTV|수수료|추가/gi, ' ').replace(/\s+/g, ' ').trim();
+                var names = lab.split(/\s*·\s*/).filter(Boolean);
+                if (am.length > 1 && names.length === am.length) names.forEach(function (n, i) { out.push({ l: n, a: am[i] }); });
+                else out.push({ l: lab || 'TV 추가', a: am[0] });
+            });
+            var tv = polParts(r && r.n || '').slice(1).filter(function (x) { return !polNotTv(x); }).join(' ').replace(/\s/g, '').toUpperCase(), hit = -1;
+            out.forEach(function (o, i) { var k = o.l.replace(/이상|\s/g, '').toUpperCase(); if (hit < 0 && k && k !== 'TV추가' && tv.indexOf(k) >= 0) hit = i; });
+            if (hit < 0) out.forEach(function (o, i) { if (hit < 0 && /이상/.test(o.l) && !/이코노미/.test(tv)) hit = i; });
+            if (hit < 0 && out.length === 1) hit = 0;
+            out.forEach(function (o, i) { o.d = i === hit; });
+            return out;
+        }
+        function polTvSum(pk) {   // 고른 줄의 TV 추가 → { n: 대수, man: 만원, txt: '스탠다드 이상 2대' }
+            if (!pk || polTv.key !== pk.key) return { n: 0, man: 0, txt: '' };
+            var opts = polTvOpts(pk.c, pk.r), n = 0, man = 0, txt = [];
+            opts.forEach(function (o) { var k = polTv.n[o.l] || 0; if (k) { n += k; man += o.a * k; txt.push((o.l === 'TV 추가' ? '' : o.l + ' ') + k + '대'); } });
+            return { n: n, man: Math.round(man * 10) / 10, txt: txt.join(' · ') };
+        }
+        function polTvInline(c, r, g, key) {   // 상품 줄을 누르면(노란 줄) 그 줄 안에 📺 TV 추가 버튼 (TV 상품만)
+            if (!polParts(r.n).slice(1).some(function (x) { return !polNotTv(x); })) return null;
+            var opts = polTvOpts(c, r); if (!opts.length) return null;
+            var mine = polTv.key === key, n = 0, man = 0;
+            if (mine) opts.forEach(function (o) { var k = polTv.n[o.l] || 0; n += k; man += o.a * k; });
+            return h('div', { class: 'pol-tvx' + (n ? ' has' : ''), onclick: function (e) { e.stopPropagation(); } }, h('span', {}, '📺 TV 추가'),
+                opts.map(function (o) {
+                    var k = mine ? polTv.n[o.l] || 0 : 0;
+                    return h('button', { type: 'button', class: 'btn btn-sm' + (o.d ? ' tv-d' : ''), 'data-act': 'pol-tvx-add', 'aria-pressed': k ? 'true' : 'false', onclick: function (e) {
+                        e.stopPropagation();
+                        if (polTv.key !== key) polTv = { key: key, n: {} };
+                        var tot = 0; Object.keys(polTv.n).forEach(function (x) { tot += polTv.n[x]; });
+                        if (tot >= 3) { toast('TV 추가는 3대까지예요. [빼기]로 다시 골라 주세요.'); return; }
+                        polTv.n[o.l] = (polTv.n[o.l] || 0) + 1; polOn[key] = true; polLast = { key: key, c: c, r: r, g: g }; render(); clMemoAuto();
+                    } }, (o.l === 'TV 추가' ? '추가셋탑' : o.l) + ' +' + o.a + '만' + (k ? ' ×' + k : ''));
+                }),
+                n ? h('b', { class: 'tv-sum' }, '+' + Math.round(man * 10) / 10 + '만 → 합계 ' + won(polFee(r).fee + Math.round(man * 10000))) : null,
+                n ? h('button', { type: 'button', class: 'link-btn', 'data-act': 'pol-tvx-clear', onclick: function (e) { e.stopPropagation(); polTv = { key: '', n: {} }; render(); clMemoAuto(); } }, '빼기') : null);
+        }
+        function polTvBar(pk) {   // 단가표 위 '선택' 아래: 📺 TV 추가 [옵션 +N만] … (누를 때마다 1대씩 · 최대 3대)
+            var tvIn = pk && polParts(pk.r.n).slice(1).some(function (x) { return !polNotTv(x); }), opts = pk ? polTvOpts(pk.c, pk.r) : [];
+            if (!pk || !opts.length || !tvIn) return null;
+            var S = polTvSum(pk), base = polFee(pk.r).fee;
+            return h('div', { class: 'pol-picknote pol-tvadd', 'data-tvadd': '1' }, h('b', {}, '📺 TV 추가'),
+                opts.map(function (o) {
+                    var k = polTv.key === pk.key ? polTv.n[o.l] || 0 : 0;
+                    return h('button', { type: 'button', class: 'btn btn-sm' + (o.d ? ' tv-d' : ''), 'data-act': 'pol-tv-add', 'aria-pressed': k ? 'true' : 'false', title: '누를 때마다 TV 1대 추가 (최대 3대)', onclick: function () {
+                        if (polTv.key !== pk.key) polTv = { key: pk.key, n: {} };
+                        var tot = 0; Object.keys(polTv.n).forEach(function (x) { tot += polTv.n[x]; });
+                        if (tot >= 3) { toast('TV 추가는 3대까지예요. [빼기]로 다시 골라 주세요.'); return; }
+                        polTv.n[o.l] = (polTv.n[o.l] || 0) + 1; render();
+                    } }, (o.l === 'TV 추가' ? '추가셋탑' : o.l) + ' +' + o.a + '만' + (k ? ' ×' + k : ''));
+                }),
+                S.n ? h('span', { class: 'tv-sum' }, '→ TV ' + S.n + '대 +' + S.man + '만 · 수수료 합계 ', h('b', {}, won(base + Math.round(S.man * 10000)))) : h('small', {}, '추가 TV가 있으면 눌러 주세요 (수수료에 더해져요)'),
+                S.n ? h('button', { type: 'button', class: 'link-btn', 'data-act': 'pol-tv-clear', onclick: function () { polTv = { key: '', n: {} }; render(); } }, '빼기') : null);
+        }
         var POL_ADD_KEYS = ['추가 상품 (CCTV)', '추가 상품 (도난안심 보험)', 'CCTV 안내'];
         function polAddKind(g) { return /보험/.test(g && g.name || '') ? 'ins' : 'cctv'; }
         function polAddSig() { return ['cctv', 'ins'].map(function (k) { return polAdd[k] ? polAdd[k].key : ''; }).join('|').replace(/^\|$/, ''); }
@@ -7473,7 +7585,7 @@
                     var f = polFee(r), s1 = f.fee - POL_KEEP[0], s2 = f.fee - POL_KEEP[1], s3 = f.fee - POL_KEEP[2], key = c.id + '|' + g.name + '|' + r.n;
                     var gmax = r.gd && c.guide[r.gd] ? c.guide[r.gd][2] : null;
                     rows.push(h('tr', { class: 'pol-row' + (polOn[key] ? ' on' : ''), 'data-key': key, onclick: function () { polOn[key] = !polOn[key]; this.classList.toggle('on', !!polOn[key]); polLast = polOn[key] ? { key: key, c: c, r: r, g: g } : (polLast && polLast.key === key ? null : polLast); if (!polOn[key] && polPick && polPick.key === key) { polPick = null; render(); } clMemoAuto(); } },
-                        h('td', {}, r.n, polTvLine(c, r), f.warn ? h('span', { class: 'pol-warn' }, '⚠ ' + f.warn) : null, r.nt ? h('span', { class: 'pol-nt' }, r.nt) : null),
+                        h('td', {}, r.n, polTvLine(c, r), polTvInline(c, r, g, key), f.warn ? h('span', { class: 'pol-warn' }, '⚠ ' + f.warn) : null, r.nt ? h('span', { class: 'pol-nt' }, r.nt) : null),
                         polInstCell(c, r, g),
                         h('td', { class: 'p-price', 'data-l': '월요금(미결합)' }, won(r.p)),
                         r.dc != null ? h('td', { class: 'p-comb', 'data-l': '결합요금', title: r.ad ? '표 요금 ' + won(r.p) + ' + 인터넷·TV 결합할인 해제 ' + won(r.ad) + ' = ' + won(r.p + r.ad) + ' → 휴대폰 결합할인 -' + won(r.dc) : '' }, won(polComb(r)), h('small', {}, (r.ad ? '+' + r.ad.toLocaleString('ko-KR') + ' ' : '') + '-' + r.dc.toLocaleString('ko-KR'))) : h('td', { class: 'p-comb', 'data-l': '결합요금' }, h('span', { class: 'p-none' }, '-')),
@@ -7648,7 +7760,7 @@
                 lines = INTAKE_TPL.split('\n');
                 vals.forEach(function (kv) { var esc = kv[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), re = new RegExp('^(\\s*' + esc + '\\s*:).*$'); lines = lines.map(function (l) { return re.test(l) ? l.replace(re, '$1') + ' ' + kv[1] : l; }); });
             }
-            var feeLine = '수수료(액면단가) : ' + polFee(p.r).fee.toLocaleString('ko-KR') + '원' + (p.r.g > 0 ? ' (단가표 상품권 ' + Math.round(p.r.g * 10000).toLocaleString('ko-KR') + '원)' : ''), fi = -1, si = -1;
+            var TV = polTvSum(p), feeLine = '수수료(액면단가) : ' + (polFee(p.r).fee + Math.round(TV.man * 10000)).toLocaleString('ko-KR') + '원' + (p.r.g > 0 ? ' (단가표 상품권 ' + Math.round(p.r.g * 10000).toLocaleString('ko-KR') + '원)' : '') + (TV.n ? ' (TV 추가 ' + TV.txt + ' +' + TV.man + '만 포함)' : ''), fi = -1, si = -1;
             lines.forEach(function (l, i) { if (/^\s*수수료\(액면단가\)\s*:/.test(l)) fi = i; if (si < 0 && /^\s*설치비\s*:/.test(l)) si = i; });
             if (fi >= 0) lines[fi] = feeLine; else if (si >= 0) lines.splice(si + 1, 0, feeLine); else lines.push(feeLine);   // 가입고객리스트 액면단가로 들어감
             U.memo.value = lines.join('\n');
@@ -8989,7 +9101,8 @@
             return h('div', {}, head, viewBar, meta, viewing ? null : hpBar(D),
                 h('div', { class: 'pol-tools' }, h('div', { class: 'pol-row1' }, cars, acts), h('div', { class: 'pol-search' }, q, h('div', { class: 'pol-sps' }, sps)),
                     polAddSig() ? h('div', { class: 'pol-picknote pa-note' }, '추가 상품: ', h('b', {}, ['cctv', 'ins'].filter(function (k) { return polAdd[k]; }).map(function (k) { return polAdd[k].r.n; }).join(' · ')), h('button', { type: 'button', class: 'link-btn', 'data-act': 'pol-addon-clear', onclick: function () { polAdd = Object.create(null); render(); clMemoAddon(); } }, '추가 상품 빼기')) : null,
-                    picked ? h('div', { class: 'pol-picknote' }, '선택: ', h('b', {}, picked.c.name + ' · ' + picked.r.n), polPick ? ' · ' + polStageText(polPick) : '', h('button', { type: 'button', class: 'link-btn', onclick: function () { polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); render(); } }, '선택 지우기')) : null),
+                    picked ? h('div', { class: 'pol-picknote' }, '선택: ', h('b', {}, picked.c.name + ' · ' + picked.r.n), polPick ? ' · ' + polStageText(polPick) : '', h('button', { type: 'button', class: 'link-btn', onclick: function () { polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); polTv = { key: '', n: {} }; render(); } }, '선택 지우기')) : null,
+                    picked ? polTvBar(picked) : null),
                 cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '조건에 맞는 요금제가 없어요. 통신사·속도·검색어를 바꿔 보세요.')),
                 D.src ? h('p', { class: 'ib-help' }, '출처: ' + D.src + ' · 결합요금은 각 통신사 공식 홈페이지의 가족결합 인터넷 할인 기준(3년 약정)이에요. SK 인터넷+TV는 표 요금이 인터넷·TV 결합할인(광랜 1,100 / 기가 5,500) 적용가라서, 휴대폰 결합 시 그 할인을 되돌린 뒤 휴대폰 결합할인을 빼요(+표시). KT는 단독 500M·1G만 휴대폰 결합 시 5,500원이 한 번 더 빠지고, TV를 함께 쓰면 5,500원까지예요.') : null);
         }
@@ -10687,12 +10800,13 @@
             return cl.data.sheets.filter(function (s) { return s.id === id; })[0] || null;
         }
         function clPk() { return polLast || polPick; }   // 마지막으로 누른 상품 줄 (1·2·3차 금액을 눌러도 그 줄)
-        function clPkSig() { var pk = clPk(); if (!pk) return ''; var on = polPick && polPick.key === pk.key; return pk.key + '#' + (on ? polPick.stage + ':' + polPick.v : '-'); }
+        function clPkSig() { var pk = clPk(); if (!pk) return ''; var on = polPick && polPick.key === pk.key; return pk.key + '#' + (on ? polPick.stage + ':' + polPick.v : '-') + '#tv' + polTvSum(pk).n + JSON.stringify(polTv.n); }
         function clPkFill(t, pk) {   // 상담 내용 양식에 짚어 둔 상품 넣기: 상담 통신사 · 상담 상품 · 안내 요금 · 오퍼 · 설치비
             var c = pk.c, r = pk.r, g = pk.g, on = polPick && polPick.key === pk.key;
             var tel = POL_TELCO[c.id] || (polBase(c.id) !== c.id && POL_TELCO[polBase(c.id)] ? POL_TELCO[polBase(c.id)] + ' · 유심동판' : c.name);
             t = clTplPut(t, '상담 통신사', tel);
-            t = clTplPut(t, '상담 상품', r.n + (g && g.name && /유심|모바일/.test(g.name + c.name) ? ' (' + g.name + ')' : ''));
+            var TV = polTvSum(pk);
+            t = clTplPut(t, '상담 상품', r.n + (g && g.name && /유심|모바일/.test(g.name + c.name) ? ' (' + g.name + ')' : '') + (TV.n ? ' + TV 추가 ' + TV.txt + ' (수수료 +' + TV.man + '만)' : ''));
             t = clTplPut(t, '안내 요금', '월 ' + won(r.p) + ' (미결합)' + (r.dc != null ? ' · 휴대폰 결합 시 월 ' + won(polComb(r)) : ''));
             t = clTplPut(t, '오퍼', on ? polStageText(polPick) : '');
             t = clTplPut(t, '설치비', polInstall(c, r, g));
@@ -10922,7 +11036,7 @@
             if (row.st === 'sale' && clIsRent(rentMemo) && confirm('렌탈 판매성공 — 상담 리스트 "' + s.name + '"에 저장했어요.\n\n렌탈 가입 확인서를 바로 열까요?\n(상담 메모의 제조사 · 렌탈사 · 상품 · 약정 · 월 렌탈료 · 사은품이 들어가요)\n\n[취소]를 누르면 신분증 요청으로 가요.')) {
                 var pcR = clColBy(s, 'ph'), digR = pcR ? digitsOnly(row.v[pcR.k] || '') : '';
                 M.open = false; clMemoBlank(M); clMemoPaint();
-                polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null;
+                polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null; polTv = { key: '', n: {} };
                 rtToForm(rentMemo, /^01\d{8,9}$/.test(digR) ? digR : '');
                 return;
             }
@@ -10939,7 +11053,7 @@
                 return;
             }
             M.open = false; clMemoBlank(M); clMemoPaint();
-            polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null;   // 상담 끝: 단가표 선택도 비워서 다음 고객은 새로 시작
+            polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null; polTv = { key: '', n: {} };   // 상담 끝: 단가표 선택도 비워서 다음 고객은 새로 시작
             state.view = 'consult'; cl.sheet = s.id; cl.st = 'all'; cl.q = ''; cl.hl = row.id;
             render();
             setTimeout(function () { var tr = document.querySelector('tr[data-row="' + row.id + '"]'); if (tr) tr.scrollIntoView({ block: 'center' }); }, 60);
@@ -12492,7 +12606,7 @@
             function put(c, v) { if (!c || v == null || v === '') return; var s = String(v); row2[c] = /^-?\d{1,3}(,\d{3})+$|^-?\d+$/.test(s) && !/^-?0\d/.test(s) && s.length < 13 ? +s.replace(/,/g, '') : s; E.edits.set(target + ',' + c, row2[c]); }
             Object.keys(GL_REG_COL).forEach(function (f) {
                 if (only && only.indexOf(f) < 0) return;
-                var v = f === 'kind' ? (reg.kind === 'wired' ? (reg.type === '렌탈' ? '렌탈' : '유선') : '모바일') : reg[f]; if (f === 'birth' && /^\d{6}$/.test(String(v || ''))) v = String(v);
+                var v = f === 'kind' ? regKindText(reg) : reg[f]; if (f === 'birth' && /^\d{6}$/.test(String(v || ''))) v = String(v);
                 if (GL_REG_NEG[f] && v) { var dn = String(v).replace(/\D/g, ''); v = +dn ? '-' + (+dn) : ''; }   // 유통망지원금·프리: -280000 처럼
                 if ((f === 'fee' || f === 'adj') && reg.fa) { var cc = colOf(GL_REG_COL[f]); if (cc && row2[cc] != null && row2[cc] !== '' && String(row2[cc]).charAt(0) !== '=') return; }   // 단가표로 자동 계산한 값은 장부에 직접 적은 값을 덮지 않음
                 put(colOf(GL_REG_COL[f]), v);
@@ -13036,7 +13150,7 @@
             Object.keys(cv).map(Number).filter(function (r) { return r > hr; }).forEach(function (r) {
                 var row = cv[r] || {}, v = function (k) { var x = col[k] ? row[col[k]] : ''; x = x == null ? '' : String(x).trim(); return x.charAt(0) === '=' ? '' : x; };
                 var kind = v('모바일&유선'), st0 = v('설치유무');
-                if (!/^유선/.test(kind) || /취소/.test(kind) || /취소/.test(st0)) return;
+                if (!/^유선/.test(kind) || /취소|렌탈/.test(kind) || /취소/.test(st0)) return;   // 유선(렌탈)은 인터넷 가입 현황에서 뺌
                 var nm = lvMask(v('고객명')), car = lvCar(v('통신사')), day = parseInt(v('가입날짜'), 10);
                 if (!nm || !car || !(day >= 1 && day <= last)) return;
                 var md = v('모델'), q = v('요금제'), mq = md + ' ' + q, speed = lvSpeed(q) || lvSpeed(md);
