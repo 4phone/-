@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-SixXHxc7P7JRUV6Bg70/LHriZFcdRfiFGAdjC0lgodQ='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+70PNZTFjx+Pb6ENZZ/bgCoQEt+d45c9tpQrtIISFv8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -576,6 +576,9 @@
         .cl-tbl td.ph { white-space: nowrap; }
         .cl-tbl tr.cl-sec td { background: #EEF0E4; font-weight: 800; font-size: 14.5px; color: #3E441E; padding: 10px 12px; border-left: 6px solid var(--sb, #3E441E); }
         .cl-tbl tr.cl-hdr td { background: #F6F7EE; font-size: 12px; font-weight: 800; color: var(--muted); }
+        .cl-idr { display: block; width: 100%; max-width: 76px; box-sizing: border-box; margin-top: 4px; font: inherit; font-size: 11.5px; line-height: 1.25; font-weight: 800; white-space: nowrap; text-align: center; padding: 3px 4px; min-height: 28px; border-radius: 8px; border: 1.5px solid #00A0DC; background: #fff; color: #00739E; cursor: pointer; }
+        .cl-idr span { display: block; } .cl-idr:hover { background: #E6F7FD; }
+        @media (pointer: coarse) { .cl-idr { min-height: 40px; font-size: 12.5px; } }
         .cl-st { display: inline-block; margin-top: 3px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 800; color: #fff; background: var(--sb, #999); white-space: nowrap; }
         .cl-st.lt { color: #4A2A40; }
         .cl-empty { padding: 26px; text-align: center; color: var(--muted); }
@@ -1881,7 +1884,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-30.10';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-30.11';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -6365,7 +6368,7 @@
             var co = ctCarrier(rec.carrier, 'wired').tag, raw = String(rec.carrier || '').toUpperCase(), plan = String(rec.plan || ''), soho = /소호/.test(plan) || /안모/.test(rec.dealer || '');
             var comb = /결합하기|기결합/.test(rec.comb || '');
             var ids = co === 'U+' ? (soho ? ['lgsoho'] : ['lgu']) : co === 'KT' ? ['kt'] : co === '스카이라이프' ? ['sky'] : co === '헬로비전' ? ['hello']
-                : co === 'SK' ? (soho ? ['skbsoho'] : /SKB|브로드/.test(raw) ? ['skb'] : /SKT/.test(raw) ? ['skt'] : []) : [];   // SKT → SKT 단가표 · SKB → SKB 단가표 (절대 섞지 않음)
+                : co === 'SK' ? (soho ? ['skbsoho'] : /SKT/.test(raw) ? ['skt'] : /SKB|브로드/.test(raw) ? ['skb'] : []) : [];   // SKT → SKT 단가표 · SKB → SKB 단가표 (절대 섞지 않음)
             if (!ids.length && co === 'SK') return { why: '통신사가 "' + (rec.carrier || 'SK') + '"로만 적혀 있어요. SKT인지 SKB인지 통신사 칸을 고쳐 주세요 (단가가 달라요)' };
             if (!ids.length) return { why: '통신사(' + (rec.carrier || '없음') + ')를 단가표에서 찾지 못했어요' };
             if (rec.dealer && mp.data && (mp.data.dealers || []).some(function (x) { return x.name === rec.dealer; })) return { why: rec.dealer + ' 유선(동판)은 거래처 동판 단가라 직접 적어 주세요' };
@@ -6566,7 +6569,7 @@
             commit(ok ? '액면단가 ' + ok + '줄을 채웠어요.' + (miss.length ? ' ' + miss.length + '줄은 직접 적어 주세요.' : '') : '');
             if (miss.length) alert('직접 적어야 하는 줄 (' + miss.length + ')\n\n' + miss.slice(0, 20).join('\n') + (miss.length > 20 ? '\n…' : ''));
         }
-        function regSkBad(r) { var c = String(r.carrier || '').toUpperCase().replace(/\s/g, ''); return r.kind === 'wired' && r.type !== '렌탈' && !!r.fee && /^단가표 자동: SKB (?!소호)/.test(r.fa || '') && /SKT/.test(c) && !/SKB|브로드/.test(c); }
+        function regSkBad(r) { var c = String(r.carrier || '').toUpperCase().replace(/\s/g, ''); return r.kind === 'wired' && r.type !== '렌탈' && !!r.fee && /^단가표 자동: SKB (?!소호)/.test(r.fa || '') && /SKT/.test(c); }
         var regSkBusy = false;
         function regSkFix() {   // SKT인데 SKB 단가로 자동 계산된 줄 → 가입 날짜의 단가표로 다시 계산 (직접 적은 값은 건드리지 않음)
             if (regSkBusy || !db || !isBoss()) return;
@@ -11416,7 +11419,8 @@
                         var longV = (kd === 'wide' || kd === 'mid') && (String(shownV).length > (kd === 'mid' ? 50 : 90) || String(shownV).split('\n').length > 4), opened = cl.openAll || !!cl.open[r.id];
                         var cellBody = longV ? [h('div', { class: 'cl-clip' + (opened ? ' open' : '') }, shownV), h('button', { type: 'button', class: 'cl-more', 'data-act': 'cl-more', onclick: function (e) { e.stopPropagation(); var on = !this.previousSibling.classList.contains('open'); this.previousSibling.classList.toggle('open', on); this.textContent = on ? '▲ 접기' : '▼ 더보기'; if (on) cl.open[r.id] = 1; else delete cl.open[r.id]; } }, opened ? '▲ 접기' : '▼ 더보기')] : shownV;
                         var td = h('td', { 'data-l': clHead(c), class: (kd === 'wide' ? 'wide' : kd === 'mid' ? 'mid' : kd === 'ph' ? 'ph' : (kd === 'date' || kd === 'time' || kd === 'staff' || kd === 'no') ? 'nw' : /위치/.test(c.l) ? 'loc' : '') + (v ? '' : ' blank'), style: css || false }, cellBody);
-                        if (i === 0) { td.classList.remove('blank'); var kk = kOf(r); if (kk !== 'net') td.appendChild(h('span', { class: 'cl-ktag k-' + kk }, kk === 'mob' ? '📱 모바일' : '🧴 렌탈')); td.appendChild(h('div', {}, h('span', { class: 'cl-st' + (hex && clLight(hex) ? ' lt' : ''), style: hex ? '--sb:#' + hex : '--sb:#9AA088' }, si && r.st !== 'etc' ? si[1] : (r.st === 'etc' ? '기타 색' : '보통')), r.ctp === 'ok' ? h('span', { class: 'cl-ctp', title: '구글 연락처에 가망 번호로 저장됨' }, '📇저장') : r.ctp === 'cust' ? h('span', { class: 'cl-ctp', title: '이미 가입 고객 번호' }, '📇가입') : r.ctp === 'fail' ? h('span', { class: 'cl-ctp bad', title: '가망 번호 저장 실패 — 줄을 눌러 다시 저장' }, '📇실패') : null)); }
+                        if (i === 0) { td.classList.remove('blank'); var kk = kOf(r); if (kk !== 'net') td.appendChild(h('span', { class: 'cl-ktag k-' + kk }, kk === 'mob' ? '📱 모바일' : '🧴 렌탈')); td.appendChild(h('div', {}, h('span', { class: 'cl-st' + (hex && clLight(hex) ? ' lt' : ''), style: hex ? '--sb:#' + hex : '--sb:#9AA088' }, si && r.st !== 'etc' ? si[1] : (r.st === 'etc' ? '기타 색' : '보통')), r.ctp === 'ok' ? h('span', { class: 'cl-ctp', title: '구글 연락처에 가망 번호로 저장됨' }, '📇저장') : r.ctp === 'cust' ? h('span', { class: 'cl-ctp', title: '이미 가입 고객 번호' }, '📇가입') : r.ctp === 'fail' ? h('span', { class: 'cl-ctp bad', title: '가망 번호 저장 실패 — 줄을 눌러 다시 저장' }, '📇실패') : null));
+                            if (r.st === 'sale') td.appendChild(h('button', { type: 'button', class: 'cl-idr', 'data-act': 'cl-row-idr', title: '신분증 요청으로 가서 이 상담 내용으로 채우기', onclick: function (e) { e.stopPropagation(); clRowToIdr(s, r); }, onkeydown: function (e) { e.stopPropagation(); } }, h('span', {}, '🪪신분증'), h('span', {}, '요청'))); }
                         return td;
                     }));
             }));
@@ -11773,6 +11777,35 @@
                 else if (x.ok) { mark('ok'); toast('📇 구글 연락처에 "' + x.label + '"(으)로 ' + (x.updated ? '바꿔 ' : '') + '저장했어요.'); }
                 else fail(x.msg || '알 수 없는 오류', x.code !== 'setup' && x.code !== 'auth' && x.code !== 'nophone');
             }, function (e) { fail(driveErrText(e), !(e && e.code === 'bad_action')); });
+        }
+        function clRowToIdr(s, r) {   // 상담 리스트 판매성공 줄 → 신분증 요청 (휴대폰 · 이름 · 접수정보 · 유선 수수료) — 고객 정보(주민번호·납부)는 리스트에 저장하지 않으니 신분증 요청에서 적음
+            var memoC = clColBy(s, '', /상담내용/), memo = memoC ? String(r.v[memoC.k] || '') : '';
+            var pc = clColBy(s, 'ph'), dig = pc ? digitsOnly(r.v[pc.k] || '') : '', okPh = /^01\d{8,9}$/.test(dig), fm = okPh ? dig.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3') : '';
+            var nmC = clColBy(s, '', /고객명|성함|이름/), nm = nmC ? String(r.v[nmC.k] || '').trim().slice(0, 20) : '';
+            if (!memo.trim() && !okPh) { toast('이 줄에는 상담 내용과 연락처가 없어요. 줄을 눌러 먼저 적어 주세요.'); return; }
+            var U = idrUI();
+            var busy = intakeHas(U.memo.value) && U.memo.value !== INTAKE_TPL && (digitsOnly(U.phone.value) !== dig || (U.name.value.trim() && nm && U.name.value.trim() !== nm));
+            var fill = !busy || confirm('신분증 요청에 다른 고객을 적던 내용이 있어요.\n지우고 이 고객(' + (nm || fm || '이름 없음') + ') 내용으로 채울까요?\n\n[취소]를 누르면 적던 내용은 그대로 두고 신분증 요청으로만 가요.');
+            var feeMsg = '';
+            if (fill) {
+                var t = clIntakeText({ cu: {} }, memo, okPh ? dig : ''), kd = clKindOf(memo);
+                if (kd === 'net') {   // 유선: 상담 통신사 · 상품으로 단가표 수수료(액면단가) — 가입 장부 · 가입고객리스트로
+                    var L = function (k) { return clRtLine(memo, k); }, a = null;
+                    try { a = regFeeWired({ kind: 'wired', carrier: L('상담 통신사'), plan: L('상담 상품'), comb: /^\s*(y|예|네|o|결합)/i.test(L('휴대폰 결합')) ? '결합하기' : '', model: '', dealer: '' }); } catch (e) { a = null; }
+                    if (a && a.fee) {
+                        var feeLine = '수수료(액면단가) : ' + (+a.fee).toLocaleString('ko-KR') + '원' + (a.gv ? ' (단가표 상품권 ' + (+a.gv).toLocaleString('ko-KR') + '원)' : '');
+                        var ls = t.split('\n'), si = -1; ls.forEach(function (l, i) { if (si < 0 && /^\s*설치비\s*:/.test(l)) si = i; });
+                        if (si >= 0) ls.splice(si + 1, 0, feeLine); else ls.push(feeLine);
+                        t = ls.join('\n'); feeMsg = ' 수수료 ' + (a.fee / 10000) + '만(' + a.src.split(' 합계')[0] + ')도 넣었어요.';
+                    } else feeMsg = ' 수수료는 단가표에서 못 찾아서 비워 뒀어요' + (a && a.why ? ' (' + a.why + ')' : '') + '.';
+                }
+                U.name.value = nm; U.phone.value = fm; U.memo.value = t;
+            }
+            state.view = 'idreq'; render();
+            setTimeout(function () {
+                try { var el = U.parts ? U.parts[0] : U.memo; el.scrollIntoView({ block: 'center' }); (U.name.value ? el : U.name).focus({ preventScroll: true }); } catch (e) { /* 무시 */ }
+                toast(fill ? '신분증 요청에 휴대폰 · 접수정보를 채웠어요.' + feeMsg + ' 고객 정보(이름·주민번호·주소·납부)는 빨간 칸에 마저 적어 주세요.' : '적던 내용은 그대로 두고 신분증 요청으로 왔어요.');
+            }, 40);
         }
         function clMemoSave() {   // 상담 완료: 상담 리스트에 한 줄로 저장하고 상담 리스트로 이동
             var M = cl.memo, s = clMemoSheet();
@@ -13864,6 +13897,7 @@
             f = String(f || '').replace(/\s/g, '').toUpperCase();
             if (/스카이|SKY/.test(f)) return ['KT 스카이라이프', 'sky'];
             if (/헬로/.test(f)) return ['LG헬로비전', 'hello'];
+            if (/SKT/.test(f)) return ['SK브로드밴드', 'skt'];   // 'SK브로드밴드(SKT정책)'도 SKT
             if (/^SKB|브로드/.test(f)) return ['SK브로드밴드', 'skb'];
             if (/^SK/.test(f)) return ['SK브로드밴드', 'skt'];
             if (/KT/.test(f)) return ['KT', 'kt'];
