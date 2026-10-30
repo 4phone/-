@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-cHMdKUEg0GnH8OmXcNffKMiRG5m3MYbolEz/X2EKjls='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-PcsSYGbvHxU+B8Pt8rBg37ZF/l6pT2bChxZs5G8MmHY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -896,6 +896,23 @@
         .ib-sub b { color: var(--ink, #222); }
         .ib-phone { font-weight: 700; color: #2B6CB0; }
         .ib-dev { background: #F1F4E6; border-radius: 6px; padding: 1px 7px; font-size: 12px; }
+        .ib-no { display: inline-block; min-width: 38px; margin-right: 6px; padding: 1px 7px; border-radius: 999px; background: #3E441E; color: #fff; font-size: 12px; font-weight: 800; text-align: center; }
+        .ib-no.off { background: #E9E9E4; color: #8A8A80; }
+        .ib-row.mk { background: #F7F7F4; } .ib-row.mk .ib-label { color: #8A8A80; text-decoration: line-through; }
+        .ib-chkw { display: grid; gap: 6px; }
+        .ib-mk { display: flex; gap: 4px; flex-wrap: wrap; }
+        .ib-mk .btn-sm { padding: 2px 8px; min-height: 28px; font-size: 12px; }
+        .ib-mk .btn[aria-pressed="true"] { background: #6B6B62; border-color: #6B6B62; color: #fff; }
+        .ib-real { color: #2E5A1E; }
+        .cl-kind.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .cl-kind [data-kind="mob"][aria-pressed="true"] { background: #2B5FA8; border-color: #2B5FA8; color: #fff; }
+        .cl-kbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; }
+        .cl-kbtn { font: inherit; font-size: 13.5px; font-weight: 800; padding: 6px 14px; border-radius: 999px; border: 1.5px solid var(--line); background: #fff; cursor: pointer; }
+        .cl-kbtn[aria-pressed="true"] { background: #3E441E; border-color: #3E441E; color: #fff; }
+        .cl-kbtn.k-mob[aria-pressed="true"] { background: #2B5FA8; border-color: #2B5FA8; }
+        .cl-kbtn.k-rent[aria-pressed="true"] { background: #0F6E64; border-color: #0F6E64; }
+        .cl-ktag { display: inline-block; margin-bottom: 3px; padding: 0 6px; border-radius: 6px; font-size: 11px; font-weight: 800; color: #fff; background: #2B5FA8; white-space: nowrap; }
+        .cl-ktag.k-rent { background: #0F6E64; }
         .ib-chk { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 700; cursor: pointer; }
         .ib-chk small { flex-basis: 100%; font-weight: 500; color: var(--muted); font-size: 12px; }
         .ib-act { display: flex; justify-content: flex-end; flex-wrap: wrap; }
@@ -1811,7 +1828,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-30.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-30.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1898,7 +1915,7 @@
                     { id: 's2', name: '직원 1', role: '', u: 0, o: 2, adm: false },
                     { id: 's3', name: '직원 2', role: '', u: 0, o: 3, adm: false }
                 ],
-                events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [],
+                events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [],
                 del: Object.create(null),                  // 지워진 항목 기록(다른 직원 화면에서도 지워지도록)
                 drive: { url: '', k: '', rev: 0, pk: '', acc: false },  // 공유 저장소 연결 정보 (암호화된 데이터 안에만 보관)
                 account: null    // 이 기기에서 로그인한 계정 (이 기기 안에만 보관하고 드라이브로는 보내지 않음)
@@ -1922,7 +1939,7 @@
         // 저장소·백업·드라이브에서 읽은 내용은 항상 이 함수로 걸러서(글자 수·개수 제한, 형식 검사) 사용합니다
         function normalizeDb(d) {
             if (!d || typeof d !== 'object') return null;
-            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
+            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
             function list(v, max) { return Array.isArray(v) ? v.slice(0, max) : []; }
             list(d.staff, 200).forEach(function (s, i) {
                 if (!s || !str(s.name, 30).trim()) return;
@@ -1986,6 +2003,10 @@
             list(d.qms, 2000).forEach(function (x) {   // 자주 하는 업무 메모 (직원별 한 줄 메모 → [업무에 넣기])
                 if (!x || !str(x.id, 40) || !str(x.t, 100).trim()) return;
                 out.qms.push({ id: str(x.id, 40), sid: str(x.sid, 40), t: str(x.t, 100).trim(), o: num(x.o), u: num(x.u), b: num(x.b) });
+            });
+            list(d.ibm, 3000).forEach(function (x) {   // 콜 인입 표시: 미인입 · 테스트 (실 인입 순번에서 뺌)
+                if (!x || !str(x.id, 60) || !str(x.iid, 40)) return;
+                out.ibm.push({ id: str(x.id, 60), iid: str(x.iid, 40), m: x.m === 'no' || x.m === 'test' ? x.m : '', by: str(x.by, 20), u: num(x.u), b: num(x.b) });
             });
             list(d.mgs, 2000).forEach(function (x) {   // 한 달 주요 업무 (달마다 · 팀 모두 보기)
                 if (!x || !str(x.id, 40) || !str(x.t, 120).trim() || !/^\d{4}-\d{2}$/.test(str(x.ym, 7))) return;
@@ -3693,8 +3714,8 @@
         }
 
         /* --- 내용 합치기: 항목마다 수정 시각(u)이 더 늦은 쪽을 남기고, 지운 항목은 삭제 기록으로 처리 --- */
-        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], del: db.del }; }
-        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], del: db.del })); }
+        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], del: db.del }; }
+        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], del: db.del })); }
         function canon(d) {   // 같은 내용이면 항상 같은 글자가 되도록 정렬한 비교용 문자열
             function byId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
             return JSON.stringify([
@@ -3708,6 +3729,7 @@
                 (d.acts || []).slice().sort(byId).map(function (x) { return [x.id, x.sid, x.k, x.s, x.e, x.u]; }),
                 (d.qms || []).slice().sort(byId).map(function (x) { return [x.id, x.sid, x.t, x.o, x.u]; }),
                 (d.mgs || []).slice().sort(byId).map(function (x) { return [x.id, x.sid, x.ym, x.t, x.d, x.o, x.u]; }),
+                (d.ibm || []).slice().sort(byId).map(function (x) { return [x.id, x.iid, x.m, x.u]; }),
                 (d.policies || []).slice().sort(byId).map(function (x) { return [x.id, x.at, x.by, x.u, x.act || 0, x.actBy || '']; })
             ]);
         }
@@ -3779,12 +3801,13 @@
                 acts: mergeList(a.acts || [], b.acts || [], false).filter(alive).sort(byId),
                 qms: mergeList(a.qms || [], b.qms || [], false).filter(alive).sort(byId),
                 mgs: mergeList(a.mgs || [], b.mgs || [], false).filter(alive).sort(byId),
+                ibm: mergeList(a.ibm || [], b.ibm || [], false).filter(alive).sort(byId),
                 policies: mergeList(a.policies || [], b.policies || [], false).filter(alive).sort(byId),   // 가입 장부: 나중에 고친 쪽으로 (충돌본 만들지 않음)
                 del: del, conflicts: conflicts
             };
         }
                 function applyMerged(m) {
-            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.acts = m.acts || []; db.qms = m.qms || []; db.mgs = m.mgs || []; db.policies = m.policies || []; db.del = m.del;
+            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.acts = m.acts || []; db.qms = m.qms || []; db.mgs = m.mgs || []; db.ibm = m.ibm || []; db.policies = m.policies || []; db.del = m.del;
             var ok = Object.create(null); db.staff.forEach(function (x) { ok[x.id] = 1; });
             [db.events, db.notices, db.tasks].forEach(function (list) { list.forEach(function (it) { if (it.staffId && !ok[it.staffId]) it.staffId = ''; }); });
             if (!staffById(me)) { me = db.staff[0].id; lsSet(ME_KEY, me); }
@@ -3792,10 +3815,10 @@
         }
 
         /* --- 동기화: 드라이브의 최신 내용을 받아 합치고, 내 변경분이 있으면 올림 --- */
-        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || []].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
+        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || []].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
         function markSynced(snap) {   // 드라이브에 올라간(또는 드라이브와 같아진) 버전을 '기준 시각(b)'으로 기록
             var changed = false;
-            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || []].forEach(function (l) { l.forEach(function (it) {
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || []].forEach(function (l) { l.forEach(function (it) {
                 var nb = !snap ? it.u : snap[it.id];            // snap: 드라이브에 올라간 시점의 수정 시각
                 if (nb === undefined) return;                     // 올릴 때 없던 항목(그 뒤에 새로 만든 것)은 다음 저장 때
                 if (nb > it.u) nb = it.u;
@@ -3805,8 +3828,8 @@
         }
         function markSeen(remote) {   // 받아 온 드라이브 버전과 같은 항목은 '본 적 있음'으로 기록 (다른 기기 기준 시각이 섞이지 않게)
             var ru = Object.create(null);
-            [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || [], remote.policies || [], remote.acts || [], remote.qms || [], remote.mgs || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
-            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || []].forEach(function (l) { l.forEach(function (it) {
+            [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || [], remote.policies || [], remote.acts || [], remote.qms || [], remote.mgs || [], remote.ibm || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || []].forEach(function (l) { l.forEach(function (it) {
                 var r = ru[it.id];
                 if (r !== undefined && r === it.u && it.b !== it.u) it.b = it.u;   // 드라이브 버전과 같음
             }); });
@@ -6688,6 +6711,20 @@
             ibCall('ibAssign', { id: x.id, to: to }).then(function (res) { delete ib.saving[x.id]; ibReplace(res.item); ibPaint(); toast(to ? to + ' 님을 담당자로 정했어요.' : '담당자 지정을 풀었어요.'); },
                 function (e) { delete ib.saving[x.id]; x.asg = before; render(); toast('담당자를 저장하지 못했어요. ' + driveErrText(e)); });
         }
+        function ibMark(x) { var id = 'ibm_' + x.id; return ((db && db.ibm) || []).filter(function (m) { return m.id === id; }).map(function (m) { return m.m; })[0] || ''; }   // '' · 'no'(미인입) · 'test'(테스트)
+        function ibMarkSet(x, m) {   // 대표님: 미인입 · 테스트 표시 (다시 누르면 풀림) → 실 인입 순번에서 빠짐 · 팀 저장소에 저장
+            if (!isBoss()) { toast('미인입 · 테스트 표시는 대표님만 할 수 있어요.'); return; }
+            if (!db.ibm) db.ibm = [];
+            var id = 'ibm_' + x.id, it = db.ibm.filter(function (y) { return y.id === id; })[0], nv = ibMark(x) === m ? '' : m;
+            if (!it) { it = { id: id, iid: x.id, m: '', by: '', u: 0 }; db.ibm.push(it); }
+            it.m = nv; it.by = staffName(me); stamp(it);
+            commit(nv ? (nv === 'no' ? '미인입' : '테스트') + '으로 표시했어요. 실 인입 순번에서 빠져요.' : '표시를 풀었어요. 실 인입 순번에 다시 들어가요.');
+        }
+        function ibSeq() {   // 실 인입 순번: 날짜마다 1번부터 (들어온 순서) · 미인입·테스트는 빼고 → { id: 번호 } · 날짜별 건수
+            var no = Object.create(null), day = Object.create(null);
+            ib.items.slice().sort(function (a, b) { return a.t - b.t; }).forEach(function (x) { if (ibMark(x)) return; var d = ymd(new Date(x.t)); day[d] = (day[d] || 0) + 1; no[x.id] = day[d]; });
+            return { no: no, day: day };
+        }
         function ibCheck(x, on) {
             if (!isBoss()) { toast('확인 표시는 대표님만 할 수 있어요.'); render(); return; }
             if (ib.saving[x.id]) return;
@@ -6744,7 +6781,7 @@
             var bossDel = isBoss();
             Object.keys(ib.sel).forEach(function (id) { if (!ib.items.some(function (x) { return x.id === id; })) delete ib.sel[id]; });   // 없어진 기록은 선택에서 뺌
             var selN = list.filter(function (x) { return ib.sel[x.id]; }).length;
-            var n = ibUnchecked();
+            var n = ibUnchecked(), SEQ = ibSeq(), realN = ib.items.filter(function (x) { return !ibMark(x); }).length, markN = ib.items.length - realN;
             var rows = list.map(function (x) {
                 var k = IB_KIND[x.kind], open = !!ib.open[x.id];
                 var boss = isBoss();
@@ -6777,15 +6814,18 @@
                     pickBox = h('input', { type: 'checkbox', 'data-fk': 'ib-sel-' + x.id, 'aria-label': '지울 기록으로 선택', checked: !!ib.sel[x.id] });
                     pickBox.addEventListener('change', function () { if (this.checked) ib.sel[x.id] = 1; else delete ib.sel[x.id]; render(); });
                 }
-                return h('div', { class: 'ib-row' + (x.chk ? ' done' : '') + (ib.sel[x.id] ? ' sel' : ''), 'data-ib': x.id },
-                    h('div', { class: 'ib-time' }, pickBox ? h('label', { class: 'ib-pick' }, pickBox, ibTime(x.t)) : ibTime(x.t)),
+                var mk = ibMark(x), no = SEQ.no[x.id];
+                var markBtns = h('div', { class: 'ib-mk', role: 'group', 'aria-label': '실 인입 아님 표시' },
+                    [['no', '미인입'], ['test', '테스트']].map(function (o) { return h('button', { type: 'button', class: 'btn btn-sm ib-mk-' + o[0], 'data-fk': 'ib-mk-' + o[0] + '-' + x.id, 'aria-pressed': mk === o[0] ? 'true' : 'false', disabled: boss ? null : true, title: boss ? (mk === o[0] ? '다시 누르면 풀려요' : o[1] + '으로 표시하면 실 인입 순번에서 빠져요') : '대표님만 표시할 수 있어요', onclick: function () { ibMarkSet(x, o[0]); } }, o[1]); }));
+                return h('div', { class: 'ib-row' + (x.chk ? ' done' : '') + (ib.sel[x.id] ? ' sel' : '') + (mk ? ' mk' : ''), 'data-ib': x.id },
+                    h('div', { class: 'ib-time' }, h('span', { class: 'ib-no' + (mk ? ' off' : ''), title: mk ? '실 인입 아님 (순번 없음)' : ymd(new Date(x.t)) + ' 실 인입 ' + no + '번째' }, mk ? (mk === 'no' ? '미인입' : '테스트') : no + '번'), pickBox ? h('label', { class: 'ib-pick' }, pickBox, ibTime(x.t)) : ibTime(x.t)),
                     h('div', { class: 'ib-kind k-' + x.kind }, k[0] + ' ' + k[1]),
                     h('div', { class: 'ib-main' }, h('div', { class: 'ib-label' }, x.label),
                         h('div', { class: 'ib-sub' }, h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC'),
                             x.name ? h('b', {}, x.name) : null,
                             x.phone ? h('a', { href: 'tel:' + x.phone, class: 'ib-phone' }, mfPhone(x.phone)) : null)),
                     asg,
-                    h('label', { class: 'ib-chk' + (boss ? '' : ' ro') }, chk, h('span', {}, '확인'), x.chk ? h('small', {}, x.chk.by + (x.chk.at ? ' · ' + ibTime(x.chk.at) : '')) : (boss ? null : h('small', {}, '대표 확인 전'))),
+                    h('div', { class: 'ib-chkw' }, h('label', { class: 'ib-chk' + (boss ? '' : ' ro') }, chk, h('span', {}, '확인'), x.chk ? h('small', {}, x.chk.by + (x.chk.at ? ' · ' + ibTime(x.chk.at) : '')) : (boss ? null : h('small', {}, '대표 확인 전'))), markBtns),
                     h('div', { class: 'ib-act' }, h('button', { type: 'button', class: 'btn btn-sm' + (open ? ' on' : ''), 'data-fk': 'ib-open-' + x.id, 'aria-expanded': open ? 'true' : 'false',
                         onclick: function () { if (ib.open[x.id]) delete ib.open[x.id]; else ib.open[x.id] = 1; render(); } }, '댓글' + (x.cm.length ? ' ' + x.cm.length : '')),
                         bossDel ? h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'data-fk': 'ib-del-' + x.id, disabled: ib.deleting ? true : null, onclick: function () { ibDelete([x.id]); } }, '삭제') : null),
@@ -6796,7 +6836,7 @@
                 h('div', { class: 'filters' }, h('label', {}, '종류', kindSel), h('label', { class: 'ib-todo' }, todo, '확인 안 한 것만'),
                     h('label', { class: 'ib-todo', title: '홈페이지에서 전화 버튼을 누르면 이 기기에서 상담 메모가 바로 열려요 (팀장 직통 번호는 그 직원 기기에서만)' }, h('input', { type: 'checkbox', 'data-fk': 'ib-automemo', checked: ibMemoOn(), onchange: function () { ibMemoSet(this.checked); toast(this.checked ? '전화 인입이 들어오면 이 기기에서 상담 메모가 바로 열려요.' : '이 기기에서는 상담 메모를 자동으로 열지 않아요.'); } }), '📞 전화 인입 시 상담 메모 자동 열기 (이 기기)'),
                     h('span', { class: 'ib-status', id: 'ib-status', role: 'status' }, ibStatusText())),
-                h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '확인 안 함 ' + n + '건 · 전체 ' + ib.items.length + '건 (최근 300건)'),
+                h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '확인 안 함 ' + n + '건 · 전체 ' + ib.items.length + '건 (최근 300건) · ', h('b', { class: 'ib-real' }, '실 인입 ' + realN + '건 (오늘 ' + (SEQ.day[ymd(new Date())] || 0) + '건)'), markN ? ' · 미인입·테스트 ' + markN + '건 제외' : ''),
                     bossDel && list.length ? (function () {
                         var all = h('input', { type: 'checkbox', 'data-fk': 'ib-sel-all', checked: selN > 0 && selN === list.length });
                         all.indeterminate = selN > 0 && selN < list.length;
@@ -6958,14 +6998,17 @@
                 var head = [0, 4, sum.length];
                 sum.push(['날짜'].concat(kinds.map(function (k) { return IB_KIND[k][1]; }), ['합계']));
                 days.forEach(function (d) { var row = [d], tot = 0; kinds.forEach(function (k) { row.push(byDay[d][k]); tot += byDay[d][k]; }); row.push(tot); sum.push(row); });
-                var det = [['일시', '종류', '누른 버튼 / 접수 종류', '기기', '성함', '연락처', '담당자', '지정한 사람', '확인', '확인자', '확인 시각', '댓글']];
+                var det = [['일시', '실 인입', '종류', '누른 버튼 / 접수 종류', '기기', '성함', '연락처', '담당자', '지정한 사람', '확인', '확인자', '확인 시각', '댓글']], realC = 0;
+                items.forEach(function (x) { if (!ibMark(x)) realC++; });
+                sum.splice(sum.length - 1, 0, ['실 인입 (미인입·테스트 뺌)', realC]);
                 items.forEach(function (x) {
-                    det.push([fmtDT(x.t), IB_KIND[x.kind][1], x.label, x.dev === 'm' ? '모바일' : 'PC', x.name, x.phone ? mfPhone(x.phone) : '', x.asg ? x.asg.to : '', x.asg ? x.asg.by : '', x.chk ? 'O' : '', x.chk ? x.chk.by : '', x.chk && x.chk.at ? fmtDT(x.chk.at) : '',
+                    var mk = ibMark(x);
+                    det.push([fmtDT(x.t), mk ? (mk === 'no' ? '미인입' : '테스트') : 'O', IB_KIND[x.kind][1], x.label, x.dev === 'm' ? '모바일' : 'PC', x.name, x.phone ? mfPhone(x.phone) : '', x.asg ? x.asg.to : '', x.asg ? x.asg.by : '', x.chk ? 'O' : '', x.chk ? x.chk.by : '', x.chk && x.chk.at ? fmtDT(x.chk.at) : '',
                         x.cm.map(function (c) { return c.by + ': ' + c.text; }).join(' / ')]);
                 });
                 saveBlob('콜인입_' + r.label + '.xlsx', xlsxBlob([
                     { name: '요약', widths: [18, 10, 10, 10, 10, 10, 10], rows: sum, head: head },
-                    { name: '상세', widths: [20, 8, 30, 8, 10, 15, 10, 10, 6, 10, 20, 50], rows: det, head: [0], freeze: 1 }]));
+                    { name: '상세', widths: [20, 8, 8, 30, 8, 10, 15, 10, 10, 6, 10, 20, 50], rows: det, head: [0], freeze: 1 }]));
                 toast('콜 인입 ' + r.label + ' 엑셀을 내려받았어요. (' + items.length + '건)');
             }, function (e) { btn.disabled = false; btn.textContent = label; toast('엑셀을 만들지 못했어요. ' + driveErrText(e)); });
         }
@@ -8588,13 +8631,26 @@
                 seg('sort', [['v', '단가 높은 순'], ['m', '모델 순']], '정렬'),
                 h('button', { type: 'button', class: 'btn btn-sm mp-reco', 'data-act': 'mp-reco', onclick: function () { mp.cls = 'cheap'; mp.sort = 'v'; mp.q = ''; mp.cmp = true; render(); } }, '💡 저가형 추천'));
         }
+        function clMobPick(r, x) {   // 모바일 단가표 모델 줄 → 열려 있는 상담 메모에 (모바일 상담으로 바꾸고) 기종 · 가입 유형 · 요금 구간 · 최고 단가 거래처
+            var M = cl.memo; if (!M || !M.open || !M.P || !M.P.memoEl) return;
+            if (M.P.kind !== 'mob') M.P.setKind('mob');
+            var el = M.P.memoEl, dl = mpIndex().dealers, bi = -1;
+            (x.picks || []).forEach(function (p, i) { if (p && (bi < 0 || p.v > x.picks[bi].v)) bi = i; });
+            var ty = { MNP: '번호이동', '기변': '기변(재가입)', '010': '신규(010)' }[mp.ty] || mp.ty, band = (MP_BANDS.filter(function (b) { return b[0] === mp.band; })[0] || ['', ''])[1];
+            clTplSet(el, '상담 기종', r.base + (r.cap !== '*' ? ' ' + r.cap : ''));
+            clTplSet(el, '가입 유형', ty);
+            if (band && !String((new RegExp('^■ 요금제[^:\\n]*:[ \\t]*(.*)$', 'm').exec(el.value) || [])[1] || '').trim()) clTplSet(el, '요금제', band);
+            if (bi >= 0 && dl[bi]) { var cur = (new RegExp('^■ 모바일 상담[^:\\n]*:[ \\t]*(.*)$', 'm').exec(el.value) || [])[1] || ''; if (!cur.trim()) clTplSet(el, '모바일 상담', (dl[bi].carrier || '') + ' · ' + dl[bi].name); }
+            el.classList.remove('cl-flash'); void el.offsetWidth; el.classList.add('cl-flash');
+            toast(r.base + ' 을(를) 모바일 상담 메모에 넣었어요.');
+        }
         function mpCmpTable(rows) {
             var dl = mpIndex().dealers, GO = { '고가': 0, '중저가': 1, '저가': 2 };
             if (!rows.length) return h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, mpIndex().rows.length ? '맞는 모델이 없어요. 찾는 말이나 모델군을 바꿔 보세요.' : '모델별로 비교할 단가표가 없어요. 대표님이 모바일 단가표를 넣으면 보여요.'));
             var thead = h('thead', {}, h('tr', {}, h('th', { class: 'mp-mn' }, '모델'), h('th', {}, '출고가'), dl.map(function (d) { return h('th', {}, d.name, d.carrier ? h('small', {}, d.carrier) : null); }), h('th', { class: 'mp-best' }, '최고')));
             var body = h('tbody', {}, rows.map(function (x, n) {
                 var r = x.r, open = !!mp.open[r.key];
-                var tr = h('tr', { class: 'mp-mrow' + (open ? ' open' : ''), 'data-key': r.key, tabindex: '0', onclick: function () { if (mp.open[r.key]) delete mp.open[r.key]; else mp.open[r.key] = 1; render(); }, onkeydown: function (e) { if (e.key === 'Enter') this.click(); } },
+                var tr = h('tr', { class: 'mp-mrow' + (open ? ' open' : ''), 'data-key': r.key, tabindex: '0', onclick: function () { if (mp.open[r.key]) delete mp.open[r.key]; else { mp.open[r.key] = 1; clMobPick(r, x); } render(); }, onkeydown: function (e) { if (e.key === 'Enter') this.click(); } },
                     h('td', { class: 'mp-mn' }, h('b', {}, r.base), r.cap !== '*' ? ' ' + r.cap : '', h('span', { class: 'mp-cls c' + GO[r.cls] }, r.cls), mp.sort === 'v' && mp.cls !== 'all' && n < 3 ? h('span', { class: 'mp-rank' }, '추천 ' + (n + 1)) : null),
                     h('td', { class: 'mp-pr' }, r.price ? Math.round(r.price / 1000).toLocaleString('ko-KR') + '천' : ''),
                     x.picks.map(function (p) {
@@ -8955,6 +9011,33 @@
             } else { M.rtPend = pk; toast('상담 메모를 여는 중이에요. 열리면 바로 들어가요.'); }
         }
         function clRtLine(memo, key) { var x = new RegExp('^■ ' + key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[^:\\n]*:[ \\t]*(.+)$', 'm').exec(String(memo || '')); return x ? x[1].trim() : ''; }
+        function mobToForm(memo, phone, name) {   // 모바일 판매성공 → 모바일 가입 확인서를 열고 상담 메모 내용으로 채움
+            var cur = mforms.mobile;
+            if (cur && cur.sheet) {
+                var used = cur.saved || [].some.call(cur.sheet.querySelectorAll('[data-mf]'), function (el) {
+                    var n = el.getAttribute('data-mf'); if (['y', 'm', 'd', 'seller', 'shopPhone', 'sellerPhone'].indexOf(n) >= 0) return false;
+                    return el.type === 'checkbox' ? el.checked : !!String(el.value || '').trim();
+                });
+                if (used && !confirm('작성 중인 모바일 가입 확인서가 있어요.\n지우고 이 고객 내용으로 새로 작성할까요?')) return false;
+                delete mforms.mobile;
+            }
+            state.view = 'forms'; state.form = 'mobile'; render();
+            var M = mforms.mobile; if (!M || !M.sheet) { toast('가입 확인서를 열지 못했어요.'); return false; }
+            var sh = M.sheet, q = function (n) { return sh.querySelector('[data-mf="' + n + '"]'); }, L = function (k) { return clRtLine(memo, k); };
+            var head = L('모바일 상담').split('·').map(function (x) { return x.trim(); }).filter(Boolean), car = '', dealer = '';
+            head.forEach(function (x) { if (DEALERS.indexOf(x) >= 0) dealer = x; else if (!car && /SK|KT|U\+|LG|알뜰/i.test(x)) car = /^SK/i.test(x) ? 'SK' : /KT/i.test(x) ? 'KT' : /U\+|LG/i.test(x) ? 'U+' : x; });
+            var prev = (L('사용 중인 폰').split('·')[0] || '').trim(), ty = L('가입 유형'), dc = L('할인');
+            var set = { carrier: car, netUse: dealer, prevCarrier: /SKT|^SK/.test(prev) ? 'SK' : /^KT/.test(prev) ? 'KT' : /U\+|LG/.test(prev) ? 'U+' : /없음|신규/.test(prev) ? '' : prev, model: L('상담 기종'), plan1: L('요금제').replace(/\s*\(.*$/, ''), phone: phone ? mfPhone(phone) : '', name: name || '' };
+            var n = 0;
+            Object.keys(set).forEach(function (k) { var el = q(k); if (!el || !set[k]) return; el.value = set[k]; el.dispatchEvent(new Event('input', { bubbles: true })); n++; });
+            var tick = function (k) { var el = q(k); if (el && !el.checked) { el.click(); n++; } };
+            if (/번호이동|MNP/i.test(ty)) tick('tPort'); else if (/기변|재가입|보상/.test(ty)) tick('tRe'); else if (/신규|010/.test(ty)) tick('tNew');
+            if (/선약|선택약정|요금할인/.test(dc)) tick('dSel'); else if (/공시/.test(dc)) tick('dSub');
+            if (M.appSync) M.appSync();
+            window.scrollTo(0, 0);
+            toast('상담 메모 내용으로 모바일 가입 확인서 ' + n + '칸을 채웠어요. 가입자 정보 · 일련번호 · 납부 정보를 마저 적어 주세요.');
+            return true;
+        }
         function rtToForm(memo, phone) {   // 렌탈 판매성공 → 가입 확인서(유선)를 렌탈로 열고 메모 내용으로 채움
             var cur = mforms.wired;
             if (cur && cur.sheet) {
@@ -8999,7 +9082,9 @@
             var boss = isBoss();
             var file = h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: function () { mpImport(this.files && this.files[0]); this.value = ''; } });
             var head = h('div', { class: 'page-head' }, h('h1', {}, '상담하기'),
-                h('div', { class: 'actions' }, polModeSeg(), h('button', { type: 'button', class: 'btn', 'data-act': 'mp-refresh', onclick: function () { mp.busy = false; mpLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침'),
+                h('div', { class: 'actions' }, polModeSeg(),
+                    driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else { clMemoOpen(); if (cl.memo && cl.memo.P && cl.memo.P.kind !== 'mob' && !clHasText(clMemoSheet() || { cols: [] }, cl.memo.P.values())) cl.memo.P.setKind('mob'); } } }, '📝 상담 메모') : null,
+                    h('button', { type: 'button', class: 'btn', 'data-act': 'mp-refresh', onclick: function () { mp.busy = false; mpLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침'),
                     boss ? h('label', { class: 'btn btn-primary', 'data-act': 'mp-import' }, '모바일 단가표 불러오기', file) : null));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '모바일 단가표는 공유 저장소를 연결한 기기에서 볼 수 있어요.')));
             if (!mp.data && !mp.busy && !mp.err) setTimeout(function () { mpLoad(false); }, 0);
@@ -10206,14 +10291,20 @@
         function clCols(s) { return s.cols.filter(function (c) { return !clHidden(c); }); }
         function clHead(c) { return clColKind(c) === 'no' ? '순번' : clShort(c.l); }   // '/' 열 → '순번'
         var CL_TPL = ['■ 상담 통신사 : ', '■ 기존 통신사 · 약정 : ', '■ 상담 상품 : ', '■ 휴대폰 결합 : ', '■ 안내 요금 : ', '■ 오퍼 (사은품·지원금) : ', '■ 설치비 : ', '■ 특이사항 : ', '■ 재케어 메모 (통화 가능 시간·설치 희망일 등) : '];
-        var CL_TPL_R = ['■ 렌탈 상담 : ', '■ 사용 중인 제품 : ', '■ 상담 제품 : ', '■ 렌탈사 · 약정 : ', '■ 월 렌탈료 : ', '■ 사은품 : ', '■ 설치 · 관리 : ', '■ 특이사항 : ', '■ 재케어 메모 (통화 가능 시간·설치 희망일 등) : '];   // 렌탈 상담 양식
+        var CL_TPL_R = ['■ 렌탈 상담 : ', '■ 사용 중인 제품 : ', '■ 상담 제품 : ', '■ 렌탈사 · 약정 : ', '■ 월 렌탈료 : ', '■ 사은품 : ', '■ 특이사항 : ', '■ 재케어 메모 (통화 가능 시간·설치 희망일 등) : '];   // 렌탈 상담 양식
+        var CL_TPL_M = ['■ 모바일 상담 : ', '■ 사용 중인 폰 · 통신사 : ', '■ 상담 기종 : ', '■ 가입 유형 : ', '■ 요금제 : ', '■ 할인 · 할부 : ', '■ 인터넷 결합 : ', '■ 오퍼 (사은품·지원금) : ', '■ 특이사항 : ', '■ 재케어 메모 (통화 가능 시간·설치 희망일 등) : '];   // 모바일 상담 양식
         function clIsRent(t) { return /(^|\n)■ 렌탈 상담/.test(String(t || '')); }
+        function clIsMob(t) { return /(^|\n)■ 모바일 상담/.test(String(t || '')); }
+        function clKindOf(t) { return clIsRent(t) ? 'rent' : clIsMob(t) ? 'mob' : 'net'; }   // 메모 글로 상담 종류
+        function clTplOf(k) { return k === 'rent' ? CL_TPL_R : k === 'mob' ? CL_TPL_M : CL_TPL; }
         function clTplArr(t, key) {   // 어느 양식인지: 그 양식에만 있는 줄이면 그 양식 · 아니면 메모 글로 판단
+            var cur = clTplOf(clKindOf(t));
             if (key) {
-                var inN = CL_TPL.some(function (x) { return x.indexOf('■ ' + key) === 0; }), inR = CL_TPL_R.some(function (x) { return x.indexOf('■ ' + key) === 0; });
-                if (inR && !inN) return CL_TPL_R; if (inN && !inR) return CL_TPL;
+                var has = function (A) { return A.some(function (x) { return x.indexOf('■ ' + key) === 0; }); };
+                if (has(cur)) return cur;   // 지금 양식에 있는 줄이면 지금 양식
+                var only = [CL_TPL, CL_TPL_R, CL_TPL_M].filter(has); if (only.length === 1) return only[0];
             }
-            return clIsRent(t) ? CL_TPL_R : CL_TPL;
+            return cur;
         }
         function clTplHead(i, A) { return (A || CL_TPL)[i].replace(/\s*:\s*$/, ''); }   // '■ 오퍼 (사은품·지원금)'
         function clTplIdx(key, A) { A = A || CL_TPL; for (var i = 0; i < A.length; i++) if (A[i].indexOf('■ ' + key) === 0) return i; return -1; }
@@ -10236,8 +10327,8 @@
             A.forEach(function (x, i) { var hd = clTplHead(i, A); if (!t.split('\n').some(function (l) { return l.indexOf(hd) === 0; })) t = clTplPut(t, hd.slice(2), ''); });
             return t;
         }
-        function clTplSwitch(t, toRent) {   // 인터넷 ↔ 렌탈 양식 바꾸기: 같은 줄(특이사항·재케어 메모)은 그대로 · 다른 양식에만 있던 내용은 아래에 글로 남김 (지우지 않음)
-            var A = toRent ? CL_TPL_R : CL_TPL, keep = {}, moved = [], free = [];
+        function clTplSwitch(t, toRent) {   // 인터넷 ↔ 렌탈 ↔ 모바일 양식 바꾸기 (toRent: true=렌탈 · false=인터넷 · 'mob' 등 종류 이름): 같은 줄(오퍼·특이사항·재케어 메모)은 그대로 · 다른 양식에만 있던 내용은 아래에 글로 남김 (지우지 않음)
+            var A = typeof toRent === 'string' ? clTplOf(toRent) : toRent ? CL_TPL_R : CL_TPL, keep = {}, moved = [], free = [];
             String(t || '').split('\n').forEach(function (l) {
                 var m = /^■ ([^:\n]+?)\s*:[ \t]*(.*)$/.exec(l);
                 if (!m) { free.push(l); return; }
@@ -10361,15 +10452,15 @@
             };
             P.paint();
             P.memoEl = null;
-            P.kind = row.k === 'rent' || row.k === 'net' ? row.k : (s.cols.some(function (c) { return clColKind(c) === 'wide' && /상담/.test(c.l.replace(/\s/g, '')) && clIsRent(row.v[c.k]); }) ? 'rent' : 'net');
-            P.kindSeg = h('div', { class: 'cl-kind', role: 'group', 'aria-label': '상담 종류' },
-                [['net', '🌐 인터넷 · TV 상담'], ['rent', '🧴 렌탈 상담']].map(function (x) { return h('button', { type: 'button', 'data-kind': x[0], 'data-act': 'cl-kind-' + x[0], 'aria-pressed': P.kind === x[0] ? 'true' : 'false', onclick: function () { P.setKind(x[0]); } }, x[1]); }));
-            P.setKind = function (k) {   // 인터넷 ↔ 렌탈: 메모 양식 · 현 통신사 버튼 · 칸 이름을 바꿈 (적은 내용은 지우지 않음)
+            P.kind = row.k === 'rent' || row.k === 'net' || row.k === 'mob' ? row.k : (function () { var k = 'net'; s.cols.forEach(function (c) { if (clColKind(c) === 'wide' && /상담/.test(c.l.replace(/\s/g, '')) && row.v[c.k]) k = clKindOf(row.v[c.k]); }); return k; })();
+            P.kindSeg = h('div', { class: 'cl-kind three', role: 'group', 'aria-label': '상담 종류' },
+                [['net', '🌐 인터넷 · TV 상담'], ['mob', '📱 모바일 상담'], ['rent', '🧴 렌탈 상담']].map(function (x) { return h('button', { type: 'button', 'data-kind': x[0], 'data-act': 'cl-kind-' + x[0], 'aria-pressed': P.kind === x[0] ? 'true' : 'false', onclick: function () { P.setKind(x[0]); } }, x[1]); }));
+            P.setKind = function (k) {   // 인터넷 ↔ 모바일 ↔ 렌탈: 메모 양식 · 현 통신사 버튼 · 칸 이름을 바꿈 (적은 내용은 지우지 않음)
                 if (k === P.kind) return;
                 P.kind = k;
                 [].forEach.call(P.kindSeg.querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-kind') === k ? 'true' : 'false'); });
-                if (P.memoEl) { var nv = clTplSwitch(P.memoEl.value, k === 'rent'); if (nv !== P.memoEl.value) { P.memoEl.value = nv; P.memoEl.dispatchEvent(new Event('input', { bubbles: true })); } }
-                if (P.telEl) { var other = k === 'rent' ? CL_TELCO : CL_MAKER; if (other.indexOf(P.telEl.value.trim()) >= 0) P.telEl.value = ''; }
+                if (P.memoEl) { var nv = clTplSwitch(P.memoEl.value, k); if (nv !== P.memoEl.value) { P.memoEl.value = nv; P.memoEl.dispatchEvent(new Event('input', { bubbles: true })); } }
+                if (P.telEl && clTelList(k).indexOf(P.telEl.value.trim()) < 0 && [CL_TELCO, CL_MAKER, CL_MTEL].some(function (L) { return L.indexOf(P.telEl.value.trim()) >= 0; })) P.telEl.value = '';   // 다른 종류 버튼으로 고른 값이면 비움
                 if (P.paintTel) P.paintTel();
                 if (P.telEl && P.memoEl && P.telEl.value.trim()) clTelcoMemo(P.memoEl, P.telEl.value.trim(), '', k);
                 if (P.onKind) P.onKind(k);
@@ -10383,7 +10474,7 @@
                 el.value = val;
                 P.inputs[c.k] = el;
                 if (isMemo && !P.memoEl) P.memoEl = el;
-                if (isMemo) return h('div', { class: 'cl-fld full' }, h('div', { class: 'cl-lab' }, h('span', {}, c.l || c.k), h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-tpl', onclick: function () { clTplInsert(el, P.kind === 'rent' ? CL_TPL_R : CL_TPL); } }, '메모 양식 넣기')), el);
+                if (isMemo) return h('div', { class: 'cl-fld full' }, h('div', { class: 'cl-lab' }, h('span', {}, c.l || c.k), h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-tpl', onclick: function () { clTplInsert(el, clTplOf(P.kind)); } }, '메모 양식 넣기')), el);
                 var body = el, tExtra = null;
                 if (kd === 'date') body = h('span', { class: 'cl-inline' }, el, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { el.value = ymd(new Date()); } }, '오늘'));
                 if (kd === 'date') body.appendChild(clCalBtn(el, 'ymd'));
@@ -10397,10 +10488,10 @@
                     var chips = h('div', { class: 'cl-telco', role: 'group', 'aria-label': '현 통신사 고르기' });
                     var telLab = h('span', { class: 'cl-tlab' }), telName = c.l || c.k;
                     P.telEl = el;
-                    P.paintTel = function () {   // 인터넷: 현 통신사 / 렌탈: 지금 쓰는 렌탈 제품 (제조사)
-                        var list = P.kind === 'rent' ? CL_MAKER : CL_TELCO;
-                        telLab.textContent = P.kind === 'rent' ? '사용 중인 렌탈 (제조사)' : telName;
-                        chips.setAttribute('aria-label', P.kind === 'rent' ? '사용 중인 렌탈 제조사 고르기' : '현 통신사 고르기');
+                    P.paintTel = function () {   // 인터넷: 현 통신사 / 모바일: 지금 쓰는 휴대폰 통신사 / 렌탈: 지금 쓰는 렌탈 제품 (제조사)
+                        var list = clTelList(P.kind);
+                        telLab.textContent = P.kind === 'rent' ? '사용 중인 렌탈 (제조사)' : P.kind === 'mob' ? '지금 쓰는 휴대폰 통신사' : telName;
+                        chips.setAttribute('aria-label', P.kind === 'rent' ? '사용 중인 렌탈 제조사 고르기' : P.kind === 'mob' ? '지금 쓰는 휴대폰 통신사 고르기' : '현 통신사 고르기');
                         chips.textContent = '';
                         list.forEach(function (t) {
                             chips.appendChild(h('button', { type: 'button', class: 'cl-tchip', 'data-telco': t, 'aria-pressed': cur() === t ? 'true' : 'false', onclick: function () { lockIn(); el.value = cur() === t ? '' : t; el.dispatchEvent(new Event('input', { bubbles: true })); } }, t));
@@ -10449,11 +10540,13 @@
         }
         var CL_TELCO = ['SK', 'KT', 'U+', 'SKB', '헬로비전', '스카이라이프', '알뜰', '신규(없음)'];   // 현 통신사 버튼
         var CL_MAKER = ['코웨이', 'SK매직', '쿠쿠', 'LG', '삼성', '청호', '교원웰스', '현대큐밍', '없음(신규)'];   // 렌탈 상담: 지금 쓰는 렌탈 제조사 버튼
+        var CL_MTEL = ['SKT', 'KT', 'LG U+', '알뜰폰', '선불·외국인', '없음(신규)'];   // 모바일 상담: 지금 쓰는 휴대폰 통신사 버튼
+        function clTelList(k) { return k === 'rent' ? CL_MAKER : k === 'mob' ? CL_MTEL : CL_TELCO; }
         function clTelcoMemo(memoEl, t, prev, kind) {   // 상담 내용 '■ 기존 통신사 · 약정'(렌탈: '■ 사용 중인 제품') 줄 맨 앞에 현 통신사 (약정 등 뒤에 적은 글은 그대로)
             if (!memoEl) return;
-            var rent = kind === 'rent' || (kind == null && clIsRent(memoEl.value)), key = rent ? '사용 중인 제품' : '기존 통신사';
+            var kd = kind || clKindOf(memoEl.value), rent = kd === 'rent', mob = kd === 'mob', key = rent ? '사용 중인 제품' : mob ? '사용 중인 폰' : '기존 통신사';
             var m = new RegExp('^■ ' + key + '[^:\\n]*:[ \\t]*(.*)$', 'm').exec(memoEl.value), rest = m ? m[1].trim() : '';
-            var known = (rent ? CL_MAKER.concat(['LG전자', '삼성전자', '청호나이스', 'SK', '웰스', '큐밍', '바디프랜드', '세라젬']) : CL_TELCO.concat(['SKT', 'LG', 'LGU+', 'LG U+', 'LG헬로비전', '헬로', '스카이'])).sort(function (a, b) { return b.length - a.length; });
+            var known = (rent ? CL_MAKER.concat(['LG전자', '삼성전자', '청호나이스', 'SK', '웰스', '큐밍', '바디프랜드', '세라젬']) : mob ? CL_MTEL.concat(['SK', 'U+', 'LGU+', 'LG', '알뜰', '선불', '외국인']) : CL_TELCO.concat(['SKT', 'LG', 'LGU+', 'LG U+', 'LG헬로비전', '헬로', '스카이'])).sort(function (a, b) { return b.length - a.length; });
             prev = String(prev || '').trim();
             if (prev && known.indexOf(prev) < 0) known.unshift(prev);   // 직접입력으로 적던 글자 (한 글자씩 바뀌어도 앞부분이 쌓이지 않게)
             for (var i = 0; i < known.length; i++) { var k = known[i]; if (rest === k || rest.indexOf(k + ' ') === 0 || rest.indexOf(k + '·') === 0) { rest = rest.slice(k.length).replace(/^\s*·?\s*/, ''); break; } }
@@ -10708,6 +10801,14 @@
                 var n = cl.data.rows.filter(function (r) { return r.sh === x.id && r.ty === 'row'; }).length;
                 return h('button', { type: 'button', class: 'cl-tab', role: 'tab', 'data-sheet': x.name, 'aria-pressed': x.id === s.id ? 'true' : 'false', onclick: function () { cl.sheet = x.id; cl.st = 'all'; render(); } }, x.name, h('small', {}, String(n)));
             }));
+            var memoCol = clColBy(s, '', /상담내용/), kOf = function (r) { return memoCol ? clKindOf(r.v[memoCol.k] || '') : 'net'; };
+            if (!cl.kd) cl.kd = 'all';
+            var kc = { net: 0, mob: 0, rent: 0 }; data.forEach(function (r) { kc[kOf(r)]++; });
+            if (cl.kd !== 'all') data = data.filter(function (r) { return kOf(r) === cl.kd; });
+            var kindBar = h('div', { class: 'cl-kbar', role: 'group', 'aria-label': '상담 종류별 보기' },
+                [['all', '전체', kc.net + kc.mob + kc.rent], ['net', '🌐 인터넷·TV', kc.net], ['mob', '📱 모바일', kc.mob], ['rent', '🧴 렌탈', kc.rent]].map(function (x) {
+                    return h('button', { type: 'button', class: 'cl-kbtn k-' + x[0], 'data-act': 'cl-kd-' + x[0], 'aria-pressed': cl.kd === x[0] ? 'true' : 'false', onclick: function () { cl.kd = x[0]; render(); } }, x[1] + ' ', h('b', {}, String(x[2])));
+                }));
             var cnt = Object.create(null); data.forEach(function (r) { cnt[r.st] = (cnt[r.st] || 0) + 1; });
             var legend = h('div', { class: 'cl-legend', role: 'group', 'aria-label': '상태별 보기' },
                 h('button', { type: 'button', class: 'cl-chip', 'aria-pressed': cl.st === 'all' ? 'true' : 'false', onclick: function () { cl.st = 'all'; render(); } }, '전체 ', h('b', {}, String(data.length))),
@@ -10730,7 +10831,8 @@
                 h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'cl-add', onclick: function () { clEdit(s, null); } }, '+ 상담 추가'));
             var qq = cl.q.trim().toLowerCase(), qd = qq.replace(/\D/g, '');
             var shown = all.filter(function (r) {
-                if (r.ty !== 'row') return cl.st === 'all' && !qq && !cl.day;   // 구분 제목·머리글 줄은 전체 보기에서만
+                if (r.ty !== 'row') return cl.st === 'all' && !qq && !cl.day && cl.kd === 'all';   // 구분 제목·머리글 줄은 전체 보기에서만
+                if (cl.kd !== 'all' && kOf(r) !== cl.kd) return false;   // 종류별 보기 (인터넷 · 모바일 · 렌탈)
                 if (cl.day && clRowDay(s, r) !== cl.day) return false;   // 날짜별 보기 (오늘 · 달력)
                 if (cl.st !== 'all' && r.st !== cl.st) return false;
                 if (!qq) return true;
@@ -10753,7 +10855,7 @@
                         var longV = (kd === 'wide' || kd === 'mid') && (String(shownV).length > (kd === 'mid' ? 50 : 90) || String(shownV).split('\n').length > 4), opened = cl.openAll || !!cl.open[r.id];
                         var cellBody = longV ? [h('div', { class: 'cl-clip' + (opened ? ' open' : '') }, shownV), h('button', { type: 'button', class: 'cl-more', 'data-act': 'cl-more', onclick: function (e) { e.stopPropagation(); var on = !this.previousSibling.classList.contains('open'); this.previousSibling.classList.toggle('open', on); this.textContent = on ? '▲ 접기' : '▼ 더보기'; if (on) cl.open[r.id] = 1; else delete cl.open[r.id]; } }, opened ? '▲ 접기' : '▼ 더보기')] : shownV;
                         var td = h('td', { 'data-l': clHead(c), class: (kd === 'wide' ? 'wide' : kd === 'mid' ? 'mid' : kd === 'ph' ? 'ph' : (kd === 'date' || kd === 'time' || kd === 'staff' || kd === 'no') ? 'nw' : /위치/.test(c.l) ? 'loc' : '') + (v ? '' : ' blank'), style: css || false }, cellBody);
-                        if (i === 0) { td.classList.remove('blank'); td.appendChild(h('div', {}, h('span', { class: 'cl-st' + (hex && clLight(hex) ? ' lt' : ''), style: hex ? '--sb:#' + hex : '--sb:#9AA088' }, si && r.st !== 'etc' ? si[1] : (r.st === 'etc' ? '기타 색' : '보통')), r.ctp === 'ok' ? h('span', { class: 'cl-ctp', title: '구글 연락처에 가망 번호로 저장됨' }, '📇저장') : r.ctp === 'cust' ? h('span', { class: 'cl-ctp', title: '이미 가입 고객 번호' }, '📇가입') : r.ctp === 'fail' ? h('span', { class: 'cl-ctp bad', title: '가망 번호 저장 실패 — 줄을 눌러 다시 저장' }, '📇실패') : null)); }
+                        if (i === 0) { td.classList.remove('blank'); var kk = kOf(r); if (kk !== 'net') td.appendChild(h('span', { class: 'cl-ktag k-' + kk }, kk === 'mob' ? '📱 모바일' : '🧴 렌탈')); td.appendChild(h('div', {}, h('span', { class: 'cl-st' + (hex && clLight(hex) ? ' lt' : ''), style: hex ? '--sb:#' + hex : '--sb:#9AA088' }, si && r.st !== 'etc' ? si[1] : (r.st === 'etc' ? '기타 색' : '보통')), r.ctp === 'ok' ? h('span', { class: 'cl-ctp', title: '구글 연락처에 가망 번호로 저장됨' }, '📇저장') : r.ctp === 'cust' ? h('span', { class: 'cl-ctp', title: '이미 가입 고객 번호' }, '📇가입') : r.ctp === 'fail' ? h('span', { class: 'cl-ctp bad', title: '가망 번호 저장 실패 — 줄을 눌러 다시 저장' }, '📇실패') : null)); }
                         return td;
                     }));
             }));
@@ -10768,7 +10870,7 @@
                 tabs,
                 h('div', { class: 'cl-head' }, titleEl, h('div', { class: 'actions' }, status, retry, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cl-sheet-set', onclick: function () { clSheetEdit(s); } }, '시트 설정'))),
                 h('div', { class: 'cl-rpt-row' }, h('button', { type: 'button', class: 'btn btn-sm btn-close', 'data-act': 'cl-report', title: '하루 마감 순서: 마감1 상담리스트 → 마감2 실적장표 → 마감3 업무 마감보고', onclick: function () { clReport(s); } }, h('span', { class: 'rpt-step' }, '마감1'), '상담리스트 마감보고')),
-                legend, dayBar, tools,
+                kindBar, legend, dayBar, tools,
                 h('div', { class: 'cl-wrap' }, h('table', { class: 'cl-tbl' }, colg, thead, shown.length ? body : h('tbody', {}, h('tr', {}, h('td', { class: 'cl-empty', colspan: cols.length }, data.length ? '조건에 맞는 상담이 없어요.' : '이 시트에는 아직 상담이 없어요. [+ 상담 추가]로 적어 주세요.'))))),
                 h('p', { class: 'ib-help' }, '줄을 누르면 고칠 수 있어요. 고친 내용은 자동으로 암호화해서 저장되고, 다른 직원 화면에도 30초 안에 반영돼요. 줄·시트 삭제, 불러오기, 엑셀 내려받기는 대표님만 할 수 있어요.'));
         }
@@ -10779,7 +10881,8 @@
             if (!cl.memo) cl.memo = { open: false, min: false, sheet: '', el: null, P: null, built: '', vals: null, st: 'n', raw: null, sig: null, kind: 'net' };
             if (!cl.memo.open) {
                 cl.memo.sig = null; cl.memo.asig = null;   // 새로 열면 지금 짚어 둔 상품 · 고른 추가 상품부터 넣음
-                if (state.view === 'policy' && state.pol.rent) { cl.memo.sig = clPkSig(); if (!cl.memo.P && cl.memo.raw == null) cl.memo.kind = 'rent'; }   // 렌탈 단가표에서 열면 렌탈 상담으로
+                if (state.view === 'policy' && state.pol.rent) { cl.memo.sig = clPkSig(); if (!cl.memo.P && cl.memo.raw == null) cl.memo.kind = 'rent'; }
+                else if (state.view === 'policy' && state.pol.mob) { cl.memo.sig = clPkSig(); if (!cl.memo.P && cl.memo.raw == null) cl.memo.kind = 'mob'; }   // 모바일 단가표에서 열면 모바일 상담으로   // 렌탈 단가표에서 열면 렌탈 상담으로
             }
             cl.memo.open = true; cl.memo.min = false;
             if (!cl.data && !cl.busy) clLoad(true);
@@ -10816,8 +10919,8 @@
             var M = cl.memo; if (!M || !M.open) return;
             var sig = clPkSig(); if (sig === M.sig) return;
             M.sig = sig; var pk = clPk(); if (!pk) return;   // 선택을 지우면 적어 둔 내용은 그대로 둠
-            if (M.P && M.P.kind === 'rent') M.P.setKind('net');   // 인터넷 단가표에서 상품을 누르면 인터넷 상담으로
-            else if (!M.P && M.raw && clIsRent(M.raw)) { M.raw = clTplSwitch(M.raw, false); M.kind = 'net'; }
+            if (M.P && M.P.kind !== 'net') M.P.setKind('net');   // 인터넷 단가표에서 상품을 누르면 인터넷 상담으로
+            else if (!M.P && M.raw && clKindOf(M.raw) !== 'net') { M.raw = clTplSwitch(M.raw, false); M.kind = 'net'; }
             if (M.P && M.P.memoEl) { var el = M.P.memoEl, v = clPkFill(el.value, pk); if (v !== el.value) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } el.classList.remove('cl-flash'); void el.offsetWidth; el.classList.add('cl-flash'); }
             else if (M.min || !M.P) M.raw = clPkFill(M.raw, pk);
         }
@@ -10916,7 +11019,7 @@
             clTabsSet(T);
             if (d.sh && cl.data.sheets.some(function (x) { return x.id === d.sh; })) M.sheet = d.sh;
             M.P = null; M.built = ''; M.vals = JSON.parse(JSON.stringify(d.v || {})); M.st = d.st || 'n'; M.raw = d.raw || null; M.sig = clPkSig(); M.asig = null; M.draftId = d.id; M.min = false; M.open = true;
-            if (M.raw != null && /(^|\n)■ /.test(M.raw)) M.kind = clIsRent(M.raw) ? 'rent' : 'net';
+            if (M.raw != null && /(^|\n)■ /.test(M.raw)) M.kind = clKindOf(M.raw);
             clMemoPaint();
         }
         function clTabBar(M) {   // 탭: […2222 고객A 18:40] […4444 SKB 18:52] [✏️ 새 상담] — 지금 적는 상담은 노란색
@@ -10986,7 +11089,8 @@
             var om = /(\d)차[^\d\n]*([\d,]+)원/.exec(off), og = /가이드\s*([\d,]+)원/.exec(off);
             if (om) offS = om[1] + '차 ' + clMan(om[2]); else if (og) offS = '가이드 ' + clMan(og[1]);
             var cur = vv(clColBy(s, '', /현통신사/)), loc = vv(clColBy(s, '', /위치/)), parts;
-            if (clIsRent(memo)) { var rf = (/월\s*([\d,]+원)/.exec(line('월 렌탈료')) || [])[1] || '', rg = line('사은품'), rb = line('렌탈 상담').split('·').pop().trim(); parts = ['렌탈', rb, line('상담 제품').replace(/\s*\([^)]*\)\s*$/, ''), rf ? '월' + rf : '', rg && !/없음|안내/.test(rg) ? '사은품 ' + rg : '', loc]; }
+            if (clIsMob(memo)) { parts = ['모바일', line('모바일 상담').split('·')[0].trim(), line('상담 기종'), line('가입 유형'), line('요금제').replace(/\s*\(.*$/, ''), offS, loc]; }
+            else if (clIsRent(memo)) { var rf = (/월\s*([\d,]+원)/.exec(line('월 렌탈료')) || [])[1] || '', rg = line('사은품'), rb = line('렌탈 상담').split('·').pop().trim(); parts = ['렌탈', rb, line('상담 제품').replace(/\s*\([^)]*\)\s*$/, ''), rf ? '월' + rf : '', rg && !/없음|안내/.test(rg) ? '사은품 ' + rg : '', loc]; }
             else if (tel || prod) parts = [(cur ? cur + '→' : '') + tel, prod, fee ? '월' + fee : '', offS, loc];
             else { var free = clTplClean(memo).replace(/^■[^\n]*$/mg, '').replace(/\s+/g, ' ').trim(); parts = [cur, free.split(/[.!?。]\s/)[0].slice(0, 34), loc]; }
             var label = ('가망 ' + day + ' ' + parts.filter(Boolean).join(' ')).replace(/\s+/g, ' ').trim().slice(0, 80);
@@ -11038,6 +11142,12 @@
                 M.open = false; clMemoBlank(M); clMemoPaint();
                 polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null; polTv = { key: '', n: {} };
                 rtToForm(rentMemo, /^01\d{8,9}$/.test(digR) ? digR : '');
+                return;
+            }
+            if (row.st === 'sale' && clIsMob(rentMemo) && confirm('모바일 판매성공 — 상담 리스트 "' + s.name + '"에 저장했어요.\n\n모바일 가입 확인서를 바로 열까요?\n(상담 메모의 통신사 · 거래처 · 기종 · 가입 유형 · 요금제 · 공시/선약이 들어가요)\n\n[취소]를 누르면 신분증 요청으로 가요.')) {
+                var pcM = clColBy(s, 'ph'), digM = pcM ? digitsOnly(row.v[pcM.k] || '') : '', nmC = clColBy(s, '', /고객명|성함|이름/), nmM = nmC ? String(row.v[nmC.k] || '').trim() : '';
+                M.open = false; clMemoBlank(M); clMemoPaint();
+                mobToForm(rentMemo, /^01\d{8,9}$/.test(digM) ? digM : '', nmM);
                 return;
             }
             if (row.st === 'sale') {   // 판매성공: 번호 저장 없이 신분증 요청으로 (번호는 가입 확인서 [드라이브/연락처 저장] 때)
@@ -11134,10 +11244,10 @@
                 if (from) { var fc = from.cols.filter(function (c) { return c.k === k; })[0], tc = fc && s.cols.filter(function (c) { return c.l.replace(/\s/g, '') === fc.l.replace(/\s/g, ''); })[0]; if (tc && clColKind(tc) !== 'no') vals[tc.k] = keep[k]; }
                 else if (s.cols.some(function (c) { return c.k === k && clColKind(c) !== 'no'; })) vals[k] = keep[k];
             });
-            if (keepRaw != null && /(^|\n)■ /.test(keepRaw)) M.kind = clIsRent(keepRaw) ? 'rent' : 'net';   // 적던 메모의 양식대로
-            var row = { v: vals, st: keepSt || 'n', k: M.kind === 'rent' ? 'rent' : 'net' };
+            if (keepRaw != null && /(^|\n)■ /.test(keepRaw)) M.kind = clKindOf(keepRaw);   // 적던 메모의 양식대로
+            var row = { v: vals, st: keepSt || 'n', k: M.kind === 'rent' || M.kind === 'mob' ? M.kind : 'net' };
             var P = clFormParts(s, row); P.sheet = s; P.onKind = function (k) { M.kind = k; };
-            if (P.memoEl) P.memoEl.value = clTplFull(keepRaw != null ? keepRaw : P.memoEl.value, P.kind === 'rent' ? CL_TPL_R : CL_TPL);   // 처음 열면 메모 양식부터 · 접었다 펴도 적던 그대로
+            if (P.memoEl) P.memoEl.value = clTplFull(keepRaw != null ? keepRaw : P.memoEl.value, clTplOf(P.kind));   // 처음 열면 메모 양식부터 · 접었다 펴도 적던 그대로
             M.P = P;
             M.el.appendChild(h('div', { class: 'cl-memo-h' }, h('b', {}, '📝 상담 메모'), sel, h('span', { class: 'cl-memo-sp' }), newBtn, minBtn, closeBtn));
             var tb2 = clTabBar(M); if (tb2) M.el.appendChild(h('div', { class: 'cl-memo-tb' }, tb2));
