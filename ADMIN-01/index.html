@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-noj+jc4IGPkFnMCt9GZ4Siqym6RBCMRLoqEO+ZGvWtk='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6SuDGkXg614Vpy3fzbezucqACLCIEWcQE6O1UTYlL0k='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -339,6 +339,14 @@
         .act-log li { line-height: 1.5; }
         .act-log li > * { margin-right: 8px; }
         .act-log b { color: #3E441E; font-weight: 700; }
+        .act-sv { font-size: 12.5px; font-weight: 800; padding: 3px 10px; border-radius: 999px; background: #FFF6D6; color: #7A5B00; border: 1px solid #F0D98A; white-space: nowrap; }
+        .act-sv.ok { background: #E3F3E3; color: #1F5F23; border-color: #A9D6A9; }
+        .act-sv.bad, .act-sv.warn { background: #FDE8E8; color: #A61F1F; border-color: #F1B0B0; }
+        .act-ed, .act-add { min-height: 40px; padding: 0 14px; font-size: 13.5px; font-weight: 800; border-radius: 10px; }
+        .act-add { margin-left: auto; background: #fff; border-style: dashed; color: #3E441E; }
+        .act-ed-s { font: inherit; font-size: 11.5px; font-weight: 700; color: #3E441E; background: #fff; border: 1px solid #CDD3B4; border-radius: 6px; padding: 2px 8px; min-height: 26px; cursor: pointer; }
+        .act-ed-s:hover, .act-add:hover { background: #F1F4E4; }
+        @media (pointer: coarse) { .act-ed-s { min-height: 34px; padding: 4px 12px; font-size: 13px; } }
         .act-log em { font-style: normal; font-weight: 700; color: #2F7D32; }
         .act-who { font-weight: 700; color: #5B6236; }
         @media (prefers-reduced-motion: reduce) { .act-dot, .act-bar.run { animation: none; } }
@@ -1870,7 +1878,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-30.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-30.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1878,7 +1886,7 @@
         var driveState = { status: 'idle', at: null, msg: '' };   // idle / syncing / ok / error / keyerror
         var acctUi = { list: null, err: '', loading: false, at: 0, enforced: null }, gateMode = 'login', gatePoll = null;
         var pendingJoin = null, inviteBad = false;   // 초대 링크로 열었을 때 받아 둔 팀 연결 정보
-        var teamCache = null, syncChain = Promise.resolve(), syncQueued = false, pollTimer = null, pushTimer = null;
+        var teamCache = null, syncChain = Promise.resolve(), syncQueued = false, pollTimer = null, pushTimer = null, pushArmed = false;
         var lastRemote = null;   // 속도: 마지막으로 받은(또는 올린) 공유 데이터 { url, k, rev, text } — 잠그면 지움
         var meMemo = null;       // 속도: 로그인 직후 '내 계정 정보' 요청을 한 번으로 합침
         var db = null, me = '', authed = false, cryptoKey = null, idleTimer = null, toastTimer = null, pendingToast = '';
@@ -2934,11 +2942,66 @@
             held.forEach(function (t) { t.ps = now; t.pr = k.slice(0, 20); stamp(t); });
             db.acts.push(stamp({ id: uid(), sid: me, k: k, s: now, e: 0, u: 0 }));
             commit(held.length ? '진행 중이던 업무 ' + held.length + '건을 중지했어요. (' + held.map(function (t) { return t.title; }).join(', ').slice(0, 60) + ')' : '');
+            requestSync(0);   // 실업은 바로 서버에 올림 (재부팅·창 닫힘 대비)
         }
         function actStop(a) {
             if (!a || a.e) return; a.e = Math.max(Date.now(), a.s + 1); stamp(a); actUi.pick = ''; actUi.etc = '';
             var paused = db.tasks.some(function (t) { return t.staffId === me && t.status === 'doing' && t.ps && !t.ext; });
             commit(a.k + ' ' + actDur(a.e - a.s) + ' 기록했어요.' + (paused ? ' 중지된 업무는 [재시작]으로 이어서 하세요.' : ''));
+            requestSync(0);
+        }
+        function actCanEdit(a) { return !!a && (a.sid === me || isBoss()); }
+        function actSvText(a) {   // 진행 중인 실업이 서버에 올라갔는지
+            if (!driveOn()) return { t: '이 기기에만 저장', c: 'warn' };
+            if ((a.b || 0) >= a.u) return { t: '✓ 서버 저장됨', c: 'ok' };
+            if (driveState.status === 'error' || driveState.status === 'keyerror') return { t: '⚠ 서버 저장 안 됨 · 재부팅 전 확인', c: 'bad' };
+            return { t: '☁ 서버에 올리는 중…', c: '' };
+        }
+        function actSvMark() {
+            if (!db || !authed) return;
+            var r = actRunning(me);
+            [].forEach.call(document.querySelectorAll('.act-sv'), function (el) { if (!r) return; var x = actSvText(r); el.textContent = x.t; el.className = 'act-sv ' + x.c; });
+        }
+        function actUnsaved() { return !!(authed && db && driveOn() && (pushArmed || (db.acts || []).some(function (a) { return a.sid === me && (a.b || 0) < a.u; }))); }
+        function actForm(a) {   // a 없으면 빠진 기록 넣기, 있으면 고치기
+            var hm = function (ms) { var d = new Date(ms); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
+            var sid = a ? a.sid : me, day = a ? ymd(new Date(a.s)) : (state.date || ymd(new Date()));
+            function toMs(d, t) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ''), n = /^(\d{1,2}):(\d{2})/.exec(t || ''); if (!m || !n) return NaN; return new Date(+m[1], +m[2] - 1, +m[3], +n[1], +n[2]).getTime(); }
+            var parsed = null;
+            openForm({
+                title: a ? '근무 기록 고치기' + (sid !== me ? ' · ' + staffName(sid) : '') : '빠진 근무 기록 넣기',
+                meta: a ? '' : '재부팅·창 닫힘 등으로 빠진 실업 기록을 직접 넣어요. 종료 시각을 비워 두면 "진행 중"으로 들어가요.',
+                saveText: a ? '저장' : '기록 넣기',
+                fields: [
+                    { key: 'k', label: '할 일', required: true, max: ACT_MAX, value: a ? a.k : '', quick: ACT_KINDS.concat(['컴퓨터 재부팅']).map(function (k) { return { label: k, value: k }; }) },
+                    { key: 'd', label: '날짜', type: 'date', required: true, value: day },
+                    { key: 's', label: '시작 시각', type: 'time', required: true, half: true, value: a ? hm(a.s) : '' },
+                    { key: 'e', label: '종료 시각', type: 'time', half: true, value: a && a.e ? hm(a.e) : '', hint: '비워 두면 진행 중' }
+                ],
+                validate: function (v) {
+                    var now = Date.now(), k = v.k.replace(/\s+/g, ' ').trim().slice(0, ACT_MAX), sMs = toMs(v.d, v.s), eMs = v.e ? toMs(v.d, v.e) : 0;
+                    if (!k) return '할 일을 적어 주세요.';
+                    if (isNaN(sMs)) return '날짜와 시작 시각을 확인해 주세요.';
+                    if (isNaN(eMs)) return '종료 시각을 확인해 주세요.';
+                    if (sMs > now + 60000) return '아직 오지 않은 시작 시각은 넣을 수 없어요.';
+                    if (sMs < now - ACT_KEEP_DAYS * 86400000) return ACT_KEEP_DAYS + '일 지난 기록은 넣을 수 없어요.';
+                    if (eMs && eMs <= sMs) return '종료 시각이 시작 시각보다 늦어야 해요. (자정을 넘긴 기록은 두 번으로 나눠 넣어 주세요)';
+                    if (eMs > now + 60000) return '종료 시각이 지금보다 늦어요. 아직 하는 중이면 종료 칸을 비워 두세요.';
+                    if (!eMs) { var r = actRunning(sid); if (r && (!a || r.id !== a.id)) return '이미 진행 중인 실업(' + r.k + ')이 있어요. 그걸 먼저 종료하거나 종료 시각을 적어 주세요.'; }
+                    parsed = { k: k, s: sMs, e: eMs };
+                    return null;
+                },
+                onSave: function () {
+                    if (!parsed) return;
+                    if (!db.acts) db.acts = [];
+                    if (a) { var cur = (db.acts || []).filter(function (x) { return x.id === a.id; })[0]; if (!cur) { toast('이미 지워진 기록이에요.'); return; } cur.k = parsed.k; cur.s = parsed.s; cur.e = parsed.e; stamp(cur); }
+                    else db.acts.push(stamp({ id: uid(), sid: me, k: parsed.k, s: parsed.s, e: parsed.e, u: 0 }));
+                    commit(a ? '근무 기록을 고쳤어요.' : '빠진 기록을 넣었어요. (' + parsed.k + ' ' + hm(parsed.s) + (parsed.e ? ' ~ ' + hm(parsed.e) : ' ~ 진행 중') + ')');
+                    requestSync(0);
+                },
+                onDelete: a ? function () { db.acts = (db.acts || []).filter(function (x) { return x.id !== a.id; }); tomb(a.id); commit('근무 기록을 지웠어요.'); requestSync(0); } : null,
+                deleteConfirm: a ? '"' + a.k + '" 기록을 지울까요?' : ''
+            });
         }
         function actForReport() {   // 진행중보고: 지금 하는 일 (진행 중) + 오늘 기록 (담당 필터 기준)
             var day = state.date || ymd(new Date());
@@ -2963,6 +3026,8 @@
             if (run) top = h('div', { class: 'act-top run' },
                 h('span', { class: 'act-ttl' }, '⏱ 실시간업무(실업)'),
                 h('span', { class: 'act-now' }, h('i', { class: 'act-dot', 'aria-hidden': 'true' }), h('b', {}, run.k), ' ' + actHm(run.s) + ' 시작 · ', h('span', { class: 'act-el', 'data-s': String(run.s) }, actDur(Date.now() - run.s)), ' 진행 중'),
+                (function () { var x = actSvText(run); return h('span', { class: 'act-sv ' + x.c, role: 'status' }, x.t); })(),
+                h('button', { type: 'button', class: 'btn btn-sm act-ed', 'data-act': 'act-edit-run', title: '시작 시각·할 일 고치기', onclick: function () { actForm(actRunning(me)); } }, '✎ 고치기'),
                 h('button', { type: 'button', class: 'btn btn-sm act-stop', 'data-act': 'act-stop', 'data-fk': 'act-stop', onclick: function () { actStop(actRunning(me)); } }, '■ 종료'));
             else {
                 var etc = actUi.pick === '기타' ? h('input', { type: 'text', class: 'act-etc', 'data-fk': 'act-etc', maxlength: 50, placeholder: '직접 적기 (예: 택배 수령 후 매장 정리, 거래처 방문) · 50자까지', 'aria-label': '기타 업무 직접 적기 (50자까지)', value: actUi.etc,
@@ -2973,11 +3038,13 @@
                     h('div', { class: 'act-chips', role: 'group', 'aria-label': '할 일 고르기' }, ACT_KINDS.concat(['기타']).map(function (k) {
                         return h('button', { type: 'button', class: 'act-chip', 'data-k': k, 'aria-pressed': actUi.pick === k ? 'true' : 'false', onclick: function () { actUi.pick = actUi.pick === k ? '' : k; render(); if (actUi.pick === '기타') setTimeout(function () { var el = document.querySelector('[data-fk="act-etc"]'); if (el) el.focus(); }, 0); } }, k);
                     })), etc,
-                    h('button', { type: 'button', class: 'btn btn-sm act-go', 'data-act': 'act-start', 'data-fk': 'act-start', disabled: !actUi.pick, title: actUi.pick ? '' : '먼저 할 일을 골라 주세요', onclick: actStart }, '▶ 시작'));
+                    h('button', { type: 'button', class: 'btn btn-sm act-go', 'data-act': 'act-start', 'data-fk': 'act-start', disabled: !actUi.pick, title: actUi.pick ? '' : '먼저 할 일을 골라 주세요', onclick: actStart }, '▶ 시작'),
+                    h('button', { type: 'button', class: 'btn btn-sm act-add', 'data-act': 'act-add', title: '재부팅·창 닫힘 등으로 빠진 기록을 직접 넣기', onclick: function () { actForm(null); } }, '+ 빠진 기록 넣기'));
             }
             return h('div', { class: 'act-bar' + (run ? ' run' : ''), 'data-act-bar': '1' }, top,
                 logs.length ? h('ol', { class: 'act-log', 'aria-label': (day === ymd(new Date()) ? '오늘' : koDate(day)) + ' 근무 기록' }, logs.map(function (a) {
-                    return h('li', {}, many ? h('span', { class: 'act-who' }, staffName(a.sid)) : null, h('b', {}, a.k), h('span', {}, actHm(a.s) + ' ~ ' + actHm(a.e)), h('em', {}, actDur(a.e - a.s)));
+                    return h('li', {}, many ? h('span', { class: 'act-who' }, staffName(a.sid)) : null, h('b', {}, a.k), h('span', {}, actHm(a.s) + ' ~ ' + actHm(a.e)), h('em', {}, actDur(a.e - a.s)),
+                        actCanEdit(a) ? h('button', { type: 'button', class: 'act-ed-s', 'data-act': 'act-edit', title: '이 기록 고치기·지우기', 'aria-label': a.k + ' 기록 고치기', onclick: function () { actForm(a); } }, '고치기') : null);
                 })) : null);
         }
         setInterval(function () { [].forEach.call(document.querySelectorAll('.act-el'), function (el) { el.textContent = actDur(Date.now() - (+el.getAttribute('data-s') || Date.now())); }); }, 15000);
@@ -3511,9 +3578,9 @@
         function reportMeta() {
             var now = new Date(), when = (now.getMonth() + 1) + '월 ' + now.getDate() + '일 (' + WEEK[now.getDay()] + ') ' + pad(now.getHours()) + ':' + pad(now.getMinutes()), f = [];
             var sub = state.date ? '기준일 ' + koDate(state.date) + (state.date === ymd(now) ? ' (오늘)' : '') : '전체 업무 (마감일 구분 없이)';
-            if (state.who !== 'all') f.push('담당 ' + (state.who === 'me' ? staffName(me) : state.who === 'none' ? '미지정' : staffName(state.who)));
+            var who = state.who === 'all' ? '전체' : state.who === 'me' ? staffName(me) : state.who === 'none' ? '미지정' : staffName(state.who);
             if (state.status !== 'all') f.push('상태 ' + STATUS.filter(function (x) { return x.v === state.status; })[0].t);
-            return { sub: sub, filters: f.join(', '), when: when };
+            return { sub: sub, filters: f.join(', '), when: when, who: who };
         }
         function buildReportCanvas(list, meta, kind) {
             var F = REPORT_FONT, W = 1000, PAD = 36, MAXROWS = 120, today = ymd(new Date()), isDoing = kind === 'doing';
@@ -3542,6 +3609,15 @@
             g.fillStyle = '#E6EBD3'; g.font = '600 22px ' + F; g.fillText(meta.sub, PAD, 98);
             if (meta.filters) { g.fillStyle = '#B9C29F'; g.font = '500 17px ' + F; g.fillText(meta.filters, PAD, 124); }
             g.textAlign = 'right'; g.fillStyle = '#FFD700'; g.font = '800 21px ' + F; g.fillText('사거리인터넷', W - PAD, 60); g.textAlign = 'left';
+            if (meta.who) {   // 가운데 빈칸: 담당 이름 크게
+                var wx = 600, fs = 56; g.font = '900 ' + fs + 'px ' + F;
+                while (g.measureText(meta.who).width > 330 && fs > 28) { fs -= 2; g.font = '900 ' + fs + 'px ' + F; }
+                var ww = g.measureText(meta.who).width, bx = wx - ww / 2 - 26, by = (headH - 84) / 2 + 6;
+                g.font = '800 17px ' + F; var lw = g.measureText('담당').width + 22;
+                rrect(g, bx - lw - 8, by + 24, lw, 34, 17, '#4A5222'); g.fillStyle = '#E6EBD3'; g.textAlign = 'center'; g.fillText('담당', bx - lw / 2 - 8, by + 47);
+                rrect(g, bx, by, ww + 52, 84, 16, '#FFD700');
+                g.fillStyle = '#2D3214'; g.font = '900 ' + fs + 'px ' + F; g.fillText(meta.who, wx, by + 42 + fs * 0.36); g.textAlign = 'left';
+            }
 
             // 요약 (완료 / 진행 / 마감 지남)
             var doneN = list.filter(function (t) { return t.status === 'done' && !t.ext; }).length, extN = list.filter(function (t) { return !!t.ext; }).length, openN = list.length - doneN - extN;
@@ -3952,7 +4028,7 @@
                 if (info.changedLocal || info.changedRev || info.pushed || info.marked) saveDb();
                 var healed = 0; try { healed = autoTaskHeal(); } catch (he) { healed = 0; }
                 if (healed) { saveDb(); info.changedLocal = true; requestSync(DRIVE_PUSH_DELAY_MS); }   // 빠졌던 담당자 할 일을 다시 넣었으면 바로 올림
-                if (info.changedLocal || !wasOk) render();
+                if (info.changedLocal || !wasOk) render(); else actSvMark();
                 fetchAcctQuiet();
                 if (info.conflicts) toast('같은 항목을 동시에 고친 내용이 있어서 한쪽을 "[충돌본]"으로 함께 보관했어요. 확인한 뒤 필요 없는 쪽을 삭제해 주세요.');
                 return { ok: true, changed: info.changedLocal, pushed: info.pushed, conflicts: info.conflicts };
@@ -3962,13 +4038,14 @@
                 var key = e && (e.code === 'bad_key' || e.code === 'decrypt');
                 var msg = driveErrText(e), changed = driveState.status !== (key ? 'keyerror' : 'error') || driveState.msg !== msg;
                 driveState = { status: key ? 'keyerror' : 'error', at: driveState.at, msg: msg };
-                if (changed) render();
+                if (changed) render(); else actSvMark();
                 return { ok: false, error: e };
             });
         }
                 function syncJob(fn) { var p = syncChain.then(fn); syncChain = p.catch(function () { /* 다음 작업은 계속 */ }); return p; }
         function runSync() {   // 자동 동기화: 이미 대기 중인 게 있으면 합침, 팀 코드가 틀린 상태면 멈춤
             if (!driveOn() || !authed || accountGate() || driveState.status === 'keyerror') return Promise.resolve({ ok: false });
+            pushArmed = false;
             if (syncQueued) return syncChain;
             syncQueued = true;
             syncChain = syncChain.then(function () { syncQueued = false; return doSync(); }).catch(function () { return { ok: false }; });
@@ -3976,8 +4053,12 @@
         }
         function requestSync(delay) {
             if (!driveOn() || !authed || accountGate() || driveState.status === 'keyerror') return;
-            clearTimeout(pushTimer); pushTimer = setTimeout(function () { runSync(); }, delay || 0);
+            clearTimeout(pushTimer); pushArmed = true; pushTimer = setTimeout(function () { pushArmed = false; runSync(); }, delay || 0);
         }
+        function flushSync() { if (pushArmed && authed && db) { clearTimeout(pushTimer); pushArmed = false; runSync(); } }   // 창을 닫거나 숨길 때: 기다리던 저장을 바로 올림
+        window.addEventListener('pagehide', flushSync);
+        document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flushSync(); });
+        window.addEventListener('beforeunload', function (e) { if (actUnsaved()) { flushSync(); e.preventDefault(); e.returnValue = ''; } });   // 실업 기록이 아직 서버에 안 올라갔으면 한 번 더 확인
         function startPoll() { stopPoll(); pollTimer = setInterval(function () { if (document.visibilityState === 'visible') runSync(); }, DRIVE_POLL_MS); }
         function stopPoll() { if (pollTimer) clearInterval(pollTimer); pollTimer = null; }
         document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') requestSync(300); });
