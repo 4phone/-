@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-CN9rOasGRPhTHHts5Ngi+FIP4W6nADl2YRWdC/GeM9w='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-9leIOc8aj7h6cMmC0pnhT0GE6ga56g2kJ4SaT1P3ouQ='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1283,6 +1283,7 @@
         .phc-d.sun:not(.on) { color: #E3A3A3; } .phc-d.sat:not(.on) { color: #9FB3D9; }
         .phc-w .sun { color: #D04848; } .phc-w .sat { color: #3B6CC0; }
         .phc-tip { margin: 8px 0 0; font-size: 12.5px; color: var(--muted); }
+        .ph-kinds { display: flex; flex-wrap: wrap; margin-bottom: 10px; } .ph-kinds button { flex: 1 1 auto; }
         .ph-cap { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; }
         .mph-day { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
         .mph-day .ph-tip { flex-basis: 100%; margin: 4px 0; }
@@ -1845,7 +1846,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-30.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-30.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -7429,6 +7430,14 @@
                 h('p', { class: 'phc-tip' }, Object.keys(marks).some(function (k) { return k.slice(0, 7) === ym; }) ? '색이 있는 날이 단가표가 바뀐(넣은) 날이에요. 눌러서 그날 단가표를 보세요.' : '이 달에는 넣은 단가표가 없어요. ◀ ▶로 달을 바꿔 보세요.'));
         }
         var phSt = { ym: '', day: '' };
+        function phKindSeg(k) {   // 날짜별 단가표 창 위: 🌐 유선·CCTV / 📱 모바일 / 🧴 렌탈 (모바일·렌탈은 기록 보관함 권한이 있는 계정만)
+            var can = glCan();
+            return h('div', { class: 'gl-seg ph-kinds', role: 'group', 'aria-label': '단가표 종류' },
+                [['net', '🌐 유선 · CCTV', polHistory], ['mob', '📱 모바일', mphDialog], ['rent', '🧴 렌탈 수수료', rfhDialog]].map(function (x) {
+                    return h('button', { type: 'button', 'data-act': 'ph-kind-' + x[0], 'aria-pressed': k === x[0] ? 'true' : 'false', disabled: x[0] !== 'net' && !can ? true : null, title: x[0] !== 'net' && !can ? '대표님과 가입고객리스트 권한이 있는 계정만 볼 수 있어요' : '', onclick: function () { if (k !== x[0]) x[2](); } }, x[1]);
+                }));
+        }
+        function phOpen() { var m = state.pol.rent ? 'rent' : state.pol.mob ? 'mob' : 'net'; if (m !== 'net' && !glCan()) m = 'net'; (m === 'rent' ? rfhDialog : m === 'mob' ? mphDialog : polHistory)(); }   // [📅 날짜별 단가표]: 보고 있는 단가표 종류부터
         function polHistory() {   // [이전 단가표]: 달력(단가표가 있는 날만) → 그날 단가표 목록 → 보기(이 기기만) / 대표는 지금 단가표로 바꾸기
             var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide';
             var cur = polCur(), shown = polShown(), boss = isBoss();
@@ -7447,12 +7456,12 @@
                         h('small', {}, ((P.data && P.data.date) ? P.data.date + ' 기준 · ' : '') + '불러온 시각 ' + (at.getMonth() + 1) + '/' + at.getDate() + ' ' + pad(at.getHours()) + ':' + pad(at.getMinutes()) + (P.by ? ' · ' + P.by : '') +
                             (P.act ? ' · ' + (function (t) { return (t.getMonth() + 1) + '/' + t.getDate() + ' ' + pad(t.getHours()) + ':' + pad(t.getMinutes()); })(new Date(P.act)) + ' 지금 단가표로 바꿈' + (P.actBy ? '(' + P.actBy + ')' : '') : ''))),
                     h('div', { class: 'ph-btns' },
-                        h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ph-view', onclick: function () { state.pol.view = isCur ? '' : P.id; polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); closeDlg(); render(); try { window.scrollTo(0, 0); } catch (e) { /* 무시 */ } } }, isCur ? '지금 단가표 보기' : '보기'),
+                        h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ph-view', onclick: function () { state.pol.mob = false; state.pol.rent = false; state.pol.view = isCur ? '' : P.id; polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); closeDlg(); render(); try { window.scrollTo(0, 0); } catch (e) { /* 무시 */ } } }, isCur ? '지금 단가표 보기' : '보기'),
                         boss && !isCur ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'ph-set', onclick: function () { polSetCur(P); } }, '이 단가표로 바꾸기') : null));
             });
             var cal = phCal(phSt.ym, marks, phSt.day, function (k) { phSt.day = phSt.day === k ? '' : k; polHistory(); }, function (ym) { phSt.ym = ym; phSt.day = ''; polHistory(); });
-            var form = h('form', { novalidate: true }, h('div', { class: 'dlg-head' }, '단가표 날짜별 보기 (달력)'),
-                h('div', { class: 'dlg-body' }, cal,
+            var form = h('form', { novalidate: true, 'data-phk': 'net' }, h('div', { class: 'dlg-head' }, '날짜별 단가표 (달력)'),
+                h('div', { class: 'dlg-body' }, phKindSeg('net'), h('p', { class: 'ph-tip' }, '유선 단가표 하나에 인터넷 · TV · 소호 · CCTV · 유심동판이 함께 들어 있어요.'), cal,
                     h('div', { class: 'ph-cap' }, phSt.day ? h('b', {}, koDate(phSt.day) + ' 단가표') : h('b', {}, +phSt.ym.slice(5) + '월 단가표 ' + list.length + '개'), phSt.day ? h('button', { type: 'button', class: 'link-btn', 'data-act': 'ph-day-all', onclick: function () { phSt.day = ''; polHistory(); } }, '이 달 전체 보기') : null),
                     h('p', { class: 'ph-tip' }, '날짜를 눌러 그날 단가표를 볼 수 있어요. 하루에 두 번 이상 바뀌면 "15:00 이후 변경건"처럼 시간이 붙어요. [보기]는 이 기기에서만 보이고 다른 직원 화면은 그대로예요.' + (boss ? ' [이 단가표로 바꾸기]는 모든 직원 화면과 홈페이지에 반영돼요.' : '')),
                     h('div', { class: 'ph-list' }, rows.length ? rows : h('div', { class: 'pol-empty' }, '이 달에는 단가표가 없어요.'))),
@@ -8291,7 +8300,7 @@
             ibCall('mpGet', { rev: force ? -1 : mp.rev }).then(function (res) {
                 if (res.same) return null;
                 if (!res.blob) { if (mp.hist) mp.live = { v: 1, dealers: [] }; else mp.data = { v: 1, dealers: [] }; mp.rev = res.rev || 0; return null; }
-                return ensureTeam().then(function (t) { return decryptText(t.encKey, res.blob, MP_AAD); }).then(function (txt) { var nd = mpNorm(JSON.parse(txt)); if (mp.hist) mp.live = nd; else mp.data = nd; mp.rev = res.rev; });
+                return ensureTeam().then(function (t) { return decryptText(t.encKey, res.blob, MP_AAD); }).then(function (txt) { var nd = mpNorm(JSON.parse(txt)); if (mp.rentHist) { mp.rentLive = nd.rent; nd.rent = mp.data && mp.data.rent; } if (mp.hist) mp.live = nd; else mp.data = nd; mp.rev = res.rev; });
             }).then(function () { mp.busy = false; mp.at = Date.now(); if (state.view === 'policy' && (state.pol.mob || state.pol.rent)) render(); mfXRefresh(); },
                 function (e) { mp.busy = false; mp.at = Date.now(); mp.err = driveErrText(e); if (state.view === 'policy' && (state.pol.mob || state.pol.rent)) render(); mfXRefresh(); });
         }
@@ -8305,23 +8314,24 @@
         function mphLoad(ym, force) {   // 그 달 모바일 단가표 기록 받기
             if (!force && mph.cache[ym]) return Promise.resolve(mph.cache[ym]);
             return glCall('glGet', { id: mphId(ym), rev: -1 }).then(function (res) {
-                if (!res.blob) return { rev: res.rev || 0, days: {} };
+                if (!res.blob) return { rev: res.rev || 0, days: {}, rent: {} };
                 return glDec(res.blob, GL_AAD + mphId(ym)).then(function (x) {
                     var days = {}; Object.keys(x && x.days || {}).forEach(function (k) { if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) return; var o = {}; Object.keys(x.days[k] || {}).slice(0, 30).forEach(function (nm) { var n = mpNorm({ dealers: [x.days[k][nm]] }).dealers[0]; if (n) o[n.name] = n; }); days[k] = o; });
-                    return { rev: res.rev, days: days };
+                    var rent = {}; Object.keys(x && x.rent || {}).forEach(function (k) { if (!/^\d{4}-\d{2}-\d{2}$/.test(k)) return; var f = rfNorm(x.rent[k]); if (f) rent[k] = f; });
+                    return { rev: res.rev, days: days, rent: rent };
                 });
             }).then(function (d) { mph.cache[ym] = d; return d; });
         }
-        function mphSave(day, dealers, tries) {   // 대표님: 그날 넣은 거래처 단가표를 기록에 더함 (같은 날 같은 거래처는 나중 것으로)
+        function mphSave(day, dealers, tries, rent) {   // 대표님: 그날 넣은 거래처 단가표(· 렌탈 수수료표)를 기록에 더함 (같은 날 같은 거래처는 나중 것으로)
             var ym = day.slice(0, 7);
             return mphLoad(ym, true).then(function (d) {
-                var next = { v: 1, ym: ym, days: JSON.parse(JSON.stringify(d.days)) };
-                next.days[day] = next.days[day] || {};
-                dealers.forEach(function (x) { next.days[day][x.name] = x; });
+                var next = { v: 1, ym: ym, days: JSON.parse(JSON.stringify(d.days)), rent: JSON.parse(JSON.stringify(d.rent || {})) };
+                if (dealers.length) { next.days[day] = next.days[day] || {}; dealers.forEach(function (x) { next.days[day][x.name] = x; }); }
+                if (rent) next.rent[day] = rent;
                 return glEnc(next, GL_AAD + mphId(ym)).then(function (blob) { return glCall('glPut', { id: mphId(ym), baseRev: d.rev, blob: blob }, 120000); })
-                    .then(function (res) { mph.cache[ym] = { rev: res.rev, days: next.days }; return true; });
+                    .then(function (res) { mph.cache[ym] = { rev: res.rev, days: next.days, rent: next.rent }; return true; });
             }).catch(function (e) {
-                if (e && e.code === 'conflict' && (tries || 0) < 2) return mphSave(day, dealers, (tries || 0) + 1);
+                if (e && e.code === 'conflict' && (tries || 0) < 2) return mphSave(day, dealers, (tries || 0) + 1, rent);
                 throw e;
             });
         }
@@ -8358,12 +8368,79 @@
                 if (!mp.hist) mp.live = mp.data;
                 r.dealers.sort(function (a, b) { var ia = DEALERS.indexOf(a.name), ib = DEALERS.indexOf(b.name); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
                 mp.data = { v: 1, dealers: r.dealers, rent: mp.live && mp.live.rent }; mp.hist = day; mp.idx = null; mp.dealer = '*';
+                state.view = 'policy'; state.pol.mob = true; state.pol.rent = false;
                 closeDlg(); render(); try { window.scrollTo(0, 0); } catch (e) { /* 무시 */ }
             }, function (e) { toast('기록을 불러오지 못했어요. ' + driveErrText(e)); });
+        }
+        var rfh = { view: null };
+        function rfDay(d) { var m = /^(\d{4})-(\d{2})(?:-(\d{2}))?/.exec(String(d && d.date || '')); return m ? m[1] + '-' + m[2] + '-' + (m[3] || '01') : ymd(new Date()); }   // 수수료표 날짜 (달만 있으면 1일)
+        function rfhAsOf(day) {   // 그날 기준 마지막으로 넣은 렌탈 수수료표 (그 달 + 지난 두 달 기록에서)
+            var ms = [0, 1, 2].map(function (n) { var t = new Date(+day.slice(0, 4), +day.slice(5, 7) - 1 - n, 1); return t.getFullYear() + '-' + pad(t.getMonth() + 1); });
+            return Promise.all(ms.map(function (ym) { return mphLoad(ym).catch(function () { return { rent: {} }; }); })).then(function (a) {
+                var all = {}; a.forEach(function (d) { Object.keys(d.rent || {}).forEach(function (k) { all[k] = d.rent[k]; }); });
+                var ks = Object.keys(all).filter(function (k) { return k <= day; }).sort(), k = ks[ks.length - 1];
+                return k ? { day: k, f: all[k] } : null;
+            });
+        }
+        function rfhView(day) {   // 그날 기준 렌탈 수수료표로 보기 (이 기기에서만 · 렌탈 화면에서만)
+            return rfhAsOf(day).then(function (r) {
+                if (!r) { toast(koDate(day) + ' 이전에 넣은 렌탈 수수료표 기록이 없어요.'); return; }
+                if (mp.hist) mphBack(true);
+                if (!mp.rentHist) mp.rentLive = mp.data ? mp.data.rent : null;
+                if (!mp.data) mp.data = { v: 1, dealers: [] };
+                mp.data.rent = r.f; mp.rentHist = day; mp.rentSrc = r.day; rt.sumKey = '';
+                state.view = 'policy'; state.pol.rent = true; state.pol.mob = false;
+                closeDlg(); render(); try { window.scrollTo(0, 0); } catch (e) { /* 무시 */ }
+            }, function (e) { toast('기록을 불러오지 못했어요. ' + driveErrText(e)); });
+        }
+        function rfhBack(quiet) { if (!mp.rentHist) return; if (mp.data) mp.data.rent = mp.rentLive || undefined; if (mp.data && !mp.data.rent) delete mp.data.rent; mp.rentLive = null; mp.rentHist = ''; mp.rentSrc = ''; rt.sumKey = ''; if (!quiet) { render(); toast('지금 렌탈 수수료표로 돌아왔어요.'); } }
+        function rfhOld(files) {   // 대표님: 지난 렌탈 수수료표 파일을 기록에만 넣기 (지금 수수료표는 그대로)
+            if (!isBoss() || !files || !files.length) return;
+            var arr = [].slice.call(files, 0, 12), ok = 0, bad = [];
+            arr.reduce(function (p, f0) {
+                return p.then(function () { return f0.text(); }).then(function (txt) {
+                    var d; try { d = JSON.parse(txt); } catch (e) { d = null; }
+                    if (!d || d.kind !== 'sageori-rentfee') { bad.push(f0.name); return; }
+                    var f = rfNorm(d); if (!f) { bad.push(f0.name); return; }
+                    f.at = f.at || Date.now(); f.by = f.by || staffName(me);
+                    return mphSave(rfDay(d), [], 0, f).then(function () { ok++; });
+                }).catch(function (e) { bad.push(f0.name + ' (' + driveErrText(e) + ')'); });
+            }, Promise.resolve()).then(function () {
+                toast('지난 렌탈 수수료표 ' + ok + '개를 날짜별 기록에 넣었어요.' + (bad.length ? ' (' + bad.length + '개는 못 넣음)' : ''));
+                if (bad.length) alert('못 넣은 파일\n\n' + bad.join('\n'));
+                if (document.getElementById('dlg').open && document.querySelector('#dlg [data-phk="rent"]')) rfhDialog();
+            });
+        }
+        function rfhDialog() {   // 🧴 렌탈 수수료표(A단가) 날짜별: 달력 (넣은 날만)
+            if (!glCan()) { toast('날짜별 렌탈 수수료표는 대표님과 가입고객리스트 권한이 있는 계정만 볼 수 있어요.'); return; }
+            var dlg = document.getElementById('dlg'), V = rfh.view || (rfh.view = { ym: (mp.rentHist || ymd(new Date())).slice(0, 7), day: '' });
+            var paint = function (d, err) {
+                dlg.textContent = ''; dlg.className = 'wide';
+                var marks = {}; if (d) Object.keys(d.rent || {}).forEach(function (k) { marks[k] = '수수료표'; });
+                var cal = d ? phCal(V.ym, marks, V.day, function (k) { V.day = V.day === k ? '' : k; paint(d); }, function (ym) { V.ym = ym; V.day = ''; go(); }) : h('div', { class: 'pol-empty' }, err || '기록을 불러오는 중이에요...');
+                var dayBox = null;
+                if (d && V.day && d.rent[V.day]) {
+                    var f = d.rent[V.day];
+                    dayBox = h('div', { class: 'mph-day' }, h('b', {}, koDate(V.day) + ' 넣은 렌탈 수수료표: '), h('span', { class: 'ph-chip view' }, (f.date || '') + ' · 모델 ' + f.rows.length + '개'),
+                        f.src ? h('p', { class: 'ph-tip' }, f.src) : null,
+                        h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'rfh-view', onclick: function () { rfhView(V.day); } }, '📅 ' + koDate(V.day) + ' 수수료표로 보기'));
+                }
+                var old = isBoss() ? h('label', { class: 'btn btn-sm', 'data-act': 'rfh-old', title: 'Claude가 보낸 지난 렌탈수수료표_….json 파일을 기록에만 넣어요 (지금 수수료표는 그대로)' }, '지난 수수료표 파일 기록에 넣기',
+                    h('input', { type: 'file', accept: '.json,application/json', multiple: true, hidden: true, onchange: function () { rfhOld(this.files); this.value = ''; } })) : null;
+                var form = h('form', { novalidate: true, 'data-phk': 'rent' }, h('div', { class: 'dlg-head' }, '날짜별 단가표 (달력)'),
+                    h('div', { class: 'dlg-body' }, phKindSeg('rent'), cal, dayBox,
+                        h('p', { class: 'ib-help' }, '렌탈 수수료표(A단가)를 넣을 때마다 날짜별로 기록돼요 (팀 키로 암호화해서 드라이브에 보관). 그날 기준 수수료표로 보면 렌탈 단가표의 [수수료(A)] 칸이 그날 금액으로 바뀌어요. 보기는 이 기기에서만이고, 다른 화면으로 가면 지금 수수료표로 돌아와요.')),
+                    h('div', { class: 'dlg-foot' }, old, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기')));
+                form.addEventListener('submit', function (e) { e.preventDefault(); });
+                dlg.appendChild(form); if (!dlg.open) showDlg(dlg);
+            };
+            var go = function () { paint(null); mphLoad(V.ym, true).then(function (d) { if (dlg.querySelector('[data-phk="rent"]')) paint(d); }, function (e) { paint(null, '기록을 불러오지 못했어요. ' + driveErrText(e)); }); };
+            go();
         }
         function mphBack(quiet) { if (!mp.hist) return; mp.data = mp.live || mp.data; mp.live = null; mp.hist = ''; mp.idx = null; if (!quiet) { render(); toast('지금 모바일 단가표로 돌아왔어요.'); } }
         function mphDialog() {   // 📅 날짜별 모바일 단가표: 달력 (기록이 있는 날만)
             if (!glCan()) { toast('날짜별 모바일 단가표는 대표님과 가입고객리스트 권한이 있는 계정만 볼 수 있어요.'); return; }
+            if (mp.rentHist) rfhBack(true);
             var dlg = document.getElementById('dlg'), V = mph.view || (mph.view = { ym: (mp.hist || ymd(new Date())).slice(0, 7), day: '' });
             var paint = function (d, err) {
                 dlg.textContent = ''; dlg.className = 'wide';
@@ -8378,8 +8455,8 @@
                 }
                 var old = isBoss() ? h('label', { class: 'btn btn-sm', 'data-act': 'mph-old', title: 'Claude가 보낸 지난 날짜 모바일단가표_….json 파일들을 한 번에 골라 기록에만 넣어요 (지금 단가표는 그대로)' }, '지난 단가표 파일 기록에 넣기',
                     h('input', { type: 'file', accept: '.json,application/json', multiple: true, hidden: true, onchange: function () { mphOld(this.files); this.value = ''; } })) : null;
-                var form = h('form', { novalidate: true, 'data-mph': '1' }, h('div', { class: 'dlg-head' }, '모바일 단가표 날짜별 보기 (달력)'),
-                    h('div', { class: 'dlg-body' }, cal, dayBox,
+                var form = h('form', { novalidate: true, 'data-mph': '1', 'data-phk': 'mob' }, h('div', { class: 'dlg-head' }, '날짜별 단가표 (달력)'),
+                    h('div', { class: 'dlg-body' }, phKindSeg('mob'), cal, dayBox,
                         h('p', { class: 'ib-help' }, '모바일 단가표를 넣을 때마다 그날 단가표가 자동으로 기록돼요 (가입고객리스트처럼 팀 키로 암호화해서 드라이브에 보관). 한 달 정산 때 그날 단가를 확인하세요. 보기는 이 기기에서만이고, 다른 화면으로 가면 지금 단가표로 돌아와요.')),
                     h('div', { class: 'dlg-foot' }, old, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기')));
                 form.addEventListener('submit', function (e) { e.preventDefault(); });
@@ -8394,7 +8471,7 @@
             file.text().then(function (txt) {
                 var d; try { d = JSON.parse(txt); } catch (e) { d = null; }
                 if (!d || d.kind !== 'sageori-mobile') { alert('모바일 단가표 변환 파일이 아니에요. Claude가 보낸 .json 파일을 골라 주세요.'); return; }
-                if (mp.hist) mphBack(true);   // 지난 단가표를 보는 중이면 지금 단가표로 돌아와서 넣음
+                if (mp.hist) mphBack(true); if (mp.rentHist) rfhBack(true);   // 지난 단가표를 보는 중이면 지금 단가표로 돌아와서 넣음
                 var inn = mpNorm(d), now = Date.now(), hday = mphDay(d);
                 if (!inn.dealers.length) { alert('파일 안에 단가표가 없어요.'); return; }
                 var names = inn.dealers.map(function (x) { return x.name + ' (표 ' + x.tables.length + '개)'; });
@@ -8940,6 +9017,7 @@
                 var d; try { d = JSON.parse(txt); } catch (e) { d = null; }
                 if (!d || d.kind !== 'sageori-rentfee') { alert('렌탈 수수료표 파일이 아니에요. Claude가 보낸 렌탈수수료표_….json 파일을 골라 주세요.'); return; }
                 var f = rfNorm(d); if (!f) { alert('파일 안에 수수료가 없어요.'); return; }
+                if (mp.rentHist) rfhBack(true); if (mp.hist) mphBack(true);   // 지난 기록을 보는 중이면 지금 단가표로 돌아와서 넣음
                 f.at = Date.now(); f.by = staffName(me);
                 if (!confirm('렌탈 수수료표를 넣을까요?\n\n' + (f.date || '') + ' · 모델 ' + f.rows.length + '개\n' + (f.src || '') + '\n\n렌탈 단가표의 [수수료(A)] 칸에 보여요. 모든 직원 화면에 바로 보이고, 사이트(홈페이지)에는 들어가지 않아요.')) return;
                 toast('암호화해서 저장하는 중이에요...');
@@ -8948,7 +9026,10 @@
                     if (!(e && e.code === 'conflict' && e.reply)) throw e;
                     mp.rev = e.reply.rev;
                     return (e.reply.blob ? ensureTeam().then(function (t) { return decryptText(t.encKey, e.reply.blob, MP_AAD); }).then(function (x) { return mpNorm(JSON.parse(x)); }) : Promise.resolve({ v: 1, dealers: [] })).then(put);
-                }).then(function () { render(); toast('렌탈 수수료표를 넣었어요. (모델 ' + f.rows.length + '개)'); }, function (e) { alert('렌탈 수수료표를 저장하지 못했어요.\n' + driveErrText(e)); });
+                }).then(function () {
+                    render(); toast('렌탈 수수료표를 넣었어요. (모델 ' + f.rows.length + '개)');
+                    if (glCan()) { var rd = ymd(new Date()); mphSave(rd, [], 0, f).then(function () { toast(koDate(rd) + ' 렌탈 수수료표를 날짜별 기록에도 남겼어요.'); }, function (e) { toast('날짜별 기록은 남기지 못했어요. ' + driveErrText(e)); }); }
+                }, function (e) { alert('렌탈 수수료표를 저장하지 못했어요.\n' + driveErrText(e)); });
             });
         }
         function rtFeeTd(c, p, x) {
@@ -9015,7 +9096,12 @@
                 h('div', { class: 'actions' }, polModeSeg(),
                     driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else clMemoOpen(); } }, '📝 상담 메모') : null,
                     h('button', { type: 'button', class: 'btn', 'data-act': 'rt-refresh', onclick: function () { rt.busy = false; rtLoad(true); mp.busy = false; mpLoad(true); toast('렌탈 상품을 새로 받고 있어요.'); render(); } }, '새로고침'),
-                    isBoss() ? h('label', { class: 'btn btn-primary', 'data-act': 'rf-import' }, '렌탈 수수료표 불러오기', h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: function () { rfImport(this.files && this.files[0]); this.value = ''; } })) : null));
+                    h('button', { type: 'button', class: 'btn', 'data-act': 'rfh-open', title: '유선 · 모바일 · 렌탈 단가표를 날짜별로 (달력)', onclick: phOpen }, '📅 날짜별 단가표'),
+                    isBoss() && !mp.rentHist ? h('label', { class: 'btn btn-primary', 'data-act': 'rf-import' }, '렌탈 수수료표 불러오기', h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: function () { rfImport(this.files && this.files[0]); this.value = ''; } })) : null));
+            if (mp.rentHist) head = h('div', {}, head, h('div', { class: 'ph-viewbar', role: 'status', 'data-rfh-bar': '1' },
+                h('span', {}, '📅 ', h('b', {}, koDate(mp.rentHist)), ' 기준 렌탈 수수료표(A단가)를 보는 중이에요 — ', mp.rentSrc ? +mp.rentSrc.slice(5, 7) + '월 ' + +mp.rentSrc.slice(8) + '일에 넣은 수수료표' : '', ' · 이 기기에서만'),
+                h('div', { class: 'ph-btns' }, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'rfh-day', onclick: rfhDialog }, '다른 날짜'),
+                    h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'rfh-back', onclick: function () { rfhBack(); } }, '지금 수수료표로 돌아가기'))));
             if (!rt.data && !rt.busy && !rt.err) setTimeout(function () { rtLoad(false); }, 0);
             if (!rt.data) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, rt.err || '렌탈 상품을 불러오는 중이에요... (홈페이지 렌탈 페이지와 같은 정보)')));
             var items = rt.data.items, words = rtWords(rt.q), cnt = Object.create(null), FR = mp.data && mp.data.rent, hasFee = !!FR;
@@ -9218,7 +9304,7 @@
                 h('div', { class: 'actions' }, polModeSeg(),
                     driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else { clMemoOpen(); if (cl.memo && cl.memo.P && cl.memo.P.kind !== 'mob' && !clHasText(clMemoSheet() || { cols: [] }, cl.memo.P.values())) cl.memo.P.setKind('mob'); } } }, '📝 상담 메모') : null,
                     h('button', { type: 'button', class: 'btn', 'data-act': 'mp-refresh', onclick: function () { mp.busy = false; mpLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침'),
-                    glCan() ? h('button', { type: 'button', class: 'btn', 'data-act': 'mph-open', title: '모바일 단가표를 넣은 날을 달력으로 보고, 그날 단가표로 볼 수 있어요', onclick: mphDialog }, '📅 날짜별 단가표') : null,
+                    h('button', { type: 'button', class: 'btn', 'data-act': 'mph-open', title: '유선 · 모바일 · 렌탈 단가표를 날짜별로 (달력)', onclick: phOpen }, '📅 날짜별 단가표'),
                     boss && !mp.hist ? h('label', { class: 'btn btn-primary', 'data-act': 'mp-import' }, '모바일 단가표 불러오기', file) : null));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '모바일 단가표는 공유 저장소를 연결한 기기에서 볼 수 있어요.')));
             var histBar = mp.hist ? h('div', { class: 'ph-viewbar', role: 'status', 'data-mph-bar': '1' },
@@ -9294,7 +9380,7 @@
             var P = polShown(), CUR = polCur(), S = state.pol, boss = isBoss(), viewing = !!(P && CUR && P !== CUR);
             var head = h('div', { class: 'page-head' }, h('h1', {}, '상담하기'),
                 h('div', { class: 'actions' }, polModeSeg(), driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else clMemoOpen(); } }, '📝 상담 메모') : null, refreshBtn(),
-                    (db.policies || []).length > 1 ? h('button', { type: 'button', class: 'btn', 'data-act': 'pol-history', onclick: polHistory }, '이전 단가표') : null,
+                    (db.policies || []).length ? h('button', { type: 'button', class: 'btn', 'data-act': 'pol-history', title: '유선 · 모바일 · 렌탈 단가표를 날짜별로 (달력)', onclick: polHistory }, '📅 날짜별 단가표') : null,
                     boss ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'pol-import', onclick: polImport }, '단가표 불러오기') : null));
             if (!P) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, boss ? '아직 단가표가 없어요. 오른쪽 위 [단가표 불러오기]로 Claude가 보낸 단가표 파일을 넣어 주세요.' : '아직 단가표가 없어요. 대표님이 단가표를 넣으면 여기에 보여요.')));
             var D = P.data, at = new Date(P.at), ageDays = Math.floor((Date.now() - P.at) / 86400000);
@@ -13554,6 +13640,7 @@
         function render() {
             if (taskDrag && authed && db) return;   // 업무를 끄는 중: 놓으면 바로 다시 그림
             if (mp.hist && !(state.view === 'policy' && state.pol.mob)) mphBack(true);   // 지난 모바일 단가표 보기는 그 화면에서만
+            if (mp.rentHist && !(state.view === 'policy' && state.pol.rent)) rfhBack(true);   // 지난 렌탈 수수료표 보기도 렌탈 화면에서만
             var app = document.getElementById('app');
             var ae = document.activeElement, fk = ae && ae.getAttribute ? ae.getAttribute('data-fk') : null, fkSel = null;
             if (fk && (ae.tagName === 'TEXTAREA' || (ae.tagName === 'INPUT' && /^(text|search|tel)$/.test(ae.type)))) { try { fkSel = [ae.selectionStart, ae.selectionEnd]; } catch (e) { fkSel = null; } }
