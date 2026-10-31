@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ivDC+IiJPTWVy07wWiY2ddAaPvcm7xCOZEG42YuVzEU='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7Sh9CvmP1Q06E71ca2fxHxICesvcDKm0wltHblWpQiw='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -514,7 +514,14 @@
         .hd-row { display: flex; gap: 10px; align-items: flex-start; } .hd-row > b { padding-top: 13px; min-width: 32px; font-size: 13px; }
         .cal-off { font-size: 11px; color: #B3261E; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .cal-off-day { font-size: 13px; color: #B3261E; font-weight: 700; }
-        @media (max-width: 640px) { .nav button[data-fk="nav-gl"] { grid-column: span 2; } }
+        @media (max-width: 900px), (max-height: 520px) and (orientation: landscape) { .nav button[data-fk="nav-gl"] { grid-column: span 2; } }   /* '가입고객리스트'가 옆 칸과 겹치지 않게 */
+        /* 빠르게: 긴 목록은 화면에 보이는 부분만 배치 계산 (스크롤하면 그때 계산 · 찾기(Ctrl+F)·인쇄는 그대로) */
+        .today-tasks .panel > .task-row { content-visibility: auto; contain-intrinsic-size: auto 66px; overflow-clip-margin: 8px; }
+        .today-tasks .panel > .task-row:focus-visible { outline-offset: -3px; }
+        .notices-list > .notice, .panel > .notice { content-visibility: auto; contain-intrinsic-size: auto 130px; overflow-clip-margin: 8px; }
+        .pol-card { content-visibility: auto; contain-intrinsic-size: auto 560px; }
+        .reg-box > .reg-row, .dl-grp > .dl-row { content-visibility: auto; contain-intrinsic-size: auto 48px; overflow-clip-margin: 8px; }
+        @media print { .today-tasks .panel > .task-row, .panel > .notice, .pol-card, .reg-box > .reg-row, .dl-grp > .dl-row { content-visibility: visible; } }
         @media (max-width: 700px) { .hd-cell { min-height: 64px; padding: 3px; } .hd-chip { font-size: 10px; padding: 0 3px; border-left-width: 2px; } .hd-n { display: none; } .hd-row { flex-direction: column; gap: 0; } .hd-row > b { padding-top: 4px; } }
         .btn-close { background: #C2410C; border-color: #C2410C; color: #fff; font-weight: 800; }
         .btn-close:hover { background: #9A3412; border-color: #9A3412; }
@@ -1197,6 +1204,11 @@
         .mf-qc-foot { flex-wrap: wrap; align-items: center; gap: 8px; }
         .mf-qc-prog { margin-right: auto; font-weight: 800; color: #9A4D00; font-size: 14px; } .mf-qc-prog.all { color: #146B3A; }
         @media (pointer: coarse) { .mf-qc-in { width: 26px; height: 26px; } }
+        @media (pointer: coarse) and (min-width: 701px) {   /* 태블릿: A4 모양은 그대로, 입력칸·▾ 버튼만 손가락 크기로 (저장 그림 .mf-snap 은 그대로) */
+            .mf-sheet:not(.mf-snap) .mf-in { padding-top: 6px; padding-bottom: 6px; min-height: 34px; }
+            .mf-sheet:not(.mf-snap) .mf-dd { min-height: 34px; min-width: 36px; }
+            .mf-sheet:not(.mf-snap) .mf-ck input { width: 20px; height: 20px; }
+        }
         @media print { .mf-xpol { display: none !important; } }
         .mf-info { color: var(--mf-green); font-size: 12.5px; margin-top: 4px; } .mf-info.red { color: var(--mf-red); }
         .mf-note { color: var(--mf-red); font-size: 12.5px; }
@@ -1913,7 +1925,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-31.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-31.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -4264,9 +4276,15 @@
         /* ---------- 새 화면(버전) 알림: 하루 종일 켜 둔 기기도 새로 올린 화면으로 바꾸게 ---------- */
         var newVer = '';
         function verNum(v) { var m = /^(\d{4})-(\d{2})-(\d{2})\.(\d+)$/.exec(v || ''); return m ? (+m[1]) * 1e8 + (+m[2]) * 1e6 + (+m[3]) * 1e4 + (+m[4]) : 0; }
+        var verTag = '';   // 지난번에 받은 화면 파일 표시(ETag) — 같으면 파일 전체(1.3MB)를 다시 받지 않음
         function checkVersion() {
-            if (location.protocol === 'file:' || !window.fetch) return;
-            fetch(location.pathname + '?vc=' + Date.now(), { cache: 'no-store', credentials: 'same-origin' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
+            if (location.protocol === 'file:' || !window.fetch || document.hidden) return;   // 안 보는 창은 건너뜀 (다시 보면 바로 확인)
+            var url = location.pathname + '?vc=' + Date.now();
+            var head = verTag ? fetch(url, { method: 'HEAD', cache: 'no-store', credentials: 'same-origin' }).then(function (r) { return r.ok ? (r.headers.get('etag') || r.headers.get('last-modified') || '') : ''; }, function () { return ''; }) : Promise.resolve('');
+            head.then(function (tg) {
+                if (tg && tg === verTag) return '';   // 바뀐 게 없음
+                return fetch(url, { cache: 'no-store', credentials: 'same-origin' }).then(function (r) { if (!r.ok) return ''; verTag = r.headers.get('etag') || r.headers.get('last-modified') || ''; return r.text(); });
+            }).then(function (t) {
                 var m = /var APP_VERSION = '([^']+)'/.exec(t || ''), v = m ? m[1] : '';
                 if (!v || verNum(v) <= verNum(APP_VERSION) || v === newVer) return;
                 if (!authed) { location.reload(); return; }   // 로그인 전이면 바로 새 화면으로
@@ -13838,6 +13856,7 @@
 
         /* ---------- 표 그리기 (엑셀 모양 그대로: 열 너비 · 줄 높이 · 병합 · 색 · 테두리 · 표시 형식) ----------
            확대/축소는 열 너비·줄 높이·글자 크기를 같은 비율로 바꿔서 그려요 (화면 고정 머리글이 칸을 가리지 않게) */
+        var glDragOff = null; window.addEventListener('mouseup', function () { if (glDragOff) glDragOff(); });
         function glEsc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
         function glStyleCss(S, scope, z) {
             return S.st.map(function (t, i) {
@@ -14132,7 +14151,7 @@
                 drag = true; el.focus({ preventScroll: true });
             });
             el.addEventListener('mousemove', function (e) { if (!drag || !(e.buttons & 1)) { drag = false; return; } var td = e.target.closest('td'); if (!td) return; var r = +td.getAttribute('data-r'), c = +td.getAttribute('data-c'); if (!E.sel2 || E.sel2.r !== r || E.sel2.c !== c) { if (r === E.sel.r && c === E.sel.c && !E.sel2) return; E.sel2 = { r: r, c: c }; glHilite(E); glBarPaint(E); } });
-            window.addEventListener('mouseup', function () { drag = false; });
+            glDragOff = function () { drag = false; };   // 화면 전체 mouseup 은 한 번만 걸어 둠 (표를 다시 그려도 쌓이지 않게)
             el.addEventListener('dblclick', function (e) { if (e.target.closest('td')) { var inp = document.getElementById('gl-in'); if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); } } });
             el.addEventListener('keydown', function (e) {
                 if (e.isComposing) return;
