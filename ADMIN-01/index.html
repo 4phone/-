@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-jKl+5UX6IxvvfHD8Wb/iiSTCP0y0XXiilerrQWD1LZg='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-fF0pIcXEbxoS9eaA+x3R7BzKNpex8PSO4gYi7KRjKk4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1925,7 +1925,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-31.9';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-31.10';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -3056,7 +3056,7 @@
         }
         function actForReport() {   // 진행중보고: 지금 하는 일 (진행 중) + 오늘 기록 (담당 필터 기준)
             var day = state.date || ymd(new Date());
-            var whoOk = function (a) { return state.who === 'all' ? true : state.who === 'me' || state.who === 'none' ? a.sid === me : a.sid === state.who; };
+            var whoOk = function (a) { if (!isBoss()) return a.sid === me; return state.who === 'all' ? true : state.who === 'me' || state.who === 'none' ? a.sid === me : a.sid === state.who; };   // 직원은 본인 기록만
             var all = (db.acts || []).filter(whoOk);
             var run = all.filter(function (a) { return !a.e; }).sort(function (a, b) { return a.s - b.s; });
             var logs = all.filter(function (a) { return a.e && ymd(new Date(a.s)) === day; }).sort(function (a, b) { return a.s - b.s; });
@@ -3489,7 +3489,8 @@
         function openCloseReport(date, who) {
             if (!db) return;
             date = date || (isYmd(state.date || '') ? state.date : ymd(new Date()));
-            var fixed = isStaffUser();
+            var fixed = isStaffUser() || !isBoss();   // 직원은 본인 마감보고만
+            if (fixed) who = me;
             if (who == null) who = fixed ? me : (state.who && state.who !== 'all' && state.who !== 'none' && staffById(state.who) ? state.who : me);
             var key = rptKey(date, who), f = rptDraft[key] || (rptDraft[key] = { mob: '', wired: '', saved: '', savedTouched: false, reason: '', notes: [''] });
             var D = rptData(date, who);
@@ -3629,7 +3630,7 @@
         function reportMeta() {
             var now = new Date(), when = (now.getMonth() + 1) + '월 ' + now.getDate() + '일 (' + WEEK[now.getDay()] + ') ' + pad(now.getHours()) + ':' + pad(now.getMinutes()), f = [];
             var sub = state.date ? '기준일 ' + koDate(state.date) + (state.date === ymd(now) ? ' (오늘)' : '') : '전체 업무 (마감일 구분 없이)';
-            var who = state.who === 'all' ? '전체' : state.who === 'me' ? staffName(me) : state.who === 'none' ? '미지정' : staffName(state.who);
+            var who = !isBoss() ? staffName(me) : state.who === 'all' ? '전체' : state.who === 'me' ? staffName(me) : state.who === 'none' ? '미지정' : staffName(state.who);   // 직원 보고는 항상 본인 이름
             if (state.status !== 'all') f.push('상태 ' + STATUS.filter(function (x) { return x.v === state.status; })[0].t);
             return { sub: sub, filters: f.join(', '), when: when, who: who };
         }
@@ -3773,6 +3774,7 @@
         }
         function captureReport(list, kind) {
             var name = kind === 'doing' ? '진행중보고' : '마감보고';
+            if (!isBoss()) list = db.tasks.filter(function (t) { return t.staffId === me && (state.status === 'all' || t.status === state.status) && (!state.date || t.due === state.date); }).sort(taskSort);   // 직원은 본인 업무만 보고 (전체·다른 직원 보고 안 됨)
             if (!list.length && kind !== 'doing') { toast('보고할 업무가 없어요. 날짜나 담당자 조건을 확인해 주세요.'); return; }   // 진행중보고는 업무가 없어도 '진행 중 업무 없음'으로 보고
             var canvas;
             try { canvas = buildReportCanvas(list, reportMeta(), kind); } catch (e) { toast(name + ' 이미지를 만들지 못했어요.'); return; }
