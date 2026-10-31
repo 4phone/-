@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-t9aIj+fsfejRSaNYKjPRIkBue9dWTImIm7vxKymARG8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ivDC+IiJPTWVy07wWiY2ddAaPvcm7xCOZEG42YuVzEU='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1913,7 +1913,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-31.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-31.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -13288,27 +13288,48 @@
             var A = glKeyRows(appS), B = glKeyRows(xS); if (!A || !B) return null;
             var lim = Math.min(A.lim, B.lim), moved = Object.keys(A.lab).filter(function (t) { return t && B.lab[t] && A.lab[t] !== B.lab[t] && A.lab[t] <= lim && B.lab[t] <= lim; });
             if (moved.length >= 2) return { kind: 'head', moved: moved.length };
-            var isF = function (v) { return typeof v === 'string' && v.charAt(0) === '='; }, byKey = {}, same = {}, sh = {};
+            var isF = function (v) { return typeof v === 'string' && v.charAt(0) === '='; }, byKey = {}, same = {}, sh = {}, rowSh = {};
             B.rows.forEach(function (x) { byKey[x.key] = x.r; });
             A.rows.forEach(function (x) {
                 var rb = byKey[x.key]; if (!rb) return;
                 var ra = appS.cv[x.r] || {}, rx = xS.cv[rb] || {};
                 for (var c = 1; c <= lim; c++) {
                     var v = ra[c]; if (v == null || v === '' || isF(v)) continue;
-                    if (String(rx[c]) === String(v)) same[c] = (same[c] || 0) + 1; else if (String(rx[c + 1]) === String(v)) sh[c] = (sh[c] || 0) + 1;
+                    if (String(rx[c]) === String(v)) same[c] = (same[c] || 0) + 1; else if (String(rx[c + 1]) === String(v)) { sh[c] = (sh[c] || 0) + 1; (rowSh[x.r] = rowSh[x.r] || []).push(c); }
                 }
             });
             var bad = Object.keys(sh).map(Number).filter(function (c) { return sh[c] >= 3 && !same[c]; }).sort(function (a, b) { return a - b; });
-            return bad.length >= 2 ? { kind: 'data', c0: bad[0] } : null;
+            if (bad.length < 2) return null;
+            var last = 0; Object.keys(rowSh).forEach(function (r) { if (rowSh[r].some(function (c) { return bad.indexOf(c) >= 0; })) last = Math.max(last, +r); });   // 밀린 줄은 여기까지 (그 아래 앱에서 들어간 줄은 제자리)
+            return { kind: 'data', c0: bad[0], last: last };
         }
-        function glRealign(S, c0) {   // 한 칸씩 밀려(왼쪽으로) 들어간 내용 → c0 칸부터 오른쪽으로 한 칸씩 (수식 칸은 엑셀 것을 쓰므로 뺌)
+        function glRealign(S, c0, last) {   // 한 칸씩 밀려(왼쪽으로) 들어간 줄(머리글 아래 ~ last) → c0 칸부터 오른쪽으로 한 칸씩 (수식 칸은 엑셀 것을 쓰므로 뺌) · last 아래 줄은 그대로
             var H = glHead(S), lim = glLedgerLast(S, H), out = JSON.parse(JSON.stringify(glPack(S)));
-            for (var r = H.r + 1; r <= S.nr; r++) {
+            for (var r = H.r + 1; r <= Math.min(S.nr, last || S.nr); r++) {
                 var row = out.cv[r]; if (!row) continue;
                 for (var c = lim - 1; c >= c0; c--) { var v = row[c]; if (v != null && !(typeof v === 'string' && v.charAt(0) === '=')) row[c + 1] = v; else delete row[c + 1]; }
                 delete row[c0];
             }
             return glNormSheet(out);
+        }
+        function glFillFromApp(oldS, X) {   // 엑셀 모양으로 바꿀 때: 같은 고객 줄의 앱 값(액면단가·부가 등)을 엑셀이 빈 칸에 머리글 이름으로 채움 → 채운 칸 수
+            var A = glKeyRows(oldS), B = glKeyRows(X); if (!A || !B) return 0;
+            var oh = oldS.cv[A.H.r] || {}, byKey = {}, at = {}, used = {}, n = 0;
+            B.rows.forEach(function (x) { (byKey[x.key] = byKey[x.key] || []).push(x.r); at[x.r] = x.key; });
+            A.rows.forEach(function (x) {   // 같은 고객이 여러 줄이면(모바일·유선 등) 같은 자리 줄 → 남은 줄 순서로 하나씩
+                var rb = at[x.r] === x.key && !used[x.r] ? x.r : (byKey[x.key] || []).filter(function (r) { return !used[r]; })[0]; if (!rb) return;
+                used[rb] = 1;
+                var src = oldS.cv[x.r] || {}, dst = X.cv[rb] || (X.cv[rb] = {});
+                Object.keys(src).forEach(function (c) {
+                    c = +c; if (c > A.lim) return;
+                    var v = src[c]; if (v == null || v === '' || (typeof v === 'string' && v.charAt(0) === '=')) return;
+                    var t = String(oh[c] == null ? '' : oh[c]).replace(/\s/g, ''), nc = t ? glLabAlias(B.lab, t) : 0;
+                    if (!nc || nc > B.lim || (dst[nc] != null && dst[nc] !== '')) return;
+                    dst[nc] = v; n++;
+                });
+            });
+            X._head = undefined; X._reg = undefined;
+            return n;
         }
         function glImport(file) {   // 엑셀 불러오기: 새 시트는 더하고, 같은 이름의 시트는 엑셀 '내용'을 반영 (수식 칸은 그대로 · 지우지는 않음 · 반영 직전 내용은 보관본)
             if (!file || !isBoss()) return;
@@ -13336,8 +13357,8 @@
                     var X0 = glNormSheet(raw), lay = glLayoutDiff(E.S, X0);
                     if (lay) {   // 칸 순서가 바뀜(칸 추가) 또는 이미 밀려 들어간 시트: 엑셀 모양 그대로 + 앱에만 있는 고객 줄은 머리글 이름으로 맞춰 이어 붙임
                         var X = glNormSheet(JSON.parse(JSON.stringify(glPack(X0)))); if (E.S.rep) X.rep = E.S.rep;
-                        var oldS = lay.kind === 'data' ? glRealign(E.S, lay.c0) : E.S, extra = glAppOnly(oldS, X), nAp = extra.length ? glAppendRows(oldS, X, extra) : 0;
-                        merges.push({ id: ex.id, name: raw.name, E: E, m: { S: X, cells: glCount(X), rows: nAp, names: extra.map(function (q) { return q.name; }), chg: [], lay: lay } });
+                        var oldS = lay.kind === 'data' ? glRealign(E.S, lay.c0, lay.last) : E.S, nFill = glFillFromApp(oldS, X), extra = glAppOnly(oldS, X), nAp = extra.length ? glAppendRows(oldS, X, extra) : 0;
+                        merges.push({ id: ex.id, name: raw.name, E: E, m: { S: X, cells: glCount(X), rows: nAp, fill: nFill, names: extra.map(function (q) { return q.name; }), chg: [], lay: lay } });
                         return;
                     }
                     var m = glMergeIn(E.S, X0);
@@ -13348,7 +13369,7 @@
                 if (!sheets.length && !merges.length) { toast('엑셀과 지금 장부 내용이 같아요. 반영할 내용이 없어요.'); return; }
                 var who = function (a) { return a.slice(0, 10).join(', ') + (a.length > 10 ? ' 외 ' + (a.length - 10) + '명' : ''); };
                 var msg = '엑셀 내용을 가입고객리스트에 반영할까요?\n'
-                    + merges.map(function (x) { if (x.m.lay) return '\n• ' + x.name + ': ' + (x.m.lay.kind === 'head' ? '칸이 새로 생겨 칸 순서가 바뀌었어요' : '칸이 한 칸씩 밀려 들어가 있어요') + ' → 엑셀 모양 그대로 바꿔요' + (x.m.rows ? ' (앱에서만 들어간 고객 ' + x.m.rows + '줄은 머리글 이름에 맞춰 이어 붙임: ' + who(x.m.names) + ')' : ''); return '\n• ' + x.name + ': 바뀐 칸 ' + x.m.cells + '개' + (x.m.renum ? ' (순번 다시 매김 ' + x.m.renum + '칸 포함)' : '') + (x.m.rows ? ' · 새 고객 ' + x.m.rows + '줄 추가 (' + who(x.m.names) + ')' : '') + (x.m.chg.length ? '\n   내용이 바뀐 고객: ' + who(x.m.chg) : ''); }).join('')
+                    + merges.map(function (x) { if (x.m.lay) return '\n• ' + x.name + ': ' + (x.m.lay.kind === 'head' ? '칸이 새로 생겨 칸 순서가 바뀌었어요' : '칸이 한 칸씩 밀려 들어가 있어요 (' + x.m.lay.last + '번 줄까지 · 그 아래 줄은 제자리)') + ' → 엑셀 모양 그대로 바꿔요' + (x.m.fill ? ' · 앱에서 적은 값 ' + x.m.fill + '칸은 그대로 살림' : '') + (x.m.rows ? ' (앱에서만 들어간 고객 ' + x.m.rows + '줄은 머리글 이름에 맞춰 이어 붙임: ' + who(x.m.names) + ')' : ''); return '\n• ' + x.name + ': 바뀐 칸 ' + x.m.cells + '개' + (x.m.renum ? ' (순번 다시 매김 ' + x.m.renum + '칸 포함)' : '') + (x.m.rows ? ' · 새 고객 ' + x.m.rows + '줄 추가 (' + who(x.m.names) + ')' : '') + (x.m.chg.length ? '\n   내용이 바뀐 고객: ' + who(x.m.chg) : ''); }).join('')
                     + (sheets.length ? '\n• 새로 더할 시트 ' + sheets.length + '개: ' + sheets.slice(0, 6).map(function (s) { return s.name; }).join(', ') + (sheets.length > 6 ? ' 외' : '') : '')
                     + (same ? '\n• 내용이 같아 그대로 둘 시트 ' + same + '개' : '')
                     + '\n\n수식 칸은 그대로 두고, 엑셀에서 비어 있는 칸은 지우지 않아요. 앱에서 들어간 고객 줄도 그대로 남아요.'
@@ -13516,6 +13537,8 @@
             }
             return { H: H, lab: lab, lim: lim, rows: out };
         }
+        var GL_ALIAS = { '복지여부': '복지', '복지': '복지여부' };   // 같은 칸의 다른 머리글 이름
+        function glLabAlias(lab, t) { return lab[t] || (GL_ALIAS[t] ? lab[GL_ALIAS[t]] : 0) || 0; }
         function glAppOnly(oldS, newS) {   // 앱 장부에는 있는데 엑셀에는 없는 고객 줄
             var A = glKeyRows(oldS), B = glKeyRows(newS); if (!A || !B) return [];
             var have = {}; B.rows.forEach(function (x) { have[x.key] = 1; });
@@ -13534,7 +13557,7 @@
                 Object.keys(prev).forEach(function (c) { var v = prev[c]; if (+c <= B.lim && dst[c] == null && typeof v === 'string' && v.charAt(0) === '=' && !/^=자동_/.test(v)) dst[c] = '=' + glShift(v.slice(1), 1, 0); });   // 윗줄 수식을 내려 씀
                 Object.keys(src).forEach(function (c) {
                     c = +c; if (c > A.lim) return;
-                    var t = String(oh[c] == null ? '' : oh[c]).replace(/\s/g, ''), nc = t ? B.lab[t] : 0, v = src[c];
+                    var t = String(oh[c] == null ? '' : oh[c]).replace(/\s/g, ''), nc = t ? glLabAlias(B.lab, t) : 0, v = src[c];
                     if (!nc || nc > B.lim) return;
                     if (dst[nc] != null && dst[nc] !== '') return;   // 엑셀 쪽 그 줄에 이미 적힌 칸(순번·수식 등)은 그대로
                     dst[nc] = typeof v === 'string' && v.charAt(0) === '=' ? '=' + glShift(v.slice(1), r - x.r, nc - c) : v;
