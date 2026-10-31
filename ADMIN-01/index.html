@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-C6u4PL6C6ylCpImGYZ9aPSVfM3chjghlh+SqvQNzPbM='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8KOsc7tyQ0QChwYfK4KLeWM9+pJpkAjBCpx5MTDMyd8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1911,7 +1911,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-31.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-31.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -6631,7 +6631,8 @@
             // 부가서비스 추가 · 차감
             var lte = cls === '저가', ex = String(rec.extra || ''), tok = /미유치|미가입|없음/.test(ex) && ex.length <= 6 ? [] : mfXParts(ex, false).concat(ex.split(/\s+/).map(mfXNorm).filter(function (w) { return w.length >= 2; })), adj = 0, notes = [], warn = [];
             var dnote = (dl.notes || []).join(' ');
-            (dl.addons || []).forEach(function (a) {
+            if (feeKwMode(dl)) { var kg = feeAddonKw(dl, rec, lte); adj += kg.adj; notes = notes.concat(kg.notes); warn = warn.concat(kg.warn); }   // 키워드가 적힌 부가 정책 (성연): 정확히 맞춤 · 묶음 미유치
+            else (dl.addons || []).forEach(function (a) {
                 var an = String(a.note || '') + ' ' + String(a.miss || ''), exP = an.slice(Math.max(0, an.search(/제외/) - 80)), codes = (an.match(/제외[^]*/) || [''])[0].match(/\b[A-Z]\d{3}\b/g) || [];
                 var exc = lte && /LTE\s*전기종|LTE\s*(모델|단말|전체)\s*제외/i.test(an) ? 'LTE 단말' : lte && tyK === 'MNP' && /LTE\s*MNP\s*제외/i.test(an) ? 'LTE 번호이동' : lte && tyK === '010' && /저가\s*모델\s*010\s*신규/.test(an) && /제외/.test(an) ? '저가모델 신규' : dc === '공시' && /제외[^]*공시\s*판매/.test(an) ? '공시 개통' : codes.some(function (cd) { return String(hit.code || '').toUpperCase().indexOf(cd) >= 0; }) ? '제외 모델' : '';
                 if (exc) { warn.push(a.name.replace(/\s*\(.*$/, '').slice(0, 14) + '는 ' + exc + '이라 추가·차감 없음'); return; }
@@ -6646,6 +6647,33 @@
             });
             var pd = feePayDeduct(dl, rec, hit, mk, lte); if (pd.amt) { adj += pd.amt; notes.push(pd.note); } else if (pd.warn) warn.push(pd.warn);
             return { fee: fee, adj: adj, src: dl.name + ' ' + model + (cap ? '' : '(256G)') + ' · ' + tyK + (dc ? '·' + dc : '') + ' · ' + tierTxt + ' ' + hit.v + '만' + (notes.length ? ' · 부가 ' + notes.join(', ') : '') + (warn.length ? ' · ' + warn.join(' / ') : '') };
+        }
+        function feeKwMode(dl) { return (dl.addons || []).some(function (a) { return /키워드\s*:/.test(a.note || ''); }); }
+        function feeKw(note, lab) { var m = new RegExp(lab + '\\s*:\\s*([^·\\n]+)').exec(String(note || '')); return m ? m[1].split('|').map(mfXNorm).filter(Boolean) : []; }
+        function feeBirthYear(b) { var d = digitsOnly(b); if (d.length >= 8 && /^(19|20)/.test(d)) return +d.slice(0, 4); if (d.length >= 6) { var yy = +d.slice(0, 2); return yy <= 30 ? 2000 + yy : 1900 + yy; } return 0; }
+        function feeAddonKw(dl, rec, lte) {   // 부가서비스(+보험) 칸 글자 → 유치한 상품 추가 · 미유치 차감 (묶음 '[이름] … 모두 미유치' 는 묶음에서 하나도 없을 때 한 번만)
+            var insRaw = String(rec.ins || '').trim(), insOn = !!insRaw && !/^(없음|중고없음|미가입|미신청|x|-)$/i.test(insRaw);
+            var txt = mfXNorm(String(rec.extra || '') + ' ' + (insOn ? insRaw : '')), out = { adj: 0, notes: [], warn: [] }, grp = {}, by = feeBirthYear(rec.birth);
+            (dl.addons || []).forEach(function (a) {
+                var kw = feeKw(a.note, '키워드'), no = feeKw(a.note, '제외'), nm = String(a.name || '').replace(/\s*[\(\[].*$/, '').trim().slice(0, 18);
+                var seen = kw.some(function (k) { return txt.indexOf(k) >= 0; }), bad = no.some(function (k) { return txt.indexOf(mfXNorm(k)) >= 0; }), hit = seen && !bad;
+                var g = /^\[([^\]]+)\]/.exec(a.miss || ''), gk = g ? g[1] : '';
+                if (gk) { if (!grp[gk]) grp[gk] = { hit: false, seen: false, miss: a.miss }; if (hit) grp[gk].hit = true; if (seen || bad) grp[gk].seen = true; }
+                if (bad && /슬림/.test(a.name)) out.warn.push(nm + '(슬림)은 지급 제외 · 차감 대상');
+                if (hit) { var p = feeMan(a.add, lte); if (p) { out.adj += p; out.notes.push(nm + ' +' + p / 10000 + '만'); } else out.warn.push(nm + ' 유치 (지급 없음 · 차감 면제)'); }
+                else if (!gk && a.miss && a.miss !== '-') {
+                    var bm = /(\d{4})년\s*이후\s*출생/.exec(String(a.note || '') + ' ' + a.miss);
+                    if (bm && by && by >= +bm[1]) { out.warn.push(nm + ' 미유치 차감 면제 (' + bm[1] + '년 이후 출생)'); return; }
+                    var mm = feeMan(a.miss, lte); if (mm && mm < 0) { out.adj += mm; out.notes.push(nm + ' 미유치 ' + mm / 10000 + '만'); }
+                }
+            });
+            Object.keys(grp).forEach(function (k) {
+                var G = grp[k];
+                if (!G.hit && k === '보험' && insOn && !G.seen) { out.warn.push('보험 "' + insRaw.slice(0, 12) + '" 종류를 몰라 추가 금액은 직접 확인 (차감은 안 함)'); return; }   // 보험 가입했는데 이름이 없으면 차감하지 않음
+                if (G.hit) return;
+                var mm = feeMan(String(G.miss).replace(/^\[[^\]]+\]/, ''), lte); if (mm && mm < 0) { out.adj += mm; out.notes.push(k + ' 모두 미유치 ' + mm / 10000 + '만'); }
+            });
+            return out;
         }
         function feePayDeduct(dl, rec, hit, mk, lte) {   // 단가표 '차감' 중 유통망 지원금 미적용(○만원 미만) → 차감 (제외 모델 · 주니어/시니어 요금제 빼고)
             var out = { amt: 0 };
@@ -6789,25 +6817,28 @@
         }
         function regSkBad(r) { var c = String(r.carrier || '').toUpperCase().replace(/\s/g, ''); return r.kind === 'wired' && r.type !== '렌탈' && !!r.fee && /^단가표 자동: SKB (?!소호)/.test(r.fa || '') && /SKT/.test(c); }
         var regSkBusy = false;
+        function regFaAdj(fa) { var m = / · 부가 ([^·]*)/.exec(String(fa || '')), t = 0; if (m) (m[1].match(/[+-]\d+(?:\.\d+)?만/g) || []).forEach(function (x) { t += parseFloat(x); }); return t; }
         function regAdjMiss(r) {   // 모바일 · 단가표 자동 · 부가 칸 비어 있음 → 지금 단가표로 같은 단가가 나오고 차감이 있으면
-            if (r.kind !== 'mobile' || !r.fee || r.adj || !/^단가표 자동: /.test(r.fa || '') || fee2ndCode(r.model)) return null;
-            var rc = JSON.parse(JSON.stringify(r)); delete rc.fee; var a; try { a = regFeeMobile(rc); } catch (e) { return null; }
-            return a && a.fee && String(a.fee) === String(r.fee) && a.adj ? a : null;
+            if (r.kind !== 'mobile' || r.dealer !== '성연' || !r.fee || !/^단가표 자동: /.test(r.fa || '') || fee2ndCode(r.model)) return null;   // 이번에 정책이 바뀐 성연만
+            if (r.adj && Math.round(regFaAdj(r.fa) * 10000) !== +r.adj) return null;   // 부가 칸을 직접 고친 줄은 그대로 (자동으로 적힌 값일 때만 다시 계산)
+            var rc = JSON.parse(JSON.stringify(r)); delete rc.fee; delete rc.adj; var a; try { a = regFeeMobile(rc); } catch (e) { return null; }
+            return a && a.fee && String(a.fee) === String(r.fee) && (+a.adj || 0) !== (+r.adj || 0) ? a : null;
         }
         function regAdjFix() {   // 한 번만 (이 PC): 2026-10-31 유통망 지원금 미적용 차감을 넣기 전에 자동 계산된 줄
-            if (!db || !isBoss() || !mp.data || lsGet('sg-adjfix-1031')) return;
-            lsSet('sg-adjfix-1031', '1');
+            if (!db || !isBoss() || !mp.data || lsGet('sg-adjfix-1031b')) return;
+            if (!mp.data.dealers.some(function (x) { return x.name === '성연' && feeKwMode(x); })) return;   // 성연 부가 정책이 들어온 뒤에 한 번
+            lsSet('sg-adjfix-1031b', '1');
             var done = [];
             (db.regs || []).forEach(function (r) {
                 if (String(r.date || '') < '2026-10-01') return;
                 var a = regAdjMiss(r); if (!a) return;
-                r.adj = String(a.adj); r.fa = ('단가표 자동: ' + a.src).slice(0, 200); stamp(r);
-                done.push((r.name || '(이름 없음)') + ' ' + (+r.date.slice(5, 7)) + '/' + (+r.date.slice(8)) + ' · 부가 ' + (a.adj / 10000) + '만');
-                if (r.name) glQueueReg(r, { only: ['adj'], match: { name: r.name, phone: r.phone || '', kind: r.kind }, fix: { adj: 0 } });
+                var old = +r.adj || 0; if (a.adj) r.adj = String(a.adj); else delete r.adj; r.fa = ('단가표 자동: ' + a.src).slice(0, 200); stamp(r);
+                done.push((r.name || '(이름 없음)') + ' ' + (+r.date.slice(5, 7)) + '/' + (+r.date.slice(8)) + ' · 부가 ' + (old / 10000) + '만 → ' + ((+a.adj || 0) / 10000) + '만');
+                if (r.name) glQueueReg(r, { only: ['adj'], match: { name: r.name, phone: r.phone || '', kind: r.kind }, fix: { adj: old } });
             });
             if (!done.length) return;
             commit('');
-            setTimeout(function () { alert('자동 계산 때 빠졌던 부가 추가&차감(유통망 지원금 미적용 차감 등)을 채웠어요.\n(지금 단가표와 액면단가가 같은 줄만 · 가입고객리스트에도 같이)\n\n' + done.slice(0, 30).join('\n') + (done.length > 30 ? '\n…' : '')); }, 50);
+            setTimeout(function () { alert('자동 계산 때 빠졌던 부가 추가&차감(성연 보험·부가서비스 · 유통망 지원금 미적용 차감 등)을 채웠어요.\n(지금 단가표와 액면단가가 같은 줄만 · 가입고객리스트에도 같이)\n\n' + done.slice(0, 30).join('\n') + (done.length > 30 ? '\n…' : '')); }, 50);
         }
         function regSkFix() {   // SKT인데 SKB 단가로 자동 계산된 줄 → 가입 날짜의 단가표로 다시 계산 (직접 적은 값은 건드리지 않음)
             if (regSkBusy || !db || !isBoss()) return;
@@ -6832,7 +6863,7 @@
         }
         function regLedger() {   // 모바일 확인서 아래: 가입 장부 (모바일·유선)
             if (isBoss() && !regSkBusy && (db.regs || []).some(regSkBad)) setTimeout(regSkFix, 0);
-            if (isBoss() && mp.data && !lsGet('sg-adjfix-1031')) setTimeout(regAdjFix, 0);
+            if (isBoss() && mp.data && !lsGet('sg-adjfix-1031b')) setTimeout(regAdjFix, 0);
             var list = regMonth(''), noFee = list.filter(function (r) { return !r.fee; }).length;
             var rows = list.map(function (r, i) {
                 var sub = [parseInt(r.date.slice(8), 10) + '일', r.dealer, r.carrier, r.kind === 'mobile' ? r.model + (r.wdp ? ' (동판)' : '') : r.plan, r.seller ? '담당 ' + r.seller : ''].filter(Boolean).join(' · ');
