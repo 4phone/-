@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2KJDLnKBdEOLhltwjN+Yjnn+6PvOV5HnVpMIuz/YoXE='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7hiQd/cuj8MsANcfg/zNXfxufFjIfedDCgRr9UwJi64='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -306,6 +306,11 @@
         .mg-bar { position: relative; margin-top: 10px; height: 18px; border-radius: 999px; background: #F1F3E6; overflow: hidden; }
         .mg-bar i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #2F7D32, #6BBF59); border-radius: 999px; transition: width .3s ease; }
         .mg-bar span { position: relative; display: block; text-align: center; font-size: 11.5px; font-weight: 800; line-height: 18px; color: #1F2A10; }
+        .mg-ord { display: inline-flex; gap: 2px; } .mg-ord .btn { padding: 0 8px; min-width: 30px; } .mg-ord .btn:disabled { opacity: .35; }
+        .mg-cp { color: #1F4E79; border-color: #A9C1DC; }
+        .mg-ahead { background: #EEF4FB; border-color: #A9C1DC; color: #1F4E79; font-weight: 800; }
+        .mg-carry.mg-copyall { background: #EEF4FB; border-color: #A9C1DC; color: #1F4E79; }
+        @media (pointer: coarse) { .mg-ord .btn, .mg-cp { min-height: 36px; } }
         .mg-carry { margin-top: 8px; width: 100%; background: #FFF6E0; border-color: #E2C27A; color: #7A5B00; font-weight: 800; }
         .mg-t { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; cursor: pointer; font-size: 14.5px; font-weight: 700; color: #1F2A10; line-height: 1.45; word-break: break-all; }
         .mg-ck { width: 20px; height: 20px; margin: 1px 0 0; flex: none; accent-color: #2F7D32; cursor: pointer; }
@@ -1925,7 +1930,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-31.11';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-31.12';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -3143,7 +3148,7 @@
         function mgOf(ym) { return (db.mgs || []).filter(function (x) { return x.ym === ym; }).sort(function (a, b) { return (a.d - b.d) || (a.o - b.o) || (a.u - b.u); }); }
         function mgAdd() {
             var ym = mgUi.ym, t = mgUi.add.replace(/\s+/g, ' ').trim().slice(0, MG_LEN), list = mgOf(ym);
-            if (!t) { toast('이번 달 주요 업무를 적어 주세요.'); qmFocus('mg-add'); return; }
+            if (!t) { toast(mgLabel(ym) + ' 주요 업무를 적어 주세요.'); qmFocus('mg-add'); return; }
             if (list.length >= MG_MAX) { toast('한 달에 ' + MG_MAX + '개까지 적을 수 있어요.'); return; }
             if (list.some(function (x) { return x.t === t; })) { toast('이미 같은 업무가 있어요.'); return; }
             if (!db.mgs) db.mgs = [];
@@ -3174,6 +3179,23 @@
             add.slice(0, MG_MAX - cur.length).forEach(function (x) { db.mgs.push(stamp({ id: uid(), sid: me, ym: ym, t: x.t, d: 0, ds: '', o: ++mo, u: 0 })); });
             commit(mgLabel(prev) + ' 남은 업무 ' + add.length + '개를 가져왔어요.');
         }
+        function mgCopyNext(items, from) {   // 다음 달로 복사 (이번 달 것은 그대로 · 다음 달에 같은 글이 있으면 건너뜀)
+            var to = mgShift(from, 1), cur = mgOf(to), add = items.filter(function (x) { return !cur.some(function (y) { return y.t === x.t; }); });
+            if (!add.length) { toast(mgLabel(to) + '에 이미 있어요.'); return; }
+            if (cur.length + add.length > MG_MAX) { toast(mgLabel(to) + '은 ' + MG_MAX + '개까지 적을 수 있어요.'); return; }
+            if (items.length > 1 && !confirm(mgLabel(from) + ' 남은 업무 ' + add.length + '개를 ' + mgLabel(to) + '로 복사할까요? (' + mgLabel(from) + ' 것은 그대로 남아요)\n\n' + add.map(function (x) { return '· ' + x.t; }).join('\n').slice(0, 600))) return;
+            if (!db.mgs) db.mgs = [];
+            var mo = 0; cur.forEach(function (x) { mo = Math.max(mo, x.o); });
+            add.forEach(function (x) { db.mgs.push(stamp({ id: uid(), sid: me, ym: to, t: x.t, d: 0, ds: '', o: ++mo, u: 0 })); });
+            commit(add.length === 1 ? '"' + add[0].t + '" ' + mgLabel(to) + '로 복사했어요.' : mgLabel(to) + '로 ' + add.length + '개 복사했어요.');
+        }
+        function mgMove(x, dir) {   // ▲▼ 순서 바꾸기 (같은 상태끼리 · 모든 직원 화면에 같은 순서)
+            var list = mgOf(x.ym), i = list.indexOf(x), j = i + dir, y = list[j];
+            if (!y || y.d !== x.d) return;
+            list[i] = y; list[j] = x;
+            list.forEach(function (z, k) { if (z.o !== k + 1) { z.o = k + 1; stamp(z); } });
+            commit('');
+        }
         function mgToTask(x) {
             var today = ymd(new Date());
             var dup = db.tasks.some(function (t) { return t.staffId === me && t.due === today && !closed(t) && t.title === x.t; });
@@ -3187,7 +3209,7 @@
             if (!/^\d{4}-\d{2}$/.test(mgUi.ym)) mgUi.ym = now;
             var ym = mgUi.ym, list = mgOf(ym), doneN = list.filter(function (x) { return x.d; }).length;
             var prevLeft = ym === now ? mgOf(mgShift(ym, -1)).filter(function (x) { return !x.d && !list.some(function (y) { return y.t === x.t; }); }).length : 0;
-            var addIn = h('input', { type: 'text', class: 'qm-in', 'data-fk': 'mg-add', maxlength: MG_LEN, placeholder: '이번 달 주요 업무 (예: 11월 단가표 정리, 재약정 고객 전화)', 'aria-label': mgLabel(ym) + ' 주요 업무 적기 (' + MG_LEN + '자까지)', value: mgUi.add,
+            var addIn = h('input', { type: 'text', class: 'qm-in', 'data-fk': 'mg-add', maxlength: MG_LEN, placeholder: (ym === now ? '이번 달' : mgLabel(ym)) + ' 주요 업무 (예: 단가표 정리, 재약정 고객 전화)', 'aria-label': mgLabel(ym) + ' 주요 업무 적기 (' + MG_LEN + '자까지)', value: mgUi.add,
                 oninput: function () { mgUi.add = this.value; }, onkeydown: function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); mgAdd(); } } });
             var rows = list.map(function (x, i) {
                 if (mgUi.edit === x.id) {
@@ -3204,6 +3226,10 @@
                         h('span', { class: 'mg-tx' }, x.t),
                         h('small', { class: 'mg-by' }, staffName(x.sid) + (x.d && x.ds ? ' · ✓ ' + staffName(x.ds) : ''))),
                     h('div', { class: 'qm-btns' },
+                        h('span', { class: 'mg-ord' },
+                            h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mg-up', 'aria-label': '위로', title: '위로', disabled: !(list[i - 1] && list[i - 1].d === x.d), onclick: function () { mgMove(x, -1); } }, '▲'),
+                            h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mg-down', 'aria-label': '아래로', title: '아래로', disabled: !(list[i + 1] && list[i + 1].d === x.d), onclick: function () { mgMove(x, 1); } }, '▼')),
+                        x.d ? null : h('button', { type: 'button', class: 'btn btn-sm mg-cp', 'data-act': 'mg-copy', title: mgLabel(mgShift(ym, 1)) + '로 복사 (이 달 것은 그대로)', onclick: function () { mgCopyNext([x], ym); } }, '→ ' + (+mgShift(ym, 1).slice(5)) + '월로 복사'),
                         x.d ? null : h('button', { type: 'button', class: 'btn btn-sm qm-go', 'data-act': 'mg-go', title: '오늘 스케줄업무(스업)에 바로 넣기', onclick: function () { mgToTask(x); } }, '＋ 업무에 넣기'),
                         h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mg-edit', onclick: function () { mgUi.edit = x.id; mgUi.text = x.t; render(); qmFocus('mg-edit'); } }, '수정'),
                         h('button', { type: 'button', class: 'btn btn-sm qm-del', 'data-act': 'mg-del', onclick: function () { mgDel(x); } }, '삭제')));
@@ -3215,11 +3241,13 @@
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mg-prev', 'aria-label': '지난달', onclick: function () { mgUi.ym = mgShift(ym, -1); mgUi.edit = ''; render(); } }, '◀'),
                     h('b', { class: 'mg-ym', 'data-fk': 'mg-ym' }, mgLabel(ym) + (ym === now ? ' (이번 달)' : '')),
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mg-next', 'aria-label': '다음 달', onclick: function () { mgUi.ym = mgShift(ym, 1); mgUi.edit = ''; render(); } }, '▶'),
-                    ym !== now ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mg-now', onclick: function () { mgUi.ym = now; mgUi.edit = ''; render(); } }, '이번 달') : null),
+                    ym !== now ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mg-now', onclick: function () { mgUi.ym = now; mgUi.edit = ''; render(); } }, '이번 달') : null,
+                    ym === now ? h('button', { type: 'button', class: 'btn btn-sm mg-ahead', 'data-act': 'mg-ahead', onclick: function () { mgUi.ym = mgShift(now, 1); mgUi.edit = ''; render(); qmFocus('mg-add'); } }, '✎ ' + (+mgShift(now, 1).slice(5)) + '월 미리 적기') : null),
                 list.length ? h('div', { class: 'mg-bar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(pct), 'aria-label': '완료 ' + pct + '%' }, h('i', { style: 'width:' + pct + '%' }), h('span', {}, pct + '%')) : null,
-                h('p', { class: 'qm-help' }, '이번 달 꼭 할 일을 적어 두고, 끝나면 체크하세요. 모든 직원이 함께 봐요.'),
+                h('p', { class: 'qm-help' }, (ym === now ? '이번 달' : ym > now ? mgLabel(ym) + '(미리 적기)' : mgLabel(ym)) + ' 꼭 할 일을 적어 두고, 끝나면 체크하세요. ▲▼로 순서를 바꿔요. 모든 직원이 함께 봐요.'),
                 h('div', { class: 'qm-add' }, addIn, h('button', { type: 'button', class: 'btn btn-sm btn-dark', 'data-fk': 'mg-add-btn', onclick: mgAdd }, '추가')),
                 prevLeft ? h('button', { type: 'button', class: 'btn btn-sm mg-carry', 'data-act': 'mg-carry', onclick: function () { mgCarry(ym); } }, '↪ 지난달 못 끝낸 ' + prevLeft + '개 가져오기') : null,
+                list.filter(function (x) { return !x.d; }).length > 1 ? h('button', { type: 'button', class: 'btn btn-sm mg-carry mg-copyall', 'data-act': 'mg-copy-all', onclick: function () { mgCopyNext(list.filter(function (x) { return !x.d; }), ym); } }, '⇉ 남은 업무 모두 ' + (+mgShift(ym, 1).slice(5)) + '월로 복사') : null,
                 list.length ? h('ol', { class: 'qm-list mg-list' }, rows) : h('div', { class: 'qm-empty' }, mgLabel(ym) + ' 주요 업무가 아직 없어요. 위 칸에 적고 Enter(또는 [추가])를 눌러 주세요.'));
         }
         function qmPanel() {
