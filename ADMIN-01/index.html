@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8KOsc7tyQ0QChwYfK4KLeWM9+pJpkAjBCpx5MTDMyd8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-29L8YsBwkiivKVcqjhtN6r3MOcmSa+EYbXIPcrWpPQo='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -768,6 +768,7 @@
         .pol-ai p { margin: 0; font-size: 13px; color: #4D5A2A; line-height: 1.5; }
         .pol-ai .btn { justify-self: start; }
         .pol-ai-out { font-size: 13px; line-height: 1.5; }
+        .chg-pick { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 14px; font-weight: 700; } .chg-pick select { flex: 1; min-width: 0; min-height: 36px; font: inherit; font-weight: 400; }
         .chg-pre { margin: 0; max-height: min(60vh, 560px); overflow: auto; white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 13.5px; line-height: 1.6; background: #FBFCF6; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; user-select: text; -webkit-user-select: text; }
         .chg-warn { margin: 0 0 6px; font-size: 13px; font-weight: 800; color: #A61F1F; }
         .chg-tip { margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
@@ -1911,7 +1912,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-31.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-31.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1998,7 +1999,7 @@
                     { id: 's2', name: '직원 1', role: '', u: 0, o: 2, adm: false },
                     { id: 's3', name: '직원 2', role: '', u: 0, o: 3, adm: false }
                 ],
-                events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [],
+                events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], chg: [],
                 del: Object.create(null),                  // 지워진 항목 기록(다른 직원 화면에서도 지워지도록)
                 drive: { url: '', k: '', rev: 0, pk: '', acc: false },  // 공유 저장소 연결 정보 (암호화된 데이터 안에만 보관)
                 account: null    // 이 기기에서 로그인한 계정 (이 기기 안에만 보관하고 드라이브로는 보내지 않음)
@@ -2022,7 +2023,7 @@
         // 저장소·백업·드라이브에서 읽은 내용은 항상 이 함수로 걸러서(글자 수·개수 제한, 형식 검사) 사용합니다
         function normalizeDb(d) {
             if (!d || typeof d !== 'object') return null;
-            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
+            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], chg: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
             function list(v, max) { return Array.isArray(v) ? v.slice(0, max) : []; }
             list(d.staff, 200).forEach(function (s, i) {
                 if (!s || !str(s.name, 30).trim()) return;
@@ -2086,6 +2087,10 @@
             list(d.qms, 2000).forEach(function (x) {   // 자주 하는 업무 메모 (직원별 한 줄 메모 → [업무에 넣기])
                 if (!x || !str(x.id, 40) || !str(x.t, 100).trim()) return;
                 out.qms.push({ id: str(x.id, 40), sid: str(x.sid, 40), t: str(x.t, 100).trim(), o: num(x.o), u: num(x.u), b: num(x.b) });
+            });
+            list(d.chg, 60).forEach(function (x) {   // 단가표 변동사항 기록 (대표만 봄 · 수수료가 들어 있어 팀 키로 암호화된 곳에만)
+                if (!x || !str(x.id, 40) || !/^(net|mob|rent)$/.test(x.k) || !str(x.full, 20000)) return;
+                out.chg.push({ id: str(x.id, 40), k: x.k, at: num(x.at), by: str(x.by, 20), t: str(x.t, 160), full: str(x.full, 20000), short: str(x.short, 6000), u: num(x.u), b: num(x.b) });
             });
             list(d.ibm, 3000).forEach(function (x) {   // 콜 인입 표시: 미인입 · 테스트 (실 인입 순번에서 뺌)
                 if (!x || !str(x.id, 60) || !str(x.iid, 40)) return;
@@ -3865,8 +3870,8 @@
         }
 
         /* --- 내용 합치기: 항목마다 수정 시각(u)이 더 늦은 쪽을 남기고, 지운 항목은 삭제 기록으로 처리 --- */
-        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], del: db.del }; }
-        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], del: db.del })); }
+        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], chg: db.chg || [], del: db.del }; }
+        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], chg: db.chg || [], del: db.del })); }
         function canon(d) {   // 같은 내용이면 항상 같은 글자가 되도록 정렬한 비교용 문자열
             function byId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
             return JSON.stringify([
@@ -3881,6 +3886,7 @@
                 (d.qms || []).slice().sort(byId).map(function (x) { return [x.id, x.sid, x.t, x.o, x.u]; }),
                 (d.mgs || []).slice().sort(byId).map(function (x) { return [x.id, x.sid, x.ym, x.t, x.d, x.o, x.u]; }),
                 (d.ibm || []).slice().sort(byId).map(function (x) { return [x.id, x.iid, x.m, x.u]; }),
+                (d.chg || []).slice().sort(byId).map(function (x) { return [x.id, x.k, x.u]; }),
                 (d.policies || []).slice().sort(byId).map(function (x) { return [x.id, x.at, x.by, x.u, x.act || 0, x.actBy || '']; })
             ]);
         }
@@ -3953,12 +3959,13 @@
                 qms: mergeList(a.qms || [], b.qms || [], false).filter(alive).sort(byId),
                 mgs: mergeList(a.mgs || [], b.mgs || [], false).filter(alive).sort(byId),
                 ibm: mergeList(a.ibm || [], b.ibm || [], false).filter(alive).sort(byId),
+                chg: mergeList(a.chg || [], b.chg || [], false).filter(alive).sort(byId),
                 policies: mergeList(a.policies || [], b.policies || [], false).filter(alive).sort(byId),   // 가입 장부: 나중에 고친 쪽으로 (충돌본 만들지 않음)
                 del: del, conflicts: conflicts
             };
         }
                 function applyMerged(m) {
-            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.acts = m.acts || []; db.qms = m.qms || []; db.mgs = m.mgs || []; db.ibm = m.ibm || []; db.policies = m.policies || []; db.del = m.del;
+            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.acts = m.acts || []; db.qms = m.qms || []; db.mgs = m.mgs || []; db.ibm = m.ibm || []; db.chg = m.chg || []; db.policies = m.policies || []; db.del = m.del;
             var ok = Object.create(null); db.staff.forEach(function (x) { ok[x.id] = 1; });
             [db.events, db.notices, db.tasks].forEach(function (list) { list.forEach(function (it) { if (it.staffId && !ok[it.staffId]) it.staffId = ''; }); });
             if (!staffById(me)) { me = db.staff[0].id; lsSet(ME_KEY, me); }
@@ -3966,10 +3973,10 @@
         }
 
         /* --- 동기화: 드라이브의 최신 내용을 받아 합치고, 내 변경분이 있으면 올림 --- */
-        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || []].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
+        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.chg || []].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
         function markSynced(snap) {   // 드라이브에 올라간(또는 드라이브와 같아진) 버전을 '기준 시각(b)'으로 기록
             var changed = false;
-            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || []].forEach(function (l) { l.forEach(function (it) {
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.chg || []].forEach(function (l) { l.forEach(function (it) {
                 var nb = !snap ? it.u : snap[it.id];            // snap: 드라이브에 올라간 시점의 수정 시각
                 if (nb === undefined) return;                     // 올릴 때 없던 항목(그 뒤에 새로 만든 것)은 다음 저장 때
                 if (nb > it.u) nb = it.u;
@@ -3979,8 +3986,8 @@
         }
         function markSeen(remote) {   // 받아 온 드라이브 버전과 같은 항목은 '본 적 있음'으로 기록 (다른 기기 기준 시각이 섞이지 않게)
             var ru = Object.create(null);
-            [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || [], remote.policies || [], remote.acts || [], remote.qms || [], remote.mgs || [], remote.ibm || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
-            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || []].forEach(function (l) { l.forEach(function (it) {
+            [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || [], remote.policies || [], remote.acts || [], remote.qms || [], remote.mgs || [], remote.ibm || [], remote.chg || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.chg || []].forEach(function (l) { l.forEach(function (it) {
                 var r = ru[it.id];
                 if (r !== undefined && r === it.u && it.b !== it.u) it.b = it.u;   // 드라이브 버전과 같음
             }); });
@@ -6653,7 +6660,7 @@
         function feeBirthYear(b) { var d = digitsOnly(b); if (d.length >= 8 && /^(19|20)/.test(d)) return +d.slice(0, 4); if (d.length >= 6) { var yy = +d.slice(0, 2); return yy <= 30 ? 2000 + yy : 1900 + yy; } return 0; }
         function feeAddonKw(dl, rec, lte) {   // 부가서비스(+보험) 칸 글자 → 유치한 상품 추가 · 미유치 차감 (묶음 '[이름] … 모두 미유치' 는 묶음에서 하나도 없을 때 한 번만)
             var insRaw = String(rec.ins || '').trim(), insOn = !!insRaw && !/^(없음|중고없음|미가입|미신청|x|-)$/i.test(insRaw);
-            var txt = mfXNorm(String(rec.extra || '') + ' ' + (insOn ? insRaw : '')), out = { adj: 0, notes: [], warn: [] }, grp = {}, by = feeBirthYear(rec.birth);
+            var txt = mfXNorm(String(rec.extra || '') + ' ' + (insOn ? insRaw : '')).replace(/[()\[\]]/g, ''), out = { adj: 0, notes: [], warn: [] }, grp = {}, by = feeBirthYear(rec.birth);
             (dl.addons || []).forEach(function (a) {
                 var kw = feeKw(a.note, '키워드'), no = feeKw(a.note, '제외'), nm = String(a.name || '').replace(/\s*[\(\[].*$/, '').trim().slice(0, 18);
                 var seen = kw.some(function (k) { return txt.indexOf(k) >= 0; }), bad = no.some(function (k) { return txt.indexOf(mfXNorm(k)) >= 0; }), hit = seen && !bad;
@@ -8622,33 +8629,52 @@
             if (!out.length) out.push('변동 없음');
             return { head: '수수료 바뀐 줄 ' + tot.rows + '개 (▲ 오름 ' + tot.up + ' · ▼ 내림 ' + tot.down + ')', sum: sum, body: out };
         }
+        function mpKwStrip(t) { return String(t || '').replace(/\s*·\s*(키워드|제외)\s*:[^·)\n]*/g, ''); }   // 자동 계산용 키워드는 화면·복사에서 숨김
         function chgText(icon, title, nowD, prevD, R, short) {   // short: 핵심만 (단톡방용)
             var t = icon + ' ' + title + ' 변동사항' + (nowD ? ' (' + nowD + ' 기준' + (prevD ? ' · 이전 ' + prevD : '') + ')' : '');
             var L = [t, '▶ ' + R.head];
             if (R.sum && R.sum.length) L = L.concat(['', '[핵심]'], R.sum);
             if (!short) L = L.concat(['', '[자세히]'], R.body);
-            return L.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+            return mpKwStrip(L.join('\n').replace(/\n{3,}/g, '\n\n').trim());
         }
         var chgLast = { net: null, mob: null, rent: null };   // 이 기기에서 마지막으로 본 변동사항 (다시 보기)
+        var CHG_KEEP = 8;   // 종류마다 최근 8번 보관
         function chgOpen(kind, icon, title, nowD, prevD, Rz) {
-            chgLast[kind] = { full: chgText(icon, title, nowD, prevD, Rz), short: chgText(icon, title, nowD, prevD, Rz, true) };
+            var full = chgText(icon, title, nowD, prevD, Rz), short = chgText(icon, title, nowD, prevD, Rz, true);
+            chgLast[kind] = { full: full, short: short };
+            try {   // 기록으로 남김 (다른 기기 · 나중에도 다시 보기)
+                if (db) {
+                    if (!db.chg) db.chg = [];
+                    var it = stamp({ id: uid(), k: kind, at: Date.now(), by: me && staffById(me) ? staffName(me) : '', t: full.split('\n')[0].slice(0, 160), full: full.slice(0, 20000), short: short.slice(0, 6000), u: 0 });
+                    db.chg.push(it); chgLast[kind].id = it.id;
+                    var mine = db.chg.filter(function (x) { return x.k === kind; }).sort(function (a, b) { return b.at - a.at; });
+                    mine.slice(CHG_KEEP).forEach(function (x) { tomb(x.id); });
+                    var gone = Object.create(null); mine.slice(CHG_KEEP).forEach(function (x) { gone[x.id] = 1; });
+                    db.chg = db.chg.filter(function (x) { return !gone[x.id]; });
+                    commit('');
+                }
+            } catch (e) { /* 기록은 못 남겨도 팝업은 띄움 */ }
             chgShow(kind); render();
         }
-        function chgShow(kind) {
-            var C = chgLast[kind];
+        function chgHist(kind) { return ((db && db.chg) || []).filter(function (x) { return x.k === kind; }).sort(function (a, b) { return b.at - a.at; }); }
+        function chgWhen(t) { var d = new Date(t); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+        function chgShow(kind, pickId) {
+            var hist = chgHist(kind), C = pickId ? hist.filter(function (x) { return x.id === pickId; })[0] : (hist[0] || chgLast[kind]);
             if (!C && kind === 'net') {   // 유선은 보관된 단가표(최근 10개)로 언제든 비교
                 var l = (db.policies || []).slice().sort(function (a, b) { return polCurAt(b) - polCurAt(a) || b.at - a.at; });
                 if (l.length < 2) { toast('비교할 이전 유선 단가표가 없어요.'); return; }
                 C = chgLast.net = { full: chgText('🌐', '유선 단가표', chgDay(l[0].data.date), chgDay(l[1].data.date), chgWired(l[1].data, l[0].data)), short: chgText('🌐', '유선 단가표', chgDay(l[0].data.date), chgDay(l[1].data.date), chgWired(l[1].data, l[0].data), true) };
             }
-            if (!C) { toast('이 기기에서 단가표를 올린 뒤에 볼 수 있어요.'); return; }
+            if (!C) { toast('단가표를 올린 뒤에 볼 수 있어요.'); return; }
             var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide';
             var pre = h('pre', { class: 'chg-pre', 'data-chg': kind, tabindex: '0', 'aria-label': '변동사항 내용' }, C.full);
+            var pickBox = hist.length > 1 ? h('label', { class: 'chg-pick' }, h('span', {}, '기록'), h('select', { 'data-act': 'chg-pick', 'aria-label': '지난 변동사항 고르기', onchange: function () { chgShow(kind, this.value); } },
+                hist.map(function (x, i) { return h('option', { value: x.id, selected: x.id === C.id || (!C.id && i === 0) }, chgWhen(x.at) + (i === 0 ? ' (최근)' : '') + ' · ' + String(x.t || '').replace(/^\S+\s/, '').slice(0, 60) + (x.by ? ' · ' + x.by : '')); }))) : null;
             var form = h('form', { novalidate: true, class: 'chg-dlg' }, h('div', { class: 'dlg-head' }, '📋 단가표 변동사항'),
                 h('div', { class: 'dlg-body' },
                     h('p', { class: 'chg-warn' }, '🔒 수수료가 들어 있어요. 직원 단톡방 등 내부에서만 쓰고, 고객·홈페이지에는 올리지 마세요.'),
-                    h('p', { class: 'chg-tip' }, '[핵심만 복사]는 통신사·거래처별로 묶은 요약만, [전체 복사]는 바뀐 상품 하나하나까지 복사해요.'),
-                    pre),
+                    h('p', { class: 'chg-tip' }, '[핵심만 복사]는 통신사·거래처별로 묶은 요약만, [전체 복사]는 바뀐 상품 하나하나까지 복사해요.' + (C.at ? ' (' + chgWhen(C.at) + (C.by ? ' · ' + C.by : '') + ' 올림)' : '')),
+                    pickBox, pre),
                 h('div', { class: 'dlg-foot' },
                     h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'),
                     h('button', { type: 'button', class: 'btn', 'data-act': 'chg-copy-all', onclick: function () { clip(C.full, '변동사항 전체를 복사했어요.'); } }, '전체 복사'),
@@ -8656,7 +8682,7 @@
             form.addEventListener('submit', function (e) { e.preventDefault(); });
             dlg.appendChild(form); showDlg(dlg);
         }
-        function chgBtn(kind) { return isBoss() && (chgLast[kind] || (kind === 'net' && (db.policies || []).length >= 2)) ? h('button', { type: 'button', class: 'btn', 'data-act': 'chg-open-' + kind, title: '이전 단가표와 비교한 변동사항 (복사용)', onclick: function () { chgShow(kind); } }, '📋 변동사항') : null; }
+        function chgBtn(kind) { return isBoss() && (chgLast[kind] || chgHist(kind).length || (kind === 'net' && (db.policies || []).length >= 2)) ? h('button', { type: 'button', class: 'btn', 'data-act': 'chg-open-' + kind, title: '이전 단가표와 비교한 변동사항 (복사용)', onclick: function () { chgShow(kind); } }, '📋 변동사항') : null; }
         function polImport() {   // 대표만: 단가표 사진(바로 변환) · 파일 · 붙여넣기로 바꾸기 → 모든 직원 화면에 바로 반영
             var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide';
             var file = h('input', { type: 'file', accept: '.json,.txt,application/json,text/plain', 'aria-label': '단가표 파일 선택' });
@@ -9955,7 +9981,7 @@
                 }).filter(Boolean);
                 if (!tbls.length && words.length) return null;
                 var pol = function (title, arr, cols, keys) { return arr.length ? h('details', { class: 'mp-pol', open: !words.length }, h('summary', {}, title + ' (' + arr.length + ')'),
-                    h('div', { class: 'pol-scroll' }, h('table', { class: 'mp-tbl mp-ptbl' }, h('thead', {}, h('tr', {}, cols.map(function (c) { return h('th', {}, c); }))), h('tbody', {}, arr.map(function (o) { return h('tr', {}, keys.map(function (k) { return h('td', {}, o[k] || ''); })); }))))) : null; };
+                    h('div', { class: 'pol-scroll' }, h('table', { class: 'mp-tbl mp-ptbl' }, h('thead', {}, h('tr', {}, cols.map(function (c) { return h('th', {}, c); }))), h('tbody', {}, arr.map(function (o) { return h('tr', {}, keys.map(function (k) { return h('td', {}, mpKwStrip(o[k] || '')); })); }))))) : null; };
                 return h('section', { class: 'pol-card mp-card', style: '--c:#3E441E', 'data-dealer': dl.name },
                     h('div', { class: 'pol-head' }, h('h2', {}, dl.name + (dl.carrier ? ' · ' + dl.carrier : '')), h('span', {}, (dl.date ? dl.date + ' 기준' : '') + (dl.at ? ' · 넣은 시각 ' + koDate(ymd(new Date(dl.at))) + (dl.by ? ' · ' + dl.by : '') : '')),
                         boss ? h('button', { type: 'button', class: 'btn btn-sm mp-del', onclick: function () { mpRemove(dl.name); } }, '지우기') : null),
