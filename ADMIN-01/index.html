@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7Sh9CvmP1Q06E71ca2fxHxICesvcDKm0wltHblWpQiw='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-LgK8lNE5ltb6/jqPrulQ3do1gzdlXXyV4GKT5P7spbU='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1925,7 +1925,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-31.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-31.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -13349,6 +13349,86 @@
             X._head = undefined; X._reg = undefined;
             return n;
         }
+        function glColShiftF(f, c0, d) {   // 엑셀에서 칸을 끼워 넣은 것처럼: c0 칸부터 오른쪽을 가리키는 참조를 d칸 옮김 (다른 시트 참조·글자는 그대로)
+            return f.replace(/("[^"]*")|('[^']*'!|[A-Za-z_][\w.]*!)?(\$?)([A-Z]{1,3})(\$?)(\d+)(?![\d(A-Za-z_])/g, function (m, q, sh, d1, col, d2, row) {
+                if (q || sh) return m;
+                var c = glCol(col); return d1 + (c >= c0 ? glColName(c + d) : col) + d2 + row;
+            });
+        }
+        function glShiftFix(S0) {   // 복지여부 칸이 생기기 전 모양으로 들어간(한 칸씩 왼쪽으로 밀린) 줄 찾아 바로잡은 새 시트 → null 또는 { S, c0, first, last, n, f }
+            var H = glHead(S0); if (!H) return null;
+            var hr = S0.cv[H.r] || {}, lab = {};
+            Object.keys(hr).forEach(function (c) { var t = String(hr[c]).replace(/\s/g, ''); if (t && !lab[t]) lab[t] = +c; });
+            var c0 = lab['복지여부'] || lab['복지'], cD = 0, cP = lab['할부원금'], cM = lab['할부개월'];
+            Object.keys(lab).forEach(function (t) { if (!cD && /^공시&선약/.test(t)) cD = lab[t]; });
+            if (!c0 || cD !== c0 + 1 || !cP || !cM) return null;
+            var lim = glLedgerLast(S0, H); if (lim <= c0) return null;
+            var str = function (v) { return v == null ? '' : String(v).trim(); }, isF = function (v) { return typeof v === 'string' && v.charAt(0) === '='; };
+            var disc = function (v) { return /^(선약|공시|유선|프약|선택약정)/.test(str(v)); };
+            var mon = function (v) { return /^\d{1,2}(\s*개월)?$/.test(str(v)); };
+            var plan = function (v) { var t = str(v); return !!t && !isF(v) && !/^-?[\d,.]+(\s*개월)?$/.test(t); };
+            var amt = function (v) { var t = str(v); return !t || /^-?[\d,.]+(\s*원)?$/.test(t); };
+            var bad = function (w) { return disc(w[c0]) || (!str(w[c0]) && plan(w[cM]) && (!str(w[cP]) || mon(w[cP])) && amt(w[cD])); };   // 밀린 줄 표시
+            var good = function (w) { return disc(w[cD]) && !disc(w[c0]); };   // 공시&선약 칸에 선약·공시가 제대로 있는 줄
+            var r, c, first = 0, last = 0, hits = 0;
+            for (r = H.r + 1; r <= S0.nr; r++) { var w0 = S0.cv[r]; if (w0 && bad(w0)) { hits++; last = r; if (!first) first = r; } }
+            if (hits < 3) return null;
+            var S = glNormSheet(JSON.parse(JSON.stringify(glPack(S0)))); if (S0.rep) S.rep = S0.rep;
+            var moved = {}, n = 0, f = 0;
+            for (r = H.r + 1; r <= last; r++) {
+                var row = S.cv[r]; if (!row || good(row)) continue;
+                var any = false; for (c = c0; c <= lim; c++) if (row[c] != null && row[c] !== '') { any = true; break; }
+                if (!any) continue;
+                for (c = 1; c < c0; c++) if (isF(row[c])) row[c] = '=' + glColShiftF(row[c].slice(1), c0, 1);   // 왼쪽 수식이 오른쪽 칸을 가리키면 참조만
+                for (c = lim - 1; c >= c0; c--) { var v = row[c]; if (v == null) delete row[c + 1]; else row[c + 1] = isF(v) ? '=' + glColShiftF(v.slice(1), c0, 1) : v; }
+                delete row[c0];
+                var m = glRunsGet(S, r); for (c = lim - 1; c >= c0; c--) { if (m[c] != null) m[c + 1] = m[c]; else delete m[c + 1]; } glRunsSet(S, r, m);   // 칸 서식(금액 표시 등)도 같이
+                moved[r] = 1; n++;
+            }
+            var prevOld = !!moved[last];   // 아래 줄(앱에서 들어간 줄): 밀린 윗줄에서 베껴 온 수식만 바로잡음 · 값은 그대로
+            for (r = last + 1; r <= S.nr && prevOld; r++) {
+                var rk = S.cv[r], op = S0.cv[r - 1] || {}, fp = S.cv[r - 1] || {}, stale = [];
+                if (!rk) { prevOld = false; break; }
+                Object.keys(rk).forEach(function (cc) { var v = rk[cc], o = op[cc]; if (isF(v) && isF(o) && !/^=자동_/.test(o) && v === '=' + glShift(o.slice(1), 1, 0)) stale.push(+cc); });
+                if (!stale.length) { prevOld = false; break; }
+                stale.forEach(function (cc) { delete rk[cc]; });
+                Object.keys(fp).forEach(function (cc) { var v = fp[cc]; if (isF(v) && !/^=자동_/.test(v) && rk[cc] == null) rk[cc] = '=' + glShift(v.slice(1), 1, 0); });
+                if (H.tax && rk[H.tax] == null) { var tf = glTaxAbove(S, H, r); if (tf) rk[H.tax] = tf; }   // 바로 윗줄이 스카이 유선(세금 없음)이어도 세금 수식은 그 위 줄에서
+                if (H.tax && isF(rk[H.tax]) && /^(유선|렌탈)/.test(str(rk[H.kind]))) { var dc = lab['거래처']; if (dc && /스카이/.test(str(rk[dc]))) delete rk[H.tax]; }   // 스카이 접수 유선은 세금 없음 (앱에서 넣을 때와 같게)
+                f++;
+            }
+            if (!n) return null;
+            S._head = undefined; S._reg = undefined;
+            return { S: S, c0: c0, first: first, last: last, n: n, f: f };
+        }
+        function glTaxAbove(S, H, r) {   // 세금 칸 수식: 가장 가까운 윗줄의 것을 이 줄 번호로 (스카이 유선 줄은 세금이 비어 있어서 건너뜀)
+            for (var x = r - 1; x > H.r && x >= r - 60; x--) { var v = (S.cv[x] || {})[H.tax]; if (typeof v === 'string' && v.charAt(0) === '=' && !/^=자동_/.test(v)) return '=' + glShift(v.slice(1), r - x, 0); }
+            return null;
+        }
+        function glShiftAsk(E) {   // 대표가 시트를 열면 한 번: 밀린 줄이 있으면 물어보고 바로잡아 저장 (직전 내용은 보관본)
+            E.fixPend = false;
+            if (!E || !E.S || E.fixAsked || !isBoss() || gl.job || glDirty() || state.view !== 'gl' || gl.cur !== E.id) return;
+            var it = glIdxList().filter(function (x) { return x.id === E.id; })[0]; if (!it) return;
+            E.fixAsked = true;
+            var x = glShiftFix(E.S); if (!x) return;
+            var cn = glColName(x.c0), H = glHead(E.S);
+            var msg = it.name + ': 칸이 한 칸씩 밀린 줄이 있어요.\n(' + x.first + '~' + x.last + '번 줄 · 복지여부에 선약·공시, 공시&선약에 공시금액, 할부원금에 할부개월, 할부개월에 요금제가 들어가 있음)'
+                + '\n\n→ 밀린 ' + x.n + '줄만 ' + cn + '(복지여부) 칸부터 오른쪽으로 한 칸씩 제자리로 옮길까요?'
+                + '\n• 복지여부는 빈칸, 선약·공시는 공시&선약 칸으로 · 수식도 같이 맞춰요'
+                + '\n• ' + (x.last + 1) + '번 줄부터는 그대로 두어요' + (x.f ? ' (윗줄에서 베껴 온 수식 ' + x.f + '줄만 바로잡음)' : '')
+                + '\n• 바로잡기 직전 내용은 [보관본]에 120일 남아서 언제든 되돌릴 수 있어요';
+            if (!confirm(msg)) return;
+            var mineG = gl; gl.job = '칸 밀린 줄을 바로잡는 중이에요...'; render();
+            glEnc(glPack(x.S), GL_AAD + E.id).then(function (blob) { return glCall('glPut', { id: E.id, baseRev: E.rev, blob: blob, snap: true }, 120000); }).then(function (res) {
+                if (mineG !== gl) return;
+                E.S = x.S; E.rev = res.rev; if (gl.meta) gl.meta[E.id] = res.rev; E.base = glCount(x.S); E.dom = {}; E.calc = null; E.edits.clear(); E.undo = []; E.rsMem = {}; E.sel2 = null; E.okShrink = false;
+                gl.job = ''; render(); glMirrorSoon(3000);
+                toast(it.name + ': 밀린 ' + x.n + '줄을 제자리로 옮겼어요 (' + x.first + '~' + x.last + '번 줄). 직전 내용은 [보관본]에 있어요.');
+            }).catch(function (e) {
+                gl.job = ''; E.fixAsked = false; render();
+                toast(e && e.code === 'conflict' ? '그 사이에 다른 직원이 장부를 고쳤어요. 새로고침 뒤 시트를 다시 열면 다시 물어봐요.' : '바로잡다가 멈췄어요. ' + driveErrText(e) + ' (장부는 그대로예요)');
+            });
+        }
         function glImport(file) {   // 엑셀 불러오기: 새 시트는 더하고, 같은 이름의 시트는 엑셀 '내용'을 반영 (수식 칸은 그대로 · 지우지는 않음 · 반영 직전 내용은 보관본)
             if (!file || !isBoss()) return;
             if (!/\.xlsx$/i.test(file.name)) { toast('.xlsx 엑셀 파일을 골라 주세요.'); return; }
@@ -13794,6 +13874,7 @@
             if (!S.cv[target]) S.cv[target] = {};
             var row2 = S.cv[target], prevRow = S.cv[target - 1] || {};
             Object.keys(prevRow).forEach(function (c) { var v = prevRow[c]; if (row2[c] == null && typeof v === 'string' && v.charAt(0) === '=' && !/^=자동_/.test(v)) row2[c] = '=' + glShift(v.slice(1), 1, 0); });   // 수식이 없는 줄이면 윗줄 수식을 내려 씀
+            if (H.tax && row2[H.tax] == null && !only && (row2[H.kind] == null || row2[H.kind] === '')) { var tf0 = glTaxAbove(S, H, target); if (tf0) row2[H.tax] = tf0; }   // 윗줄이 스카이 유선이라 세금이 비어 있어도 세금 수식은 이어서
             function put(c, v) { if (!c || v == null || v === '') return; var s = String(v); row2[c] = /^-?\d{1,3}(,\d{3})+$|^-?\d+$/.test(s) && !/^-?0\d/.test(s) && s.length < 13 ? +s.replace(/,/g, '') : s; E.edits.set(target + ',' + c, row2[c]); }
             Object.keys(GL_REG_COL).forEach(function (f) {
                 if (only && only.indexOf(f) < 0) return;
@@ -14479,6 +14560,7 @@
         function glAfterRender() {   // 화면을 다시 그린 뒤: 표 스크롤 위치·선택 칸 · 탭 위치 · 가로 이동바
             if (state.view !== 'gl') return;
             var E = gl.sh[gl.cur], D = E && E.dom[gl.view];
+            if (E && E.S && !E.fixAsked && !E.fixPend && isBoss()) { E.fixPend = true; setTimeout(function () { glShiftAsk(E); }, 600); }   // 칸 밀린 줄 바로잡기 (한 번 물어봄)
             if (gl.waitCl && cl.data && E && E.S) { gl.waitCl = false; glRefresh(E, []); }
             if (D) { var sp = E.scroll[gl.view]; if (sp) { D.el.scrollLeft = sp[0]; D.el.scrollTop = sp[1]; } if (E.sel) { glHilite(E); glBarPaint(E); } }
             var t = document.querySelector('.gl-tabs');
