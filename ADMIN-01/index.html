@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7hiQd/cuj8MsANcfg/zNXfxufFjIfedDCgRr9UwJi64='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-QvcwwSCeZl7m3eXELDCb3+wADYDFI9zPObeADtLI7So='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1930,7 +1930,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-31.12';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-31.13';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -5637,6 +5637,7 @@
                 var regMsg = '';
                 var regOk = false; M.calRes = [];
                 try { regOk = regUpsert(M, y, m, d); regMsg = regOk ? ' 가입 장부에도 정리했어요.' + (M.xMsg || '') : ''; } catch (re) { regMsg = ' (가입 장부 정리는 실패했어요)'; }
+                if (regOk) { try { mfsSave(M, sheet); } catch (se) { /* 보관 못 해도 저장은 끝남 */ } }
                 if (regOk && M.feeRes && M.kind === 'wired') regMsg += M.feeRes.fee ? ' 액면단가 ' + M.feeRes.fee.toLocaleString('ko-KR') + '원 ' + (M.feeRes.src === '상담에서 고른 상품 수수료' ? '(상담에서 고른 값) 입력.' : '자동 입력' + (M.feeRes.chk ? ' — 확인 필요' : '') + '.') : M.feeRes.why ? ' (액면단가 자동 입력 안 됨: ' + M.feeRes.why + ' — 가입 장부 [수정]에서 적어 주세요)' : '';
                 var cr = res.contact;   // 구글 연락처 결과 (그림 저장과 따로)
                 if (cr && cr.ok) { M.contactId = String(cr.id || ''); regMsg += ' ' + ctOkMsg(cr, ct); }
@@ -6950,6 +6951,7 @@
                     h('div', { class: 'reg-main' }, h('span', { class: 'reg-kind ' + r.kind }, r.kind === 'mobile' ? '모바일' : r.type === '렌탈' ? '렌탈' : '유선'), h('b', {}, r.name || '(이름 없음)'), h('span', { class: 'reg-sub' }, sub), regFeeChip(r)),
                     h('div', { class: 'reg-act' },
                         h('button', { type: 'button', class: 'btn btn-sm btn-report', 'data-act': 'reg-copy', onclick: function () { clip(regLine(r, i + 1), (r.name || '') + ' 한 줄을 복사했어요. 장부 엑셀에서 그 줄의 C열(모바일&유선) 칸을 누르고 붙여넣기(Ctrl+V) 하세요. (BH열 액면단가 · BC열 부가 추가&차감까지 채워지고, 뒤쪽 수식 칸은 그대로)' + (r.fee ? '' : ' ⚠ 이 줄은 액면단가가 비어 있어요.')); } }, '한 줄 복사'),
+                        mfsHas(r.id) ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'reg-form', title: '드라이브에 저장한 가입 확인서를 다시 열어 고치기 (이 기기에 저장한 것만)', onclick: function () { mfsOpen(r, null); } }, '📄 확인서') : null,
                         h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editReg(r); } }, '수정'), regDelBtn(r)));
             });
             return h('section', { class: 'reg-box', 'data-ledger': 'all' },
@@ -7042,6 +7044,69 @@
                 regMonthsBar(),
                 blocks.length ? blocks : h('div', { class: 'reg-empty' }, ymLabel(state.regYm) + '에 드라이브 저장한 유선 가입 확인서가 없어요.'));
         }
+        /* ---------- 저장한 가입 확인서 보관 (이 기기 · 팀 키로 암호화) → 장부에서 고칠 때 다시 열어 [수정 업로드] ---------- */
+        var MFS_PRE = 'sg-mfs-', MFS_MAX = 15, MFS_DAYS = 14;   // 최근 2주 · 15건 (서명 그림이 들어 있어 브라우저 저장 공간을 넘지 않게)
+        var MFS_MAP = [['name', 'name'], ['phone', 'phone'], ['birth', 'birth'], ['welf', 'welfare'], ['carrier', 'carrier'], ['prev', 'prevCarrier'], ['dealer', 'netUse'], ['seller', 'seller'], ['addr', 'addr'],
+            ['model', 'model', 'm'], ['serial', 'serial', 'm'], ['months', 'months', 'm'], ['plan', 'plan1', 'm'], ['keep', 'keep1', 'm'], ['plan2', 'plan2', 'm'], ['bill1', 'bill1', 'm'], ['bill2', 'bill2', 'm'], ['extra', 'extra', 'm'],
+            ['subsidy', 'subsidy', 'm'], ['pay', 'payAmt', 'm'], ['fre', 'freAmt', 'm']];   // 장부 칸 → 확인서 칸 ('m': 모바일 확인서만)
+        function mfsList() { var out = []; try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf(MFS_PRE) === 0) { var o = null; try { o = JSON.parse(localStorage.getItem(k)); } catch (e) { o = null; } out.push({ k: k, t: o && +o.t || 0 }); } } } catch (e) { /* 무시 */ } return out; }
+        function mfsPrune(max) { var cut = Date.now() - MFS_DAYS * 86400000, l = mfsList().sort(function (a, b) { return b.t - a.t; }); l.forEach(function (x, i) { if (i >= max || x.t < cut) lsDel(x.k); }); }
+        function mfsHas(id) { var t = lsGet(MFS_PRE + id); if (!t) return false; try { return +JSON.parse(t).t > Date.now() - MFS_DAYS * 86400000; } catch (e) { return false; } }
+        function mfsSave(M, sheet) {   // 고객 정보·서명이 들어 있어서 팀 키로 암호화해서 이 기기에만 · 종이 스캔본은 그림을 다시 만들 수 없어 표시만
+            if (!M.regId || !M.savedId || !db) return;
+            var vals = {};
+            if (!M.scan) [].forEach.call(sheet.querySelectorAll('input[data-mf], select[data-mf], textarea[data-mf]'), function (el) { var n = el.getAttribute('data-mf'); if (el.type === 'file') return; vals[n] = el.type === 'checkbox' || el.type === 'radio' ? (el.checked ? 1 : 0) : el.value; });
+            var snap = { kind: M.kind, regId: M.regId, savedId: M.savedId, saved: M.saved, savedFolder: M.savedFolder, contactId: M.contactId || '', pg: M.pg || '', scan: !!M.scan, v: M.scan ? null : vals, sig: M.scan ? null : M.sig };
+            var id = M.regId;
+            ensureTeam().then(function (t) { return encryptText(t.encKey, JSON.stringify(snap), 'mfs-v1:' + id); }).then(function (b) {
+                var txt = JSON.stringify({ t: Date.now(), b: b });
+                if (!lsSet(MFS_PRE + id, txt)) { mfsPrune(10); lsSet(MFS_PRE + id, txt); }
+                mfsPrune(MFS_MAX);
+            }, function () { /* 보관 못 해도 저장은 끝남 */ });
+        }
+        function mfsSet(M, n, val) {   // 확인서 칸 하나 바꾸기 (화면 계산·모양이 같이 바뀌게 input·change 알림)
+            var el = M.sheet.querySelector('[data-mf="' + n + '"]'); if (!el) return false;
+            if (el.type === 'checkbox' || el.type === 'radio') { if (el.checked === !!val) return true; el.checked = !!val; }
+            else { if (el.value === String(val)) return true; el.value = String(val); el.dispatchEvent(new Event('input', { bubbles: true })); }
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            return true;
+        }
+        function mfsOpen(r, before) {   // 저장한 가입 확인서를 다시 열기 (before가 있으면 장부에서 고친 칸을 확인서에도 넣음)
+            var raw = lsGet(MFS_PRE + r.id), o = null; try { o = JSON.parse(raw); } catch (e) { o = null; }
+            if (!o || !o.b) { toast('이 기기에는 이 고객의 가입 확인서 원본이 없어요. (확인서를 저장한 기기에서 열 수 있어요)'); return; }
+            ensureTeam().then(function (t) { return decryptText(t.encKey, o.b, 'mfs-v1:' + r.id); }).then(function (txt) {
+                var snap = JSON.parse(txt);
+                if (snap.scan) { alert('이 가입 확인서는 서명 받은 종이를 스캔해서 저장한 거라, 화면에서 그림을 다시 만들 수 없어요.\n종이 확인서를 고쳐서 [🖨 스캔] → 다시 저장해 주세요. (가입 장부 · 가입고객리스트는 이미 고쳤어요)'); return; }
+                var cur = mforms[snap.kind];
+                if (cur && cur.regId !== r.id && cur.dirty && !confirm('작성 중인 ' + (snap.kind === 'mobile' ? '모바일' : '유선') + ' 가입 확인서가 있어요. 그 내용은 지우고 ' + (r.name || '이 고객') + ' 확인서를 열까요?')) return;
+                var M = snap.kind === 'mobile' ? buildMobileForm() : buildWiredForm();
+                Object.keys(snap.v || {}).forEach(function (n) { var el = M.sheet.querySelector('[data-mf="' + n + '"]'); if (!el) return; if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!snap.v[n]; else el.value = snap.v[n]; });
+                Object.keys(M.box || {}).forEach(function (k) { if (snap.sig && snap.sig[k]) M.sig[k] = snap.sig[k]; paintSig(M, k); });
+                [].forEach.call(M.sheet.querySelectorAll('input[data-mf]:not([type=checkbox]):not([type=radio]):not([type=file]), textarea[data-mf]'), function (el) { if (el.value) el.dispatchEvent(new Event('input', { bubbles: true })); });
+                M.sheet.dispatchEvent(new Event('change', { bubbles: true }));   // 변경일 같은 자동 계산 칸도 다시 (저장할 때와 같은 그림)
+                M.saved = snap.saved; M.savedId = snap.savedId; M.savedFolder = snap.savedFolder; M.contactId = snap.contactId; M.regId = r.id; M.pg = snap.pg || '';
+                M.fee = r.fee || '';   // 장부에 있는 액면단가를 그대로 (다시 저장해도 장부에서 고친 값 유지)
+                M.dirty = false;
+                var miss = [];
+                if (before) {
+                    MFS_MAP.forEach(function (m) { if (m[2] === 'm' && snap.kind !== 'mobile') return; if ((r[m[0]] || '') === (before[m[0]] || '')) return; if (!mfsSet(M, m[1], r[m[0]] || '')) miss.push(m[0]); });
+                    var ty = r.type || '';
+                    if (ty !== (before.type || '')) {
+                        if (snap.kind === 'mobile') { mfsSet(M, 'tNew', /신규|010/.test(ty)); mfsSet(M, 'tPort', /번호이동|MNP/i.test(ty)); mfsSet(M, 'tRe', /재가입|기변|기기변경/.test(ty)); mfsSet(M, 'noBuy', /비구매/.test(ty)); }
+                        else { mfsSet(M, 'tNew', /신규/.test(ty)); mfsSet(M, 'tTrans', /동판/.test(ty)); mfsSet(M, 'tRenew', /재약정/.test(ty)); }
+                    }
+                    if (snap.kind === 'mobile') {
+                        if ((r.disc || '') !== (before.disc || '')) { mfsSet(M, 'dSel', /선약/.test(r.disc || '')); mfsSet(M, 'dSub', /공시/.test(r.disc || '')); }
+                        if ((r.wdp || '') !== (before.wdp || '')) mfsSet(M, 'wDp', !!r.wdp);
+                        if ((r.ins || '') !== (before.ins || '')) { var no = !r.ins || /^(없음|미가입|중고없음|x|-)$/i.test(r.ins); mfsSet(M, 'insY', !no); mfsSet(M, 'insN', no); if (!no && !/^가입$/.test(r.ins)) mfsSet(M, 'insName', r.ins); }
+                    }
+                    M.dirty = true;
+                }
+                mforms[snap.kind] = M; state.view = 'forms'; state.form = snap.kind; render(); window.scrollTo(0, 0);
+                try { mfGate(M); } catch (e) { /* 무시 */ }
+                toast(before ? '장부에서 고친 내용을 넣었어요' + (miss.length ? ' (확인서에 칸이 없어 못 넣은 것: ' + miss.join(', ') + ')' : '') + '. 확인한 뒤 [드라이브/연락처 저장] → [수정 업로드]를 눌러 주세요.' : (r.name || '') + ' 가입 확인서를 열었어요. 고친 뒤 [드라이브/연락처 저장] → [수정 업로드]를 누르면 드라이브 파일이 바뀌어요.');
+            }, function () { toast('가입 확인서 원본을 열지 못했어요. (팀 키가 바뀌었을 수 있어요)'); });
+        }
         function editReg(r) {   // 장부 한 줄 고치기 (할부원금처럼 확인서에 없는 칸도 여기서)
             var t = function (key, label, o) { o = o || {}; return { key: key, label: label, value: r[key] || '', half: o.full ? false : true, max: o.max || REG_LONG[key] || 60, type: o.type }; };
             var fields = [
@@ -7050,7 +7115,8 @@
                 t('name', '고객명'), t('welf', '복지여부'), t('dealer', '거래처(접수처)'), t('seller', '담당자'), t('carrier', '통신사'), t('phone', '번호'), t('birth', '생년월일'),
                 t('model', '모델'), { key: 'wdp', label: '워치·탭 동판 (2nd Device)', type: 'seg', options: [{ v: '일반', t: '일반' }, { v: '동판', t: '동판(번들)' }], value: r.wdp ? '동판' : '일반', half: true }, t('serial', '일련번호'), t('disc', '공시&선약(프약)'), t('subsidy', '공시금액'), t('price', '할부원금'), t('months', '할부개월'),
                 t('plan', '요금제'), t('extra', '부가서비스'), t('ins', '보험가입여부(종류)'), t('combKind', '결합종류'), t('comb', '결합여부'), t('keep', '요금제유지개월'),
-                t('plan2', '변경요금제'), t('bill1', '가입후요금'), t('bill2', '3개월후 요금'), t('prev', '이전사업자'), t('type', '가입유형'),
+                t('plan2', '변경요금제'), t('bill1', '가입후요금'), t('bill2', '3개월후 요금'), t('prev', '이전사업자'),
+                { key: 'type', label: '가입유형', value: r.type || '', half: true, max: 60, hint: '신규 · 번호이동 · 재가입(기기변경) · 비구매 — 바꾸면 액면단가도 다시 계산' },
                 { key: 'bank', label: '입금계좌 (사은품)', value: r.bank || '', half: true, max: 80, hint: '예: 국민 123456789012 (예금주가 다르면 괄호)' },
                 { key: 'pay', label: '유통망지원금 (PAY)', value: r.pay || '', half: true, max: 12, hint: '숫자만 · 가입고객리스트에는 -로 들어가요' },
                 { key: 'fre', label: '프리 (FRE)', value: r.fre || '', half: true, max: 12, hint: '숫자만 · 가입고객리스트에는 -로 들어가요' },
@@ -7076,17 +7142,32 @@
                     r.kind = v.kind === 'wired' ? 'wired' : 'mobile'; r.date = v.date;
                     REG_FIELDS.forEach(function (f) { if (!v.hasOwnProperty(f)) return; var x = String(v[f] || '').trim().slice(0, REG_LONG[f] || 60); if (x) r[f] = x; else delete r[f]; });
                     var reMsg = '';
-                    if (r.kind === 'mobile' && !feeHand && (r.wdp || '') !== (before.wdp || '') && (!before.fee || /^단가표 자동: /.test(before.fa || ''))) {   // 동판 ↔ 일반 바꾸면 단가표로 다시 계산 (직접 적은 단가는 그대로)
+                    var adjHand = v.hasOwnProperty('adj') && (v.adj || '') !== (before.adj || '');
+                    var feeKeys = r.kind === 'mobile' ? ['kind', 'type', 'model', 'plan', 'carrier', 'dealer', 'wdp', 'extra', 'ins', 'birth', 'pay', 'disc'] : ['kind', 'type', 'plan', 'carrier', 'dealer', 'model', 'comb'];
+                    var feeCh = feeKeys.some(function (f) { return (r[f] || '') !== (before[f] || ''); });
+                    if (feeCh && !feeHand && r.type !== '렌탈' && (!before.fee || /^단가표 자동: /.test(before.fa || ''))) {   // 가입유형·모델·요금제 등을 바꾸면 단가표로 다시 계산 (직접 적은 단가는 그대로)
                         var rc = JSON.parse(JSON.stringify(r)); delete rc.fee; delete rc.adj; delete rc.fa;
-                        var a2; try { a2 = regFeeMobile(rc); } catch (e2) { a2 = null; }
-                        if (a2 && a2.fee) { r.fee = String(a2.fee); if (a2.adj) r.adj = String(a2.adj); else delete r.adj; r.fa = ('단가표 자동: ' + a2.src).slice(0, 200); reMsg = ' 액면단가 ' + (a2.fee / 10000) + '만으로 다시 계산했어요.'; }
-                        else reMsg = ' (액면단가 다시 계산 못 함: ' + (a2 && a2.why ? a2.why : '단가표 확인') + ')';
+                        var a2; try { a2 = r.kind === 'mobile' ? regFeeMobile(rc) : regFeeWired(rc, polAt(r.date)); } catch (e2) { a2 = null; }
+                        if (a2 && a2.fee) {
+                            r.fee = String(a2.fee); r.fa = ('단가표 자동: ' + a2.src).slice(0, 200);
+                            if (r.kind === 'mobile' && !adjHand) { if (a2.adj) r.adj = String(a2.adj); else delete r.adj; }
+                            reMsg = ' 액면단가 ' + (+before.fee ? (+before.fee / 10000) + '만 → ' : '') + (a2.fee / 10000) + '만' + (r.kind === 'mobile' && !adjHand && (r.adj || '') !== (before.adj || '') ? ' · 부가 ' + ((+r.adj || 0) / 10000) + '만' : '') + '으로 다시 계산했어요.';
+                        } else reMsg = ' (액면단가 다시 계산 못 함: ' + (a2 && a2.why ? a2.why : '단가표 확인') + ' — 액면단가를 직접 확인해 주세요)';
                     }
-                    var ch = Object.keys(GL_REG_COL).concat(['addr']).filter(function (f) { return f !== 'kind' && (r[f] || '') !== (before[f] || '') && r[f]; });
-                    if (ch.length && before.name) glQueueReg(r, { only: ch, match: { name: before.name, phone: before.phone || '', kind: before.kind } });   // 고친 칸만 가입고객리스트 같은 고객 줄에도
+                    var ch = Object.keys(GL_REG_COL).concat(['addr']).filter(function (f) { return f !== 'kind' && (r[f] || '') !== (before[f] || '') && (r[f] || f === 'adj' || f === 'fee'); });
                     if (v.instDate) { r.instDate = v.instDate; r.inst = true; } else { delete r.instDate; }
                     delete regDraft[r.id]; stamp(r);
-                    commit('가입 장부를 고쳤어요.' + reMsg);
+                    if (ch.length && before.name) {   // 고친 칸만 가입고객리스트 같은 고객 줄에도 (액면단가·부가는 리스트 칸이 예전 값일 때만 바꿈)
+                        var rq = JSON.parse(JSON.stringify(r)), fx = {};
+                        ['fee', 'adj'].forEach(function (f) { if (ch.indexOf(f) < 0) return; fx[f] = +before[f] || 0; if (!rq[f]) rq[f] = '0'; });
+                        glQueueReg(rq, { only: ch, match: { name: before.name, phone: before.phone || '', kind: before.kind }, fix: fx });
+                    }
+                    var formCh = MFS_MAP.some(function (m) { return m[0] !== 'fee' && (r[m[0]] || '') !== (before[m[0]] || ''); }) || (r.type || '') !== (before.type || '') || (r.disc || '') !== (before.disc || '') || (r.wdp || '') !== (before.wdp || '') || (r.ins || '') !== (before.ins || '');
+                    var hasSnap = formCh && mfsHas(r.id);
+                    commit('가입 장부를 고쳤어요.' + reMsg + (ch.length && before.name ? ' 가입고객리스트에도 반영해요.' : '') + (formCh && !hasSnap ? ' (드라이브 가입 확인서 그림은 이 기기에 원본이 없어 그대로예요 — 확인서를 저장한 기기에서 고치면 그림도 바꿀 수 있어요)' : ''));
+                    if (hasSnap) setTimeout(function () {
+                        if (confirm('드라이브에 저장된 가입 확인서도 고칠까요?\n\n→ 고친 내용을 넣은 가입 확인서를 열어 드려요.\n   확인한 뒤 [드라이브/연락처 저장] → [수정 업로드]를 누르면 이전 파일은 휴지통으로, 고친 확인서로 바뀌어요.')) mfsOpen(r, before);
+                    }, 60);
                 },
                 onDelete: isBoss() ? function () { regRemove(r); } : null,
                 deleteConfirm: regDelText(r)
@@ -13937,7 +14018,7 @@
                 if (x.fix && x.fix[f] != null) { var fc = colOf(GL_REG_COL[f]), fv = fc ? row2[fc] : null; if (fv != null && fv !== '' && (String(fv).charAt(0) === '=' || Math.abs(+String(fv).replace(/,/g, '')) !== Math.abs(+x.fix[f]))) return; }   // 시트를 직접 고친 값은 그대로
                 var v = f === 'kind' ? regKindText(reg) : reg[f]; if (f === 'birth' && /^\d{6}$/.test(String(v || ''))) v = String(v);
                 if (GL_REG_NEG[f] && v) { var dn = String(v).replace(/\D/g, ''); v = +dn ? '-' + (+dn) : ''; }   // 유통망지원금·프리: -280000 처럼
-                if ((f === 'fee' || f === 'adj') && reg.fa) { var cc = colOf(GL_REG_COL[f]); if (cc && row2[cc] != null && row2[cc] !== '' && String(row2[cc]).charAt(0) !== '=') return; }   // 단가표로 자동 계산한 값은 장부에 직접 적은 값을 덮지 않음
+                if ((f === 'fee' || f === 'adj') && reg.fa && !(x.fix && x.fix[f] != null)) { var cc = colOf(GL_REG_COL[f]); if (cc && row2[cc] != null && row2[cc] !== '' && String(row2[cc]).charAt(0) !== '=') return; }   // 단가표로 자동 계산한 값은 장부에 직접 적은 값을 덮지 않음
                 put(colOf(GL_REG_COL[f]), v);
             });
             if (H.date && !only) put(H.date, (x.day || '') + '일');
