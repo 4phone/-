@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-fF0pIcXEbxoS9eaA+x3R7BzKNpex8PSO4gYi7KRjKk4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2KJDLnKBdEOLhltwjN+Yjnn+6PvOV5HnVpMIuz/YoXE='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1925,7 +1925,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-31.10';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-10-31.11';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -6565,7 +6565,7 @@
         }
         function regFeeWired(rec, Pin) {
             var P = Pin || polCur(); if (!P || !P.data) return { why: '유선 단가표가 없어요' };
-            var co = ctCarrier(rec.carrier, 'wired').tag, raw = String(rec.carrier || '').toUpperCase(), plan = String(rec.plan || ''), soho = /소호/.test(plan) || /안모/.test(rec.dealer || '');
+            var co = ctCarrier(rec.carrier, 'wired').tag, raw = String(rec.carrier || '').toUpperCase(), plan = String(rec.plan || ''), soho = /소호/.test(plan + ' ' + (rec.type || ''));   // 접수처(안모·스카이 등)와 상관없이 같은 유선 단가 · 소호 상품만 소호 단가
             var comb = /결합하기|기결합/.test(rec.comb || '');
             var ids = co === 'U+' ? (soho ? ['lgsoho'] : ['lgu']) : co === 'KT' ? ['kt'] : co === '스카이라이프' ? ['sky'] : co === '헬로비전' ? ['hello']
                 : co === 'SK' ? (soho ? ['skbsoho'] : /SKT/.test(raw) ? ['skt'] : /SKB|브로드/.test(raw) ? ['skb'] : []) : [];   // SKT → SKT 단가표 · SKB → SKB 단가표 (절대 섞지 않음)
@@ -6892,7 +6892,26 @@
                 alert('SKT 가입인데 SKB 단가로 자동 계산됐던 줄을 SKT 단가표로 고쳤어요.\n(가입 날짜에 쓰던 단가표 기준 · 가입고객리스트 액면단가도 같이 고쳐요)\n\n' + (done.length ? '고친 줄 ' + done.length + '\n' + done.slice(0, 30).join('\n') : '') + (miss.length ? '\n\n직접 확인할 줄 ' + miss.length + '\n' + miss.slice(0, 20).join('\n') : ''));
             }, 50);
         }
+        var regAnmoTried = Object.create(null);
+        function regAnmoBad(r) { return r.kind === 'wired' && r.type !== '렌탈' && !r.fee && /안모/.test(r.dealer || '') && !/소호/.test((r.plan || '') + ' ' + (r.type || '')) && !regAnmoTried[r.id]; }
+        function regAnmoFix() {   // 안모 접수 유선인데 단가가 비어 있는 줄 → 스카이와 같은 유선 단가로 채움 (직접 적은 값은 건드리지 않음)
+            if (!db || !isBoss()) return;
+            var bad = (db.regs || []).filter(regAnmoBad); if (!bad.length) return;
+            var n = 0;
+            bad.forEach(function (r) {
+                regAnmoTried[r.id] = 1;
+                var a; try { a = regFeeWired(JSON.parse(JSON.stringify(r)), polAt(r.date)); } catch (e) { a = null; }
+                if (!a || !a.fee) return;
+                var only = ['fee'], fix = { fee: 0 };
+                r.fee = String(a.fee); r.fa = ('단가표 자동: ' + a.src).slice(0, 200);
+                if (a.gv && !r.gv) { r.gv = String(a.gv); only.push('gv'); fix.gv = 0; }
+                stamp(r); n++;
+                if (r.name) glQueueReg(r, { only: only, match: { name: r.name, phone: r.phone || '', kind: r.kind }, fix: fix });   // 가입고객리스트 액면단가도 (빈 칸일 때만)
+            });
+            if (n) { commit(''); toast('안모 접수 유선 ' + n + '줄의 액면단가를 스카이와 같은 유선 단가로 채웠어요.'); }
+        }
         function regLedger() {   // 모바일 확인서 아래: 가입 장부 (모바일·유선)
+            if (isBoss() && (db.regs || []).some(regAnmoBad)) setTimeout(regAnmoFix, 0);
             if (isBoss() && !regSkBusy && (db.regs || []).some(regSkBad)) setTimeout(regSkFix, 0);
             if (isBoss() && mp.data && !lsGet('sg-adjfix-1031b')) setTimeout(regAdjFix, 0);
             var list = regMonth(''), noFee = list.filter(function (r) { return !r.fee; }).length;
