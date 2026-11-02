@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3LqCWr/ceMaVaK+x1TJ8h6XguSQqH0UVqHx6VueAzDI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-DnjJ4+zULvE+mVNEKfTmFO0sWysR4ye1hOghYykOcBk='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1150,6 +1150,8 @@
         .mf-comb .mf-cell { flex: 1 1 auto; flex-wrap: nowrap; white-space: nowrap; min-width: 0; }
         .mf-comb .mf-cell:last-child { flex: 0 0 auto; }
         .mf-sheet .mf-comb .mf-in.mid { flex: 1 1 60px; width: auto; min-width: 40px; }
+        .mf-sheet .mf-off .mf-in, .mf-sheet .mf-combo.mf-off .mf-in, .mf-sheet .mf-in:disabled { background: #EFEFEA; color: #9AA08A; cursor: not-allowed; }
+        .mf-sheet .mf-grp.mf-off { opacity: .55; } .mf-sheet .mf-combo.mf-off .mf-dd { opacity: .4; }
         .mf-giftrow { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; }
         .mf-giftrow .mf-combo { flex: 0 0 auto; }
         .mf-sheet .mf-giftrow .mf-combo .mf-in.gift { width: 86px; flex: 0 0 86px; text-align: right; padding-right: 22px; }
@@ -1959,7 +1961,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-02.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-02.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -5472,6 +5474,37 @@
             var dirty = function () { if (M.saved && !M.dirty) { M.dirty = true; mfSaveBtn(M); } };   // 드라이브에 저장한 뒤 고치면 '수정 저장'
             M.markDirty = dirty;
             sheet.addEventListener('change', dirty);
+            var prevSync = function (byType) {   // 모바일: 신규 → 이전 통신사 '신규' · 재가입 → 가입 통신사와 같게 · 번호이동 → 자동으로 넣은 값만 지움
+                if (M.kind !== 'mobile') return;
+                var pv = q('prevCarrier'), car = q('carrier'); if (!pv) return;
+                var auto = pv.getAttribute('data-auto'), isAuto = auto != null && pv.value === auto;
+                var want = q('tNew') && q('tNew').checked ? '신규' : q('tRe') && q('tRe').checked ? (car ? car.value.trim() : '') : null;
+                if (want != null) { if (byType || isAuto || !pv.value.trim()) { pv.value = want; pv.setAttribute('data-auto', want); } }
+                else if (isAuto) { pv.value = ''; pv.removeAttribute('data-auto'); }
+            };
+            sheet.addEventListener('change', function (e) { var n = e.target && e.target.getAttribute ? e.target.getAttribute('data-mf') : ''; if (/^(tNew|tPort|tRe)$/.test(n)) prevSync(true); else if (n === 'carrier') prevSync(false); });
+            sheet.addEventListener('input', function (e) { if (e.target && e.target.getAttribute && e.target.getAttribute('data-mf') === 'carrier') prevSync(false); });
+            var giftOff = function () {   // 유선: 사은품 총 '없음' → 나머지 사은품 칸 잠금
+                var tot = q('giftT'); if (!tot) return;
+                var off = /^없음$/.test(String(tot.value || '').trim());
+                if (off === !!M.giftOff) return;
+                M.giftOff = off;
+                MF_GIFT.concat(['dpBank', 'dpNo', 'dpOwner', 'dpSame']).forEach(function (n) {
+                    var x = q(n); if (!x) return;
+                    if (off) {
+                        if (MF_GIFT.indexOf(n) >= 0) { x.value = '없음'; x.setAttribute('data-auto', '없음'); }
+                        else if (x.type === 'checkbox') x.checked = false; else x.value = '';
+                    } else if (MF_GIFT.indexOf(n) >= 0 && x.value === '없음' && x.getAttribute('data-auto') === '없음') { x.value = ''; x.removeAttribute('data-auto'); }
+                    x.disabled = off;
+                    var cb = x.closest ? x.closest('.mf-combo') : null; if (cb) { cb.classList.toggle('mf-off', off); [].forEach.call(cb.querySelectorAll('button'), function (b) { b.disabled = off; }); }
+                });
+                var dpRow = q('dpBank'); dpRow = dpRow && dpRow.closest ? dpRow.closest('.mf-grp') : null; if (dpRow) dpRow.classList.toggle('mf-off', off);
+                var gr = sheet.querySelector('.mf-giftrow'); if (gr) gr.classList.toggle('mf-gift-off', off);
+            };
+            M.giftOff = false;
+            sheet.addEventListener('change', function (e) { if (e.target && e.target.getAttribute && e.target.getAttribute('data-mf') === 'giftT') giftOff(); });
+            sheet.addEventListener('input', function (e) { if (e.target && e.target.getAttribute && e.target.getAttribute('data-mf') === 'giftT') giftOff(); });
+            sheet.addEventListener('focusout', function () { setTimeout(giftOff, 0); });
             sheet.addEventListener('input', function (e) {
                 dirty();
                 var t = e.target, n = t.getAttribute ? t.getAttribute('data-mf') : null;
@@ -5768,7 +5801,7 @@
             ['@card', '제휴 카드 신청/미신청', ['cardY', 'cardN']], ['cardDisc', '제휴카드 할인금액', null, 'cardY'], ['cardOwner', '제휴카드 명의자', null, 'cardY'], ['cardBirth', '제휴카드 생년월일', null, 'cardY'], ['cardPhone', '제휴카드 휴대폰', null, 'cardY'], ['cardCo', '카드사명', null, 'cardY'],
             ['@comb', '결합 정보', ['cOld', 'cNew', 'cNone'], '!tRent'], ['cOldN', '기존 결합 내용', null, 'cOld'], ['cNewN', '결합 내용', null, 'cNew'],
             ['@imp', '기타 정보 [확인] 체크', ['impOk']], ['etc1', '기타 정보 첫 줄(설치비)'],
-            ['giftT', '사은품 총액'], ['giftV', '상품권'], ['giftH', '본사 지원금'], ['giftA', '추가지원금'],
+            ['giftT', '사은품 총액'], ['giftV', '상품권', null, '$giftT'], ['giftH', '본사 지원금', null, '$giftT'], ['giftA', '추가지원금', null, '$giftT'],
             ['dpBank', '사은품 입금 은행', null, '$giftT'], ['dpNo', '사은품 입금 계좌번호', null, '$giftT'], ['dpOwner', '사은품 입금 예금주', null, '$giftT'],
             ['y', '작성 연도'], ['m', '작성 월'], ['d', '작성 일'], ['seller', '판매자'], ['sellerPhone', '판매자 연락처']];
         var MF_REQ_MOBILE = [   // 모바일 가입 확인서: 다 써야 저장·복사·파일 받기·인쇄가 켜짐 (추가 서비스·기타 메모·케이스 주문은 선택 · 변경 요금제·잔여 할부금·위약금·지원금 계좌·법정대리인은 하나라도 적으면 그 줄 전부)
