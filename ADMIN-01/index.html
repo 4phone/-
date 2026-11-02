@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-h2erQeWR2+ROcd3UuM1da1SXxfzHXpiGYWW1S+opcWs='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lbEboS4BzMBaUduoWptjDuDb6UpSj7hcTttHdaQpOmY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -223,6 +223,12 @@
         .cal-cell.out { background: #F6F7F0; }
         .cal-cell.out .cal-num { color: #A8B097; }
         .cal-cell.sel { box-shadow: inset 0 0 0 3px var(--olive-700); }
+        .cal-top { display: flex; align-items: center; gap: 4px; width: 100%; min-width: 0; }
+        .cal-sale { display: inline-flex; align-items: center; gap: 3px; margin-left: auto; font-size: 10.5px; line-height: 1; white-space: nowrap; min-width: 0; overflow: hidden; }
+        .cal-sale b, .cal-sum b { font-weight: 900; padding: 2px 4px; border-radius: 4px; }
+        .cs-m { color: #1F4E79; background: #E7F0FA; } .cs-t { color: #1F6B2A; background: #E6F4E8; }
+        .cs-bm { color: #6B4A00; font-weight: 800; }
+        .cal-sum { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; margin: 0 6px; flex-wrap: wrap; }
         .cal-num { font-weight: 700; font-size: 13px; width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; flex: none; }
         .cal-cell.sun .cal-num { color: var(--danger); } .cal-cell.sat .cal-num { color: var(--blue); }
         .cal-cell.today .cal-num { background: var(--gold); color: #1B1E0C; }
@@ -1656,6 +1662,7 @@
             .forms-grid { grid-template-columns: minmax(0, 1fr); }
             .acct-email { display: none; }
             .cal-cell { min-height: 56px; padding: 4px 2px; align-items: center; gap: 2px; }
+            .cal-top { flex-direction: column; gap: 1px; } .cal-sale { margin-left: 0; font-size: 9.5px; gap: 1px; } .cal-sale b { padding: 1px 2px; } .cal-sale .cs-bm { display: none; }
             .cal-cell .chip, .cal-cell .more { display: none; }
             .cal-cell .cal-count { display: inline-block; }
             .cal-title { font-size: 19px; min-width: 0; }
@@ -1939,7 +1946,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-02.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-02.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2912,8 +2919,30 @@
         }
 
         /* ---------- 화면: 캘린더 ---------- */
+        var calSaleWait = Object.create(null);
+        function calSales(y, m) {   // 그 달 장부에서 날짜별 { m: 모바일 건수, t: 유선 건수, bm: 운영비포함총매출 합 } (권한 없거나 아직 못 받았으면 null)
+            if (!db || !glCan() || !driveOn()) return null;
+            if (!gl.idx) { if (!gl.busy) glLoad(false); return null; }
+            var it = glIdxList().filter(function (x) { var k = glYm(x.name); return k && /장부/.test(x.name) && k.y === y && k.m === m + 1; })[0];
+            if (!it) return { none: true, days: {}, sum: { m: 0, t: 0, bm: 0 } };
+            var E = gl.sh[it.id];
+            if (!E || !E.S) {
+                if (!calSaleWait[it.id]) { calSaleWait[it.id] = 1; glOpenSheet(it.id, false).then(function () { calSaleWait[it.id] = 0; if (state.view === 'calendar') render(); }, function () { calSaleWait[it.id] = 0; }); }
+                return null;
+            }
+            var days = {}, sum = { m: 0, t: 0, bm: 0 };
+            glRowsOf(glCalcOf(E)).forEach(function (x) {
+                if (!x.day) return;
+                var d = days[x.day] || (days[x.day] = { m: 0, t: 0, bm: 0 });
+                if (/^모바일/.test(x.kind)) { d.m++; sum.m++; } else if (/^유선/.test(x.kind)) { d.t++; sum.t++; }
+                d.bm += x.bm || 0; sum.bm += x.bm || 0;
+            });
+            return { days: days, sum: sum };
+        }
+        function calMan(v) { var n = Math.round((v || 0) / 10000); return n.toLocaleString('ko-KR') + '만'; }
         function renderCalendar() {
             var y = state.calY, m = state.calM, first = new Date(y, m, 1), offset = first.getDay(), daysIn = new Date(y, m + 1, 0).getDate();
+            var SALE = calSales(y, m);   // 날짜별 실적 (대표 · 가입고객리스트 권한)
             var total = Math.ceil((offset + daysIn) / 7) * 7, today = ymd(new Date()), map = {}, i;
             db.events.forEach(function (e) { (map[e.date] = map[e.date] || []).push(e); });
             Object.keys(map).forEach(function (k) { map[k].sort(byTime); });
@@ -2927,7 +2956,13 @@
                         type: 'button', 'data-fk': 'cal-' + key, class: cls, 'aria-label': (d.getMonth() + 1) + '월 ' + d.getDate() + '일, 일정 ' + list.length + '건', 'aria-pressed': key === state.selDate ? 'true' : 'false',
                         onclick: function () { state.selDate = key; if (out) { state.calY = d.getFullYear(); state.calM = d.getMonth(); } render(); }
                     },
-                        h('span', { class: 'cal-num' }, d.getDate()),
+                        (function () {   // 날짜 + 그날 실적 (M 모바일 · T 유선 · 매출)
+                            var sd = !out && SALE && SALE.days[d.getDate()];
+                            var num = h('span', { class: 'cal-num' }, d.getDate());
+                            if (!sd || !(sd.m || sd.t || sd.bm)) return num;
+                            return h('span', { class: 'cal-top' }, num, h('span', { class: 'cal-sale', title: d.getDate() + '일 실적: 모바일 ' + sd.m + '건 · 유선 ' + sd.t + '건 · 매출 ' + Math.round(sd.bm).toLocaleString('ko-KR') + '원' },
+                                h('b', { class: 'cs-m' }, 'M' + sd.m), h('b', { class: 'cs-t' }, 'T' + sd.t), h('span', { class: 'cs-bm' }, calMan(sd.bm))));
+                        })(),
                         (function () { var nm = hdNames(key); return nm.length ? h('span', { class: 'cal-off', title: '휴무: ' + nm.join(', ') }, '🌴 ' + nm.join(', ')) : null; })(),
                         list.slice(0, 3).map(function (e) { var es = evState(e); return h('span', { class: 'chip' + (es === 'done' ? ' ev-done' : es === 'ext' ? ' ev-ext' : ''), style: '--c:' + staffColor(e.staffId) }, (es === 'done' ? '✓ ' : es === 'ext' ? '→ ' : '') + (e.time ? e.time + ' ' : '') + e.title); }),
                         list.length > 3 ? h('span', { class: 'more' }, '+' + (list.length - 3) + '건 더') : null,
@@ -2951,6 +2986,7 @@
                 h('div', { class: 'cal-bar' },
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'cal-prev', 'aria-label': '이전 달', onclick: function () { shiftMonth(-1); } }, '이전 달'),
                     h('div', { class: 'cal-title', 'aria-live': 'polite' }, y + '년 ' + (m + 1) + '월'),
+                    SALE && !SALE.none ? h('span', { class: 'cal-sum', title: '가입고객리스트 ' + (y % 100) + '년 ' + (m + 1) + '월 장부 기준 (취소 제외)' }, h('b', { class: 'cs-m' }, 'M ' + SALE.sum.m), h('b', { class: 'cs-t' }, 'T ' + SALE.sum.t), h('span', { class: 'cs-bm' }, '매출 ' + calMan(SALE.sum.bm))) : null,
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'cal-next', 'aria-label': '다음 달', onclick: function () { shiftMonth(1); } }, '다음 달'),
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'cal-today', onclick: function () { var n = new Date(); state.calY = n.getFullYear(); state.calM = n.getMonth(); state.selDate = ymd(n); render(); } }, '오늘')),
                 h('div', { class: 'cal-wrap' }, h('div', { class: 'cal-week' }, WEEK.map(function (w) { return h('div', {}, w); })), h('div', { class: 'cal-grid' }, cells)),
@@ -13319,7 +13355,7 @@
             }).then(function () {
                 if (mine !== gl) return;
                 if (gl.inbox > 0) glInboxPull();
-                if (state.view === 'gl') render();
+                if (state.view === 'gl' || state.view === 'calendar') render();
             }).catch(function (e) {
                 if (mine !== gl) return;
                 gl.busy = false;
