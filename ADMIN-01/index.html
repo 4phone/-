@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-CTNKEnhwrBQi1kK+34eSBVE8e3WX4OWrbHbSNxEQQg4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3LqCWr/ceMaVaK+x1TJ8h6XguSQqH0UVqHx6VueAzDI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -539,6 +539,19 @@
         .today-tasks .panel > .task-row { content-visibility: auto; contain-intrinsic-size: auto 66px; overflow-clip-margin: 8px; }
         .today-tasks .panel > .task-row:focus-visible { outline-offset: -3px; }
         .notices-list > .notice, .panel > .notice { content-visibility: auto; contain-intrinsic-size: auto 130px; overflow-clip-margin: 8px; }
+        .pol-top-btn { background: #FFF6D6; border-color: #E3BE00; color: #6B4A00; font-weight: 900; } .pol-top-btn[aria-pressed="true"] { background: #FFD700; color: #2D3214; }
+        .pol-top { margin-bottom: 18px; padding: 12px 12px 6px; }
+        .pol-top-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; } .pol-top-h b { font-size: 16px; } .pol-top-h small { color: var(--muted); font-size: 12px; }
+        .pol-top-t { width: 100%; border-collapse: collapse; min-width: 720px; }
+        .pol-top-t th, .pol-top-t td { border-bottom: 1px solid var(--line); padding: 7px 8px; text-align: left; vertical-align: top; font-size: 13px; }
+        .pol-top-t thead th { background: #F7F9F0; font-size: 12.5px; color: var(--muted); font-weight: 800; }
+        .pol-top-t .pt-k { white-space: nowrap; font-weight: 900; color: #2D3214; } .pol-top-t .pt-k small { display: block; font-size: 15px; color: #3E441E; }
+        .pol-top-t tr.pt-split th, .pol-top-t tr.pt-split td { border-top: 3px solid #CDD3B4; }
+        .pol-top-c { cursor: pointer; } .pol-top-c:hover, .pol-top-c:focus-visible { background: #FFF6D6; outline: none; } .pol-top-c.first { background: #FFFBE6; }
+        .pol-top-c .pt-fee { display: block; font-size: 17px; font-weight: 900; color: #B3261E; } .pol-top-c.none { color: var(--muted); cursor: default; }
+        .pol-top-c .pt-car { display: inline-block; font-weight: 900; color: #fff; background: var(--c); border-radius: 6px; padding: 1px 6px; font-size: 12px; margin: 2px 0; }
+        .pol-top-c .pt-n { display: block; color: var(--muted); font-size: 11.5px; line-height: 1.35; }
+        .pol-top-t .pt-rest { font-size: 12px; color: #3E441E; }
         .pol-card { content-visibility: auto; contain-intrinsic-size: auto 560px; }
         .reg-box > .reg-row, .dl-grp > .dl-row { content-visibility: auto; contain-intrinsic-size: auto 48px; overflow-clip-margin: 8px; }
         @media print { .today-tasks .panel > .task-row, .panel > .notice, .pol-card, .reg-box > .reg-row, .dl-grp > .dl-row { content-visibility: visible; } }
@@ -1946,7 +1959,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-02.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-02.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -1959,7 +1972,7 @@
         var meMemo = null;       // 속도: 로그인 직후 '내 계정 정보' 요청을 한 번으로 합침
         var db = null, me = '', authed = false, cryptoKey = null, idleTimer = null, toastTimer = null, pendingToast = '';
         var now0 = new Date();
-        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false, date: '', form: '', regYm: ymd(now0).slice(0, 7), pol: { car: 'all', q: '', sp: 'all', view: '' } };
+        var state = { view: 'today', calY: now0.getFullYear(), calM: now0.getMonth(), selDate: ymd(now0), who: 'all', status: 'all', open: Object.create(null), showDone: false, date: '', form: '', regYm: ymd(now0).slice(0, 7), pol: { car: 'all', q: '', sp: 'all', view: '', top: false } };
 
         /* ---------- 공통 도구 ---------- */
         function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -8332,6 +8345,44 @@
                 h('div', { class: 'pa-list' }, rows),
                 h('div', { class: 'pol-more' }, box('수수료 · 확인 사항', c.extra, true), box('해지 · 환수 기준', c.refund, false), box('결합 조건', c.notes, false)));
         }
+        function polTopRank(D) {   // 구성 × 속도마다 통신사별 가장 높은 수수료 상품 → 높은 순
+            var SPS = [['100M', '100M'], ['200M', '160·200M'], ['500M', '500M'], ['1G', '1G']], rows = [];
+            var home = D.carriers.filter(function (c) { return !c.closed && !/soho|caps|hyundai|multi|usim|retail|cctv/i.test(c.id) && !/소호|CCTV|유심|멀티룸|소매/i.test(c.name); });
+            [['solo', '인터넷 단독'], ['tv', '인터넷 + TV']].forEach(function (K) {
+                SPS.forEach(function (S) {
+                    var best = [];
+                    home.forEach(function (c) {
+                        var top = null;
+                        c.groups.forEach(function (g) { g.rows.forEach(function (r) {
+                            if (polSpeed(r.n) !== S[0]) return;
+                            var tv = polParts(r.n).slice(1).filter(function (x) { return !polNotTv(x); }).length > 0;
+                            if ((K[0] === 'tv') !== tv) return;
+                            var f = polFee(r).fee; if (!(f > 0)) return;
+                            if (!top || f > top.f) top = { c: c, r: r, f: f, g: g };
+                        }); });
+                        if (top) best.push(top);
+                    });
+                    best.sort(function (a, b) { return b.f - a.f; });
+                    if (best.length) rows.push({ k: K[0], kl: K[1], sp: S[0], sl: S[1], best: best });
+                });
+            });
+            return rows;
+        }
+        function polTopPanel(D) {
+            var rows = polTopRank(D); if (!rows.length) return null;
+            var man = function (f) { return (Math.round(f / 1000) / 10) + '만'; };
+            var go = function (x, row) { state.pol.car = x.c.id; state.pol.sp = row.sp; state.pol.q = ''; state.pol.top = false; render(); setTimeout(function () { var el = document.querySelector('.pol-card'); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 60); };
+            return h('section', { class: 'panel pol-top', 'aria-label': '최고 수수료' },
+                h('div', { class: 'pol-top-h' }, h('b', {}, '🏆 구성별 최고 수수료'), h('small', {}, '통신사마다 그 구성에서 가장 높은 상품 · 높은 순 · 칸을 누르면 그 통신사 표로 (소호·CCTV·유심동판 제외)')),
+                h('div', { class: 'pol-scroll' }, h('table', { class: 'pol-top-t' },
+                    h('thead', {}, h('tr', {}, h('th', {}, '구성'), h('th', {}, '🥇 1위'), h('th', {}, '🥈 2위'), h('th', {}, '🥉 3위'), h('th', {}, '그다음'))),
+                    h('tbody', {}, rows.map(function (row, ri) {
+                        var cell = function (x, i) { return x ? h('td', { class: 'pol-top-c' + (i === 0 ? ' first' : ''), tabindex: '0', role: 'button', 'data-act': 'pol-top-go', title: x.c.name + ' · ' + x.r.n + ' — 눌러서 이 통신사 표 보기', onclick: function () { go(x, row); }, onkeydown: function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(x, row); } } },
+                            h('b', { class: 'pt-fee' }, man(x.f)), h('span', { class: 'pt-car', style: '--c:' + (x.c.color || '#3E441E') }, x.c.name), h('small', { class: 'pt-n' }, x.r.n + (x.r.g > 0 ? ' · 상품권 ' + x.r.g + '만' : ''))) : h('td', { class: 'pol-top-c none' }, '-'); };
+                        return h('tr', { class: ri && rows[ri - 1].k !== row.k ? 'pt-split' : '' }, h('th', { class: 'pt-k' }, row.kl, h('small', {}, row.sl)), cell(row.best[0], 0), cell(row.best[1], 1), cell(row.best[2], 2),
+                            h('td', { class: 'pt-rest' }, row.best.slice(3).map(function (x) { return x.c.name + ' ' + man(x.f); }).join(' · ') || '-'));
+                    })))));
+        }
         function polCard(c, sp, q) {
             if (c.addon) return polAddonCard(c, q);
             var rows = [], shown = 0;
@@ -10377,9 +10428,11 @@
                 }));
             var q = h('input', { type: 'search', 'data-fk': 'pol-q', placeholder: '상품 찾기 (예: 500 스탠다드)', 'aria-label': '상품 찾기', value: S.q });
             q.addEventListener('input', function () { state.pol.q = this.value; clearTimeout(renderPolicy.t); renderPolicy.t = setTimeout(render, 150); });
+            var topBtn = h('button', { type: 'button', class: 'btn btn-sm pol-top-btn', 'data-act': 'pol-top', 'aria-pressed': S.top ? 'true' : 'false', onclick: function () { state.pol.top = !state.pol.top; render(); } }, S.top ? '🏆 최고 수수료 닫기' : '🏆 최고 수수료');
             var cards = D.carriers.filter(function (c) { return S.car === 'all' || S.car === c.id; }).map(function (c) { return polCard(c, S.sp, S.q.trim()); }).filter(Boolean);
             var picked = polPick || polLast;
             var acts = h('div', { class: 'pol-acts' },
+                topBtn,
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'calc', 'aria-pressed': calcOpen() ? 'true' : 'false', onclick: function () { calcToggle(); this.setAttribute('aria-pressed', calcOpen() ? 'true' : 'false'); } }, '계산기'),
                 h('button', { type: 'button', class: 'btn btn-sm btn-step', 'data-step': '3', 'data-act': 'pol-to-idr', title: picked ? picked.c.name + ' ' + picked.r.n + ' 로 신분증 요청 진행' : '상담할 상품 줄을 먼저 눌러 주세요', onclick: polToIdr }, '신분증요청 바로진행'));
             var viewBar = viewing ? h('div', { class: 'ph-viewbar', role: 'status' },
@@ -10392,6 +10445,7 @@
                     polAddSig() ? h('div', { class: 'pol-picknote pa-note' }, '추가 상품: ', h('b', {}, ['cctv', 'ins'].filter(function (k) { return polAdd[k]; }).map(function (k) { return polAdd[k].r.n; }).join(' · ')), h('button', { type: 'button', class: 'link-btn', 'data-act': 'pol-addon-clear', onclick: function () { polAdd = Object.create(null); render(); clMemoAddon(); } }, '추가 상품 빼기')) : null,
                     picked ? h('div', { class: 'pol-picknote' }, '선택: ', h('b', {}, picked.c.name + ' · ' + picked.r.n), polPick ? ' · ' + polStageText(polPick) : '', h('button', { type: 'button', class: 'link-btn', onclick: function () { polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); polTv = { key: '', n: {} }; render(); } }, '선택 지우기')) : null,
                     picked ? polTvBar(picked) : null),
+                S.top ? polTopPanel(D) : null,
                 cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '조건에 맞는 요금제가 없어요. 통신사·속도·검색어를 바꿔 보세요.')),
                 D.src ? h('p', { class: 'ib-help' }, '출처: ' + D.src + ' · 결합요금은 각 통신사 공식 홈페이지의 가족결합 인터넷 할인 기준(3년 약정)이에요. SK 인터넷+TV는 표 요금이 인터넷·TV 결합할인(광랜 1,100 / 기가 5,500) 적용가라서, 휴대폰 결합 시 그 할인을 되돌린 뒤 휴대폰 결합할인을 빼요(+표시). KT는 단독 500M·1G만 휴대폰 결합 시 5,500원이 한 번 더 빠지고, TV를 함께 쓰면 5,500원까지예요.') : null);
         }
