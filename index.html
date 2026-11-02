@@ -11,12 +11,13 @@
     <!-- 카톡 미리보기 간판(OG 태그) 끝 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'">
     <title>사거리인터넷 - 털보아저씨가 최대 사은품 쏘는 곳!</title>
     <!-- 투명 파비콘 적용 완료 -->
     <link rel="icon" href="사거리로고_투명.png" type="image/png">
     
-    <!-- 프리텐다드 폰트 불러오기 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <!-- 프리텐다드 폰트 불러오기 (화면에 쓰인 글자만 나눠 받는 방식 · 2026-10-31 속도 개선) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" />
     <meta name="color-scheme" content="light only">
     <!-- [추가] 첫 화면·제목용 글꼴 (Noto Sans KR 가는 굵기, Noto Serif KR 명조, Cormorant Garamond 영문 장식) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -238,6 +239,8 @@
         .hl-top { aspect-ratio: 1 / 1; display: flex; flex-direction: column; padding: 14px; box-sizing: border-box; background: radial-gradient(110% 80% at 85% 0%, rgba(201,169,98,0.22), rgba(201,169,98,0) 60%), linear-gradient(160deg, #F2F7F6 0%, #E3EEEC 100%); }
         .hl-r1 { display: flex; align-items: center; justify-content: center; gap: 6px; }
         .hl-st { font-size: 10.5px; font-weight: 800; border-radius: 999px; padding: 3px 8px; white-space: nowrap; border: 1px solid; }
+        .hl-mon { font-size: 10.5px; font-weight: 800; border-radius: 999px; padding: 3px 7px; white-space: nowrap; color: #134047; background: #FFFFFF; border: 1px solid #B9D6D1; }   /* 접수 월 (예: 11월) */
+        @media (max-width: 380px) { .hl-r1 { gap: 4px; } .hl-mon, .hl-st { font-size: 9.5px; padding: 2px 6px; } }   /* 아주 좁은 휴대폰: 월 · 진행 두 칸이 한 줄에 들어가게 */
         .hl-st.sch { color: #9A5B00; background: #FFF1D6; border-color: #F1C77A; }
         .hl-st.wait { color: #1F5A5E; background: #E6F1EF; border-color: #B9D6D1; }
         .hl-st.done { color: #1E7A4C; background: #E5F6EC; border-color: #A9DDBF; }
@@ -1930,7 +1933,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         <a href="tel:18332440" class="m-bar-btn m-btn-phone">
             <span class="m-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg></span>전화상담
         </a>
-        <a href="http://pf.kakao.com/_PxjsKG/chat" target="_blank" class="m-bar-btn m-btn-kakao">
+        <a href="https://pf.kakao.com/_PxjsKG/chat" target="_blank" rel="noopener" class="m-bar-btn m-btn-kakao">
             <span class="m-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4c-5 0-9 3.1-9 7 0 2.5 1.7 4.7 4.2 5.9L6.5 20l3.8-2.3c.6.1 1.1.1 1.7.1 5 0 9-3.1 9-7s-4-6.8-9-6.8z"></path></svg></span>카톡상담
         </a>
         <a href="#" onclick="openMobileDirectForm(event)" class="m-bar-btn m-btn-direct">
@@ -1946,7 +1949,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         <a href="tel:18332440" class="pc-q-btn pc-btn-phone">
             <span class="pc-q-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path></svg></span>상담전화
         </a>
-        <a href="http://pf.kakao.com/_PxjsKG/chat" target="_blank" class="pc-q-btn pc-btn-kakao">
+        <a href="https://pf.kakao.com/_PxjsKG/chat" target="_blank" rel="noopener" class="pc-q-btn pc-btn-kakao">
             <span class="pc-q-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4c-5 0-9 3.1-9 7 0 2.5 1.7 4.7 4.2 5.9L6.5 20l3.8-2.3c.6.1 1.1.1 1.7.1 5 0 9-3.1 9-7s-4-6.8-9-6.8z"></path></svg></span>카톡상담
         </a>
         <a href="#" onclick="openPcDirectForm(event)" class="pc-q-btn pc-btn-direct">
@@ -3978,8 +3981,9 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
         function mon(x) { return typeof x.m === 'string' ? x.m : typeof x.d === 'string' ? x.d.slice(0, 7) : ''; }   // 서버 버전에 따라 월(m) 또는 날짜(d) → 월만 사용
         function ok(x) { return x && /^\d{4}-\d{2}$/.test(mon(x)) && typeof x.nm === 'string' && x.nm.indexOf('○') > 0 && CAR.hasOwnProperty(x.car) && ST.hasOwnProperty(x.st); }
-        function card(x) {   // 날짜는 보내지 않고 장부의 '월'만 (예: 10월)
+        function card(x) {   // 날짜는 보내지 않고 장부의 '월'만 (예: 10월) → 카드 위에 '11월'처럼 표시
             var c = el('div', 'hl-card'), top = el('div', 'hl-top'), r1 = el('div', 'hl-r1'), car = SHORT[x.car] || x.car;
+            r1.appendChild(el('span', 'hl-mon', (+mon(x).slice(5)) + '월'));   // 접수 월 (장부의 월)
             r1.appendChild(el('span', 'hl-st ' + x.st, ST[x.st]));
             var cw = el('div', 'hl-car'), lg = el('span', 'hl-lg', car); lg.style.background = CAR[x.car]; cw.appendChild(lg);
             top.appendChild(r1); top.appendChild(cw);
@@ -4821,7 +4825,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
     var A = window.SGAI;
     var st = { topic: '', n: {}, r: {}, cards: [], hist: [], rentItems: null, busy: false };
     var FEED = 'https://modil.co.kr/api/feed/rental', CK = 'sg-ai-rent-v1', TTL = 30 * 60 * 1000;
-    var TEL = '1833-2440', KAKAO = 'http://pf.kakao.com/_PxjsKG/chat';
+    var TEL = '1833-2440', KAKAO = 'https://pf.kakao.com/_PxjsKG/chat';
     var $ = function (id) { return document.getElementById(id); };
     function h(tag, attrs) {
         var e = document.createElement(tag);
@@ -4839,7 +4843,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
         ov = h('div', { class: 'sga-ov', id: 'sga-ov', hidden: true, role: 'dialog', 'aria-modal': 'true', 'aria-label': '사거리 AI 상담' },
             h('div', { class: 'sga-panel' },
                 h('div', { class: 'sga-head' },
-                    h('span', { class: 'sga-av' }, h('img', { src: '털보아저씨국방색.png', alt: '' })),
+                    h('span', { class: 'sga-av' }, h('img', { src: '털보아저씨_아바타.jpg', alt: '' })),
                     h('div', { class: 'sga-ttl' }, h('b', { text: '사거리 AI 상담' }), h('small', { text: '인터넷·TV · 렌탈 추천부터 가입까지' })),
                     h('button', { type: 'button', class: 'sga-reset', title: '대화를 지우고 처음부터 다시 시작해요', 'aria-label': '대화 초기화 · 처음부터 다시', onclick: reset }, h('span', { 'aria-hidden': 'true', text: '↺' }), h('span', { class: 'sga-reset-t', text: '처음부터' })),
                     h('button', { type: 'button', class: 'sga-x', 'aria-label': '닫기', onclick: close }, '✕')),
