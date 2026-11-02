@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-bj4D+EpkpBfrezdNKLAvPEmW0Cb0QJNglIyeIvucPL8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-O1JQ0th6TJG/7ktZfi0b//GyIPhj1q2W3xyf/8uRNMY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1931,7 +1931,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-10-31.14';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-02.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -13241,6 +13241,10 @@
                 if (gl.cur) return glOpenSheet(gl.cur, force);
                 return null;
             }).then(function () {
+                if (mine !== gl) return null;
+                var L0 = glLatest();
+                return glMonthAuto().then(function () { var L1 = glLatest(); if (L1 && L0 && L1.id !== L0.id && gl.cur === L0.id) { gl.cur = L1.id; gl.tabX = null; return glOpenSheet(L1.id, false); } return null; });   // 새 달: 이번 달 장부를 만들고 그 탭으로
+            }).then(function () {
                 if (mine !== gl) return;
                 if (gl.inbox > 0) glInboxPull();
                 if (state.view === 'gl') render();
@@ -13929,12 +13933,24 @@
 
         /* ---------- 다음 달 장부: 가장 최근 장부 양식 그대로 (가입 줄 입력값만 비움 · 수식·운영비·실적장표 목표는 그대로) ---------- */
         function glNextName() { var L = glLatest(); if (!L) return ''; var k = L.k; return String((Math.floor(k / 12) - 2000) % 100).replace(/^(\d)$/, '0$1') + '년 ' + (k % 12 + 1) + '월 장부'; }
-        function glNewMonth() {
-            var L = glLatest(); if (!L) return;
-            var E0 = gl.sh[L.id]; if (!E0 || !E0.S) { toast('최근 장부를 먼저 열어 주세요.'); return; }
-            var name = glNextName();
-            if (glIdxList().some(function (s) { return s.name === name; })) { toast(name + ' 시트가 이미 있어요.'); return; }
-            if (!confirm('"' + name + '"를 만들까요?\n"' + E0.S.name + '"와 같은 양식으로 만들고, 가입 줄에 적은 값만 비워요. (수식 · 운영비 · 실적장표 목표는 그대로)')) return;
+        function glIdxFetch() {   // 서버의 최신 시트 목록 (다른 기기가 방금 만든 시트까지)
+            return glCall('glGet', { id: '_index' }).then(function (res) {
+                if (!res.blob) return null;
+                return glDec(res.blob, GL_AAD + '_index').then(function (ix) {
+                    glEntry('_index').rev = res.rev; if (gl.meta) gl.meta._index = res.rev;
+                    gl.idx = { v: 1, sheets: (Array.isArray(ix.sheets) ? ix.sheets : []).filter(function (s) { return s && /^[A-Za-z0-9_-]{1,40}$/.test(s.id) && s.id !== '_index'; }).map(function (s) { return { id: s.id, name: String(s.name || '시트').slice(0, 60), o: +s.o || 0 }; }) };
+                });
+            });
+        }
+        function glMonthMake(auto) {   // 다음 달 장부 (auto: 묻지 않고) → 시트 번호 (못 만들면 null)
+            var L = glLatest(); if (!L) return Promise.resolve(null);
+            var name = glNextName(), ny = glYm(name), id = 'm' + ny.y + ('0' + ny.m).slice(-2), mine = gl;
+            var have = glIdxList().filter(function (x) { return x.name === name; })[0];
+            if (have) { if (!auto) toast(name + ' 시트가 이미 있어요.'); return Promise.resolve(have.id); }
+            return glOpenSheet(L.id, false).then(function () {
+                var E0 = gl.sh[L.id]; if (mine !== gl) return null;
+                if (!E0 || !E0.S) { if (!auto) toast('최근 장부를 먼저 열어 주세요.'); return null; }
+                if (!auto && !confirm('"' + name + '"를 만들까요?\n"' + E0.S.name + '"와 같은 양식으로 만들고, 가입 줄에 적은 값만 비워요. (수식 · 운영비 · 실적장표 목표는 그대로)')) return null;
             var S = glNormSheet(JSON.parse(JSON.stringify(glPack(E0.S)))), H = glHead(S), R = glRegions(S), oldYm = glYm(E0.S.name), ny = glYm(name);
             S.name = name;
             if (H) for (var r = H.r + 1; r <= S.nr; r++) {
@@ -13945,17 +13961,40 @@
             if (R.dash && oldYm && ny) Object.keys(S.cv).forEach(function (r) { Object.keys(S.cv[r]).forEach(function (c) { var v = S.cv[r][c]; if (+c >= R.dash.c1 && typeof v === 'string' && v.charAt(0) !== '=') S.cv[r][c] = v.replace(new RegExp(String(oldYm.y % 100) + '\\s*년\\s*' + oldYm.m + '\\s*월', 'g'), (ny.y % 100) + '년 ' + ny.m + '월'); }); });
             glAutoApply(S);
             delete S.rep; var cq0 = glReportCell(S); if (cq0) { if (!S.cv[cq0.r]) S.cv[cq0.r] = {}; S.cv[cq0.r][cq0.c] = '목표'; }   // 새 달은 보고 시각을 '목표'부터
-            var id = 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), o = 0;
-            glIdxList().forEach(function (s) { o = Math.max(o, s.o); });
-            gl.job = '새 장부를 만드는 중...'; render();
-            glEnc(glPack(S), GL_AAD + id).then(function (blob) { return glCall('glPut', { id: id, baseRev: 0, blob: blob }); }).then(function (res) {
-                var E = glEntry(id); E.S = S; E.rev = res.rev; E.base = glCount(S);
-                var lo = (glIdxList().filter(function (x) { return x.id === L.id; })[0] || { o: o }).o;   // 새 장부는 최근 장부 바로 뒤 탭에
-                gl.idx.sheets.push({ id: id, name: name, o: lo + 0.5 });
-                glIdxList().forEach(function (x, k) { x.o = k + 1; });
-                return glSaveIndex();
-            }).then(function () { gl.job = ''; gl.cur = id; gl.tabX = null; render(); glMirrorSoon(5000); toast(name + '를 만들었어요.'); }, function (e) { gl.job = ''; render(); toast('만들지 못했어요. ' + driveErrText(e)); });
+            gl.job = auto ? name + '를 자동으로 만드는 중...' : '새 장부를 만드는 중...'; glStatusPaint();
+                return glEnc(glPack(S), GL_AAD + id).then(function (blob) { return glCall('glPut', { id: id, baseRev: 0, blob: blob }); }).then(function (res) {
+                    var E = glEntry(id); E.S = S; E.rev = res.rev; E.base = glCount(S);
+                }, function (e) { if (!(e && e.code === 'conflict')) throw e; })   // 다른 기기가 먼저 만든 경우: 그 시트를 씀
+                .then(function () {
+                    var tries = 0;
+                    function addIdx() {   // 목록에 넣기 (그 사이 다른 기기가 목록을 바꿨으면 다시 받아서 한 번 더)
+                        return glIdxFetch().then(function () {
+                            if (glIdxList().some(function (x) { return x.id === id || x.name === name; })) return null;
+                            var lo = (glIdxList().filter(function (x) { return x.id === L.id; })[0] || { o: 0 }).o;   // 최근 장부 바로 뒤 탭에
+                            gl.idx.sheets.push({ id: id, name: name, o: lo + 0.5 });
+                            glIdxList().forEach(function (x, k) { x.o = k + 1; });
+                            return glSaveIndex();
+                        }).catch(function (e) { if (e && e.code === 'conflict' && ++tries < 3) return addIdx(); throw e; });
+                    }
+                    return addIdx();
+                }).then(function () {
+                    gl.job = ''; glMirrorSoon(5000);
+                    toast(auto ? '새 달이라 "' + name + '"를 자동으로 만들었어요. (' + E0.S.name + '와 같은 양식)' : name + '를 만들었어요.');
+                    return id;
+                }, function (e) { gl.job = ''; if (state.view === 'gl') render(); toast(name + '를 만들지 못했어요. ' + driveErrText(e)); return null; });
+            });
         }
+        function glMonthAuto(needK) {   // 이번 달(또는 받은 가입 줄의 달)까지 장부가 없으면 이어서 만듦 (한 번에 2달까지 · 그보다 멀면 직접)
+            var d = new Date(), nowK = d.getFullYear() * 12 + d.getMonth() + 1, n = 0;
+            needK = Math.min(needK || nowK, nowK);
+            function step() {
+                var L = glLatest();
+                if (!L || L.k >= needK || L.k < needK - 2 || n++ >= 2 || !glCan()) return Promise.resolve();
+                return glMonthMake(true).then(function (id) { return id ? step() : null; });
+            }
+            return step();
+        }
+        function glNewMonth() { glMonthMake(false).then(function (id) { if (id) { gl.cur = id; gl.tabX = null; render(); } }); }
 
         /* ---------- 가입 확인서 → 가입고객리스트 한 줄 (권한이 없어도 넣기만 가능 · 암호화해서 받은 편지함으로) ---------- */
         function glQueueReg(rec, upd) {   // upd: { only: [고친 칸], match: { name, phone, kind } } → 같은 고객 줄의 그 칸만 고침 (줄이 없으면 넣지 않음)
@@ -13977,6 +14016,10 @@
                 return Promise.all(items.map(function (it) { return glDec(it.blob, GL_IN_AAD).then(function (x) { return { it: it, x: x }; }, function () { return null; }); }));
             }).then(function (list) {
                 if (mine !== gl) return null;
+                var needK = 0; list.filter(Boolean).forEach(function (p) { var y = glYm(String(p.x.ym || '')); if (y) needK = Math.max(needK, y.y * 12 + y.m); });
+                return glMonthAuto(needK).then(function () { return list; });   // 새 달 첫 가입: 그 달 장부부터 자동으로
+            }).then(function (list) {
+                if (mine !== gl || !list) return null;
                 var bySheet = {}, jobs = [];
                 list.filter(Boolean).forEach(function (p) {
                     var sh = glIdxList().filter(function (s) { return /장부/.test(s.name) && glYm(s.name) && String(p.x.ym || '') === (glYm(s.name).y % 100) + '년 ' + glYm(s.name).m + '월'; })[0] || (glLatest() ? { id: glLatest().id } : null);
