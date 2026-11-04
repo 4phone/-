@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WrBnn6OGpvUwSfv0Zjhn73zhmgxmxlQaBLgj6/bSbGU='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-1JIwW6tqW2Dcubxa0qFk1s6CBUcrJa66W/YSqE2YonI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2011,7 +2011,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-04.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-04.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -7346,6 +7346,7 @@
                         mfsHasR(r) ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'reg-form', title: '드라이브에 저장한 가입 확인서를 다시 열어 고치기 → [수정 업로드]', onclick: function () { mfsOpen(r, null); } }, '📄 확인서') : null,
                         h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { editReg(r); } }, '수정'), regDelBtn(r)));
             });
+            if (!q) rows.reverse();   // 달별 보기: 최근 등록이 맨 위 (번호는 장부 순서 그대로 → 1번이 맨 아래)
             return h('section', { class: 'reg-box', 'data-ledger': 'all' },
                 h('div', { class: 'reg-head' }, h('h2', {}, '가입 장부'), h('small', {}, q ? '찾기 ' + list.length + '건' : ymLabel(state.regYm) + ' ' + list.length + '건'),
                     list.length && !q ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'reg-copy-all', onclick: function () {
