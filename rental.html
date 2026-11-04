@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-pJGzWcnf/0f94E6bhg7qbXL7D+nqKwR7rbXEeKSBAbw='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-X2RhlhMfm2nucUC0AkR2HQ+dXXniknKbOdMAUET0Igo='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -587,6 +587,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             </label>
             <label><span class="sr">정렬</span>
                 <select id="sort" class="sel">
+                    <option value="pop">인기순</option>
                     <option value="low">렌탈료 낮은 순</option>
                     <option value="high">렌탈료 높은 순</option>
                     <option value="name">이름순</option>
@@ -1009,7 +1010,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
     }
 
     /* ---------- 주소(?type= · ?id=) ---------- */
-    var st = { type: '', kind: [], feat: [], size: [], brand: [], price: [], gift: [], q: '', sort: 'low', shown: PAGE, kexp: false }, listY = 0, fromList = false;
+    var st = { type: '', kind: [], feat: [], size: [], brand: [], price: [], gift: [], q: '', sort: 'pop', shown: PAGE, kexp: false }, listY = 0, fromList = false;
     /* 고르는 칸: 정수기 기능(상품명 기준) · 가격대(월 렌탈료 최저가 기준 — 받은 값을 비교만 함) */
     var FEATS = ['냉온정', '냉온정+얼음', '냉정', '냉정+얼음', '정수전용'];
     function featOf(p) {   // 상품명에 적힌 말로만 나눔 (모르면 빈칸 → '기능 전체'에서만 보임)
@@ -1066,7 +1067,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         var q = new URLSearchParams(location.search);
         function list(name, n, ok) { var out = []; q.getAll(name).slice(0, 40).forEach(function (v) { v = S(v, n); if (v && out.indexOf(v) < 0 && (!ok || ok(v))) out.push(v); }); return out; }
         return { id: S(q.get('id'), 80), type: S(q.get('type'), 30), kind: list('kind', 40), feat: list('feat', 20, function (v) { return FEATS.indexOf(v) >= 0; }), size: list('size', 10),
-            price: list('price', 4, function (v) { return PRICES.some(function (x) { return x[0] === v; }); }), gift: list('gift', 1, function (v) { return v === 'y' || v === 'n'; }), brand: list('brand', 40), q: S(q.get('q'), 40), sort: /^(low|high|name)$/.test(q.get('sort') || '') ? q.get('sort') : 'low' };
+            price: list('price', 4, function (v) { return PRICES.some(function (x) { return x[0] === v; }); }), gift: list('gift', 1, function (v) { return v === 'y' || v === 'n'; }), brand: list('brand', 40), q: S(q.get('q'), 40), sort: /^(pop|low|high|name)$/.test(q.get('sort') || '') ? q.get('sort') : 'pop' };
     }
     function listQs() {
         var q = new URLSearchParams();
@@ -1078,7 +1079,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         st.price.forEach(function (v) { q.append('price', v); });
         st.gift.forEach(function (v) { q.append('gift', v); });
         if (st.q) q.set('q', st.q);
-        if (st.sort !== 'low') q.set('sort', st.sort);
+        if (st.sort !== 'pop') q.set('sort', st.sort);
         var s = q.toString(); return s ? '?' + s : location.pathname.split('/').pop() || 'rental.html';
     }
     function setUrl(qs, push) { try { history[push ? 'pushState' : 'replaceState']({ sg: 1 }, '', qs); } catch (e) { /* 무시 */ } }
@@ -1135,10 +1136,14 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                 return h('button', { type: 'button', class: 'fchip', 'aria-pressed': on ? 'true' : 'false', disabled: !on && !it[2] ? true : null, 'data-v': it[0], onclick: function () { pick(name, it[0]); } }, it[1], h('small', {}, String(it[2])));
             }));
     }
+    /* 손님이 많이 찾는 가전 종류 (이 순서대로 먼저 · 나머지는 상품 개수 순) */
+    var HOT = ['안마의자', '매트리스·침대', '공기청정기', '냉장고', '에어컨', '식기세척기', '비데'];
+    function hot(k) { var i = HOT.indexOf(k || ''); return i < 0 ? HOT.length : i; }
     function sortList(l) {
         var s = st.sort;
         return l.slice().sort(function (a, b) {
             if (s === 'name') return a.name.localeCompare(b.name, 'ko');
+            if (s === 'pop' && hot(a.kind) !== hot(b.kind)) return hot(a.kind) - hot(b.kind);   // 인기순: 인기 종류 먼저 → 같은 종류 안에서는 렌탈료 낮은 순
             var x = a.low, y = b.low;
             if (x == null && y == null) return a.name.localeCompare(b.name, 'ko');
             if (x == null) return 1; if (y == null) return -1;
@@ -1162,7 +1167,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         inCat.forEach(function (p) { if (p.kind) { if (!(p.kind in kc)) { kc[p.kind] = 0; kinds.push(p.kind); } } });
         DATA.items.forEach(function (p) { if (p.kind && p.kind in kc && match(p, 'kind')) kc[p.kind]++; });
         var all = Object.create(null); inCat.forEach(function (p) { if (p.kind) all[p.kind] = (all[p.kind] || 0) + 1; });
-        kinds.sort(function (a, b) { return all[b] - all[a] || a.localeCompare(b, 'ko'); });
+        kinds.sort(function (a, b) { return hot(a) - hot(b) || all[b] - all[a] || a.localeCompare(b, 'ko'); });   // 인기 종류 먼저 → 나머지는 개수 순
         sortList(inCat).forEach(function (p) { if (p.kind && !kimg[p.kind] && U(p.img[0])) kimg[p.kind] = p.img[0]; });   // 종류마다 대표 사진 (렌탈료 낮은 상품)
         st.kind = st.kind.filter(function (k) { return k in kc; });
         if (kinds.length) {
@@ -1627,7 +1632,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
     /* ---------- 고르는 도구 ---------- */
     var qT = 0;
     $('q').addEventListener('input', function () { clearTimeout(qT); qT = setTimeout(function () { st.q = S($('q').value, 40); st.shown = PAGE; setUrl(listQs(), false); if (DATA) renderList(); }, 180); });
-    $('sort').addEventListener('change', function () { st.sort = /^(low|high|name)$/.test($('sort').value) ? $('sort').value : 'low'; st.shown = PAGE; setUrl(listQs(), false); renderList(); });
+    $('sort').addEventListener('change', function () { st.sort = /^(pop|low|high|name)$/.test($('sort').value) ? $('sort').value : 'pop'; st.shown = PAGE; setUrl(listQs(), false); renderList(); });
     $('reset').addEventListener('click', function () { clearPicks(); st.q = ''; $('q').value = ''; st.shown = PAGE; setUrl(listQs(), false); renderList(); });
     $('more-btn').addEventListener('click', function () { st.shown += PAGE; renderList(); });
     $('m-ask').addEventListener('click', function () {
