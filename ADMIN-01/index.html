@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hH/eP/h/DWUuNirE068m2zqnxBEcxRcWWmEUSslK8g0='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-WrBnn6OGpvUwSfv0Zjhn73zhmgxmxlQaBLgj6/bSbGU='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2011,7 +2011,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-04.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-04.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -2343,6 +2343,7 @@
         /* --- 로그인 상태 / 자동 잠금 --- */
         function startSession() {
             authed = true;
+            state.who = isStaffUser() && staffById(me) ? me : 'all'; state.calLast = '';   // 기본: 직원은 본인 캘린더·업무만, 대표는 전체
             var sv = String(ssGet(VIEW_KEY) || '').split('|');   // 새로고침 전에 보던 메뉴로 돌아가기
             if (/^(calendar|notices|tasks)$/.test(sv[0])) sv[0] = 'daily';   // 예전에 보던 캘린더·공지·업무 → 데일리워크
             if (VIEWS.some(function (v) { return v.v === sv[0]; })) { state.view = sv[0]; state.form = sv[0] === 'forms' && /^(mobile|wired)$/.test(sv[1] || '') ? sv[1] : ''; }
@@ -3029,8 +3030,8 @@
         }
         /* ---------- 화면: 캘린더 ---------- */
         var CAL_MODE_KEY = 'sg-cal-mode';
-        function calMode() { if (state.calMode) return state.calMode; var v = lsGet(CAL_MODE_KEY); return v === 'all' || v === 'mine' ? v : (isStaffUser() ? 'mine' : 'all'); }
-        function calWho() { return isStaffUser() ? me : (staffById(state.calWho) ? state.calWho : me); }   // 개인 캘린더: 직원은 본인 · 대표는 고를 수 있음
+        function calMode() { return state.who === 'all' || state.who === 'none' ? 'all' : 'mine'; }   // 캘린더와 업무는 담당자 하나(state.who)로 같이 움직임: 전체 직원 = 전체 캘린더
+        function calWho() { return staffById(state.who) ? state.who : me; }   // 개인 캘린더 = 지금 고른 담당자 (내 업무만 → 나)
         function calEvOk(e) { return calMode() === 'all' || e.staffId === calWho(); }
         function calTkOk(t) { return calMode() === 'all' || t.staffId === calWho(); }
         var calSaleWait = Object.create(null);
@@ -3109,18 +3110,19 @@
                         whoTag(e.staffId, e.staffId ? null : '전체'));
                 })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '이 날은 등록된 일정이 없어요.')), tkPanel);
 
-            var setMode = function (v) { state.calMode = v; lsSet(CAL_MODE_KEY, v); render(); };
+            var setMode = function (v) { if (v === MODE) return; state.who = v === 'all' ? 'all' : (state.calLast && staffById(state.calLast) ? state.calLast : me); render(); };   // 아래 업무 담당도 같이 바뀜
             var whoSel = null;
-            if (MODE === 'mine' && !isStaffUser()) {
-                whoSel = h('select', { class: 'cal-who', 'data-fk': 'cal-who', 'aria-label': '개인 캘린더 직원' }, db.staff.map(function (x) { return h('option', { value: x.id }, x.name); }));
-                whoSel.value = WHO; whoSel.addEventListener('change', function () { state.calWho = this.value; render(); });
+            if (MODE === 'mine') {
+                state.calLast = WHO;
+                whoSel = h('select', { class: 'cal-who', 'data-fk': 'cal-who', 'aria-label': '담당 직원 (캘린더·업무 같이 바뀜)' }, db.staff.map(function (x) { return h('option', { value: x.id }, x.name + (x.id === me ? ' (나)' : '')); }));
+                whoSel.value = WHO; whoSel.addEventListener('change', function () { state.who = this.value; render(); });
             }
             return h('div', { class: 'cal-' + MODE },
                 h('div', { class: 'page-head' }, h('h2', { class: 'dw-h' }, '📅 캘린더'),
                     h('div', { class: 'actions cal-mode', role: 'group', 'aria-label': '캘린더 종류' },
                         h('button', { type: 'button', class: 'btn btn-sm' + (MODE === 'all' ? ' on' : ''), 'aria-pressed': MODE === 'all' ? 'true' : 'false', 'data-fk': 'cal-all', onclick: function () { setMode('all'); } }, '전체 캘린더'),
                         h('button', { type: 'button', class: 'btn btn-sm' + (MODE === 'mine' ? ' on' : ''), 'aria-pressed': MODE === 'mine' ? 'true' : 'false', 'data-fk': 'cal-mine', onclick: function () { setMode('mine'); } }, '개인 캘린더'),
-                        whoSel, MODE === 'mine' && isStaffUser() ? h('span', { class: 'cal-mine-who' }, staffName(WHO)) : null)),
+                        whoSel)),
                 h('div', { class: 'cal-bar' },
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'cal-prev', 'aria-label': '이전 달', onclick: function () { shiftMonth(-1); } }, '이전 달'),
                     h('div', { class: 'cal-title', 'aria-live': 'polite' }, y + '년 ' + (m + 1) + '월'),
@@ -3577,7 +3579,7 @@
                 var okWho = state.who === 'all' || (state.who === 'me' ? t.staffId === me : state.who === 'none' ? !t.staffId : t.staffId === state.who);
                 return okWho && (state.status === 'all' || t.status === state.status) && (!state.date || t.due === state.date);
             }).sort(taskSort);
-            var whoSel = h('select', { id: 'flt-who', 'data-fk': 'flt-who', 'aria-label': '담당자 필터', value: state.who },
+            var whoSel = h('select', { id: 'flt-who', 'data-fk': 'flt-who', 'aria-label': '담당자 필터 (위 캘린더도 같이 바뀜)', title: '바꾸면 위 캘린더도 같은 담당자로 바뀌어요', value: state.who },
                 h('option', { value: 'all' }, '전체 직원'), h('option', { value: 'me' }, '내 업무만'),
                 db.staff.map(function (s) { return h('option', { value: s.id }, s.name); }), h('option', { value: 'none' }, '미지정'));
             whoSel.value = state.who;
