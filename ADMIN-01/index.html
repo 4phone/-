@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-LxREwX8NRgCjdnBsbs5I6uNAm/LNVpM8XTiS+aqAgMo='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hH/eP/h/DWUuNirE068m2zqnxBEcxRcWWmEUSslK8g0='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -328,6 +328,8 @@
         .dw-cal .day-panel { margin-top: 0; }
         .dp-tk { margin-top: 16px; }
         .dp-tk-row .dp-st { flex: none; min-width: 52px; text-align: center; font-size: 12px; font-weight: 800; border-radius: 999px; padding: 3px 8px; background: #F1F4E6; color: #3E441E; white-space: nowrap; }
+        .panel > .row.dp-tk-more { display: block; width: 100%; text-align: center; padding: 11px 12px; font-size: 14px; font-weight: 800; color: #3E441E; background: #F7F8F0; }
+        .panel > .row.dp-tk-more:hover { background: #EEF1E0; }
         .dp-tk-row .dp-st.st-doing { background: #E3F0FF; color: #1F4E79; } .dp-tk-row .dp-st.st-done { background: #E3F3E3; color: #1F5F23; }
         @media (min-width: 1200px) { .dw-cal { grid-template-columns: minmax(0, 1fr) 360px; } .dw-cal .day-panel { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; scrollbar-width: thin; } }
         @media (max-width: 700px) { .dw-h { font-size: 18px; } .dw-jumps { width: 100%; } .dw-jumps .btn { flex: 1 1 auto; } .cal-cell .cal-tk { display: none; } .cal-mode { width: 100%; } .cal-mode .btn { flex: 1 1 0; } }
@@ -2009,7 +2011,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-03.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-04.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -3086,15 +3088,17 @@
             }
 
             var sel = map[state.selDate] || [], selT = (tmap[state.selDate] || []).slice().sort(taskSort);
+            if (state.dpTkAll && state.dpTkAll !== state.selDate) state.dpTkAll = '';   // 다른 날을 누르면 다시 3건만
+            var tkOpenAll = state.dpTkAll === state.selDate, tkShow = tkOpenAll ? selT : selT.slice(0, 3), tkMore = selT.length - tkShow.length;   // 마감 업무: 처음엔 3건만
             var tkPanel = h('div', { class: 'dp-tk' },
                 h('div', { class: 'section-head' }, h('h2', {}, koDate(state.selDate) + ' 마감 업무 ', h('small', {}, selT.length + '건')),
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'dp-tk-go', title: '아래 업무 목록을 이 날 마감 업무로 맞춰요', onclick: function () { state.date = state.selDate; state.who = MODE === 'mine' ? WHO : 'all'; state.status = 'all'; render(); dwGo('tasks'); } }, '업무 목록에서 보기')),
-                selT.length ? h('div', { class: 'panel' }, selT.map(function (t) {
+                selT.length ? h('div', { class: 'panel' }, tkShow.map(function (t) {
                     return h('button', { type: 'button', class: 'row dp-tk-row' + (closed(t) ? ' ev-closed' : ''), onclick: function () { editTask(t); } },
                         h('span', { class: 'dp-st st-' + t.status }, (STATUS.filter(function (x) { return x.v === t.status; })[0] || { t: '' }).t),
                         h('span', {}, h('div', { class: 'title' }, t.title), t.memo ? h('div', { class: 'sub' }, String(t.memo).split('\n')[0]) : null),
                         whoTag(t.staffId, t.staffId ? null : '미지정'));
-                })) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '이 날 마감인 업무가 없어요.')));
+                }).concat(selT.length > 3 ? [h('button', { type: 'button', class: 'row dp-tk-more', 'data-fk': 'dp-tk-more', onclick: function () { state.dpTkAll = tkOpenAll ? '' : state.selDate; render(); if (tkOpenAll) { var tp = document.querySelector('.dp-tk'); if (tp && tp.getBoundingClientRect().top < 0) tp.scrollIntoView({ block: 'start' }); } } }, tkOpenAll ? '▲ 접기 (3건만 보기)' : '▼ 나머지 ' + tkMore + '건 더 보기')] : [])) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, '이 날 마감인 업무가 없어요.')));
             var panel = h('div', { class: 'day-panel' },
                 h('div', { class: 'section-head' }, h('h2', {}, koDate(state.selDate) + ' 일정', hdNames(state.selDate).length ? h('small', { class: 'cal-off-day' }, ' 🌴 휴무: ' + hdNames(state.selDate).join(', ')) : null), h('button', { type: 'button', class: 'btn btn-primary btn-sm', onclick: function () { editEvent(null, state.selDate); } }, '이 날 일정 추가')),
                 sel.length ? h('div', { class: 'panel' }, sel.map(function (e) {
