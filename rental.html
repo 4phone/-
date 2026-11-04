@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-n4IDUljs8/hWcdwcC6HEmfmNymW6vfNj4sy59w9yd4s='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-pJGzWcnf/0f94E6bhg7qbXL7D+nqKwR7rbXEeKSBAbw='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -932,7 +932,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                     var g = S(x.gift, 300), gw = Object.prototype.hasOwnProperty.call(GIFT, S(c.name, 40) + '|' + model + '|' + N(x.contractMonths) + '|' + fee) ? GIFT[S(c.name, 40) + '|' + model + '|' + N(x.contractMonths) + '|' + fee] : null;
                     if (!g && typeof gw === 'number' && gw > 0) g = giftTxt(gw);
                     plans.push({ pid: S(x.planId, 80), m: N(x.contractMonths), mm: N(x.mandatoryMonths), fee: fee, pm: N(x.promoMonths), af: N(x.afterPromoMonthlyFee), g: g, gn: !g && gw === 0,
-                        dg: S(x.gift, 300), w: N(x.warrantyMonths), etf: S(x.earlyTerminationFee, 300) });   // dg: 데이터의 사은품 칸 그대로 (직원용 글에만)
+                        w: N(x.warrantyMonths), etf: S(x.earlyTerminationFee, 300) });   // 무상 A/S 개월 · 중도해지 안내
                 });
                 if (plans.length) cos.push({ name: S(c.name, 40), plans: plans });
             });
@@ -1550,7 +1550,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             pid: p.id, pname: p.name, model: p.model, brand: p.brand, rcat: p.kind ? p.cat + ' · ' + p.kind : p.cat,
             rco: pl ? (pl.c.name || '렌탈사 상담 시 안내') : '상담 때 정함', rmonths: pl && pl.x.m != null ? String(pl.x.m) : '', rmand: pl && pl.x.mm != null ? String(pl.x.mm) : '',
             rfee: pl ? String(pl.x.fee) : '', rafter: pl && pl.x.pm != null && pl.x.af != null ? pl.x.pm + '개월 뒤 월 ' + pl.x.af : '', rgift: pl ? pl.x.g : '', rplan: pl ? pl.x.pid : '',
-            rpm: pl && promoOf(pl.x) ? String(pl.x.pm) : '', raf: pl && promoOf(pl.x) ? String(pl.x.af) : '', rdg: pl ? pl.x.dg : '', rcon: pl ? pl.c.name : '', at1: kst(new Date()),
+
             agree: '수집 · 이용 동의' + (pl && pl.c.name ? ' · 제3자 제공 동의(' + pl.c.name + ')' : ''), at0: DATA && DATA.at ? DATA.at : ''
         };
     }
@@ -1584,26 +1584,12 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
     function ping(url, label) {   // 관리자 페이지 '콜 인입' 알림 (이름 · 연락처는 넣지 않음)
         try { fetch(url, { method: 'POST', mode: 'no-cors', keepalive: true, credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'inbound', kind: 'form', label: label.slice(0, 60), dev: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '') || window.innerWidth <= 950 ? 'm' : 'pc' }) }).catch(function () { /* 무시 */ }); } catch (e) { /* 무시 */ }
     }
-    function kst(d) {   // 한국 시각 'YYYY-MM-DD HH:mm'
-        var t = new Date(d.getTime() + 9 * 3600000), p2 = function (v) { return ('0' + v).slice(-2); };
-        return t.getUTCFullYear() + '-' + p2(t.getUTCMonth() + 1) + '-' + p2(t.getUTCDate()) + ' ' + p2(t.getUTCHours()) + ':' + p2(t.getUTCMinutes());
-    }
-    function modilText(o) {   // 직원이 카카오톡에 그대로 붙이는 글 (줄 순서 · 앞 글자 바꾸지 않음 · 상품번호 · 요금번호는 데이터 값 그대로)
-        var m = o.rmonths ? o.rmonths + '개월' : '-', mm = o.rmand ? o.rmand + '개월' : '-';
-        var fee = o.rpm && o.raf ? o.rpm + '개월간 ' + won(+o.rfee) + ', 이후 ' + won(+o.raf) : o.rfee ? won(+o.rfee) : '-';
-        return ['[모딜 렌탈 신청]', '신청시각: ' + o.at1, '상품번호: ' + o.pid, '요금번호: ' + (o.rplan || '-'), '모델명: ' + (o.model || '-'), '상품명: ' + o.pname,
-            '제조사: ' + (o.brand || '-'), '렌탈사: ' + (o.rcon || '-'), '약정/의무: ' + m + ' / ' + mm, '월 렌탈료: ' + fee, '사은품: ' + (o.rdg || '-'),
-            '고객명: ' + o.name, '연락처: ' + o.phone.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3'), '설치지역: ' + o.region, '상담가능: ' + o.ctime,
-            '동의: 수집·이용 ✔' + (o.rcon ? ' / 제3자(' + o.rcon + ') ✔' : ''), '데이터기준: ' + (o.at0 ? String(o.at0).replace(/\.\d+Z$/, 'Z') : '-')].join('\n');
-    }
     function mailText(o) {   // 접수 메일 본문 (홈페이지 상담 접수 메일과 같은 형식: type · name · phone · summary)
         var fee = o.rfee ? won(+o.rfee) : '상담 때 안내';
         return ['[렌탈 상담 접수]', '상품: ' + o.pname + (o.model ? ' (' + o.model + ')' : ''), '제조사 · 종류: ' + [o.brand, o.rcat].filter(Boolean).join(' · '),
             '렌탈사: ' + o.rco, '약정: ' + (o.rmonths ? o.rmonths + '개월' + (o.rmand ? ' (의무 ' + o.rmand + '개월)' : '') : '상담 때 정함'), '월 렌탈료: ' + fee,
             o.rafter ? '할인 뒤: ' + o.rafter.replace(/월 (\d+)$/, function (m0, n) { return '월 ' + won(+n); }) : '', o.rgift ? '사은품: ' + o.rgift : '',
-            '설치 지역: ' + o.region, '상담 가능 시간: ' + o.ctime, '동의: ' + o.agree, '상품 번호: ' + o.pid,
-].filter(Boolean).join('\n')
-            + '\n\n──────── 직원용 · 카톡 전달 글 (아래를 그대로 복사) ────────\n' + modilText(o);
+            '설치 지역: ' + o.region, '상담 가능 시간: ' + o.ctime, '동의: ' + o.agree, '상품 번호: ' + o.pid].filter(Boolean).join('\n');
     }
     function sendMail(o) {   // 접수 메일 (응답을 읽을 수 없는 방식이라, 보내기만 확인)
         var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
