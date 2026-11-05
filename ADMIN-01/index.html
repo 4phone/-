@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MeXLeSSNolDSJb8lG8HzqYRTp8gdos8HUQR8yt1xmwI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-u+5qWgDqrIal3lvcV8x45Lr/7pULjwB7Jo7JF+oLezc='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1066,7 +1066,8 @@
         .dm-ok { width: 100%; margin-top: 14px; padding: 12px; font-size: 16px; }
         .dm-btn { width: 100%; margin-bottom: 8px; background: #FFF1D6; border-color: #E07F00; color: #6B4600; font-weight: 800; }
         .dm-r { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--line); }
-        .dm-r .dm-st { font-weight: 800; color: #9A6A00; } .dm-r.ok .dm-st { color: #1E6B34; }
+        .dm-r .dm-st { font-weight: 800; color: #9A6A00; } .dm-r.ok .dm-st { color: #1E6B34; } .dm-r.miss .dm-st { color: #B3261E; }
+        .dm-flow { font-size: 12.5px; color: var(--muted, #5B5E4A); margin: 2px 0 4px; overflow-wrap: anywhere; } .dm-miss { font-size: 12.5px; color: #B3261E; background: #FDECEA; border-radius: 8px; padding: 6px 8px; margin: 4px 0; }
         select.ib-src { font-size: 12px; padding: 2px 6px; min-height: 28px; max-width: 170px; margin-left: 6px; border-radius: 8px; }
         select.ib-src.on { border-color: #3E441E; font-weight: 700; }
         .ib-srcsum { color: #3E441E; font-weight: 700; }
@@ -1085,6 +1086,7 @@
         .wck-box h4 { margin: 8px 0 6px; } .wck-r { display: grid; grid-template-columns: 80px 70px 120px minmax(0, 1fr); gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
         .wck-k { color: #9A6A00; font-weight: 700; }
         @media (max-width: 640px) { .wck-r { grid-template-columns: 70px 1fr; } }
+        .idr-sent { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: #E6F4EA; color: #1E6B34; font-size: 11.5px; font-weight: 700; }
         .ib-cl { display: block; margin-top: 4px; padding: 4px 8px; border-radius: 8px; background: #E6F4EA; color: #1E6B34; font-size: 12px; font-weight: 700; text-align: left; border: 1px solid #9BD3AE; cursor: pointer; max-width: 100%; overflow-wrap: anywhere; }
         .ib-cl.none { background: #FFF8EC; color: #9A6A00; border-color: #F2C879; cursor: default; font-weight: 600; }
         .ib-rcv-n { margin-left: 6px; font-weight: 700; color: #3E441E; }
@@ -2093,7 +2095,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-05.15';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-05.17';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2288,7 +2290,7 @@
             });
             list(d.dms, 600).forEach(function (x) {   // 전달하기: 대표 → 직원 (직원이 [확인했어요] 누르면 ack 시각)
                 if (!x || !str(x.id, 40) || !str(x.to, 40)) return;
-                out.dms.push({ id: str(x.id, 40), to: str(x.to, 40), fr: str(x.fr, 40), t: str(x.t, 1000), ref: str(x.ref, 300), at: num(x.at), ack: num(x.ack), u: num(x.u), b: num(x.b) });
+                out.dms.push({ id: str(x.id, 40), to: str(x.to, 40), fr: str(x.fr, 40), t: str(x.t, 1000), ref: str(x.ref, 300), at: num(x.at), ack: num(x.ack), rcv: num(x.rcv), rv: str(x.rv, 20), u: num(x.u), b: num(x.b) });
             });
             list(d.mgs, 2000).forEach(function (x) {   // 한 달 주요 업무 (달마다 · 팀 모두 보기)
                 if (!x || !str(x.id, 40) || !str(x.t, 120).trim() || !/^\d{4}-\d{2}$/.test(str(x.ym, 7))) return;
@@ -2985,12 +2987,13 @@
         }
         function idleBusy() { return !!actRunning(me) || db.tasks.some(function (t) { return t.staffId === me && t.status === 'doing' && !t.ps && !t.ext; }); }
         function idleClose() { if (idl.el) { idl.el.remove(); idl.el = null; } }
-        function idleCheck() {   // 직원: 실업·스업이 15분 동안 비어 있으면 물어봄 (근무 시간 · 휴무 아닌 날 · 대표님 제외)
+        var IDLE_MIN = 7;   // 실업·스업이 이 시간(분) 비면 물어봄 (대표님 11/5: 15분 → 7분)
+        function idleCheck() {   // 직원: 실업·스업이 IDLE_MIN분 동안 비어 있으면 물어봄 (근무 시간 · 휴무 아닌 날 · 대표님 제외)
             if (!authed || !db || accountGate() || isBoss() || idl.el || estAl.el) { if (idl.el && idleBusy()) idleClose(); return; }
             var now = new Date(), hr = now.getHours(); if (hr < 9 || hr >= 21) return;
             try { if (hdNames(ymd(now)).indexOf(staffName(me)) >= 0) return; } catch (e) { /* 무시 */ }
             if (idleBusy()) { idl.at = Math.max(idl.at, Date.now() - 1); return; }
-            if (Date.now() - idleLast() < 15 * 60000) return;
+            if (Date.now() - idleLast() < IDLE_MIN * 60000) return;
             idleAsk();
         }
         function idleAsk() {
@@ -3001,7 +3004,7 @@
             var startAct = function (k) { if (!k) { etc.focus(); return; } if (ACT_KINDS.indexOf(k) >= 0) { actUi.pick = k; actUi.etc = ''; } else { actUi.pick = '기타'; actUi.etc = k; } actStart(); answer('실업 시작: ' + k); };
             idl.el = h('div', { class: 'dm-back', 'data-fk': 'idle-pop', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': '어떤 업무를 하고 있나요' },
                 h('div', { class: 'dm-pop idl-pop' },
-                    h('div', { class: 'dm-h' }, '🕒 지금 어떤 업무를 하고 있나요?', h('small', {}, ' 실업·스업이 15분 동안 비어 있어요')),
+                    h('div', { class: 'dm-h' }, '🕒 지금 어떤 업무를 하고 있나요?', h('small', {}, ' 실업·스업이 ' + IDLE_MIN + '분 동안 비어 있어요')),
                     h('div', { class: 'idl-sec' }, h('b', {}, '📋 스업 바로 시작'),
                         mine.length ? mine.map(function (t) {
                             return h('button', { type: 'button', class: 'btn idl-tk', 'data-fk': 'idle-tk', onclick: function () {
@@ -3013,10 +3016,10 @@
                     h('div', { class: 'idl-sec' }, h('b', {}, '⏱ 실업 바로 시작'),
                         h('div', { class: 'idl-chips' }, ACT_KINDS.map(function (k) { return h('button', { type: 'button', class: 'act-chip', 'data-fk': 'idle-act', onclick: function () { startAct(k); } }, k); })),
                         h('div', { class: 'idl-etc-w' }, etc, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { var v = etc.value.replace(/\s+/g, ' ').trim().slice(0, ACT_MAX); if (!v) { etc.focus(); return; } startAct(v); } }, '▶ 시작'))),
-                    h('button', { type: 'button', class: 'btn btn-sm idl-later', 'data-fk': 'idle-later', onclick: function () { idleClose(); idl.at = Date.now() - 5 * 60000; wckAdd('idle', null, '나중에 (10분 뒤 다시)'); } }, '10분 뒤에 다시 물어보기')));
+                    h('button', { type: 'button', class: 'btn btn-sm idl-later', 'data-fk': 'idle-later', onclick: function () { idleClose(); idl.at = Date.now() + (10 - IDLE_MIN) * 60000; wckAdd('idle', null, '나중에 (10분 뒤 다시)'); } }, '10분 뒤에 다시 물어보기')));
             document.body.appendChild(idl.el);
             try { estBeep(); } catch (e) { /* 무시 */ }
-            try { if (window.Notification && Notification.permission === 'granted' && document.hidden) new Notification('🕒 지금 어떤 업무를 하고 있나요?', { body: '실업·스업이 15분 동안 비어 있어요', tag: 'sg-idle' }); } catch (e) { /* 무시 */ }
+            try { if (window.Notification && Notification.permission === 'granted' && document.hidden) new Notification('🕒 지금 어떤 업무를 하고 있나요?', { body: '실업·스업이 ' + IDLE_MIN + '분 동안 비어 있어요', tag: 'sg-idle' }); } catch (e) { /* 무시 */ }
         }
         setInterval(function () { try { idleCheck(); } catch (e) { /* 무시 */ } }, 20000);
         /* ---------- 실업 30분마다 확인: 30분 · 1시간 · 1시간 30분 … (직원 · 대표님 제외) ---------- */
@@ -4449,7 +4452,7 @@
                 (d.qms || []).slice().sort(byId).map(function (x) { return [x.id, x.sid, x.t, x.o, x.u]; }),
                 (d.mgs || []).slice().sort(byId).map(function (x) { return [x.id, x.sid, x.ym, x.t, x.d, x.o, x.u]; }),
                 (d.ibm || []).slice().sort(byId).map(function (x) { return [x.id, x.iid, x.m, x.s || '', x.u]; }),
-                (d.dms || []).slice().sort(byId).map(function (x) { return [x.id, x.to, x.ack, x.u]; }),
+                (d.dms || []).slice().sort(byId).map(function (x) { return [x.id, x.to, x.ack, x.rcv || 0, x.u]; }),
                 (d.wck || []).slice().sort(byId).map(function (x) { return [x.id, x.a, x.u]; }),
                 (d.chg || []).slice().sort(byId).map(function (x) { return [x.id, x.k, x.u]; }),
                 (d.tlog || []).slice().sort(byId).map(function (x) { return [x.id, x.u]; }),
@@ -4930,7 +4933,7 @@
                     h('button', { type: 'button', class: 'btn', onclick: rotateTeamKey }, '팀 키 교체'),
                     isBoss() ? h('button', { type: 'button', class: 'btn', 'data-act': 'ct-check', onclick: contactCheck }, '구글 연락처 연결 확인') : null,
                     isBoss() ? h('button', { type: 'button', class: 'btn', 'data-act': 'ai-key', onclick: aiKeyOpen }, '단가표 사진 변환 키') : null,
-                    isBoss() ? h('button', { type: 'button', class: 'btn', 'data-act': 'sms-key', onclick: smsKeyOpen }, '문자 인증 설정') : null,
+                    isBoss() ? h('button', { type: 'button', class: 'btn', 'data-act': 'sms-key', onclick: smsKeyOpen }, '문자 설정 (SOLAPI)') : null,
                     h('button', { type: 'button', class: 'btn btn-danger', onclick: disconnectDrive }, '연결 끊기'))
                    : h('div', { class: 'actions' },
                     h('button', { type: 'button', class: 'btn btn-dark', onclick: openInitForm }, '처음 연결하기 (관리자)'),
@@ -8126,7 +8129,19 @@
             setTimeout(function () { toast('📱 전화가 왔어요' + (x.ph ? ' (' + x.ph + ')' : '') + ' · 경로: ' + ibSrcText(x) + ' — 상담 메모를 ' + (writing ? '새로 열었어요 (적던 상담은 위 탭에)' : '열었어요') + (ph ? ' · 연락처 ' + ph + ' 넣음' : x.n4 ? ' · 번호 끝 ' + x.n4 + ' (전체 번호는 안 왔어요)' : '') + '. 통화하면서 바로 적어 주세요.'); }, 150);
         }
         /* ---------- 📨 전달하기: 대표 → 직원 화면 팝업 → [확인했어요] → 대표에게 확인 알림 (팀 키로 암호화된 팀 저장소 · 30초마다 맞춤) ---------- */
-        var dmEl = null, dmShownId = '', dmSeen = null;
+        var dmEl = null, dmShownId = '', dmSeen = null, dmListKey = '', dmBlink = null, dmTitle0 = '', dmBeepAt = 0;
+        var DM_MISS_MS = 10000;   // 보낸 뒤 10초 안에 직원 화면에 안 뜨면 대표님께 '아직 못 받음'
+        function dmGap(a, b) { var s2 = Math.max(0, Math.round((b - a) / 1000)); return s2 < 60 ? s2 + '초' : Math.floor(s2 / 60) + '분 ' + (s2 % 60) + '초'; }
+        function dmAttn(on) {   // 직원: 팝업 떠 있는 동안 탭 제목 깜빡임 + 20초마다 소리 (확인하면 멈춤)
+            if (!on) { if (dmBlink) { clearInterval(dmBlink); dmBlink = null; document.title = dmTitle0 || document.title; } return; }
+            if (dmBlink) return;
+            dmTitle0 = document.title; var flip = false;
+            dmBlink = setInterval(function () {
+                if (!dmEl) { dmAttn(false); return; }
+                flip = !flip; document.title = flip ? '📨 새 전달이 왔어요!' : dmTitle0;
+                if (Date.now() - dmBeepAt > 20000) { dmBeepAt = Date.now(); try { estBeep(); } catch (e) { /* 무시 */ } }
+            }, 1000);
+        }
         function dmWait() { return (db.dms || []).filter(function (x) { return x.fr === me && !x.ack; }).length; }
         function dmSend(pre) {   // 대표: 보낼 직원 · 내용
             if (!isBoss()) return;
@@ -8147,7 +8162,7 @@
                 }
             });
         }
-        function wckKind(w) { return w.k === 'half' ? '스업 예상 시간 반' : w.k === 'end' ? '스업 예상 시간 끝' : w.k === 'act' ? '실업 30분마다' : '15분 빈 시간'; }
+        function wckKind(w) { return w.k === 'half' ? '스업 예상 시간 반' : w.k === 'end' ? '스업 예상 시간 끝' : w.k === 'act' ? '실업 30분마다' : '빈 시간'; }
         function dmList() {   // 대표: 전달 내역 (확인 여부)
             var l = (db.dms || []).filter(function (x) { return x.fr === me; }).sort(function (a, b) { return b.at - a.at; }).slice(0, 30);
             var close = function () { var o = document.querySelector('[data-fk=dm-list]'); if (o) o.remove(); };
@@ -8158,11 +8173,15 @@
                     h('div', { class: 'dpop-body' }, (function () {   // 오늘 업무 확인 응답
                         var td = ymd(new Date()), w = (db.wck || []).filter(function (x) { return ymd(new Date(x.at)) === td; }).sort(function (a, b) { return b.at - a.at; });
                         return h('div', { class: 'wck-box', 'data-fk': 'wck-list' }, h('h4', {}, '🔔 오늘 업무 확인 응답 ' + w.length + '건'),
-                            w.length ? w.slice(0, 40).map(function (x) { return h('div', { class: 'wck-r' }, h('span', {}, ibHms(x.at)), h('b', {}, staffName(x.sid)), h('span', { class: 'wck-k' }, wckKind(x)), h('span', {}, (x.tt ? '"' + x.tt + '" → ' : '') + x.a)); }) : h('div', { class: 'dpop-empty' }, '아직 없어요. (스업 예상 시간 반·끝, 15분 빈 시간에 직원이 답하면 여기에 바로 떠요)'),
+                            w.length ? w.slice(0, 40).map(function (x) { return h('div', { class: 'wck-r' }, h('span', {}, ibHms(x.at)), h('b', {}, staffName(x.sid)), h('span', { class: 'wck-k' }, wckKind(x)), h('span', {}, (x.tt ? '"' + x.tt + '" → ' : '') + x.a)); }) : h('div', { class: 'dpop-empty' }, '아직 없어요. (스업 예상 시간 반·끝, ' + IDLE_MIN + '분 빈 시간에 직원이 답하면 여기에 바로 떠요)'),
                             h('h4', {}, '📨 전달 내역'));
                     })(), l.length ? l.map(function (x) {
-                        return h('div', { class: 'dm-r' + (x.ack ? ' ok' : '') }, h('span', { class: 'dm-st' }, x.ack ? '✅ 확인 ' + ibHms(x.ack) : '⏳ 확인 전'),
-                            h('div', {}, h('b', {}, staffName(x.to)), h('small', {}, ' · ' + ibHms(x.at)), h('div', { class: 'dpop-memo' }, x.t + (x.ref ? '\n— ' + x.ref : ''))),
+                        var miss = !x.ack && !x.rcv && Date.now() - x.at > DM_MISS_MS;
+                        return h('div', { class: 'dm-r' + (x.ack ? ' ok' : miss ? ' miss' : '') }, h('span', { class: 'dm-st' }, x.ack ? '✅ 확인 ' + ibHms(x.ack) : miss ? '⚠️ 아직 못 받음' : x.rcv ? '👀 화면에 뜸' : '⏳ 보내는 중'),
+                            h('div', {}, h('b', {}, staffName(x.to)),
+                                h('div', { class: 'dm-flow', 'data-fk': 'dm-flow' }, '보냄 ' + ibHms(x.at) + ' → ' + (x.rcv ? '뜸 ' + ibHms(x.rcv) + ' (' + dmGap(x.at, x.rcv) + ')' : '뜸 —') + ' → ' + (x.ack ? '확인 ' + ibHms(x.ack) + (x.rcv ? ' (' + dmGap(x.rcv, x.ack) + ')' : '') : '확인 —') + (x.rv ? ' · 직원 화면 ' + x.rv + (verNum(x.rv) < verNum(APP_VERSION) ? ' ⚠️ 예전 화면' : '') : '')),
+                                miss ? h('div', { class: 'dm-miss' }, '직원 사거리온이 꺼져 있거나(로그아웃·화면 닫힘) 예전 화면이라 아직 팝업이 안 떴어요. 직원 기기에서 사거리온을 열고 Ctrl+F5 해 주세요.') : null,
+                                h('div', { class: 'dpop-memo' }, x.t + (x.ref ? '\n— ' + x.ref : ''))),
                             h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { if (!confirm('이 전달을 지울까요?')) return; db.dms = db.dms.filter(function (y) { return y.id !== x.id; }); tomb(x.id); commit('전달을 지웠어요.'); close(); dmList(); } }, '지우기'));
                     }) : h('div', { class: 'dpop-empty' }, '아직 보낸 전달이 없어요.'))));
             document.body.appendChild(box);
@@ -8176,11 +8195,20 @@
                 (db.wck || []).forEach(function (w) { if (dmSeen['w' + w.id]) return; dmSeen['w' + w.id] = 1; if (w.sid === me) return; toast('🔔 ' + staffName(w.sid) + ' · ' + wckKind(w) + (w.tt ? ' "' + w.tt.slice(0, 24) + '"' : '') + ' → ' + w.a); });
                 var wc = Date.now() - 7 * 86400000, wo = (db.wck || []).filter(function (w) { return w.at < wc; }); if (wo.length) { db.wck = db.wck.filter(function (w) { return w.at >= wc; }); wo.forEach(function (w) { tomb(w.id); }); saveDb(); }
             }
+            l.forEach(function (x) {
+                if (x.fr !== me || x.ack) return;
+                if (x.rcv && !dmSeen['r' + x.id]) { dmSeen['r' + x.id] = 1; if (Date.now() - x.rcv < 120000) toast('👀 ' + staffName(x.to) + ' 님 화면에 전달이 떴어요 (' + dmGap(x.at, x.rcv) + ' 걸림)'); }
+                else if (!x.rcv && !dmSeen['m' + x.id] && Date.now() - x.at > DM_MISS_MS) { dmSeen['m' + x.id] = 1; if (Date.now() - x.at < 600000) toast('⚠️ ' + staffName(x.to) + ' 님 화면에 아직 전달이 안 떴어요 — 사거리온이 꺼져 있거나 예전 화면일 수 있어요.'); }
+            });
+            var lo = document.querySelector('[data-fk=dm-list]');
+            if (lo) { var lk = l.filter(function (x) { return x.fr === me; }).map(function (x) { return x.id + ':' + (x.rcv || 0) + ':' + (x.ack || 0) + ':' + (!x.ack && !x.rcv && Date.now() - x.at > DM_MISS_MS ? 1 : 0); }).join(','); if (dmListKey && lk !== dmListKey && !lo.contains(document.activeElement && document.activeElement.tagName === 'INPUT' ? document.activeElement : null)) { var sy = (lo.querySelector('.dpop-body') || {}).scrollTop || 0; dmList(); var nb = document.querySelector('[data-fk=dm-list] .dpop-body'); if (nb) nb.scrollTop = sy; } dmListKey = lk; } else dmListKey = '';
             l.forEach(function (x) { if (x.fr === me && x.ack && !dmSeen[x.id]) { dmSeen[x.id] = 1; toast('✅ ' + staffName(x.to) + ' 님이 전달을 확인했어요 (' + ibHms(x.ack) + '): ' + String(x.t).slice(0, 40)); } else if (x.ack) dmSeen[x.id] = 1; });
             if (isBoss()) { var cut = Date.now() - 30 * 86400000, old = l.filter(function (x) { return x.ack && x.ack < cut; }); if (old.length) { db.dms = l.filter(function (x) { return !(x.ack && x.ack < cut); }); old.forEach(function (x) { tomb(x.id); }); commit(''); } }
             var mine = l.filter(function (x) { return x.to === me && !x.ack; }).sort(function (a, b) { return a.at - b.at; }), d = mine[0];
-            if (!d) { if (dmEl) { dmEl.remove(); dmEl = null; dmShownId = ''; } return; }
+            if (!d) { if (dmEl) { dmEl.remove(); dmEl = null; dmShownId = ''; } dmAttn(false); return; }
             if (dmEl && dmShownId === d.id) return;
+            var newRcv = mine.filter(function (x) { return !x.rcv; });   // 이 화면에 떴다고 바로 기록 (대표님이 '뜸' 시각을 봄)
+            if (newRcv.length) { var nowR = Date.now(); newRcv.forEach(function (x) { x.rcv = nowR; x.rv = APP_VERSION; stamp(x); }); commit(''); dmBump(); }
             if (dmEl) dmEl.remove();
             dmShownId = d.id;
             dmEl = h('div', { class: 'dm-back', 'data-fk': 'dm-pop', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': '대표님 전달' },
@@ -8190,10 +8218,13 @@
                     d.ref ? h('div', { class: 'dm-ref' }, d.ref) : null,
                     h('button', { type: 'button', class: 'btn btn-primary dm-ok', 'data-fk': 'dm-ok', onclick: function () {
                         var x = (db.dms || []).filter(function (y) { return y.id === d.id; })[0]; if (!x) return;
-                        x.ack = Date.now(); stamp(x); commit('확인했다고 ' + staffName(d.fr) + ' 님께 알렸어요.'); dmBump(); dmCheck();
+                        x.ack = Date.now(); if (!x.rcv) { x.rcv = x.ack; x.rv = APP_VERSION; } stamp(x); commit('확인했다고 ' + staffName(d.fr) + ' 님께 알렸어요.'); dmBump(); dmAttn(false); dmCheck();
+                        try { if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) { /* 무시 */ }   // 다음부터 다른 창을 보고 있어도 알림
                     } }, '✅ 확인했어요')));
             document.body.appendChild(dmEl);
-            try { if (window.Notification && Notification.permission === 'granted' && document.visibilityState !== 'visible') new Notification('📨 ' + staffName(d.fr) + ' 님 전달', { body: String(d.t).slice(0, 120) }); } catch (e) { /* 무시 */ }
+            dmBeepAt = Date.now(); try { estBeep(); } catch (e) { /* 무시 */ }
+            dmAttn(true);
+            try { if (window.Notification && Notification.permission === 'granted' && document.visibilityState !== 'visible') new Notification('📨 ' + staffName(d.fr) + ' 님 전달', { body: String(d.t).slice(0, 120), tag: 'sg-dm', requireInteraction: true }); } catch (e) { /* 무시 */ }
         }
         setInterval(function () { try { dmCheck(); } catch (e) { /* 무시 */ } }, 2000);
         var dmTickV = null, dmTickBusy = false, dmTickOff = false, dmTickAt = 0;
@@ -9782,14 +9813,14 @@
             var st = h('p', { class: 'ph-tip', 'aria-live': 'polite' }, '확인하는 중이에요...');
             var k = h('input', { type: 'password', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'SOLAPI API Key', placeholder: 'API Key' });
             var sec = h('input', { type: 'password', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'SOLAPI API Secret', placeholder: 'API Secret' });
-            var from = h('input', { type: 'tel', autocomplete: 'off', 'aria-label': '발신번호', placeholder: '01056901800 (SOLAPI에 등록한 발신번호)' });
-            function show(r) { st.textContent = r.set ? '✅ 문자 인증 사용 중 (키 끝자리 …' + r.tail + ' · 발신번호 ' + r.from + '). 인증번호가 대표님 휴대폰 문자로 가요.' : '아직 문자 설정이 없어요. 지금은 인증번호가 회사 메일로 가요.'; }
-            function call(p, okMsg) { return ibCall('smsKey', p).then(function (r) { show(r); if (okMsg) toast(okMsg); k.value = ''; sec.value = ''; }, function (e) { st.textContent = driveErrText(e); }); }
+            var from = h('input', { type: 'tel', autocomplete: 'off', 'aria-label': '발신번호', placeholder: '18332440 (SOLAPI에 등록·승인된 발신번호)' });
+            function show(r) { st.textContent = r.set ? '✅ 문자 사용 중 (키 끝자리 …' + r.tail + ' · 발신번호 ' + telFmt(r.from) + '). 신분증 요청 문자가 바로 가고, 인증번호도 대표님 휴대폰 문자로 가요.' : '아직 문자 설정이 없어요. 신분증 요청은 문자 앱 열기/복사로, 인증번호는 회사 메일로 가요.'; }
+            function call(p, okMsg) { return ibCall('smsKey', p).then(function (r) { show(r); idr.noSms = !r.set; if (okMsg) toast(okMsg); k.value = ''; sec.value = ''; }, function (e) { st.textContent = driveErrText(e); }); }
             dlg.appendChild(h('form', { novalidate: true, onsubmit: function (e) { e.preventDefault(); if (!k.value.trim() || !sec.value.trim()) { toast('API Key와 API Secret을 모두 넣어 주세요.'); return; } call({ op: 'set', key: k.value.trim(), secret: sec.value.trim(), from: from.value }, '문자 인증 설정을 저장했어요.'); } },
-                h('div', { class: 'dlg-head' }, '문자 인증 설정 (SOLAPI)'),
+                h('div', { class: 'dlg-head' }, '문자 설정 (SOLAPI)'),
                 h('div', { class: 'dlg-body' }, st,
-                    h('p', {}, '[내용 모두 지우기] 같은 되돌릴 수 없는 작업은 대표님 휴대폰 인증번호가 있어야 진행돼요. SOLAPI에서 받은 키를 넣으면 문자로, 넣기 전에는 회사 메일로 인증번호가 가요. 키는 구글 Apps Script 서버에만 보관돼요.'),
-                    h('label', { class: 'field' }, 'API Key', k), h('label', { class: 'field' }, 'API Secret', sec), h('label', { class: 'field' }, '발신번호 (비우면 010-5690-1800)', from)),
+                    h('p', {}, 'SOLAPI에서 받은 키를 넣으면 ① 신분증 요청 [문자로 보내기]가 PC에서도 고객에게 바로 가고 ② [내용 모두 지우기] 같은 작업의 인증번호도 대표님 휴대폰 문자로 가요. 키는 구글 Apps Script 서버에만 보관되고 화면엔 끝 4자리만 보여요.'),
+                    h('label', { class: 'field' }, 'API Key', k), h('label', { class: 'field' }, 'API Secret', sec), h('label', { class: 'field' }, '발신번호 (대표번호 18332440 · 비우면 예전 값 유지)', from)),
                 h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn btn-danger left', onclick: function () { if (confirm('문자 설정을 지울까요? 인증번호가 메일로 가게 돼요.')) call({ op: 'clear' }, '문자 설정을 지웠어요.'); } }, '설정 지우기'),
                     h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), h('button', { type: 'submit', class: 'btn btn-primary', 'data-act': 'sms-key-save' }, '저장'))));
             showDlg(dlg); call({});
@@ -11640,6 +11671,29 @@
                 + '· 고객님 전용 주소이며 ' + until + '까지 한 번만 사용할 수 있어요.\n'
                 + '· 문의: 사거리인터넷 직통 번호 1833-2440';
         }
+        function telFmt(v) { var d = String(v == null ? '' : v).replace(/\D/g, ''); return /^1[5-9]\d{6}$/.test(d) ? d.slice(0, 4) + '-' + d.slice(4) : mfPhone(d); }   // 18332440 → 1833-2440
+        function idrSend() {   // [⑤ 문자로 보내기]: 서버(SOLAPI)로 1833-2440에서 바로 발송 → 설정이 없으면 휴대폰은 문자 앱 · PC는 내용 복사
+            var U = idr.ui, L = idr.last;
+            if (!idrReady() || idr.sending) return;
+            var mob = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+            function fallback(why) {
+                if (mob) { toast(why + ' 문자 앱으로 열게요.'); window.location.href = idrSms(L.phone, L.text); return; }
+                copyText(L.text, U.area).then(function (ok) { toast(why + (ok ? ' 문자 내용을 복사했어요. 휴대폰 문자나 카카오톡에 붙여넣어 보내 주세요.' : ' [내용 복사]를 눌러 보내 주세요.')); });
+            }
+            if (idr.noSms) { fallback('바로 보내기 설정이 아직 없어요.'); return; }
+            if (!confirm(L.name + ' 고객님(' + mfPhone(L.phone) + ')께 1833-2440 번호로 문자를 바로 보낼까요?' + (L.sent ? '\n\n※ 이 고객에게는 이미 ' + ibTime(L.sent) + '에 보냈어요.' : ''))) return;
+            idr.sending = true; U.sms.disabled = true; U.sms.textContent = '보내는 중...';
+            ibCall('idSms', { code: L.code, text: L.text }).then(function (r) {
+                idr.sending = false; U.sms.textContent = '문자로 보내기';
+                if (idr.last === L) L.sent = r.sms || Date.now();
+                idrPaint(); idr.items = null; idr.busy = false; idrLoad();
+                toast('✅ ' + L.name + ' 고객님께 문자를 보냈어요. (' + telFmt(r.from || '18332440') + ' → ' + mfPhone(L.phone) + ')');
+            }, function (e) {
+                idr.sending = false; U.sms.textContent = '문자로 보내기'; idrPaint();
+                if (e && (e.code === 'no_sms' || e.code === 'bad_action')) { idr.noSms = true; fallback(e.code === 'no_sms' ? '바로 보내기 설정이 아직 없어요.' : '서버가 예전 버전이에요.'); return; }
+                toast(driveErrText(e));
+            });
+        }
         function idrSms(phone, text) { return 'sms:' + phone + '?&body=' + encodeURIComponent(text); }   // 아이폰·갤럭시 모두 문자 앱에 내용이 채워져 열려요
         var IDR_PARTS = [['고객 정보', null], ['납부 정보', /^\s*■\s*납부\s*정보/], ['접수 정보', /^\s*●\s*접수\s*정보/], ['고객 사은품', /^\s*◆\s*고객\s*사은품/]];
         var idrMemoGet = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').get, idrMemoSet = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
@@ -11739,7 +11793,7 @@
                 h('div', { class: 'idr-form-foot' }, h('p', {}, '고객 전용 주소는 72시간 동안 한 번만 쓸 수 있어요. 사진·서류는 서버에 남기지 않고 관리자 메일로만 보내져요. 접수 메모는 팀 암호로 잠가서 보관하고 ' + INTAKE_KEEP_DAYS + '일 뒤 자동으로 지워요.'), U.make));
             U.title = h('div', { class: 'vs-h' }, '고객에게 보낼 문자');
             U.area = h('textarea', { class: 'idr-msg', readonly: true, rows: '9', 'aria-label': '고객에게 보낼 문자 내용' });
-            U.sms = h('button', { type: 'button', class: 'btn btn-step', 'data-step': '5', 'data-fk': 'idr-sms', onclick: function () { if (idrReady()) window.location.href = idrSms(idr.last.phone, idr.last.text); } }, '문자로 보내기');
+            U.sms = h('button', { type: 'button', class: 'btn btn-step', 'data-step': '5', 'data-fk': 'idr-sms', onclick: function () { idrSend(); } }, '문자로 보내기');
             U.copy = h('button', { type: 'button', class: 'btn btn-step', 'data-step': '5', 'data-fk': 'idr-copy', onclick: function () { if (!idrReady()) return; copyText(idr.last.text, U.area).then(function (ok) { toast(ok ? '문자 내용을 복사했어요. 카카오톡 등에 붙여넣어 보내도 돼요.' : '길게 눌러 직접 복사해 주세요.'); }); } }, '내용 복사');
             U.copyLink = h('button', { type: 'button', class: 'btn btn-step', 'data-step': '5', 'data-fk': 'idr-copy-link', onclick: function () { if (!idrReady()) return; copyText(idrLink(idr.last.code)).then(function (ok) { toast(ok ? '링크만 복사했어요.' : '복사하지 못했어요.'); }); } }, '링크만 복사');
             U.note = h('p', { class: 'ib-help' });
@@ -11771,7 +11825,7 @@
             [U.sms, U.copy, U.copyLink].forEach(function (b) { b.disabled = !ok; });
             U.result.classList.toggle('idr-ready', ok);
             U.note.textContent = !L ? '※ 전용 링크를 만들면 [문자로 보내기] · [내용 복사] · [링크만 복사]를 누를 수 있어요.'
-                : ok ? '※ [문자로 보내기]는 휴대폰에서 누르면 문자 앱이 이 내용으로 열려요. 컴퓨터에서는 [내용 복사] 후 보내 주세요.'
+                : ok ? L.sent ? '✅ ' + ibTime(L.sent) + '에 1833-2440으로 문자를 보냈어요. (못 받았다고 하시면 한 번 더 보내도 돼요 · 3번까지)' : (idr.noSms ? '※ 바로 보내기 설정 전이라 [문자로 보내기]는 휴대폰에선 문자 앱을 열고, 컴퓨터에선 내용을 복사해요.' : '※ [문자로 보내기]를 누르면 확인 후 1833-2440 번호로 고객에게 바로 문자가 가요. (컴퓨터에서도 돼요)')
                 : '※ 성함·휴대폰 번호·고객 구분이 바뀌었어요. 이 고객에게 보내려면 [전용 링크 만들기]를 다시 눌러 주세요.';
         }
         function idrReset() {   // 다른 고객: 적던 내용과 만든 링크를 지우고 처음부터
@@ -11799,7 +11853,7 @@
                 if (bossDel) { pick = h('input', { type: 'checkbox', 'data-fk': 'idr-sel-' + x.code, 'aria-label': (x.name || '') + ' 요청 지우기 선택', checked: !!idr.sel[x.code] }); pick.addEventListener('change', function () { if (this.checked) idr.sel[x.code] = 1; else delete idr.sel[x.code]; render(); }); }
                 return h('div', { class: 'idr-row' + (idr.sel[x.code] ? ' sel' : ''), 'data-code': x.code }, h('div', { class: 'ib-time' }, pick ? h('label', { class: 'ib-pick' }, pick, ibTime(x.t)) : ibTime(x.t)),
                     h('div', { class: 'idr-who' }, x.kind && x.kind !== 'person' && IDR_KINDS[x.kind] ? h('span', { class: 'idr-kind-tag' + (x.kind === 'corp' ? ' corp' : '') }, IDR_KINDS[x.kind].label) : null, h('b', {}, x.name), ' ', mfPhone(x.phone)),
-                    h('div', { class: 'idr-memo' }, (x.memo ? x.memo + ' · ' : '') + '담당 ' + x.staff),
+                    h('div', { class: 'idr-memo' }, (x.memo ? x.memo + ' · ' : '') + '담당 ' + x.staff, x.sms ? h('span', { class: 'idr-sent', title: '1833-2440으로 보낸 문자' }, '📩 문자 보냄 ' + ibTime(x.sms) + (x.smsBy ? ' · ' + x.smsBy : '')) : null),
                     h('div', { class: 'idr-stc' }, h('span', { class: 'idr-st ' + s[1] }, s[0] + (x.state === 'done' && x.done ? ' ' + ibTime(x.done) : '')),
                         bossDel ? h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'data-fk': 'idr-del-' + x.code, disabled: idr.deleting ? true : null, onclick: function () { idrDelete([x.code]); } }, '삭제') : null),
                     idrNote(x));
