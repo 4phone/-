@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-zw/AhQytcTTluAHN3qkytPJNMXhGt5YQ6CF09XD8htQ='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-IoRtDzRO3977Mb1nBgQ0qHbdBJbGiAUGD+G06WFoOQo='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2077,7 +2077,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-05.11';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-05.12';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -4289,6 +4289,7 @@
             }).then(function (j) {
                 clearTimeout(timer);
                 if (!j || j.ok !== true) {
+                    if (j && j.error === 'old_app' && !newVer) { newVer = 'new'; setTimeout(function () { render(); checkVersion(); }, 0); }   // 서버가 예전 화면이라고 함 → 새 화면 안내
                     var e = new Error((j && j.error) || 'bad'); e.code = (j && j.error) || 'bad'; e.reply = j;
                     e.serverMessage = j && typeof j.message === 'string' ? j.message.slice(0, 200) : ''; throw e;
                 }
@@ -4708,7 +4709,7 @@
         function verNum(v) { var m = /^(\d{4})-(\d{2})-(\d{2})\.(\d+)$/.exec(v || ''); return m ? (+m[1]) * 1e8 + (+m[2]) * 1e6 + (+m[3]) * 1e4 + (+m[4]) : 0; }
         var verTag = '';   // 지난번에 받은 화면 파일 표시(ETag) — 같으면 파일 전체(1.3MB)를 다시 받지 않음
         function checkVersion() {
-            if (location.protocol === 'file:' || !window.fetch || document.hidden) return;   // 안 보는 창은 건너뜀 (다시 보면 바로 확인)
+            if (location.protocol === 'file:' || !window.fetch) return;   // 안 보는 창도 확인 (자리 비운 사이 새 화면으로 바꿀 수 있게)
             var url = location.pathname + '?vc=' + Date.now();
             var head = verTag ? fetch(url, { method: 'HEAD', cache: 'no-store', credentials: 'same-origin' }).then(function (r) { return r.ok ? (r.headers.get('etag') || r.headers.get('last-modified') || '') : ''; }, function () { return ''; }) : Promise.resolve('');
             head.then(function (tg) {
@@ -4717,25 +4718,46 @@
             }).then(function (t) {
                 var m = /var APP_VERSION = '([^']+)'/.exec(t || ''), v = m ? m[1] : '';
                 if (!v || verNum(v) <= verNum(APP_VERSION) || v === newVer) return;
-                if (!authed) { location.reload(); return; }   // 로그인 전이면 바로 새 화면으로
-                newVer = v; render();
+                if (!authed) { verGo(v); return; }   // 로그인 전이면 바로 새 화면으로
+                newVer = v; render(); verAuto();
             }).catch(function () { /* 다음에 다시 확인 */ });
         }
         function verNote() {
             if (!newVer) return null;
-            return h('div', { class: 'mode-note ver-note', 'data-note': 'newver' }, h('span', {}, h('b', {}, '새 화면이 올라왔어요 '), '새로고침하면 새 기능이 보여요. (다시 로그인해야 해요)'),
+            return h('div', { class: 'mode-note ver-note', 'data-note': 'newver' }, h('span', {}, h('b', {}, '새 화면이 올라왔어요 '), '새로고침하면 새 기능이 보여요. 3분 동안 화면을 안 만지면 쓰던 것을 보관하고 알아서 바꿔요. (다시 로그인해야 해요)'),
                 svUnsavedForms().length ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'reload-save', onclick: function () {
                     var b = this; b.disabled = true; b.textContent = '저장하는 중...';
-                    saveAll(true).then(function () { location.reload(); }, function () { b.disabled = false; b.textContent = '저장하고 새로고침'; toast('임시 보관하지 못했어요. 다시 눌러 주세요.'); });
+                    saveAll(true).then(function () { verGo(); }, function () { b.disabled = false; b.textContent = '저장하고 새로고침'; toast('임시 보관하지 못했어요. 다시 눌러 주세요.'); });
                 } }, '저장하고 새로고침') : null,
                 h('button', { type: 'button', class: 'btn btn-sm' + (svUnsavedForms().length ? '' : ' btn-primary'), 'data-act': 'reload', onclick: function () {
                     var n = svUnsavedForms().length;
                     if (n && !confirm('저장 안 된 가입 확인서가 ' + n + '건 있어요. 저장하지 않고 새로고침하면 지워져요.\n그래도 새로고침할까요? ([저장하고 새로고침]을 누르면 이 기기에 보관한 뒤 새로고침해요)')) return;
-                    location.reload();
+                    verGo();
                 } }, svUnsavedForms().length ? '저장 안 하고 새로고침' : '지금 새로고침'));
         }
+        /* ---------- 오래 켜 둔 PC·태블릿: 새 화면이 올라오면 일 안 할 때 알아서 바꿈 ----------
+           3분 동안 화면을 안 만졌고(자리 비움) 저장 중인 게 없으면 → 쓰던 가입 확인서·상담 메모를 이 기기에 보관하고 → 새 화면으로 (다시 로그인 → [이어 쓰기])
+           주소에 버전을 붙여 열어서 예전 화면(캐시)이 다시 뜨지 않게 */
+        var verActAt = Date.now(), verGoing = false;
+        ['keydown', 'pointerdown', 'input', 'wheel', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, function () { verActAt = Date.now(); }, { capture: true, passive: true }); });
+        function verGo(v) { verGoing = true; location.replace(location.pathname + '?v=' + encodeURIComponent(v || newVer || String(Date.now())) + location.hash); }
+        function verBusy() {   // 지금 새 화면으로 바꾸면 안 되는 때
+            if (svBusy || verGoing) return true;
+            try { if (gl.job || glDirty()) return true; } catch (e) { /* 무시 */ }
+            if (document.querySelector('dialog[open]')) return true;   // 고치는 창이 열려 있음
+            if (document.querySelector('[data-busy]')) return true;    // 드라이브 저장 등 진행 중
+            try { if (cl.saving) return true; } catch (e) { /* 무시 */ }
+            return false;
+        }
+        function verAuto() {
+            if (!newVer || !authed || !db || verGoing) return;
+            if (Date.now() - verActAt < 3 * 60000 || verBusy()) return;   // 일하는 중이면 다음에 (30초마다 다시 봄)
+            verGoing = true;
+            saveAll(true).then(function () { verGo(); }, function () { verGoing = false; });   // 쓰던 것 먼저 보관 · 보관 못 하면 바꾸지 않음
+        }
+        setInterval(verAuto, 30000);
         setTimeout(checkVersion, 4000);
-        setInterval(checkVersion, 5 * 60 * 1000);
+        setInterval(checkVersion, 2 * 60 * 1000);   // 2분마다 새 화면 확인 (바뀐 게 없으면 머리글만 확인 · 가벼움)
         setInterval(function () { lvTick(false); }, 60000);   // 사장님 전용 '실시간 접수 현황': 3시간마다 자동 반영 (아래 lvTick)
         document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') checkVersion(); });
         function driveBanner() {
