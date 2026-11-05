@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-QzmxG4jHR36+dUjGMhHRxCOQFJQXaAG4FdtwpAjn708='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-tO8suBLCUfsztgv26Zb/hiVUU9YucVU0AHkmxmdcYq4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1033,7 +1033,8 @@
         .save-fab.ok { background: #E6F4EA; color: #1E6B34; border-color: #9BD3AE; }
         .save-fab.dirty { background: #FF9F1C; color: #fff; border-color: #E07F00; }
         .save-fab.busy { background: #F1F2E8; color: #6B6B62; }
-        @media (max-width: 700px) { .save-fab { top: auto; bottom: 78px; right: 12px; width: 58px; height: 58px; padding: 0; border-radius: 50%; font-size: 11px; line-height: 1.15; white-space: normal; } }
+        body.cl-memo-on .save-fab { top: auto; bottom: 16px; right: auto; left: 248px; }   /* 상담 메모가 열리면 메모 창 버튼을 가리지 않게 왼쪽 아래로 */
+        @media (max-width: 700px) { .save-fab, body.cl-memo-on .save-fab { top: auto; bottom: 78px; right: 12px; left: auto; width: 58px; height: 58px; padding: 0; border-radius: 50%; font-size: 11px; line-height: 1.15; white-space: normal; } body.cl-memo-on .save-fab { right: auto; left: 12px; } }
         .mfd-note { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 8px 0; }
         .mfd-it { display: inline-flex; gap: 6px; align-items: center; padding: 4px 8px; background: #fff; border-radius: 8px; }
         .reg-miss { margin: 8px 0; padding: 10px 12px; border: 2px solid #E07F00; border-radius: 10px; background: #FFF8EC; display: grid; gap: 6px; }
@@ -2058,7 +2059,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-05.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-05.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -7922,13 +7923,35 @@
         }
         function ibAutoMemo(fresh) {
             if (!ibMemoOn() || !driveOn() || !fresh || !fresh.length) return false;
-            var A = ibAutoMap(), now = Date.now(), calls = fresh.filter(function (x) { return (x.kind === 'call' || (x.kind === 'rcv' && A[x.id] !== 'merged')) && x.t && now - x.t < 10 * 60000 && ibCallForMe(x); });
+            var now = Date.now(), rc = fresh.filter(function (x) { return x.kind === 'rcv' && x.t && now - x.t < 10 * 60000 && ibCallForMe(x); });
+            if (rc.length) { ibRcvMemo(rc[0]); return true; }   // 실제로 전화가 옴 → 그 휴대폰 담당 직원 화면에 상담하기 + 상담 메모 + 번호
+            if (ibCiSince()) return false;   // 착신 휴대폰을 연결했으면 버튼만 누른 기록으로는 열지 않음 (전화가 실제로 오면 열림)
+            var calls = fresh.filter(function (x) { return x.kind === 'call' && x.t && now - x.t < 10 * 60000 && ibCallForMe(x); });
             if (!calls.length) return false;
             var M = cl.memo, was = !!(M && M.open), writing = !!(M && M.P && clMemoSheet() && clHasText(clMemoSheet(), M.P.values()));
             if (was && M.min) { clMemoStash(); M.min = false; M.built = ''; clMemoPaint(); }
             else if (!was) clMemoOpen();
             setTimeout(function () { toast('📞 전화 인입: ' + calls[0].label + ' — 상담 메모를 ' + (writing ? '펼쳤어요 (적던 내용은 그대로)' : '열었어요') + '. 통화하면서 바로 적어 주세요.'); }, 80);
             return true;
+        }
+        function ibRcvMemo(x) {   // 착신 전화: 상담하기 화면 + 상담 메모(적던 상담은 탭으로) + 연락처에 번호
+            var ph = x.phone ? mfPhone(x.phone) : '';
+            var stay = state.view === 'forms' && svUnsavedForms().length;   // 가입 확인서를 쓰던 중이면 화면은 그대로 (메모만 위에)
+            if (!stay && state.view !== 'policy') { state.view = 'policy'; render(); window.scrollTo(0, 0); }
+            var M = cl.memo, s0 = clMemoSheet(), cur = M && M.open && M.P && s0 ? M.P.values() : null;
+            var phCol = function (s) { return s ? s.cols.filter(function (c) { return clColKind(c) === 'ph'; })[0] : null; };
+            var curPh = cur && phCol(s0) ? digitsOnly(cur[phCol(s0).k] || '') : '';
+            var writing = !!(cur && clHasText(s0, cur)) && !(ph && curPh === digitsOnly(ph));
+            if (writing && cl.data) clMemoNew();   // 적던 상담은 위 탭에 접어 두고 새 메모
+            else if (!M || !M.open || M.min) { if (M && M.open && M.min) { clMemoStash(); M.min = false; M.built = ''; clMemoPaint(); } else clMemoOpen(); }
+            var tries = 0, fill = function () {   // 상담 리스트를 받는 중이면 메모 칸이 생길 때까지 기다렸다가 넣음
+                var MM = cl.memo, s = clMemoSheet(), c = phCol(s), inp = MM && MM.P && c ? MM.P.inputs[c.k] : null;
+                if (!inp) { if (++tries < 40) setTimeout(fill, 250); return; }
+                if (ph && !inp.value.trim()) { inp.value = ph; inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); }
+                var t = MM.P.memoEl; if (t) { try { t.focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }
+            };
+            setTimeout(fill, 120);
+            setTimeout(function () { toast('📱 전화가 왔어요' + (x.ph ? ' (' + x.ph + ')' : '') + ' — 상담 메모를 ' + (writing ? '새로 열었어요 (적던 상담은 위 탭에)' : '열었어요') + (ph ? ' · 연락처 ' + ph + ' 넣음' : x.n4 ? ' · 번호 끝 ' + x.n4 + ' (전체 번호는 안 왔어요)' : '') + '. 통화하면서 바로 적어 주세요.'); }, 150);
         }
         function ibPaint() {   // 화면·메뉴 숫자 갱신 (댓글을 쓰는 중이면 다 쓴 뒤에)
             var ae = document.activeElement;
@@ -7972,7 +7995,7 @@
         function ibRcvAll(items, legacy) {   // 착신 기록: 목록 줄(종류 rcv · 미인입·테스트 표시한 것은 빼고) + 예전 방식(11-05.2 첫 시험)
             return ibRcvNorm((legacy || []).concat(items.filter(function (x) { var m = ibMark(x); return x.kind === 'rcv' && m !== 'no' && m !== 'test'; })));
         }
-        function ibPhNorm(l) { return (Array.isArray(l) ? l : []).filter(function (p) { return p && typeof p.ph === 'string'; }).map(function (p) { return { ph: p.ph.slice(0, 12), since: Number(p.since) || 0 }; }); }
+        function ibPhNorm(l) { return (Array.isArray(l) ? l : []).filter(function (p) { return p && typeof p.ph === 'string'; }).map(function (p) { return { ph: p.ph.slice(0, 12), since: Number(p.since) || 0, st: typeof p.st === 'string' ? p.st.slice(0, 20) : '' }; }); }
         function ibCiSince() { var t = 0; ib.phones.forEach(function (p) { if (p.since && (!t || p.since < t)) t = p.since; }); return t; }   // 착신 휴대폰을 처음 연결한 시각 (그 전 기록은 대조하지 않음)
         function ibAutoMap(items, rcv, out) {   // 자동 표시: 착신 대조(통화 확인·통화 없음) + PC에서 누른 전화 · 모바일에서 3분 안에 다시 누른 전화
             items = items || ib.items; rcv = rcv || ibRcvAll(ib.items, ib.rcvOld || []); out = out || {};   // 미인입·테스트 표시를 바로 반영
@@ -8051,18 +8074,18 @@
             return c.by === staffName(me);
         }
         function ibHms(t) { var d = new Date(t); return (ymd(d) === ymd(new Date()) ? '' : (d.getMonth() + 1) + '/' + d.getDate() + ' ') + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':' + pad2(d.getSeconds()); }
-        function ibCiAct(action, ph) {   // 대표: 착신 휴대폰 연결 키 만들기 · 연결 끊기
+        function ibCiAct(action, ph, st) {   // 대표: 착신 휴대폰 연결 키 만들기 · 연결 끊기 · 담당 직원
             if (!isBoss() || ib.ciBusy) return;
             ph = String(ph || '').replace(/[<>]/g, '').trim().slice(0, 12);
             if (!ph) { toast('휴대폰 이름을 적어 주세요. (예: 휴대폰1)'); return; }
             if (action === 'ciDel' && !confirm('"' + ph + '" 연결을 끊을까요?\n그 휴대폰에서 보내는 기록은 더 받지 않아요. (이미 받은 기록은 그대로)')) return;
             if (action === 'ciKey' && ib.phones.some(function (p) { return p.ph === ph; }) && !confirm('"' + ph + '" 연결 키를 다시 만들까요?\n예전 키는 바로 못 쓰게 돼서, 그 휴대폰 앱에 새 키를 넣어야 해요.')) return;
             ib.ciBusy = true; render();
-            ibCall(action, { ph: ph }).then(function (res) {
-                ib.ciBusy = false; ib.phones = ibPhNorm(res.phones); ib.ciName = '';
-                ib.ciKey = action === 'ciKey' && typeof res.key === 'string' ? { ph: res.ph || ph, key: res.key } : null;
-                render(); toast(action === 'ciKey' ? '"' + ph + '" 연결 키를 만들었어요. 아래 내용을 휴대폰 앱에 넣어 주세요.' : '"' + ph + '" 연결을 끊었어요.');
-            }, function (e) { ib.ciBusy = false; render(); toast(driveErrText(e)); });
+            ibCall(action, action === 'ciStaff' ? { ph: ph, st: st || '' } : { ph: ph }).then(function (res) {
+                ib.ciBusy = false; ib.phones = ibPhNorm(res.phones); if (action !== 'ciStaff') ib.ciName = '';
+                if (action !== 'ciStaff') ib.ciKey = action === 'ciKey' && typeof res.key === 'string' ? { ph: res.ph || ph, key: res.key } : null;
+                render(); toast(action === 'ciStaff' ? '"' + ph + '"로 오는 전화는 ' + (st ? st + ' 님 담당으로 들어가고, ' + st + ' 님 화면에서 상담 메모가 열려요.' : '담당 없이 들어가고, 모든 기기에서 상담 메모가 열려요.') : action === 'ciKey' ? '"' + ph + '" 연결 키를 만들었어요. 아래 내용을 휴대폰 앱에 넣어 주세요.' : '"' + ph + '" 연결을 끊었어요.');
+            }, function (e) { ib.ciBusy = false; render(); toast(e && e.code === 'bad_action' ? 'Apps Script를 새 버전(drive-storage_1105-4.gs)으로 배포해야 쓸 수 있어요.' : driveErrText(e)); });
         }
         function ibCiPanel(SEQ) {   // 콜 인입 아래: 착신 휴대폰 연결 (대표만)
             ib.rcv = ibRcvAll(ib.items, ib.rcvOld || []);
@@ -8076,7 +8099,9 @@
             return h('details', { class: 'panel ci-box', 'data-fk': 'ci-box', open: K || ib.ciOpen || !ib.phones.length ? true : null, ontoggle: function () { ib.ciOpen = this.open; } },
                 h('summary', {}, '📱 착신 휴대폰 연결 (' + ib.phones.length + '대) — 대표번호를 받는 안드로이드 휴대폰이 전화 온 시각을 보내면 자동으로 맞춰요'),
                 h('div', { class: 'ci-list' }, ib.phones.length ? ib.phones.map(function (p) {
-                    return h('div', { class: 'ci-ph' }, h('b', {}, p.ph), h('small', {}, '연결 ' + (p.since ? ibHms(p.since) : '') + ' · 마지막 수신 ' + (last[p.ph] ? ibHms(last[p.ph]) : '아직 없음')),
+                    var stSel = h('select', { 'data-fk': 'ci-st-' + p.ph, 'aria-label': p.ph + ' 담당 직원', disabled: ib.ciBusy ? true : null }, [h('option', { value: '' }, '담당 직원: 없음 (모든 기기)')].concat(db.staff.slice().sort(byO).map(function (x) { return h('option', { value: x.name }, '담당 직원: ' + x.name); })));
+                    stSel.value = p.st || ''; stSel.addEventListener('change', function () { ibCiAct('ciStaff', p.ph, this.value); });
+                    return h('div', { class: 'ci-ph' }, h('b', {}, p.ph), stSel, h('small', {}, '연결 ' + (p.since ? ibHms(p.since) : '') + ' · 마지막 수신 ' + (last[p.ph] ? ibHms(last[p.ph]) : '아직 없음')),
                         h('button', { type: 'button', class: 'btn btn-sm', disabled: ib.ciBusy ? true : null, onclick: function () { ibCiAct('ciKey', p.ph); } }, '키 다시 만들기'),
                         h('button', { type: 'button', class: 'btn btn-sm btn-danger', disabled: ib.ciBusy ? true : null, onclick: function () { ibCiAct('ciDel', p.ph); } }, '연결 끊기'));
                 }) : h('div', { class: 'empty' }, '아직 연결한 휴대폰이 없어요.')),
@@ -8151,7 +8176,8 @@
                         h('div', { class: 'ib-sub' }, x.kind === 'rcv' ? h('span', { class: 'ib-dev' }, '직접 전화') : h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC'),
                             x.name ? h('b', {}, x.name) : null,
                             x.phone ? h('a', { href: 'tel:' + x.phone, class: 'ib-phone' }, mfPhone(x.phone)) : null,
-                            x.kind === 'rcv' ? h('span', { class: 'ib-rcv-n' }, x.n4 ? '번호 끝 ' + x.n4 : '번호 안 옴') : null,
+                            x.kind === 'rcv' && !x.phone ? h('span', { class: 'ib-rcv-n' }, x.n4 ? '번호 끝 ' + x.n4 : '번호 안 옴') : null,
+                            x.kind === 'rcv' && x.phone ? h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-memo-' + x.id, title: '이 번호로 상담 메모 열기', onclick: function () { ibRcvMemo(x); } }, '📝 상담 메모') : null,
                             SEQ.mt[x.id] ? h('span', { class: 'ib-rcv-ok', title: '착신 휴대폰에 실제로 전화가 왔어요' }, '📱 통화 확인 ' + ibHms(SEQ.mt[x.id].t) + ' · ' + SEQ.mt[x.id].ph + (SEQ.mt[x.id].n4 ? ' · 끝 ' + SEQ.mt[x.id].n4 : '')) : null)),
                     asg,
                     h('div', { class: 'ib-chkw' }, h('label', { class: 'ib-chk' + (boss ? '' : ' ro') }, chk, h('span', {}, '확인'), x.chk ? h('small', {}, x.chk.by + (x.chk.at ? ' · ' + ibTime(x.chk.at) : '')) : (boss ? null : h('small', {}, '대표 확인 전'))), markBtns),
