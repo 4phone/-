@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-elrVJNvSg/InR23EXGasUgssaK3d7m+r0nQnErBVBXk='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-zw/AhQytcTTluAHN3qkytPJNMXhGt5YQ6CF09XD8htQ='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1070,6 +1070,7 @@
         select.ib-src { font-size: 12px; padding: 2px 6px; min-height: 28px; max-width: 170px; margin-left: 6px; border-radius: 8px; }
         select.ib-src.on { border-color: #3E441E; font-weight: 700; }
         .ib-srcsum { color: #3E441E; font-weight: 700; }
+        .bl-link-tip { font-size: 13px; color: #3E441E; background: #F1F2E8; border-radius: 8px; padding: 6px 10px; margin: 6px 0 0; }
         .ib-rcv-n { margin-left: 6px; font-weight: 700; color: #3E441E; }
         .ib-kind.k-rcv { color: #1E6B34; }
         .ib-rcv-ok { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #E6F4EA; color: #1E6B34; font-size: 12px; font-weight: 700; }
@@ -2076,7 +2077,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-05.10';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-05.11';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -4275,7 +4276,7 @@
         function driveCall(url, action, payload, waitMs) {   // waitMs: 오래 걸리는 요청(드라이브 저장 등)만 따로
             if (!DRIVE_URL_RE.test(url)) return Promise.reject(new Error('url'));
             var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, waitMs || DRIVE_TIMEOUT_MS);
-            var base = { action: action };
+            var base = { action: action, av: APP_VERSION };   // 화면 버전: 예전 화면이면 서버가 저장을 거절 (새로고침 안내)
             if (action === 'login' || action === 'signup' || action === 'adminInit') base.dev = devId();   // 계정당 기기 3대: 이 기기를 구분하는 번호
             if (db && db.account && db.account.session) base.session = db.account.session;   // 계정 로그인 확인표(서버가 승인된 계정인지 확인)
             var body = JSON.stringify(Object.assign(base, payload || {}));
@@ -4295,6 +4296,7 @@
             }, function (e) { clearTimeout(timer); throw e; });
         }
         function driveErrText(e) {
+            if (e && e.code === 'old_app') return '예전 사거리온 화면이에요. 새로고침(Ctrl+F5)으로 새 화면을 연 뒤 다시 해 주세요.';
             if (e && e.code === 'bad_action') return '서버 프로그램(Apps Script)이 예전 버전이에요. 새 코드로 바꿔서 "새 버전"으로 다시 배포해 주세요.';
             if (e && e.serverMessage) return e.serverMessage;
             if (e && e.name === 'AbortError') return '드라이브 응답이 너무 늦어요. 잠시 뒤 다시 시도해 주세요.';
@@ -7919,7 +7921,7 @@
                 ib.known = ib.known || Object.create(null);
                 items.forEach(function (x) { ib.known[x.id] = 1; });
                 ib.items = items; ib.rev = typeof res.rev === 'number' ? res.rev : -1;
-                ib.rcvOld = ibRcvNorm(res.rcv); ib.rcv = ibRcvAll(items, ib.rcvOld); if (Array.isArray(res.phones)) ib.phones = ibPhNorm(res.phones);
+                ib.rcvOld = ibRcvNorm(res.rcv); ib.rcv = ibRcvAll(items, ib.rcvOld); ibVsLoad(); if (Array.isArray(res.phones)) ib.phones = ibPhNorm(res.phones);
                 try { ibAutoMemo(fresh); } catch (ae) { /* 상담 메모를 못 열어도 목록은 그대로 */ }
                 fresh = fresh.filter(function (x) { return x.kind !== 'rcv' || ibAutoMap()[x.id] !== 'merged'; });
                 if (fresh.length) {   // 새 기록 알림
@@ -7957,7 +7959,7 @@
             setTimeout(function () { toast('📞 전화 인입: ' + calls[0].label + ' — 상담 메모를 ' + (writing ? '펼쳤어요 (적던 내용은 그대로)' : '열었어요') + '. 통화하면서 바로 적어 주세요.'); }, 80);
             return true;
         }
-        function ibRcvMemo(x) {   // 착신 전화: 상담하기 화면 + 상담 메모(적던 상담은 탭으로) + 연락처에 번호
+        function ibRcvMemo(x) {   // 착신 전화: 상담하기 화면 + 상담 메모(적던 상담은 탭으로) + 연락처에 번호 · 경로 표시
             var ph = x.phone ? mfPhone(x.phone) : '';
             var stay = state.view === 'forms' && svUnsavedForms().length;   // 가입 확인서를 쓰던 중이면 화면은 그대로 (메모만 위에)
             if (!stay && state.view !== 'policy') { state.view = 'policy'; render(); window.scrollTo(0, 0); }
@@ -7974,7 +7976,7 @@
                 var t = MM.P.memoEl; if (t) { try { t.focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }
             };
             setTimeout(fill, 120);
-            setTimeout(function () { toast('📱 전화가 왔어요' + (x.ph ? ' (' + x.ph + ')' : '') + ' — 상담 메모를 ' + (writing ? '새로 열었어요 (적던 상담은 위 탭에)' : '열었어요') + (ph ? ' · 연락처 ' + ph + ' 넣음' : x.n4 ? ' · 번호 끝 ' + x.n4 + ' (전체 번호는 안 왔어요)' : '') + '. 통화하면서 바로 적어 주세요.'); }, 150);
+            setTimeout(function () { toast('📱 전화가 왔어요' + (x.ph ? ' (' + x.ph + ')' : '') + ' · 경로: ' + ibSrcText(x) + ' — 상담 메모를 ' + (writing ? '새로 열었어요 (적던 상담은 위 탭에)' : '열었어요') + (ph ? ' · 연락처 ' + ph + ' 넣음' : x.n4 ? ' · 번호 끝 ' + x.n4 + ' (전체 번호는 안 왔어요)' : '') + '. 통화하면서 바로 적어 주세요.'); }, 150);
         }
         /* ---------- 📨 전달하기: 대표 → 직원 화면 팝업 → [확인했어요] → 대표에게 확인 알림 (팀 키로 암호화된 팀 저장소 · 30초마다 맞춤) ---------- */
         var dmEl = null, dmShownId = '', dmSeen = null;
@@ -8127,7 +8129,42 @@
             if (x.kind === 'rcv') return '';
             return /블로그/.test(l) ? '블로그' : /인스타/.test(l) ? '인스타' : /구글/.test(l) ? '구글' : /플레이스|네이버/.test(l) ? '네이버' : /당근/.test(l) ? '당근' : /카카오채널/.test(l) ? '카카오채널' : /유튜브/.test(l) ? '기타' : /전단지|현수막/.test(l) ? '전단지·현수막' : '홈페이지';
         }
-        function ibSrc(x) { return ibSrcMan(x) || ibSrcGuess(x); }   // 직접 고른 경로 > 버튼 이름
+        function ibKnown(ph) {   // 걸려 온 번호가 가입 장부 · 상담 리스트에 있으면 → { k, name }
+            ph = digitsOnly(ph || ''); if (ph.length < 9) return null;
+            var r = (db.regs || []).filter(function (x) { return digitsOnly(x.phone || '') === ph; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0];
+            if (r) return { k: '기존 고객', name: r.name || '' };
+            try {
+                if (cl.data) for (var i = 0; i < cl.data.sheets.length; i++) {
+                    var s = cl.data.sheets[i], pc = s.cols.filter(function (c) { return clColKind(c) === 'ph'; })[0], nc = s.cols.filter(function (c) { return /고객명|성함|이름/.test(c.l); })[0];
+                    if (!pc) continue;
+                    var row = cl.data.rows.filter(function (x) { return x.sh === s.id && digitsOnly((x.v || {})[pc.k] || '') === ph; })[0];
+                    if (row) return { k: '재케어', name: nc ? String(row.v[nc.k] || '') : '' };
+                }
+            } catch (e) { /* 무시 */ }
+            return null;
+        }
+        function ibVisitNear(t) {   // 전화 오기 10분 안의 홈페이지 방문 (가장 가까운 것) → 그 방문의 유입 경로
+            var best = null; (ib.vs || []).forEach(function (v) { if (v.t <= t + 30000 && v.t >= t - 600000 && (!best || v.t > best.t)) best = v; });
+            return best;
+        }
+        function ibSrcInfo(x) {   // 경로: 직접 고른 값 > 누른 버튼 > (착신) 기존 고객·재케어 > 10분 안 방문 추정 > 모름
+            var man = ibSrcMan(x); if (man) return { v: man, n: '' };
+            if (x.kind !== 'rcv') return { v: ibSrcGuess(x), n: '' };
+            var k = ibKnown(x.phone); if (k) return { v: k.k, n: k.name };
+            var vv = ibVisitNear(x.t); if (vv) return { v: vv.src || '홈페이지', n: '추정 · ' + pad2(new Date(vv.t).getHours()) + ':' + pad2(new Date(vv.t).getMinutes()) + ' 홈페이지 방문' };
+            return { v: '모름', n: '직접 전화' };
+        }
+        function ibSrcText(x) { var i = ibSrcInfo(x); return i.v + (i.n ? ' · ' + i.n : ''); }
+        function ibSrc(x) { return ibSrcInfo(x).v; }   // 직접 고른 경로 > 자동
+        function ibVsLoad() {   // 착신 경로 추정용: 최근 하루 홈페이지 방문 (1분마다)
+            if (!ibCiSince() || !driveOn() || ib.vsBusy || Date.now() - (ib.vsAt || 0) < 60000) return;
+            ib.vsBusy = true;
+            ibCall('vsList', { from: Date.now() - 86400000, to: Date.now() + 60000 }).then(function (r) {
+                ib.vsBusy = false; ib.vsAt = Date.now();
+                var l = (Array.isArray(r.items) ? r.items : []).filter(function (v) { return v && typeof v.t === 'number'; }).map(function (v) { return { t: v.t, src: String(v.src || '').slice(0, 30), dev: v.dev === 'm' ? 'm' : 'pc' }; });
+                var ch = l.length !== (ib.vs || []).length; ib.vs = l; if (ch && state.view === 'calls') ibPaint();
+            }, function () { ib.vsBusy = false; ib.vsAt = Date.now(); });
+        }
         function ibSrcSet(x, v) {   // 경로 직접 고르기 (모든 직원 · 팀 저장소)
             if (!db.ibm) db.ibm = [];
             var id = 'ibm_' + x.id, it = db.ibm.filter(function (y) { return y.id === id; })[0];
@@ -8136,7 +8173,7 @@
             commit(v ? '경로를 "' + v + '"(으)로 적었어요.' : '경로를 지웠어요.');
         }
         function ibSrcSel(x, mt) {   // 줄마다 경로 고르는 칸 (자동으로 알 수 있으면 그 값이 기본)
-            var man = ibSrcMan(x), auto = mt ? ibSrcGuess(mt) : ibSrcGuess(x);
+            var man = ibSrcMan(x), auto = mt ? ibSrcGuess(mt) : x.kind === 'rcv' ? (function () { var i = ibSrcInfo({ id: '-', kind: 'rcv', phone: x.phone, t: x.t }); return i.v + (i.n ? ' · ' + i.n : ''); })() : ibSrcGuess(x);
             var sel = h('select', { class: 'ib-src' + (man || auto ? ' on' : ''), 'data-fk': 'ib-src-' + x.id, 'aria-label': '전화 경로', title: '어떻게 알고 연락했는지 (블로그·인스타·구글 등)' },
                 [h('option', { value: '' }, auto ? '경로: ' + auto + ' (자동)' : '경로 선택')].concat(IB_SRCS.map(function (v) { return h('option', { value: v }, '경로: ' + v); })));
             sel.value = man; sel.addEventListener('change', function () { ibSrcSet(x, this.value); });
@@ -8258,6 +8295,7 @@
                 h('div', { class: 'actions' }, excelButtons(ibExcel, 'ib'), h('button', { type: 'button', class: 'btn', 'data-fk': 'ib-refresh', onclick: function () { ib.busy = false; ibLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침')));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '콜 인입은 구글 드라이브 공유 저장소를 연결한 기기에서 볼 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
             if (ib.rev < 0 && !ib.busy && !ib.err) setTimeout(function () { ibLoad(true); }, 0);
+            setTimeout(ibVsLoad, 0);
             var kindSel = h('select', { id: 'ib-kind', 'data-fk': 'ib-kind', 'aria-label': '종류 필터' }, h('option', { value: 'all' }, '전체'),
                 Object.keys(IB_KIND).map(function (k) { return h('option', { value: k }, IB_KIND[k][0] + ' ' + IB_KIND[k][1]); }));
             kindSel.value = ib.kind;
@@ -8335,7 +8373,8 @@
                         var td = ymd(new Date()), c = {}, n0 = 0;
                         shown.forEach(function (x) { if (ibEff(x, AU) || ymd(new Date(x.t)) !== td) return; var sv = ibSrc(x); if (sv) c[sv] = (c[sv] || 0) + 1; else n0++; });
                         var ks = Object.keys(c).sort(function (a, b) { return c[b] - c[a]; });
-                        return ks.length || n0 ? h('span', { class: 'ib-srcsum', 'data-fk': 'ib-srcsum' }, ' · 📊 오늘 경로: ' + ks.map(function (k) { return k + ' ' + c[k]; }).concat(n0 ? ['미입력 ' + n0] : []).join(' · ')) : null;
+                        var tot = n0 + ks.reduce(function (a, k) { return a + c[k]; }, 0), mo = c['모름'] || 0;
+                        return ks.length || n0 ? h('span', { class: 'ib-srcsum', 'data-fk': 'ib-srcsum', title: '모름 = 버튼·방문·기존 고객 어디에도 안 맞는 직접 전화 → 블로그·플레이스·인스타·전단 QR에 전화 링크(call.html?src=…)를 붙이면 줄어요' }, ' · 📊 오늘 경로: ' + ks.map(function (k) { return k + ' ' + c[k]; }).concat(n0 ? ['미입력 ' + n0] : []).join(' · ') + (mo && tot ? ' (모름 ' + Math.round(mo * 100 / tot) + '%)' : '')) : null;
                     })(),
                     ibCiSince() ? h('span', { class: 'ib-free', title: '착신 휴대폰에는 왔지만 홈페이지 전화 버튼 기록이 없는 전화 (네이버·전단지 번호를 보고 직접 건 전화 · 지인 전화 포함)' }, ' · 📱 홈페이지 밖 전화 ' + SEQ.free.length + '건 (오늘 ' + SEQ.free.filter(function (r) { return ymd(new Date(r.t)) === ymd(new Date()); }).length + '건)') : null),
                     bossDel && list.length ? (function () {
@@ -11671,6 +11710,7 @@
                 return { t: 'text', v: String(b.v).slice(0, 4000) };
             });
             for (var i = 1; i <= n; i++) if (!used[i]) blocks.push({ t: 'photo', n: i, cap: '' });   // 빠진 사진은 끝에
+            if (!blocks.some(function (b) { return b.t === 'text' && b.v.indexOf(BL_CALL_LINE) >= 0; })) blocks.push({ t: 'text', v: BL_CALL_LINE });   // 글 끝에 항상 전화 상담 (복사하면 번호에 전화 추적 링크)
             var tags = blTags25(Array.isArray(j.tags) ? j.tags : []);
             return { title: String(j.title).slice(0, 100), blocks: blocks, tags: tags };
         }
@@ -11703,14 +11743,16 @@
             toast('새로 쓰기 — 주제부터 적어 주세요.');
             setTimeout(function () { var t = document.querySelector('[data-fk="bl-topic"]'); if (t) try { t.focus(); } catch (e) { /* 무시 */ } }, 50);
         }
+        var BL_CALL_URL = 'https://www.xn--v69aq4gtzi0phw6is8o.com/call.html?src=blog', BL_CALL_LINE = '📞 전화 상담 1833-2440';   // 블로그 전화 링크 (한글 도메인은 앱에서 깨질 수 있어 영문 변환 주소)
+        function blLink(escaped) { return escaped.replace(/1833-?2440/g, '<a href="' + BL_CALL_URL + '">1833-2440</a>'); }   // 복사할 때 번호 글자에 링크 (손님 눈엔 번호만)
         function blEsc(t) { return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
         function blSay(msg, W) { if (W && W !== window) { bl.miniMsg = msg; blMiniRender(); } else toast(msg); }
         function blCopyText(t, msg, nl, W) {   // nl: 글·설명은 끝에 빈 줄 하나 더 → 붙여넣으면 커서가 다음 줄에서 시작 · W: 복사 버튼을 누른 창 (도우미 창이면 그 창에서 복사)
             W = W || window;
             var ok = function () { blSay(msg || '복사했어요. 네이버 글쓰기 창에 Ctrl+V 로 붙여넣어 주세요.', W); };
             var plain = nl ? String(t).replace(/\s+$/, '') + '\n\n' : String(t), nav = W.navigator, CI = W.ClipboardItem, BB = W.Blob || Blob;
-            if (nl && CI && nav.clipboard && nav.clipboard.write) {   // 네이버 편집기는 그림 글(html) 붙여넣기에서 줄바꿈을 그대로 살려 줌
-                var html = String(t).replace(/\s+$/, '').split('\n').map(function (l) { return '<p>' + (l.trim() ? blEsc(l) : '<br>') + '</p>'; }).join('') + '<p><br></p>';
+            if ((nl || /1833-?2440/.test(t)) && CI && nav.clipboard && nav.clipboard.write) {   // 네이버 편집기는 그림 글(html) 붙여넣기에서 줄바꿈 · 링크를 그대로 살려 줌
+                var html = String(t).replace(/\s+$/, '').split('\n').map(function (l) { return '<p>' + (l.trim() ? blLink(blEsc(l)) : '<br>') + '</p>'; }).join('') + (nl ? '<p><br></p>' : '');
                 return nav.clipboard.write([new CI({ 'text/plain': new BB([plain], { type: 'text/plain' }), 'text/html': new BB([html], { type: 'text/html' }) })])
                     .then(ok, function () { return nav.clipboard.writeText(plain).then(ok, function () { blFallbackCopy(plain, W); ok(); }); });
             }
@@ -11998,7 +12040,9 @@
                     h('ol', { class: 'bl-steps' }, steps.map(function (s, k) { return h('li', { class: k < cur ? 'done' : k === cur ? 'now' : '' }, h('button', { type: 'button', class: 'bl-step', onclick: function () { blGo(k); } }, (k < cur ? '✓ ' : k === cur ? '👉 ' : '') + s.label)); }))),
                     h('div', { class: 'bl-up-alt' }, h('span', {}, '다른 방법: '),
                         h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { blCopyText(blFullText(), '글 전체를 복사했어요 ([사진 N] 자리 표시 포함). 붙여넣고 그 자리에 사진을 넣어 주세요.'); } }, '글 전체 한 번에 복사'),
-                        bl.photos.length ? h('button', { type: 'button', class: 'btn btn-sm', onclick: blSaveAll }, '사진·동영상 순서대로 저장 (' + bl.photos.length + '개)') : null));
+                        bl.photos.length ? h('button', { type: 'button', class: 'btn btn-sm', onclick: blSaveAll }, '사진·동영상 순서대로 저장 (' + bl.photos.length + '개)') : null,
+                        h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'bl-link-copy', title: '링크가 안 붙는 기기: 네이버 글에서 1833-2440 글자를 드래그 → 링크 아이콘 → 이 주소 붙여넣기', onclick: function () { blCopyText(BL_CALL_URL, '전화 링크 주소를 복사했어요. 네이버 글에서 1833-2440 글자를 드래그 → 🔗 링크 → 붙여넣기 하세요.'); } }, '🔗 전화 링크 주소만 복사')),
+                    h('p', { class: 'bl-link-tip' }, '🔗 본문의 1833-2440은 복사할 때 전화 링크(블로그에서 온 전화로 콜 인입에 표시)가 붙어서 들어가요. 손님 눈에는 번호만 보여요. 링크가 안 붙으면 [🔗 전화 링크 주소만 복사] → 번호 드래그 → 링크 아이콘에 붙여넣기.'));
                 result = h('div', { class: 'bl-result' },
                     h('div', { class: 'panel' }, h('h2', {}, '✍️ 완성된 글 (바로 고칠 수 있어요)'),
                         h('label', { class: 'bl-lb' }, '제목'), title,
