@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-htplnlBExb6PyphtuXZCxkDEgzgAPyJDGd/NBqn1fss='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MeXLeSSNolDSJb8lG8HzqYRTp8gdos8HUQR8yt1xmwI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1085,6 +1085,8 @@
         .wck-box h4 { margin: 8px 0 6px; } .wck-r { display: grid; grid-template-columns: 80px 70px 120px minmax(0, 1fr); gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
         .wck-k { color: #9A6A00; font-weight: 700; }
         @media (max-width: 640px) { .wck-r { grid-template-columns: 70px 1fr; } }
+        .ib-cl { display: block; margin-top: 4px; padding: 4px 8px; border-radius: 8px; background: #E6F4EA; color: #1E6B34; font-size: 12px; font-weight: 700; text-align: left; border: 1px solid #9BD3AE; cursor: pointer; max-width: 100%; overflow-wrap: anywhere; }
+        .ib-cl.none { background: #FFF8EC; color: #9A6A00; border-color: #F2C879; cursor: default; font-weight: 600; }
         .ib-rcv-n { margin-left: 6px; font-weight: 700; color: #3E441E; }
         .ib-kind.k-rcv { color: #1E6B34; }
         .ib-rcv-ok { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #E6F4EA; color: #1E6B34; font-size: 12px; font-weight: 700; }
@@ -2091,7 +2093,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-05.14';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-05.15';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8248,7 +8250,31 @@
                 function (e) { delete ib.saving[x.id]; x.asg = before; render(); toast('담당자를 저장하지 못했어요. ' + driveErrText(e)); });
         }
         function ibMark(x) { var id = 'ibm_' + x.id; return ((db && db.ibm) || []).filter(function (m) { return m.id === id; }).map(function (m) { return m.m; })[0] || ''; }   // '' · 'no'(미인입) · 'test'(테스트)
-        var IB_DUP_MS = 180000, IB_MK_TXT = { no: '미인입', test: '테스트', dup: '중복?', pc: 'PC 클릭', nocall: '통화 없음' };
+        var IB_DUP_MS = 180000, IB_MK_TXT = { no: '미인입', test: '테스트', dup: '중복?', pc: 'PC 클릭', nocall: '통화 없음', nomatch: '미인입(상담 없음)' };
+        var IB_CL_WAIT = 30 * 60000;   // 착신 뒤 30분 안에 상담 리스트에 번호가 없으면 자동 미인입
+        function ibClIdx() {   // 상담 리스트 연락처(숫자만) → 상담 줄들 (상담 리스트가 바뀔 때만 다시 만듦)
+            if (!cl.data) return null;
+            var key = cl.rev + '|' + cl.data.rows.length + '|' + (cl.editAt || 0);
+            if (ib.clIx && ib.clIxKey === key) return ib.clIx;
+            var ix = Object.create(null);
+            cl.data.sheets.forEach(function (sh) {
+                var pc = sh.cols.filter(function (c) { return clColKind(c) === 'ph'; }); if (!pc.length) return;
+                var nc = sh.cols.filter(function (c) { return /고객명|성함|이름/.test(c.l); })[0], mc = sh.cols.filter(function (c) { return clColKind(c) === 'wide'; })[0], sc = sh.cols.filter(function (c) { return clColKind(c) === 'staff'; })[0], dc = sh.cols.filter(function (c) { return clColKind(c) === 'date'; })[0];
+                cl.data.rows.forEach(function (r) {
+                    if (r.sh !== sh.id) return;
+                    pc.forEach(function (c) { var d = digitsOnly((r.v || {})[c.k] || ''); if (d.length < 9) return;
+                        (ix[d] = ix[d] || []).push({ id: r.id, sh: sh.id, shn: sh.name, name: nc ? String(r.v[nc.k] || '') : '', memo: mc ? String(r.v[mc.k] || '') : '', who: sc ? String(r.v[sc.k] || '') : '', day: dc ? String(r.v[dc.k] || '') : '' }); });
+                });
+            });
+            ib.clIx = ix; ib.clIxKey = key; return ix;
+        }
+        function ibClMatch(x) {   // 착신 번호가 상담 리스트에 있으면 → 가장 최근 상담 줄
+            var ix = ibClIdx(); if (!ix) return null;
+            var d = digitsOnly(x.phone || ''), l = d ? ix[d] : null;
+            if (!l && x.n4) { var ks = Object.keys(ix).filter(function (k) { return k.slice(-4) === x.n4; }); if (ks.length === 1) l = ix[ks[0]]; }   // 7일 지나 끝 4자리만 남은 기록: 하나만 맞을 때
+            if (!l || !l.length) return null;
+            return l.slice().sort(function (a, b) { return a.day < b.day ? 1 : a.day > b.day ? -1 : 0; })[0];
+        }
         var CI_BEFORE = 60000, CI_AFTER = 180000, CI_WAIT = 240000;   // 착신 대조: 버튼 누르기 1분 전 ~ 3분 뒤에 온 전화 · 4분 지나도 없으면 '통화 없음'
         function ibRcvNorm(l) { return (Array.isArray(l) ? l : []).filter(function (r) { return r && typeof r.id === 'string' && typeof r.t === 'number' && typeof r.ph === 'string'; }).map(function (r) { return { id: r.id.slice(0, 40), t: r.t, ph: r.ph.slice(0, 12), n4: typeof r.n4 === 'string' ? r.n4.replace(/\D/g, '').slice(-4) : '' }; }).sort(function (a, b) { return a.t - b.t; }); }
         function ibRcvAll(items, legacy) {   // 착신 기록: 목록 줄(종류 rcv · 미인입·테스트 표시한 것은 빼고) + 예전 방식(11-05.2 첫 시험)
@@ -8274,6 +8300,10 @@
                 lastM = x.t;
             });
             Object.keys(used).forEach(function (rid) { a[rid] = 'merged'; });
+            if (cl.data) ps.forEach(function (x) {   // 착신: 상담 리스트에 번호가 있으면 실 인입 · 30분 지나도 없으면 자동 미인입
+                if (x.kind !== 'rcv' || used[x.id] || ibMark(x)) return;
+                if (!ibClMatch(x) && now - x.t > IB_CL_WAIT) a[x.id] = 'nomatch';
+            });
             out.mt = mt; out.free = rcv.filter(function (r) { return !used[r.id]; });
             return a;
         }
@@ -8293,7 +8323,8 @@
                 if (cl.data) for (var i = 0; i < cl.data.sheets.length; i++) {
                     var s = cl.data.sheets[i], pc = s.cols.filter(function (c) { return clColKind(c) === 'ph'; })[0], nc = s.cols.filter(function (c) { return /고객명|성함|이름/.test(c.l); })[0];
                     if (!pc) continue;
-                    var row = cl.data.rows.filter(function (x) { return x.sh === s.id && digitsOnly((x.v || {})[pc.k] || '') === ph; })[0];
+                    var dcc = s.cols.filter(function (c) { return clColKind(c) === 'date'; })[0], today = ymd(new Date());
+                    var row = cl.data.rows.filter(function (x) { return x.sh === s.id && digitsOnly((x.v || {})[pc.k] || '') === ph && !(dcc && String((x.v || {})[dcc.k] || '') >= today); })[0];   // 오늘 적은 상담은 이번 전화 → 재케어 아님
                     if (row) return { k: '재케어', name: nc ? String(row.v[nc.k] || '') : '' };
                 }
             } catch (e) { /* 무시 */ }
@@ -8452,6 +8483,7 @@
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '콜 인입은 구글 드라이브 공유 저장소를 연결한 기기에서 볼 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
             if (ib.rev < 0 && !ib.busy && !ib.err) setTimeout(function () { ibLoad(true); }, 0);
             setTimeout(ibVsLoad, 0);
+            if (!cl.data && !cl.busy && !cl.err) setTimeout(function () { clLoad(true); }, 0);   // 착신 번호 ↔ 상담 리스트 맞추기용
             var kindSel = h('select', { id: 'ib-kind', 'data-fk': 'ib-kind', 'aria-label': '종류 필터' }, h('option', { value: 'all' }, '전체'),
                 Object.keys(IB_KIND).map(function (k) { return h('option', { value: k }, IB_KIND[k][0] + ' ' + IB_KIND[k][1]); }));
             kindSel.value = ib.kind;
@@ -8501,7 +8533,7 @@
                 var markBtns = h('div', { class: 'ib-mk', role: 'group', 'aria-label': '실 인입 아님 표시' },
                     [['no', '미인입'], ['test', '테스트']].concat(au || mk0 === 'yes' ? [['yes', '실 인입']] : []).map(function (o) { if (o[0] === 'yes') return h('button', { type: 'button', class: 'btn btn-sm ib-mk-yes', 'data-fk': 'ib-mk-yes-' + x.id, 'aria-pressed': mk0 === 'yes' ? 'true' : 'false', disabled: boss ? null : true, title: boss ? (mk0 === 'yes' ? '다시 누르면 자동 제외로 돌아가요' : '실제로 통화한 전화면 눌러 주세요 → 실 인입 순번에 들어가요') : '대표님만 표시할 수 있어요', onclick: function () { ibMarkSet(x, 'yes'); } }, o[1]); return h('button', { type: 'button', class: 'btn btn-sm ib-mk-' + o[0], 'data-fk': 'ib-mk-' + o[0] + '-' + x.id, 'aria-pressed': mk0 === o[0] ? 'true' : 'false', disabled: boss ? null : true, title: boss ? (mk0 === o[0] ? '다시 누르면 풀려요' : o[1] + '으로 표시하면 실 인입 순번에서 빠져요') : '대표님만 표시할 수 있어요', onclick: function () { ibMarkSet(x, o[0]); } }, o[1]); }));
                 return h('div', { class: 'ib-row' + (x.chk ? ' done' : '') + (ib.sel[x.id] ? ' sel' : '') + (mk ? ' mk' : ''), 'data-ib': x.id },
-                    h('div', { class: 'ib-time' }, h('span', { class: 'ib-no' + (mk ? ' off' : '') + (mk === 'dup' || mk === 'pc' || mk === 'nocall' ? ' auto' : ''), title: mk === 'nocall' ? '자동 제외: 버튼을 누른 뒤 3분 안에 착신 휴대폰에 온 전화가 없어요 (전화를 걸지 않음). 실제로 통화했으면 [실 인입]' : mk === 'dup' ? '자동 제외: 바로 전(3분 안)에 모바일에서 누른 전화가 또 있어요 — 같은 손님이 여러 번 누른 것으로 봤어요. 실제로 따로 온 전화면 [실 인입]' : mk === 'pc' ? '자동 제외: PC에서 누른 전화 버튼이에요 (PC는 바로 전화가 걸리지 않아요). 실제로 통화했으면 [실 인입]' : mk ? '실 인입 아님 (순번 없음)' : ymd(new Date(x.t)) + ' 실 인입 ' + no + '번째' }, mk ? IB_MK_TXT[mk] : no + '번'), pickBox ? h('label', { class: 'ib-pick' }, pickBox, ibTime(x.t)) : ibTime(x.t)),
+                    h('div', { class: 'ib-time' }, h('span', { class: 'ib-no' + (mk ? ' off' : '') + (mk === 'dup' || mk === 'pc' || mk === 'nocall' || mk === 'nomatch' ? ' auto' : ''), title: mk === 'nomatch' ? '자동 미인입: 전화 온 뒤 30분이 지나도 상담 리스트에 이 번호가 없어요. 상담했으면 상담 리스트에 연락처를 적으면 자동으로 실 인입으로 바뀌어요 (또는 [실 인입])' : mk === 'nocall' ? '자동 제외: 버튼을 누른 뒤 3분 안에 착신 휴대폰에 온 전화가 없어요 (전화를 걸지 않음). 실제로 통화했으면 [실 인입]' : mk === 'dup' ? '자동 제외: 바로 전(3분 안)에 모바일에서 누른 전화가 또 있어요 — 같은 손님이 여러 번 누른 것으로 봤어요. 실제로 따로 온 전화면 [실 인입]' : mk === 'pc' ? '자동 제외: PC에서 누른 전화 버튼이에요 (PC는 바로 전화가 걸리지 않아요). 실제로 통화했으면 [실 인입]' : mk ? '실 인입 아님 (순번 없음)' : ymd(new Date(x.t)) + ' 실 인입 ' + no + '번째' }, mk ? IB_MK_TXT[mk] : no + '번'), pickBox ? h('label', { class: 'ib-pick' }, pickBox, ibTime(x.t)) : ibTime(x.t)),
                     h('div', { class: 'ib-kind k-' + x.kind }, k[0] + ' ' + k[1]),
                     h('div', { class: 'ib-main' }, h('div', { class: 'ib-label' }, x.label),
                         h('div', { class: 'ib-sub' }, x.kind === 'rcv' ? h('span', { class: 'ib-dev' }, '직접 전화') : h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC'),
@@ -8509,6 +8541,9 @@
                             x.phone ? h('a', { href: 'tel:' + x.phone, class: 'ib-phone' }, mfPhone(x.phone)) : null,
                             x.kind === 'rcv' && !x.phone ? h('span', { class: 'ib-rcv-n' }, x.n4 ? '번호 끝 ' + x.n4 : '번호 안 옴') : null,
                             x.kind === 'rcv' || x.kind === 'call' ? ibSrcSel(x, null) : null,
+                            x.kind === 'rcv' ? (function () { var m = ibClMatch(x); if (!m) return mk === 'nomatch' ? null : h('span', { class: 'ib-cl none' }, '📝 상담 리스트에 아직 없음 (30분 안에 적으면 실 인입)');
+                                return h('button', { type: 'button', class: 'ib-cl', 'data-fk': 'ib-cl-' + x.id, title: '상담 리스트에서 이 고객 보기', onclick: function () { cl.sheet = m.sh; cl.q = digitsOnly(x.phone || '') || x.n4 || ''; state.view = 'consult'; render(); window.scrollTo(0, 0); } },
+                                    '📝 상담 리스트 · ' + [m.day, m.name, m.who].filter(Boolean).join(' · ') + (m.memo ? ' — ' + m.memo.replace(/■[^:\n]*:\s*(\n|$)/g, '').replace(/\s+/g, ' ').trim().slice(0, 90) : '')); })() : null,
                             boss ? h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-dm-' + x.id, title: '이 콜을 직원에게 전달 (직원 화면에 팝업)', onclick: function () { dmSend({ to: x.asg ? (db.staff.filter(function (st) { return st.name === x.asg.to; })[0] || {}).id : '', ref: IB_KIND[x.kind][1] + ' · ' + x.label + (x.phone ? ' · ' + mfPhone(x.phone) : x.n4 ? ' · 끝 ' + x.n4 : '') + ' · ' + ibHms(x.t), t: (x.phone ? mfPhone(x.phone) + ' ' : '') + '고객님 연락 부탁드려요.' }); } }, '📨 전달') : null,
                             x.kind === 'rcv' && x.phone ? h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-memo-' + x.id, title: '이 번호로 상담 메모 열기', onclick: function () { ibRcvMemo(x); } }, '📝 상담 메모') : null,
                             SEQ.mt[x.id] ? h('span', { class: 'ib-rcv-ok', title: '착신 휴대폰에 실제로 전화가 왔어요' }, '📱 통화 확인 ' + ibHms(SEQ.mt[x.id].t) + ' · ' + SEQ.mt[x.id].ph + (SEQ.mt[x.id].n4 ? ' · 끝 ' + SEQ.mt[x.id].n4 : '')) : null)),
@@ -8524,7 +8559,7 @@
                 h('div', { class: 'filters' }, h('label', {}, '종류', kindSel), h('label', { class: 'ib-todo' }, todo, '확인 안 한 것만'),
                     h('label', { class: 'ib-todo', title: '홈페이지에서 전화 버튼을 누르면 이 기기에서 상담 메모가 바로 열려요 (팀장 직통 번호는 그 직원 기기에서만)' }, h('input', { type: 'checkbox', 'data-fk': 'ib-automemo', checked: ibMemoOn(), onchange: function () { ibMemoSet(this.checked); toast(this.checked ? '전화 인입이 들어오면 이 기기에서 상담 메모가 바로 열려요.' : '이 기기에서는 상담 메모를 자동으로 열지 않아요.'); } }), '📞 전화 인입 시 상담 메모 자동 열기 (이 기기)'),
                     h('span', { class: 'ib-status', id: 'ib-status', role: 'status' }, ibStatusText())),
-                h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '확인 안 함 ' + n + '건 · 전체 ' + shown.length + '건 (최근 300건) · ', h('b', { class: 'ib-real' }, '실 인입 ' + realN + '건 (오늘 ' + (SEQ.day[ymd(new Date())] || 0) + '건)'), markN ? ' · 제외 ' + markN + '건' + (autoN ? ' (자동: 통화 없음·중복·PC 클릭 ' + autoN + '건)' : '') : '',
+                h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '확인 안 함 ' + n + '건 · 전체 ' + shown.length + '건 (최근 300건) · ', h('b', { class: 'ib-real' }, '실 인입 ' + realN + '건 (오늘 ' + (SEQ.day[ymd(new Date())] || 0) + '건)'), markN ? ' · 제외 ' + markN + '건' + (autoN ? ' (자동: 상담 없음·통화 없음·중복·PC 클릭 ' + autoN + '건)' : '') : '',
                     (function () {   // 오늘 실 인입 경로별 (합친 착신은 버튼 줄 경로로)
                         var td = ymd(new Date()), c = {}, n0 = 0;
                         shown.forEach(function (x) { if (ibEff(x, AU) || ymd(new Date(x.t)) !== td) return; var sv = ibSrc(x); if (sv) c[sv] = (c[sv] || 0) + 1; else n0++; });
