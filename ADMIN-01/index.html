@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Lxgjt8zmgyi6L5EjzivwWy46TSwSK5+viz+UvBGQjLk='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-+Dkj3mRMPzzSrZgWGnGe3tWzMnjdiur9jnikO/QvccI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -97,6 +97,12 @@
         .field-wrap { display: grid; gap: 8px; }
         .quick-row { display: flex; gap: 6px; flex-wrap: wrap; }
         .t-num { font-weight: 800; font-size: 15px; color: var(--olive-700); text-align: center; }
+        .ib-pv { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 10px; padding: 8px 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
+        .ib-pv-u { display: inline-flex; gap: 4px; } .ib-pv-u .btn.on { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
+        .ib-pv-nav { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; } .ib-pv-label { min-width: 0; font-size: 15px; } .ib-pv-pick { min-height: 32px; max-width: 160px; }
+        .ib-pt-w { overflow-x: auto; max-height: 360px; overflow-y: auto; padding: 6px; } .ib-pt { border-collapse: collapse; width: 100%; font-size: 13px; }
+        .ib-pt th, .ib-pt td { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; } .ib-pt th:first-child, .ib-pt td:first-child { text-align: left; }
+        .ib-pt th { position: sticky; top: 0; background: #F4F5EC; } .ib-pt tr.z td { color: #A6A898; } .ib-pt tr.sum td { font-weight: 800; background: #F7F8F0; }
         .box-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
         .box-count { font-size: 13.5px; font-weight: 700; color: var(--muted); }
         .btn-report { background: var(--olive-700); border-color: var(--olive-700); color: #fff; font-weight: 800; }
@@ -2098,7 +2104,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-05.18';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-05.19';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8412,9 +8418,9 @@
             it.m = nv; it.by = staffName(me); stamp(it);   // 경로(s)는 그대로
             commit(nv === 'yes' ? '실 인입으로 표시했어요. 자동 제외에서 빠지고 순번에 들어가요.' : nv ? IB_MK_TXT[nv] + '(으)로 표시했어요. 실 인입 순번에서 빠지고 ' + (nv === 'nc' ? '비상담으로 따로 세요.' : '제외로 세요.') : '표시를 풀었어요.' + (ibAutoMap()[x.id] ? ' 다시 자동 제외(' + IB_MK_TXT[ibAutoMap()[x.id]] + ')로 돌아가요.' : ' 실 인입 순번에 다시 들어가요.'));
         }
-        function ibSeq() {   // 실 인입 순번: 날짜마다 1번부터 (들어온 순서) · 미인입·테스트는 빼고 → { id: 번호 } · 날짜별 건수
-            var no = Object.create(null), day = Object.create(null), MX = {}, A = ibAutoMap(null, null, MX);
-            ib.items.slice().sort(function (a, b) { return a.t - b.t; }).forEach(function (x) { if (ibEff(x, A)) return; var d = ymd(new Date(x.t)); day[d] = (day[d] || 0) + 1; no[x.id] = day[d]; });
+        function ibSeq(items, legacy) {   // 실 인입 순번: 날짜마다 1번부터 (들어온 순서) · 미인입·테스트는 빼고 → { id: 번호 } · 날짜별 건수 (items: 기간 목록)
+            var no = Object.create(null), day = Object.create(null), MX = {}, A = items ? ibAutoMap(items, ibRcvAll(items, legacy || []), MX) : ibAutoMap(null, null, MX);
+            (items || ib.items).slice().sort(function (a, b) { return a.t - b.t; }).forEach(function (x) { if (ibEff(x, A)) return; var d = ymd(new Date(x.t)); day[d] = (day[d] || 0) + 1; no[x.id] = day[d]; });
             return { no: no, day: day, auto: A, mt: MX.mt, free: MX.free };
         }
         function ibCheck(x, on) {
@@ -8515,9 +8521,94 @@
                         ph && it ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { ibRcvMemo(it); } }, '📝 상담 메모') : h('span', {}));
                 }) : h('div', { class: 'empty' }, '아직 휴대폰에 온 전화가 없어요.'));
         }
+        /* ---------- 콜 인입 기간 보기: 일별 · 주별 · 월별 · 연도별 ---------- */
+        var IB_PU = [['day', '일별'], ['week', '주별'], ['month', '월별'], ['year', '연도별']], IB_WD = ['일', '월', '화', '수', '목', '금', '토'];
+        function ibPeriod() {
+            if (!ib.pv) ib.pv = { u: 'day', a: Date.now() };
+            var u = ib.pv.u, a = new Date(ib.pv.a), f, t, label, file;
+            if (u === 'week') { var dw = (a.getDay() + 6) % 7; f = new Date(a.getFullYear(), a.getMonth(), a.getDate() - dw); t = new Date(f.getFullYear(), f.getMonth(), f.getDate() + 7); var e = new Date(t.getTime() - 86400000); label = ymd(f) + ' (월) ~ ' + (e.getMonth() + 1) + '/' + e.getDate() + ' (일)'; file = ymd(f) + '~' + pad2(e.getMonth() + 1) + '-' + pad2(e.getDate()) + '(주별)'; }
+            else if (u === 'month') { f = new Date(a.getFullYear(), a.getMonth(), 1); t = new Date(a.getFullYear(), a.getMonth() + 1, 1); label = String(f.getFullYear()).slice(2) + '년' + (f.getMonth() + 1) + '월'; file = label + '(월별)'; }
+            else if (u === 'year') { f = new Date(a.getFullYear(), 0, 1); t = new Date(a.getFullYear() + 1, 0, 1); label = f.getFullYear() + '년'; file = label + '(연도별)'; }
+            else { u = 'day'; f = new Date(a.getFullYear(), a.getMonth(), a.getDate()); t = new Date(f.getFullYear(), f.getMonth(), f.getDate() + 1); label = ymd(f) + ' (' + IB_WD[f.getDay()] + ')'; file = ymd(f) + '(일별)'; }
+            var now = Date.now();
+            return { u: u, from: f.getTime(), to: t.getTime(), label: label, file: file, now: f.getTime() <= now && now < t.getTime(), future: f.getTime() > now, short: { day: '이 날', week: '이 주', month: '이 달', year: '이 해' }[u] };
+        }
+        function ibPvMove(n) {   // ◀ ▶: 이전·다음 기간
+            var P = ibPeriod(), a = new Date(ib.pv.a);
+            if (P.u === 'day') a.setDate(a.getDate() + n); else if (P.u === 'week') a.setDate(a.getDate() + 7 * n); else if (P.u === 'month') a = new Date(a.getFullYear(), a.getMonth() + n, 1); else a = new Date(a.getFullYear() + n, 0, 1);
+            if (a.getTime() > Date.now()) a = new Date();
+            ib.pv.a = a.getTime(); render();
+        }
+        function ibPerItems(P) {   // 이 기간 기록: 받아 둔 최근 기록으로 되면 그걸로(실시간) · 아니면 서버에서 그 기간을 받음 (+ 새로 들어온 기록 합침)
+            var loc = ib.items.filter(function (x) { return x.t >= P.from && x.t < P.to; }), legLoc = (ib.rcvOld || []).filter(function (r) { return r.t >= P.from && r.t < P.to; });
+            var full = ib.items.length < 300, cov = full ? Date.now() - 88 * 86400000 : ib.items.reduce(function (m, x) { return Math.min(m, x.t); }, Infinity);
+            if (!ib.at || P.from >= cov) return { items: loc, legacy: legLoc, loading: false };
+            var key = P.from + '|' + P.to;
+            if (!ib.per || ib.per.key !== key) {
+                ib.per = { key: key, busy: true, items: [], legacy: [], err: '' };
+                var mine = ib.per;
+                ibCall('ibExport', { from: P.from, to: P.to }).then(function (res) {
+                    if (ib.per !== mine) return;
+                    mine.busy = false; mine.items = (Array.isArray(res.items) ? res.items : []).filter(ibOk).map(ibNorm); mine.legacy = ibRcvNorm(res.rcv || []);
+                    if (state.view === 'calls') render();
+                }, function (e) { if (ib.per !== mine) return; mine.busy = false; mine.err = driveErrText(e); if (state.view === 'calls') render(); });
+            }
+            var have = Object.create(null), out = loc.slice();
+            loc.forEach(function (x) { have[x.id] = 1; });
+            ib.per.items.forEach(function (x) { if (!have[x.id]) out.push(x); });   // 최근 기록(실시간) 우선
+            out.sort(function (a, b) { return b.t - a.t; });
+            return { items: out, legacy: ib.per.legacy.concat(legLoc), loading: ib.per.busy, err: ib.per.err };
+        }
+        function ibPerBar(P, onExcel) {   // 기간 버튼 · ◀ ▶ · 날짜 고르기 · [오늘] · [📥 이 기간 엑셀]
+            var pick;
+            if (P.u === 'day' || P.u === 'week') { pick = h('input', { type: 'date', class: 'ib-pv-pick', 'data-fk': 'ib-pv-pick', 'aria-label': '날짜 고르기', max: ymd(new Date()) }); pick.value = ymd(new Date(ib.pv.a)); pick.addEventListener('change', function () { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(this.value); if (m) { ib.pv.a = new Date(+m[1], +m[2] - 1, +m[3]).getTime(); render(); } }); }
+            else if (P.u === 'month') { var td = new Date(); pick = h('input', { type: 'month', class: 'ib-pv-pick', 'data-fk': 'ib-pv-pick', 'aria-label': '달 고르기', max: td.getFullYear() + '-' + pad2(td.getMonth() + 1) }); var a0 = new Date(ib.pv.a); pick.value = a0.getFullYear() + '-' + pad2(a0.getMonth() + 1); pick.addEventListener('change', function () { var m = /^(\d{4})-(\d{2})$/.exec(this.value); if (m) { ib.pv.a = new Date(+m[1], +m[2] - 1, 1).getTime(); render(); } }); }
+            else { var y0 = new Date().getFullYear(); pick = h('select', { class: 'ib-pv-pick', 'data-fk': 'ib-pv-pick', 'aria-label': '연도 고르기' }, [y0, y0 - 1, y0 - 2].map(function (y) { return h('option', { value: String(y) }, y + '년'); })); pick.value = String(new Date(ib.pv.a).getFullYear()); pick.addEventListener('change', function () { ib.pv.a = new Date(+this.value, 0, 1).getTime(); render(); }); }
+            return h('div', { class: 'ib-pv', role: 'group', 'aria-label': '보기 기간' },
+                h('div', { class: 'ib-pv-u' }, IB_PU.map(function (o) { return h('button', { type: 'button', class: 'btn btn-sm' + (P.u === o[0] ? ' on' : ''), 'data-fk': 'ib-pv-' + o[0], 'aria-pressed': P.u === o[0] ? 'true' : 'false', onclick: function () { ib.pv.u = o[0]; render(); } }, o[1]); })),
+                h('div', { class: 'ib-pv-nav' }, h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-pv-prev', 'aria-label': '이전 기간', onclick: function () { ibPvMove(-1); } }, '◀'),
+                    h('b', { class: 'ib-pv-label', 'data-fk': 'ib-pv-label' }, P.label), pick,
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-pv-next', 'aria-label': '다음 기간', disabled: P.now || P.future ? true : null, onclick: function () { ibPvMove(1); } }, '▶'),
+                    P.now ? null : h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-pv-today', onclick: function () { ib.pv.a = Date.now(); render(); } }, '오늘로')),
+                h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-fk': 'ib-pv-xl', title: '지금 화면에 보이는 그대로(기간·종류·확인 안 한 것만) 엑셀로', onclick: onExcel }, '📥 이 기간 엑셀'));
+        }
+        function ibPerTable(P, shown, AU) {   // 월별: 날짜별 · 연도별: 달별 건수 표
+            if (P.u !== 'month' && P.u !== 'year') return null;
+            var keys = [], lab = {}, c = {};
+            if (P.u === 'month') { var d = new Date(P.from); while (d.getTime() < P.to) { var k = ymd(d); keys.push(k); lab[k] = (d.getMonth() + 1) + '/' + d.getDate() + ' (' + IB_WD[d.getDay()] + ')'; d.setDate(d.getDate() + 1); } }
+            else for (var m = 0; m < 12; m++) { var k2 = new Date(P.from).getFullYear() + '-' + pad2(m + 1); keys.push(k2); lab[k2] = (m + 1) + '월'; }
+            keys.forEach(function (k) { c[k] = { all: 0, real: 0, nc: 0, out: 0 }; });
+            shown.forEach(function (x) { var dd = new Date(x.t), k = P.u === 'month' ? ymd(dd) : dd.getFullYear() + '-' + pad2(dd.getMonth() + 1); var o = c[k]; if (!o) return; var mk = ibEff(x, AU); o.all++; if (!mk) o.real++; else if (mk === 'nc') o.nc++; else o.out++; });
+            var tot = { all: 0, real: 0, nc: 0, out: 0 }; keys.forEach(function (k) { ['all', 'real', 'nc', 'out'].forEach(function (f) { tot[f] += c[k][f]; }); });
+            var rowsK = P.u === 'month' ? keys.filter(function (k) { return k <= ymd(new Date()); }) : keys;
+            return { keys: rowsK, lab: lab, c: c, tot: tot, el: h('div', { class: 'panel ib-pt-w' }, h('table', { class: 'ib-pt', 'data-fk': 'ib-pertable' },
+                h('thead', {}, h('tr', {}, ['', '전체', '실 인입', '비상담', '제외'].map(function (x) { return h('th', {}, x); }))),
+                h('tbody', {}, rowsK.slice().reverse().map(function (k) { var o = c[k]; return h('tr', { class: o.all ? '' : 'z' }, h('td', {}, lab[k]), h('td', {}, o.all), h('td', {}, h('b', {}, o.real)), h('td', {}, o.nc), h('td', {}, o.out)); }),
+                    h('tr', { class: 'sum' }, h('td', {}, '합계'), h('td', {}, tot.all), h('td', {}, h('b', {}, tot.real)), h('td', {}, tot.nc), h('td', {}, tot.out))))) };
+        }
+        function ibPerExcel(P, list, AU, TB) {   // [📥 이 기간 엑셀]: 화면에 보이는 그대로
+            var items = list.slice().sort(function (a, b) { return a.t - b.t; });
+            var kinds = Object.keys(IB_KIND), cnt = {}; kinds.forEach(function (k) { cnt[k] = 0; }); items.forEach(function (x) { cnt[x.kind]++; });
+            var realC = items.filter(function (x) { return !ibEff(x, AU); }).length, ncC = items.filter(function (x) { return ibEff(x, AU) === 'nc'; }).length;
+            var sum = [['사거리인터넷 콜 인입 (' + IB_PU.filter(function (o) { return o[0] === P.u; })[0][1] + ')'], ['기간', P.label], ['보기 조건', '종류: ' + (ib.kind === 'all' ? '전체' : IB_KIND[ib.kind][1]) + (ib.todo ? ' · 확인 안 한 것만' : '')], ['내려받은 시각', fmtDT(Date.now())], [], ['종류', '건수']];
+            kinds.forEach(function (k) { sum.push([IB_KIND[k][1], cnt[k]]); });
+            sum.push(['합계', items.length], ['실 인입 (미인입·비상담·테스트·중복·PC 클릭 뺌)', realC], ['비상담', ncC], []);
+            var head = [0, 5];
+            if (TB) { head.push(sum.length); sum.push([P.u === 'month' ? '날짜' : '달', '전체', '실 인입', '비상담', '제외']); TB.keys.forEach(function (k) { var o = TB.c[k]; sum.push([TB.lab[k], o.all, o.real, o.nc, o.out]); }); sum.push(['합계', TB.tot.all, TB.tot.real, TB.tot.nc, TB.tot.out]); }
+            var det = [['일시', '실 인입', '종류', '누른 버튼 / 접수 종류', '기기', '성함', '연락처', '담당자', '지정한 사람', '확인', '확인자', '확인 시각', '댓글', '경로']];
+            items.forEach(function (x) {
+                var mk = ibEff(x, AU);
+                det.push([fmtDT(x.t), mk ? IB_MK_TXT[mk] : 'O', IB_KIND[x.kind][1], x.label, x.dev === 'm' ? '모바일' : 'PC', x.name, x.phone ? mfPhone(x.phone) : (x.n4 ? '끝 ' + x.n4 : ''), x.asg ? x.asg.to : '', x.asg ? x.asg.by : '', x.chk ? 'O' : '', x.chk ? x.chk.by : '', x.chk && x.chk.at ? fmtDT(x.chk.at) : '',
+                    x.cm.map(function (c) { return c.by + ': ' + c.text; }).join(' / '), ibSrc(x)]);
+            });
+            saveBlob('콜인입_' + P.file + '.xlsx', xlsxBlob([
+                { name: '요약', widths: [26, 10, 10, 10, 10], rows: sum, head: head },
+                { name: '상세', widths: [20, 12, 8, 30, 8, 10, 15, 10, 10, 6, 10, 20, 50, 12], rows: det, head: [0], freeze: 1 }]));
+            toast('콜 인입 ' + P.label + ' 엑셀을 내려받았어요. (' + items.length + '건)');
+        }
         function renderCalls() {
             var head = h('div', { class: 'page-head' }, h('h1', {}, '콜 인입'),
-                h('div', { class: 'actions' }, excelButtons(ibExcel, 'ib'), h('button', { type: 'button', class: 'btn', 'data-fk': 'ib-refresh', onclick: function () { ib.busy = false; ibLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침')));
+                h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'ib-refresh', onclick: function () { ib.busy = false; ibLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침')));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '콜 인입은 구글 드라이브 공유 저장소를 연결한 기기에서 볼 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
             if (ib.rev < 0 && !ib.busy && !ib.err) setTimeout(function () { ibLoad(true); }, 0);
             setTimeout(ibVsLoad, 0);
@@ -8529,14 +8620,14 @@
             kindSel.addEventListener('change', function () { ib.kind = this.value; render(); });
             var todo = h('input', { type: 'checkbox', id: 'ib-todo', 'data-fk': 'ib-todo', checked: ib.todo });
             todo.addEventListener('change', function () { ib.todo = this.checked; render(); });
-            var AU0 = ibAutoMap(), shown = ib.items.filter(function (x) { return AU0[x.id] !== 'merged'; });
+            var P = ibPeriod(), PD = ibPerItems(P), SEQ = ibSeq(PD.items, PD.legacy), AU0 = SEQ.auto, shown = PD.items.filter(function (x) { return AU0[x.id] !== 'merged'; });
             var list = shown.filter(function (x) { return (ib.kind === 'all' || x.kind === ib.kind) && (!ib.todo || !x.chk); });
             var bossDel = isBoss();
             Object.keys(ib.sel).forEach(function (id) { if (!ib.items.some(function (x) { return x.id === id; })) delete ib.sel[id]; });   // 없어진 기록은 선택에서 뺌
             var selN = list.filter(function (x) { return ib.sel[x.id]; }).length;
-            var n = ibUnchecked(), SEQ = ibSeq(), AU = SEQ.auto, realN = shown.filter(function (x) { return !ibEff(x, AU); }).length, markN = shown.length - realN,
+            var n = shown.filter(function (x) { return !x.chk; }).length, AU = SEQ.auto, TB = ibPerTable(P, shown, AU), realN = shown.filter(function (x) { return !ibEff(x, AU); }).length, markN = shown.length - realN,
                 autoN = shown.filter(function (x) { return !ibMark(x) && AU[x.id]; }).length;
-            var rows = list.map(function (x) {
+            var IB_SHOW = 500, rows = list.slice(0, IB_SHOW).map(function (x) {
                 var k = IB_KIND[x.kind], open = !!ib.open[x.id];
                 var boss = isBoss();
                 var chk = h('input', { type: 'checkbox', 'data-fk': 'ib-chk-' + x.id, 'aria-label': '확인 표시', checked: !!x.chk, disabled: !boss, title: boss ? '' : '확인 표시는 대표님만 할 수 있어요' });
@@ -8595,18 +8686,19 @@
             });
             return h('div', {}, head,
                 h('p', { class: 'forms-sub' }, '고객이 홈페이지에서 전화·카톡·문자 버튼을 누르거나 접수를 마치면 여기에 바로 올라와요. 이름 버튼을 눌러 담당자를 정하고(모든 직원 가능), 처리 내용은 댓글로 남겨 주세요. [확인] 체크와 기록 삭제는 대표님만 할 수 있어요.'),
+                ibPerBar(P, function () { if (PD.loading) { toast('아직 불러오는 중이에요. 잠시 뒤 눌러 주세요.'); return; } ibPerExcel(P, list, AU, TB); }),
                 h('div', { class: 'filters' }, h('label', {}, '종류', kindSel), h('label', { class: 'ib-todo' }, todo, '확인 안 한 것만'),
                     h('label', { class: 'ib-todo', title: '홈페이지에서 전화 버튼을 누르면 이 기기에서 상담 메모가 바로 열려요 (팀장 직통 번호는 그 직원 기기에서만)' }, h('input', { type: 'checkbox', 'data-fk': 'ib-automemo', checked: ibMemoOn(), onchange: function () { ibMemoSet(this.checked); toast(this.checked ? '전화 인입이 들어오면 이 기기에서 상담 메모가 바로 열려요.' : '이 기기에서는 상담 메모를 자동으로 열지 않아요.'); } }), '📞 전화 인입 시 상담 메모 자동 열기 (이 기기)'),
                     h('span', { class: 'ib-status', id: 'ib-status', role: 'status' }, ibStatusText())),
-                h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '확인 안 함 ' + n + '건 · 전체 ' + shown.length + '건 (최근 300건) · ', h('b', { class: 'ib-real' }, '실 인입 ' + realN + '건 (오늘 ' + (SEQ.day[ymd(new Date())] || 0) + '건)'), (function () { var c = shown.filter(function (x) { return ibEff(x, AU) === 'nc'; }).length; return c ? ' · 비상담 ' + c + '건' : ''; })(), markN ? ' · 제외 ' + markN + '건' + (autoN ? ' (자동: 상담 없음·통화 없음·중복·PC 클릭 ' + autoN + '건)' : '') : '',
-                    (function () {   // 오늘 실 인입 경로별 (합친 착신은 버튼 줄 경로로)
-                        var td = ymd(new Date()), c = {}, n0 = 0;
-                        shown.forEach(function (x) { if (ibEff(x, AU) || ymd(new Date(x.t)) !== td) return; var sv = ibSrc(x); if (sv) c[sv] = (c[sv] || 0) + 1; else n0++; });
+                h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '확인 안 함 ' + n + '건 · 전체 ' + shown.length + '건 · ', h('b', { class: 'ib-real' }, '실 인입 ' + realN + '건' + (P.now && P.u !== 'day' ? ' (오늘 ' + (SEQ.day[ymd(new Date())] || 0) + '건)' : '')), (function () { var c = shown.filter(function (x) { return ibEff(x, AU) === 'nc'; }).length; return c ? ' · 비상담 ' + c + '건' : ''; })(), markN ? ' · 제외 ' + markN + '건' + (autoN ? ' (자동: 상담 없음·통화 없음·중복·PC 클릭 ' + autoN + '건)' : '') : '',
+                    (function () {   // 이 기간 실 인입 경로별 (합친 착신은 버튼 줄 경로로)
+                        var c = {}, n0 = 0;
+                        shown.forEach(function (x) { if (ibEff(x, AU)) return; var sv = ibSrc(x); if (sv) c[sv] = (c[sv] || 0) + 1; else n0++; });
                         var ks = Object.keys(c).sort(function (a, b) { return c[b] - c[a]; });
                         var tot = n0 + ks.reduce(function (a, k) { return a + c[k]; }, 0), mo = c['모름'] || 0;
-                        return ks.length || n0 ? h('span', { class: 'ib-srcsum', 'data-fk': 'ib-srcsum', title: '모름 = 버튼·방문·기존 고객 어디에도 안 맞는 직접 전화 → 블로그·플레이스·인스타·전단 QR에 전화 링크(call.html?src=…)를 붙이면 줄어요' }, ' · 📊 오늘 경로: ' + ks.map(function (k) { return k + ' ' + c[k]; }).concat(n0 ? ['미입력 ' + n0] : []).join(' · ') + (mo && tot ? ' (모름 ' + Math.round(mo * 100 / tot) + '%)' : '')) : null;
+                        return ks.length || n0 ? h('span', { class: 'ib-srcsum', 'data-fk': 'ib-srcsum', title: '모름 = 버튼·방문·기존 고객 어디에도 안 맞는 직접 전화 → 블로그·플레이스·인스타·전단 QR에 전화 링크(call.html?src=…)를 붙이면 줄어요' }, ' · 📊 ' + P.short + ' 경로: ' + ks.map(function (k) { return k + ' ' + c[k]; }).concat(n0 ? ['미입력 ' + n0] : []).join(' · ') + (mo && tot ? ' (모름 ' + Math.round(mo * 100 / tot) + '%)' : '')) : null;
                     })(),
-                    ibCiSince() ? h('span', { class: 'ib-free', title: '착신 휴대폰에는 왔지만 홈페이지 전화 버튼 기록이 없는 전화 (네이버·전단지 번호를 보고 직접 건 전화 · 지인 전화 포함)' }, ' · 📱 홈페이지 밖 전화 ' + SEQ.free.length + '건 (오늘 ' + SEQ.free.filter(function (r) { return ymd(new Date(r.t)) === ymd(new Date()); }).length + '건)') : null),
+                    ibCiSince() ? h('span', { class: 'ib-free', title: '착신 휴대폰에는 왔지만 홈페이지 전화 버튼 기록이 없는 전화 (네이버·전단지 번호를 보고 직접 건 전화 · 지인 전화 포함)' }, ' · 📱 홈페이지 밖 전화 ' + SEQ.free.length + '건') : null),
                     bossDel && list.length ? (function () {
                         var all = h('input', { type: 'checkbox', 'data-fk': 'ib-sel-all', checked: selN > 0 && selN === list.length });
                         all.indeterminate = selN > 0 && selN < list.length;
@@ -8615,8 +8707,10 @@
                             h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'data-fk': 'ib-del-sel', disabled: !selN || ib.deleting ? true : null,
                                 onclick: function () { ibDelete(list.filter(function (x) { return ib.sel[x.id]; }).map(function (x) { return x.id; })); } }, ib.deleting ? '지우는 중...' : '선택 삭제' + (selN ? ' (' + selN + '건)' : '')));
                     })() : null),
-                ibRcvRecent(SEQ),
-                h('div', { class: 'panel' }, rows.length ? rows : h('div', { class: 'empty' }, ib.at || ib.err ? (ib.items.length ? '조건에 맞는 기록이 없어요.' : '아직 들어온 기록이 없어요. 고객이 홈페이지에서 전화·카톡·문자 버튼을 누르면 여기에 올라와요.') : '불러오는 중이에요...')),
+                P.now ? ibRcvRecent(ibSeq()) : null,
+                TB ? TB.el : null,
+                list.length > IB_SHOW ? h('p', { class: 'ib-help' }, '※ 목록은 최근 ' + IB_SHOW + '건만 보여요 (전체 ' + list.length + '건은 [📥 이 기간 엑셀]에 모두 들어가요).') : null,
+                h('div', { class: 'panel' }, rows.length ? rows : h('div', { class: 'empty' }, PD.loading ? P.label + ' 기록을 불러오는 중이에요...' : PD.err ? '불러오지 못했어요. ' + PD.err : P.future ? '아직 오지 않은 기간이에요.' : ib.at && !P.now ? '이 기간에는 기록이 없어요.' : ib.at || ib.err ? (ib.items.length ? '조건에 맞는 기록이 없어요.' : '아직 들어온 기록이 없어요. 고객이 홈페이지에서 전화·카톡·문자 버튼을 누르면 여기에 올라와요.') : '불러오는 중이에요...')),
                 h('p', { class: 'ib-help' }, '※ 착신 휴대폰을 연결하면 전화 버튼마다 실제로 전화가 왔는지 자동으로 맞춰요: 왔으면 그 줄에 📱 통화 확인, 3분 안에 안 왔으면 \'통화 없음\'으로 빠져요. 버튼 없이 온 전화(네이버·전단지 번호로 직접 건 전화)는 📱 착신 줄로 올라와요(개인 전화면 [미인입]). ※ 자동 제외: PC에서 누른 전화 버튼(PC 클릭)과 모바일에서 3분 안에 다시 누른 전화(중복?)는 실 인입 순번에서 자동으로 빠져요. 실제로 통화한 전화면 대표님이 [실 인입]을 눌러 되살려 주세요. ※ 홈페이지에서는 고객이 어떤 버튼을 언제 눌렀는지만 알 수 있어요. 전화를 건 고객의 번호나 실제 통화 연결 여부는 알 수 없어서 기록되지 않아요. 접수 완료 건은 고객이 적은 성함·연락처가 함께 보여요(번호를 누르면 전화 연결).'));
         }
 
