@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-LP953J57gOaSj4eQbfWiIa7fPE82XLJEg34Qd/u+2q0='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dMigWHnPl/1e0/EO6Cmu1wi5UENn122pd6JgODfVu/w='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2137,7 +2137,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-05.21';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-05.22';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8339,7 +8339,7 @@
                 function (e) { delete ib.saving[x.id]; x.asg = before; render(); toast('담당자를 저장하지 못했어요. ' + driveErrText(e)); });
         }
         function ibMark(x) { var id = 'ibm_' + x.id; return ((db && db.ibm) || []).filter(function (m) { return m.id === id; }).map(function (m) { return m.m; })[0] || ''; }   // '' · 'no'(미인입) · 'test'(테스트)
-        var IB_DUP_MS = 180000, IB_MK_TXT = { no: '미인입', nc: '비상담', test: '테스트', dup: '중복?', pc: 'PC 클릭', nocall: '통화 없음', nomatch: '미인입(상담 없음)' };
+        var IB_DUP_MS = 180000, IB_MK_TXT = { no: '미인입', nc: '비상담', nca: '비상담(자동)', test: '테스트', dup: '중복?', pc: 'PC 클릭', nocall: '통화 없음', nomatch: '미인입(상담 없음)' };
         var IB_CL_WAIT = 30 * 60000;   // 착신 뒤 30분 안에 상담 리스트에 번호가 없으면 자동 미인입
         function ibClIdx() {   // 상담 리스트 연락처(숫자만) → 상담 줄들 (상담 리스트가 바뀔 때만 다시 만듦)
             if (!cl.data) return null;
@@ -8391,7 +8391,9 @@
             Object.keys(used).forEach(function (rid) { a[rid] = 'merged'; });
             if (cl.data) ps.forEach(function (x) {   // 착신: 상담 리스트에 번호가 있으면 실 인입 · 30분 지나도 없으면 자동 미인입
                 if (x.kind !== 'rcv' || used[x.id] || ibMark(x)) return;
-                if (!ibClMatch(x) && now - x.t > IB_CL_WAIT) a[x.id] = 'nomatch';
+                var why = ibMemoWhy(x), cm = ibClMatch(x);
+                if (why && why !== '번호 안 옴') { if (!(cm && cm.day && cm.day >= ymd(new Date(x.t)))) a[x.id] = 'nca'; }   // 유선·대표번호 · 저장된 연락처 · 가입 고객 → 바로 비상담(자동) · 이 날 이후 상담 리스트에 적으면 실 인입
+                else if (!cm && now - x.t > IB_CL_WAIT) a[x.id] = 'nomatch';
             });
             out.mt = mt; out.free = rcv.filter(function (r) { return !used[r.id]; });
             return a;
@@ -8623,7 +8625,7 @@
             if (P.u === 'month') { var d = new Date(P.from); while (d.getTime() < P.to) { var k = ymd(d); keys.push(k); lab[k] = (d.getMonth() + 1) + '/' + d.getDate() + ' (' + IB_WD[d.getDay()] + ')'; d.setDate(d.getDate() + 1); } }
             else for (var m = 0; m < 12; m++) { var k2 = new Date(P.from).getFullYear() + '-' + pad2(m + 1); keys.push(k2); lab[k2] = (m + 1) + '월'; }
             keys.forEach(function (k) { c[k] = { all: 0, real: 0, nc: 0, out: 0 }; });
-            shown.forEach(function (x) { var dd = new Date(x.t), k = P.u === 'month' ? ymd(dd) : dd.getFullYear() + '-' + pad2(dd.getMonth() + 1); var o = c[k]; if (!o) return; var mk = ibEff(x, AU); o.all++; if (!mk) o.real++; else if (mk === 'nc') o.nc++; else o.out++; });
+            shown.forEach(function (x) { var dd = new Date(x.t), k = P.u === 'month' ? ymd(dd) : dd.getFullYear() + '-' + pad2(dd.getMonth() + 1); var o = c[k]; if (!o) return; var mk = ibEff(x, AU); o.all++; if (!mk) o.real++; else if (mk === 'nc' || mk === 'nca') o.nc++; else o.out++; });
             var tot = { all: 0, real: 0, nc: 0, out: 0 }; keys.forEach(function (k) { ['all', 'real', 'nc', 'out'].forEach(function (f) { tot[f] += c[k][f]; }); });
             var rowsK = P.u === 'month' ? keys.filter(function (k) { return k <= ymd(new Date()); }) : keys;
             return { keys: rowsK, lab: lab, c: c, tot: tot, el: h('div', { class: 'panel ib-pt-w' }, h('table', { class: 'ib-pt', 'data-fk': 'ib-pertable' },
@@ -8634,7 +8636,7 @@
         function ibPerExcel(P, list, AU, TB) {   // [📥 이 기간 엑셀]: 화면에 보이는 그대로
             var items = list.slice().sort(function (a, b) { return a.t - b.t; });
             var kinds = Object.keys(IB_KIND), cnt = {}; kinds.forEach(function (k) { cnt[k] = 0; }); items.forEach(function (x) { cnt[x.kind]++; });
-            var realC = items.filter(function (x) { return !ibEff(x, AU); }).length, ncC = items.filter(function (x) { return ibEff(x, AU) === 'nc'; }).length;
+            var realC = items.filter(function (x) { return !ibEff(x, AU); }).length, ncC = items.filter(function (x) { var m = ibEff(x, AU); return m === 'nc' || m === 'nca'; }).length;
             var sum = [['사거리인터넷 콜 인입 (' + IB_PU.filter(function (o) { return o[0] === P.u; })[0][1] + ')'], ['기간', P.label], ['보기 조건', '종류: ' + (ib.kind === 'all' ? '전체' : IB_KIND[ib.kind][1]) + (ib.todo ? ' · 확인 안 한 것만' : '')], ['내려받은 시각', fmtDT(Date.now())], [], ['종류', '건수']];
             kinds.forEach(function (k) { sum.push([IB_KIND[k][1], cnt[k]]); });
             sum.push(['합계', items.length], ['실 인입 (미인입·비상담·테스트·중복·PC 클릭 뺌)', realC], ['비상담', ncC], []);
@@ -8708,7 +8710,7 @@
                 var markBtns = h('div', { class: 'ib-mk', role: 'group', 'aria-label': '실 인입 아님 표시' },
                     [['no', '미인입'], ['nc', '비상담'], ['test', '테스트']].concat(au || mk0 === 'yes' ? [['yes', '실 인입']] : []).map(function (o) { if (o[0] === 'yes') return h('button', { type: 'button', class: 'btn btn-sm ib-mk-yes', 'data-fk': 'ib-mk-yes-' + x.id, 'aria-pressed': mk0 === 'yes' ? 'true' : 'false', disabled: boss ? null : true, title: boss ? (mk0 === 'yes' ? '다시 누르면 자동 제외로 돌아가요' : '실제로 통화한 전화면 눌러 주세요 → 실 인입 순번에 들어가요') : '대표님만 표시할 수 있어요', onclick: function () { ibMarkSet(x, 'yes'); } }, o[1]); return h('button', { type: 'button', class: 'btn btn-sm ib-mk-' + o[0], 'data-fk': 'ib-mk-' + o[0] + '-' + x.id, 'aria-pressed': mk0 === o[0] ? 'true' : 'false', disabled: boss ? null : true, title: boss ? (mk0 === o[0] ? '다시 누르면 풀려요' : o[0] === 'nc' ? '상담이 아닌 전화(A/S·요금·해지 문의, 거래처, 잘못 건 전화 등) → 실 인입에서 빼고 비상담으로 따로 세요' : o[1] + '으로 표시하면 실 인입 순번에서 빠져요') : '대표님만 표시할 수 있어요', onclick: function () { ibMarkSet(x, o[0]); } }, o[1]); }));
                 return h('div', { class: 'ib-row' + (x.chk ? ' done' : '') + (ib.sel[x.id] ? ' sel' : '') + (mk ? ' mk' : ''), 'data-ib': x.id },
-                    h('div', { class: 'ib-time' }, h('span', { class: 'ib-no' + (mk ? ' off' : '') + (mk === 'dup' || mk === 'pc' || mk === 'nocall' || mk === 'nomatch' ? ' auto' : ''), title: mk === 'nomatch' ? '자동 미인입: 전화 온 뒤 30분이 지나도 상담 리스트에 이 번호가 없어요. 늦게라도 상담 리스트에 연락처를 적으면 (몇 시간·며칠 뒤라도) 자동으로 실 인입으로 바뀌어요 (또는 [실 인입])' : mk === 'nocall' ? '자동 제외: 버튼을 누른 뒤 3분 안에 착신 휴대폰에 온 전화가 없어요 (전화를 걸지 않음). 실제로 통화했으면 [실 인입]' : mk === 'dup' ? '자동 제외: 바로 전(3분 안)에 모바일에서 누른 전화가 또 있어요 — 같은 손님이 여러 번 누른 것으로 봤어요. 실제로 따로 온 전화면 [실 인입]' : mk === 'pc' ? '자동 제외: PC에서 누른 전화 버튼이에요 (PC는 바로 전화가 걸리지 않아요). 실제로 통화했으면 [실 인입]' : mk ? '실 인입 아님 (순번 없음)' : ymd(new Date(x.t)) + ' 실 인입 ' + no + '번째' }, mk ? IB_MK_TXT[mk] : no + '번'), pickBox ? h('label', { class: 'ib-pick' }, pickBox, ibTime(x.t)) : ibTime(x.t)),
+                    h('div', { class: 'ib-time' }, h('span', { class: 'ib-no' + (mk ? ' off' : '') + (mk === 'dup' || mk === 'pc' || mk === 'nocall' || mk === 'nomatch' || mk === 'nca' ? ' auto' : ''), title: mk === 'nca' ? '자동 비상담: ' + ibMemoWhy(x) + ' 전화라 상담이 아닌 것으로 봤어요. 이 날 이후 상담 리스트에 이 번호로 상담을 적으면 자동으로 실 인입으로 바뀌어요 (또는 [실 인입])' : mk === 'nomatch' ? '자동 미인입: 전화 온 뒤 30분이 지나도 상담 리스트에 이 번호가 없어요. 늦게라도 상담 리스트에 연락처를 적으면 (몇 시간·며칠 뒤라도) 자동으로 실 인입으로 바뀌어요 (또는 [실 인입])' : mk === 'nocall' ? '자동 제외: 버튼을 누른 뒤 3분 안에 착신 휴대폰에 온 전화가 없어요 (전화를 걸지 않음). 실제로 통화했으면 [실 인입]' : mk === 'dup' ? '자동 제외: 바로 전(3분 안)에 모바일에서 누른 전화가 또 있어요 — 같은 손님이 여러 번 누른 것으로 봤어요. 실제로 따로 온 전화면 [실 인입]' : mk === 'pc' ? '자동 제외: PC에서 누른 전화 버튼이에요 (PC는 바로 전화가 걸리지 않아요). 실제로 통화했으면 [실 인입]' : mk ? '실 인입 아님 (순번 없음)' : ymd(new Date(x.t)) + ' 실 인입 ' + no + '번째' }, mk ? IB_MK_TXT[mk] : no + '번'), pickBox ? h('label', { class: 'ib-pick' }, pickBox, ibTime(x.t)) : ibTime(x.t)),
                     h('div', { class: 'ib-kind k-' + x.kind }, k[0] + ' ' + k[1]),
                     h('div', { class: 'ib-main' }, h('div', { class: 'ib-label' }, x.label),
                         h('div', { class: 'ib-sub' }, x.kind === 'rcv' ? h('span', { class: 'ib-dev' }, '직접 전화', (function () { var w = ibMemoWhy(x); return w && w !== '번호 안 옴' ? h('b', { class: 'ib-ctk' + (w === '유선·대표번호' ? ' tel' : ''), title: '이 전화는 상담 메모를 자동으로 열지 않았어요 (010 휴대폰 · 연락처·가입 장부에 없는 번호만 열어요)' }, w === '유선·대표번호' ? ' ☎ 유선·대표번호' : w === '저장된 연락처' ? ' 📇 저장된 연락처' : ' 📇 가입 고객') : x.ctk === 0 ? h('b', { class: 'ib-ctk new' }, ' 🆕 미등록 번호') : null; })()) : h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC'),
@@ -8735,7 +8737,7 @@
                 h('div', { class: 'filters' }, h('label', {}, '종류', kindSel), h('label', { class: 'ib-todo' }, todo, '확인 안 한 것만'),
                     h('label', { class: 'ib-todo', title: '홈페이지에서 전화 버튼을 누르면 이 기기에서 상담 메모가 바로 열려요 (팀장 직통 번호는 그 직원 기기에서만)' }, h('input', { type: 'checkbox', 'data-fk': 'ib-automemo', checked: ibMemoOn(), onchange: function () { ibMemoSet(this.checked); toast(this.checked ? '전화 인입이 들어오면 이 기기에서 상담 메모가 바로 열려요.' : '이 기기에서는 상담 메모를 자동으로 열지 않아요.'); } }), '📞 전화 인입 시 상담 메모 자동 열기 (이 기기)'),
                     h('span', { class: 'ib-status', id: 'ib-status', role: 'status' }, ibStatusText())),
-                h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '확인 안 함 ' + n + '건 · 전체 ' + shown.length + '건 · ', h('b', { class: 'ib-real' }, '실 인입 ' + realN + '건' + (P.now && P.u !== 'day' ? ' (오늘 ' + (SEQ.day[ymd(new Date())] || 0) + '건)' : '')), (function () { var c = shown.filter(function (x) { return ibEff(x, AU) === 'nc'; }).length; return c ? ' · 비상담 ' + c + '건' : ''; })(), markN ? ' · 제외 ' + markN + '건' + (autoN ? ' (자동: 상담 없음·통화 없음·중복·PC 클릭 ' + autoN + '건)' : '') : '',
+                h('div', { class: 'box-bar' }, h('span', { class: 'box-count' }, '확인 안 함 ' + n + '건 · 전체 ' + shown.length + '건 · ', h('b', { class: 'ib-real' }, '실 인입 ' + realN + '건' + (P.now && P.u !== 'day' ? ' (오늘 ' + (SEQ.day[ymd(new Date())] || 0) + '건)' : '')), (function () { var c = shown.filter(function (x) { var m = ibEff(x, AU); return m === 'nc' || m === 'nca'; }).length; return c ? ' · 비상담 ' + c + '건' : ''; })(), markN ? ' · 제외 ' + markN + '건' + (autoN ? ' (자동: 비상담·상담 없음·통화 없음·중복·PC 클릭 ' + autoN + '건)' : '') : '',
                     (function () {   // 이 기간 실 인입 경로별 (합친 착신은 버튼 줄 경로로)
                         var c = {}, n0 = 0;
                         shown.forEach(function (x) { if (ibEff(x, AU)) return; var sv = ibSrc(x); if (sv) c[sv] = (c[sv] || 0) + 1; else n0++; });
@@ -8912,7 +8914,7 @@
                 days.forEach(function (d) { var row = [d], tot = 0; kinds.forEach(function (k) { row.push(byDay[d][k]); tot += byDay[d][k]; }); row.push(tot); sum.push(row); });
                 var det = [['일시', '실 인입', '종류', '누른 버튼 / 접수 종류', '기기', '성함', '연락처', '담당자', '지정한 사람', '확인', '확인자', '확인 시각', '댓글', '경로']], realC = 0;
                 items.forEach(function (x) { if (!ibEff(x, XA)) realC++; });
-                sum.splice(sum.length - 1, 0, ['실 인입 (미인입·비상담·테스트·중복·PC 클릭 뺌)', realC], ['비상담', items.filter(function (x) { return ibEff(x, XA) === 'nc'; }).length]);
+                sum.splice(sum.length - 1, 0, ['실 인입 (미인입·비상담·테스트·중복·PC 클릭 뺌)', realC], ['비상담', items.filter(function (x) { var m = ibEff(x, XA); return m === 'nc' || m === 'nca'; }).length]);
                 items.forEach(function (x) {
                     var mk = ibEff(x, XA);
                     det.push([fmtDT(x.t), mk ? IB_MK_TXT[mk] : 'O', IB_KIND[x.kind][1], x.label, x.dev === 'm' ? '모바일' : 'PC', x.name, x.phone ? mfPhone(x.phone) : '', x.asg ? x.asg.to : '', x.asg ? x.asg.by : '', x.chk ? 'O' : '', x.chk ? x.chk.by : '', x.chk && x.chk.at ? fmtDT(x.chk.at) : '',
