@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-IoRtDzRO3977Mb1nBgQ0qHbdBJbGiAUGD+G06WFoOQo='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8sKKwvKCNQMZWHVMQxNMHzIaIvEC/qVu6jDGQBUly0g='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1071,6 +1071,18 @@
         select.ib-src.on { border-color: #3E441E; font-weight: 700; }
         .ib-srcsum { color: #3E441E; font-weight: 700; }
         .bl-link-tip { font-size: 13px; color: #3E441E; background: #F1F2E8; border-radius: 8px; padding: 6px 10px; margin: 6px 0 0; }
+        .est-half { border-top: 5px solid #FF9F1C; }
+        .idl-pop { width: min(560px, 100%); }
+        .idl-sec { margin-top: 12px; display: grid; gap: 6px; }
+        .idl-tk { text-align: left; justify-content: flex-start; white-space: normal; font-weight: 700; }
+        .idl-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .idl-etc-w { display: flex; gap: 6px; } .idl-etc { flex: 1; min-width: 0; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); }
+        .idl-none { color: #8A8A80; margin: 0; } .idl-later { margin-top: 14px; width: 100%; }
+        .act-others { display: grid; gap: 4px; flex: 1 1 100%; }
+        .act-o { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 14px; } .act-o.run { color: #1F5F23; } .act-idle { color: #9A6A00; }
+        .wck-box h4 { margin: 8px 0 6px; } .wck-r { display: grid; grid-template-columns: 80px 70px 120px minmax(0, 1fr); gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+        .wck-k { color: #9A6A00; font-weight: 700; }
+        @media (max-width: 640px) { .wck-r { grid-template-columns: 70px 1fr; } }
         .ib-rcv-n { margin-left: 6px; font-weight: 700; color: #3E441E; }
         .ib-kind.k-rcv { color: #1E6B34; }
         .ib-rcv-ok { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: #E6F4EA; color: #1E6B34; font-size: 12px; font-weight: 700; }
@@ -2077,7 +2089,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-05.12';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-05.13';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2164,7 +2176,7 @@
                     { id: 's2', name: '직원 1', role: '', u: 0, o: 2, adm: false },
                     { id: 's3', name: '직원 2', role: '', u: 0, o: 3, adm: false }
                 ],
-                events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], dms: [], chg: [], tlog: [],
+                events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], dms: [], wck: [], chg: [], tlog: [],
                 del: Object.create(null),                  // 지워진 항목 기록(다른 직원 화면에서도 지워지도록)
                 drive: { url: '', k: '', rev: 0, pk: '', acc: false },  // 공유 저장소 연결 정보 (암호화된 데이터 안에만 보관)
                 account: null    // 이 기기에서 로그인한 계정 (이 기기 안에만 보관하고 드라이브로는 보내지 않음)
@@ -2188,7 +2200,7 @@
         // 저장소·백업·드라이브에서 읽은 내용은 항상 이 함수로 걸러서(글자 수·개수 제한, 형식 검사) 사용합니다
         function normalizeDb(d) {
             if (!d || typeof d !== 'object') return null;
-            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], dms: [], chg: [], tlog: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
+            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], dms: [], wck: [], chg: [], tlog: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
             function list(v, max) { return Array.isArray(v) ? v.slice(0, max) : []; }
             list(d.staff, 200).forEach(function (s, i) {
                 if (!s || !str(s.name, 30).trim()) return;
@@ -2265,6 +2277,10 @@
             list(d.ibm, 3000).forEach(function (x) {   // 콜 인입 표시: 미인입 · 테스트 (실 인입 순번에서 뺌)
                 if (!x || !str(x.id, 60) || !str(x.iid, 40)) return;
                 out.ibm.push({ id: str(x.id, 60), iid: str(x.iid, 40), m: x.m === 'no' || x.m === 'test' || x.m === 'yes' ? x.m : '', s: str(x.s, 16), by: str(x.by, 20), u: num(x.u), b: num(x.b) });
+            });
+            list(d.wck, 1500).forEach(function (x) {   // 업무 확인 응답: 스업 반·끝 확인 · 15분 빈 시간 → 직원 답 (대표님이 봄)
+                if (!x || !str(x.id, 40) || !str(x.sid, 40)) return;
+                out.wck.push({ id: str(x.id, 40), sid: str(x.sid, 40), tid: str(x.tid, 40), tt: str(x.tt, 80), k: x.k === 'half' || x.k === 'end' || x.k === 'idle' ? x.k : 'idle', a: str(x.a, 100), at: num(x.at), u: num(x.u), b: num(x.b) });
             });
             list(d.dms, 600).forEach(function (x) {   // 전달하기: 대표 → 직원 (직원이 [확인했어요] 누르면 ack 시각)
                 if (!x || !str(x.id, 40) || !str(x.to, 40)) return;
@@ -2904,18 +2920,36 @@
             estAl.blink = setInterval(function () { document.title = (k++ % 2) ? estAl.title : '⏰ 예상 시간이 됐어요'; }, 900);
         }
         function estClose() { if (estAl.el) { estAl.el.remove(); estAl.el = null; } estBlink(false); }
+        function wckAdd(k, t, a) {   // 직원 답 → 팀 저장소 + 바로 신호 (대표님 화면에 3~5초 안에 알림)
+            if (!db.wck) db.wck = [];
+            db.wck.push(stamp({ id: uid(), sid: me, tid: t ? t.id : '', tt: t ? String(t.title || '').slice(0, 80) : '', k: k, a: String(a || '').slice(0, 100), at: Date.now(), u: 0 }));
+            saveDb(); try { dmBump(); } catch (e) { requestSync(0); }
+        }
+        function estHalf(t) {   // 예상 시간 반이 지남 → 잘 되고 있나요? (남은 예상 시간)
+            var em = estMs(t), wk = workMs(t, Date.now());
+            estClose();
+            estAl.el = h('div', { class: 'est-al est-half', role: 'alertdialog', 'aria-live': 'assertive', 'aria-label': '업무 중간 확인', 'data-fk': 'est-half' },
+                h('div', { class: 'est-al-ic', 'aria-hidden': 'true' }, '⏳'),
+                h('div', { class: 'est-al-t' }, h('b', {}, '잘 진행되고 있나요?'), h('span', { class: 'est-al-n' }, t.title), h('small', {}, '예상 ' + (t.est || '') + '의 반이 지났어요 · 남은 예상 시간 ' + durText(Math.max(0, em - wk)) + ' · ' + clockText(t.st) + ' 시작')),
+                h('div', { class: 'est-al-b' },
+                    h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'half-go', onclick: function () { estClose(); wckAdd('half', t, '계속 진행'); toast('👍 계속 진행해요. 남은 예상 시간 ' + durText(Math.max(0, em - workMs(t, Date.now())))); } }, '👍 계속 진행'),
+                    h('button', { type: 'button', class: 'btn btn-sm est-done', 'data-act': 'half-done', onclick: function () { if (setTaskStatus(t, 'done')) { stamp(t); estClose(); wckAdd('half', t, '업무 종료됨'); commit('완료 처리했어요. 수고했어요! 👏'); } else estClose(); } }, '✅ 업무 종료됨')));
+            document.body.appendChild(estAl.el);
+            estBeep(); if (document.hidden) estBlink(true);
+            try { if (window.Notification && Notification.permission === 'granted') new Notification('⏳ 잘 진행되고 있나요?', { body: t.title + '\n남은 예상 시간 ' + durText(Math.max(0, em - wk)), tag: 'sg-half-' + t.id }); } catch (e) { /* 무시 */ }
+        }
         function estAlert(t) {
             var em = estMs(t), wk = workMs(t, Date.now());
             estClose();
-            var plus = function (min) { var n = Math.round(em / 60000) + min; t.est = n >= 60 ? Math.floor(n / 60) + '시간' + (n % 60 ? ' ' + n % 60 + '분' : '') : n + '분'; stamp(t); estClose(); commit('예상 시간을 ' + t.est + '로 늘렸어요. 그때 다시 알려 드릴게요.'); };
+            var plus = function (min) { var n = Math.round(em / 60000) + min; t.est = n >= 60 ? Math.floor(n / 60) + '시간' + (n % 60 ? ' ' + n % 60 + '분' : '') : n + '분'; stamp(t); estClose(); commit('예상 시간을 ' + t.est + '로 늘렸어요. 그때 다시 알려 드릴게요.'); wckAdd('end', t, '계속 진행 (+' + min + '분)'); };
             estAl.el = h('div', { class: 'est-al', role: 'alertdialog', 'aria-live': 'assertive', 'aria-label': '예상 소요시간 알림', 'data-fk': 'est-al' },
                 h('div', { class: 'est-al-ic', 'aria-hidden': 'true' }, '⏰'),
                 h('div', { class: 'est-al-t' }, h('b', {}, '예상 시간이 됐어요'), h('span', { class: 'est-al-n' }, t.title), h('small', {}, '예상 ' + (t.est || '') + ' · 일한 시간 ' + durText(wk) + ' · ' + clockText(t.st) + ' 시작')),
                 h('div', { class: 'est-al-b' },
-                    h('button', { type: 'button', class: 'btn btn-sm est-done', 'data-act': 'est-done', onclick: function () { if (!confirm('"' + t.title + '"\n이 업무를 완료 처리할까요?')) return; if (setTaskStatus(t, 'done')) { stamp(t); estClose(); commit('완료 처리했어요. 수고했어요! 👏'); } } }, '✓ 완료'),
+                    h('button', { type: 'button', class: 'btn btn-sm est-done', 'data-act': 'est-done', onclick: function () { if (setTaskStatus(t, 'done')) { stamp(t); estClose(); wckAdd('end', t, '업무 종료됨'); commit('완료 처리했어요. 수고했어요! 👏'); } } }, '✓ 완료'),
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'est-p10', onclick: function () { plus(10); } }, '＋10분'),
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'est-p30', onclick: function () { plus(30); } }, '＋30분'),
-                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'est-close', onclick: estClose }, '계속 할게요')));
+                    h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'est-close', onclick: function () { estClose(); wckAdd('end', t, '계속 진행'); } }, '👍 계속 진행')));
             document.body.appendChild(estAl.el);
             estBeep();
             if (document.hidden) estBlink(true);
@@ -2925,15 +2959,62 @@
             if (!authed || !db || estAl.el) return;
             var now = Date.now(), seen = estSeen(), mem = estAl.mem || {};
             var due = db.tasks.filter(function (t) { var em = estMs(t); return t.staffId === me && t.status === 'doing' && !t.ps && !t.ext && t.st && em && workMs(t, now) >= em && !seen[estKey(t)] && !mem[estKey(t)]; });
-            if (!due.length) return;
+            if (!due.length) {   // 예상 시간 반: 잘 되고 있나요? (한 업무에 한 번)
+                var half = db.tasks.filter(function (t) { var em = estMs(t), wk = t.st ? workMs(t, now) : 0; return t.staffId === me && t.status === 'doing' && !t.ps && !t.ext && t.st && em >= 4 * 60000 && wk >= em / 2 && wk < em && !seen[estKey(t) + '|h'] && !mem[estKey(t) + '|h']; });
+                if (half.length) { estMark(estKey(half[0]) + '|h'); estHalf(half[0]); }
+                return;
+            }
             estMark(estKey(due[0])); estAlert(due[0]);
         }
-        setInterval(estCheck, 15000);
+        setInterval(estCheck, 10000);   // 10초마다 (빠르게)
         document.addEventListener('visibilitychange', function () { if (!document.hidden) { estBlink(false); estCheck(); } });
         document.addEventListener('pointerdown', function () { var C = window.AudioContext || window.webkitAudioContext; if (C && !estAl.ac) { try { estAl.ac = new C(); } catch (e) { /* 무시 */ } } else if (estAl.ac && estAl.ac.state === 'suspended') estAl.ac.resume(); }, { capture: true, passive: true });
         function estAskNotify() {   // 업무를 '진행 중'으로 바꿀 때 한 번: 컴퓨터 알림 허용 묻기 (다른 창을 보고 있어도 알림이 뜨게)
             try { if (window.Notification && Notification.permission === 'default' && !estAl.asked) { estAl.asked = true; Notification.requestPermission(); } } catch (e) { /* 무시 */ }
         }
+        var idl = { el: null, at: Date.now(), etc: '' };   // at: 마지막으로 물어본(또는 답한) 시각 · 로그인 시각
+        function idleLast() {   // 내 마지막 업무 끝 시각 (실업 종료 · 스업 완료/중지 · 마지막 물음)
+            var t0 = idl.at;
+            (db.acts || []).forEach(function (a) { if (a.sid === me && a.e && a.e > t0) t0 = a.e; });
+            db.tasks.forEach(function (t) { if (t.staffId !== me) return; if (t.fin && t.fin > t0) t0 = t.fin; if (t.ps && t.ps > t0) t0 = t.ps; if (t.st && t.st > t0) t0 = t.st; });
+            return t0;
+        }
+        function idleBusy() { return !!actRunning(me) || db.tasks.some(function (t) { return t.staffId === me && t.status === 'doing' && !t.ps && !t.ext; }); }
+        function idleClose() { if (idl.el) { idl.el.remove(); idl.el = null; } }
+        function idleCheck() {   // 직원: 실업·스업이 15분 동안 비어 있으면 물어봄 (근무 시간 · 휴무 아닌 날 · 대표님 제외)
+            if (!authed || !db || accountGate() || isBoss() || idl.el || estAl.el) { if (idl.el && idleBusy()) idleClose(); return; }
+            var now = new Date(), hr = now.getHours(); if (hr < 9 || hr >= 21) return;
+            try { if (hdNames(ymd(now)).indexOf(staffName(me)) >= 0) return; } catch (e) { /* 무시 */ }
+            if (idleBusy()) { idl.at = Math.max(idl.at, Date.now() - 1); return; }
+            if (Date.now() - idleLast() < 15 * 60000) return;
+            idleAsk();
+        }
+        function idleAsk() {
+            var today = ymd(new Date());
+            var mine = db.tasks.filter(function (t) { return t.staffId === me && !t.ext && t.status !== 'done' && (!t.due || t.due <= today); }).sort(taskSort).slice(0, 6);
+            var answer = function (txt) { idleClose(); idl.at = Date.now(); wckAdd('idle', null, txt); };
+            var etc = h('input', { type: 'text', class: 'idl-etc', maxlength: 50, placeholder: '기타 — 직접 적기 (예: 택배 정리)', 'aria-label': '기타 실업' });
+            var startAct = function (k) { if (!k) { etc.focus(); return; } if (ACT_KINDS.indexOf(k) >= 0) { actUi.pick = k; actUi.etc = ''; } else { actUi.pick = '기타'; actUi.etc = k; } actStart(); answer('실업 시작: ' + k); };
+            idl.el = h('div', { class: 'dm-back', 'data-fk': 'idle-pop', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': '어떤 업무를 하고 있나요' },
+                h('div', { class: 'dm-pop idl-pop' },
+                    h('div', { class: 'dm-h' }, '🕒 지금 어떤 업무를 하고 있나요?', h('small', {}, ' 실업·스업이 15분 동안 비어 있어요')),
+                    h('div', { class: 'idl-sec' }, h('b', {}, '📋 스업 바로 시작'),
+                        mine.length ? mine.map(function (t) {
+                            return h('button', { type: 'button', class: 'btn idl-tk', 'data-fk': 'idle-tk', onclick: function () {
+                                if (t.status === 'doing' && t.ps) togglePause(t); else { if (setTaskStatus(t, 'doing')) { stamp(t); commit('▶ "' + t.title + '" 시작했어요.'); } }
+                                estAskNotify(); answer('스업 시작: ' + t.title);
+                            } }, (t.status === 'doing' && t.ps ? '⏯ 재시작 · ' : '▶ ') + t.title + (t.est ? ' (예상 ' + t.est + ')' : ''));
+                        }) : h('p', { class: 'idl-none' }, '오늘 남은 스업이 없어요.'),
+                        h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'idle-newtk', onclick: function () { idleClose(); idl.at = Date.now(); editTask(null); } }, '＋ 새 스업 적기')),
+                    h('div', { class: 'idl-sec' }, h('b', {}, '⏱ 실업 바로 시작'),
+                        h('div', { class: 'idl-chips' }, ACT_KINDS.map(function (k) { return h('button', { type: 'button', class: 'act-chip', 'data-fk': 'idle-act', onclick: function () { startAct(k); } }, k); })),
+                        h('div', { class: 'idl-etc-w' }, etc, h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { var v = etc.value.replace(/\s+/g, ' ').trim().slice(0, ACT_MAX); if (!v) { etc.focus(); return; } startAct(v); } }, '▶ 시작'))),
+                    h('button', { type: 'button', class: 'btn btn-sm idl-later', 'data-fk': 'idle-later', onclick: function () { idleClose(); idl.at = Date.now() - 5 * 60000; wckAdd('idle', null, '나중에 (10분 뒤 다시)'); } }, '10분 뒤에 다시 물어보기')));
+            document.body.appendChild(idl.el);
+            try { estBeep(); } catch (e) { /* 무시 */ }
+            try { if (window.Notification && Notification.permission === 'granted' && document.hidden) new Notification('🕒 지금 어떤 업무를 하고 있나요?', { body: '실업·스업이 15분 동안 비어 있어요', tag: 'sg-idle' }); } catch (e) { /* 무시 */ }
+        }
+        setInterval(function () { try { idleCheck(); } catch (e) { /* 무시 */ } }, 20000);
         function workMs(t, end) { return Math.max(0, end - t.st - (t.pa || 0) - (t.ps ? Math.max(0, end - t.ps) : 0)); }   // 실제로 일한 시간
         function isBoss() { var m = staffById(me); return !!(m && m.adm) && isAdminUser(); }   // 대표(관리자)
         function canChangeStatus(t) { return t.status !== 'done' || isBoss(); }   // 완료한 업무는 대표만 되돌릴 수 있음
@@ -3375,12 +3456,23 @@
             db.acts = db.acts.filter(function (a) { return !(a.e && a.s < cut); }); old.forEach(function (a) { tomb(a.id); }); saveDb(); requestSync(DRIVE_PUSH_DELAY_MS);
         }
         function actBar() {
-            var run = actRunning(me), day = state.date || ymd(new Date());
+            var other = isBoss() && state.who !== 'me' && state.who !== 'none' && state.who !== me;   // 대표님이 다른 직원(또는 전체)을 보는 중
+            var run = other ? null : actRunning(me), day = state.date || ymd(new Date());
             var whoOk = function (a) { return state.who === 'all' ? true : state.who === 'me' || state.who === 'none' ? a.sid === me : a.sid === state.who; };
             var logs = (db.acts || []).filter(function (a) { return a.e && ymd(new Date(a.s)) === day && whoOk(a); }).sort(function (a, b) { return a.s - b.s; });
             var many = logs.some(function (a) { return a.sid !== logs[0].sid; });
             var top;
-            if (run) top = h('div', { class: 'act-top run' },
+            if (other) {   // 그 직원(전체면 모든 직원)의 지금 실업 · 스업
+                var sids = state.who === 'all' ? db.staff.slice().sort(byO).map(function (x) { return x.id; }) : [state.who];
+                top = h('div', { class: 'act-top act-view' }, h('span', { class: 'act-ttl' }, '⏱ 실시간업무(실업)'),
+                    h('div', { class: 'act-others' }, sids.map(function (sid) {
+                        var r = actRunning(sid), tk = db.tasks.filter(function (t) { return t.staffId === sid && t.status === 'doing' && !t.ps && !t.ext; })[0];
+                        return h('div', { class: 'act-o' + (r ? ' run' : '') }, h('b', {}, staffName(sid)),
+                            r ? h('span', { class: 'act-now' }, h('i', { class: 'act-dot', 'aria-hidden': 'true' }), h('b', {}, r.k), ' ' + actHm(r.s) + ' 시작 · ', h('span', { class: 'act-el', 'data-s': String(r.s) }, actDur(Date.now() - r.s)), ' 진행 중')
+                                : tk ? h('span', { class: 'act-now' }, '📋 스업 진행 중: ', h('b', {}, tk.title)) : h('span', { class: 'act-idle' }, '지금 진행 중인 실업·스업 없음'),
+                            r ? h('button', { type: 'button', class: 'btn btn-sm act-ed', onclick: function () { actForm(actRunning(sid)); } }, '✎ 고치기') : null);
+                    })));
+            } else if (run) top = h('div', { class: 'act-top run' },
                 h('span', { class: 'act-ttl' }, '⏱ 실시간업무(실업)'),
                 h('span', { class: 'act-now' }, h('i', { class: 'act-dot', 'aria-hidden': 'true' }), h('b', {}, run.k), ' ' + actHm(run.s) + ' 시작 · ', h('span', { class: 'act-el', 'data-s': String(run.s) }, actDur(Date.now() - run.s)), ' 진행 중'),
                 (function () { var x = actSvText(run); return h('span', { class: 'act-sv ' + x.c, role: 'status' }, x.t); })(),
@@ -4310,8 +4402,8 @@
         }
 
         /* --- 내용 합치기: 항목마다 수정 시각(u)이 더 늦은 쪽을 남기고, 지운 항목은 삭제 기록으로 처리 --- */
-        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], dms: db.dms || [], chg: db.chg || [], tlog: db.tlog || [], del: db.del }; }
-        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], dms: db.dms || [], chg: db.chg || [], tlog: db.tlog || [], del: db.del })); }
+        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], dms: db.dms || [], wck: db.wck || [], chg: db.chg || [], tlog: db.tlog || [], del: db.del }; }
+        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], dms: db.dms || [], wck: db.wck || [], chg: db.chg || [], tlog: db.tlog || [], del: db.del })); }
         function canon(d) {   // 같은 내용이면 항상 같은 글자가 되도록 정렬한 비교용 문자열
             function byId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
             return JSON.stringify([
@@ -4327,6 +4419,7 @@
                 (d.mgs || []).slice().sort(byId).map(function (x) { return [x.id, x.sid, x.ym, x.t, x.d, x.o, x.u]; }),
                 (d.ibm || []).slice().sort(byId).map(function (x) { return [x.id, x.iid, x.m, x.s || '', x.u]; }),
                 (d.dms || []).slice().sort(byId).map(function (x) { return [x.id, x.to, x.ack, x.u]; }),
+                (d.wck || []).slice().sort(byId).map(function (x) { return [x.id, x.a, x.u]; }),
                 (d.chg || []).slice().sort(byId).map(function (x) { return [x.id, x.k, x.u]; }),
                 (d.tlog || []).slice().sort(byId).map(function (x) { return [x.id, x.u]; }),
                 (d.policies || []).slice().sort(byId).map(function (x) { return [x.id, x.at, x.by, x.u, x.act || 0, x.actBy || '']; })
@@ -4402,6 +4495,7 @@
                 mgs: mergeList(a.mgs || [], b.mgs || [], false).filter(alive).sort(byId),
                 ibm: mergeList(a.ibm || [], b.ibm || [], false).filter(alive).sort(byId),
                 dms: mergeList(a.dms || [], b.dms || [], false).filter(alive).sort(byId),
+                wck: mergeList(a.wck || [], b.wck || [], false).filter(alive).sort(byId),
                 chg: mergeList(a.chg || [], b.chg || [], false).filter(alive).sort(byId),
                 tlog: mergeList(a.tlog || [], b.tlog || [], false).filter(alive).sort(byId),
                 policies: mergeList(a.policies || [], b.policies || [], false).filter(alive).sort(byId),   // 가입 장부: 나중에 고친 쪽으로 (충돌본 만들지 않음)
@@ -4409,7 +4503,7 @@
             };
         }
                 function applyMerged(m) {
-            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.acts = m.acts || []; db.qms = m.qms || []; db.mgs = m.mgs || []; db.ibm = m.ibm || []; db.dms = m.dms || []; db.chg = m.chg || []; db.tlog = m.tlog || []; db.policies = m.policies || []; db.del = m.del;
+            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.acts = m.acts || []; db.qms = m.qms || []; db.mgs = m.mgs || []; db.ibm = m.ibm || []; db.dms = m.dms || []; db.wck = m.wck || []; db.chg = m.chg || []; db.tlog = m.tlog || []; db.policies = m.policies || []; db.del = m.del;
             var ok = Object.create(null); db.staff.forEach(function (x) { ok[x.id] = 1; });
             [db.events, db.notices, db.tasks].forEach(function (list) { list.forEach(function (it) { if (it.staffId && !ok[it.staffId]) it.staffId = ''; }); });
             if (!staffById(me)) { me = db.staff[0].id; lsSet(ME_KEY, me); }
@@ -4417,10 +4511,10 @@
         }
 
         /* --- 동기화: 드라이브의 최신 내용을 받아 합치고, 내 변경분이 있으면 올림 --- */
-        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.chg || [], db.tlog || []].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
+        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.wck || [], db.chg || [], db.tlog || []].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
         function markSynced(snap) {   // 드라이브에 올라간(또는 드라이브와 같아진) 버전을 '기준 시각(b)'으로 기록
             var changed = false;
-            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.chg || [], db.tlog || []].forEach(function (l) { l.forEach(function (it) {
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.wck || [], db.chg || [], db.tlog || []].forEach(function (l) { l.forEach(function (it) {
                 var nb = !snap ? it.u : snap[it.id];            // snap: 드라이브에 올라간 시점의 수정 시각
                 if (nb === undefined) return;                     // 올릴 때 없던 항목(그 뒤에 새로 만든 것)은 다음 저장 때
                 if (nb > it.u) nb = it.u;
@@ -4430,8 +4524,8 @@
         }
         function markSeen(remote) {   // 받아 온 드라이브 버전과 같은 항목은 '본 적 있음'으로 기록 (다른 기기 기준 시각이 섞이지 않게)
             var ru = Object.create(null);
-            [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || [], remote.policies || [], remote.acts || [], remote.qms || [], remote.mgs || [], remote.ibm || [], remote.dms || [], remote.chg || [], remote.tlog || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
-            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.chg || [], db.tlog || []].forEach(function (l) { l.forEach(function (it) {
+            [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || [], remote.policies || [], remote.acts || [], remote.qms || [], remote.mgs || [], remote.ibm || [], remote.dms || [], remote.wck || [], remote.chg || [], remote.tlog || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.wck || [], db.chg || [], db.tlog || []].forEach(function (l) { l.forEach(function (it) {
                 var r = ru[it.id];
                 if (r !== undefined && r === it.u && it.b !== it.u) it.b = it.u;   // 드라이브 버전과 같음
             }); });
@@ -8022,14 +8116,20 @@
                 }
             });
         }
+        function wckKind(w) { return w.k === 'half' ? '스업 예상 시간 반' : w.k === 'end' ? '스업 예상 시간 끝' : '15분 빈 시간'; }
         function dmList() {   // 대표: 전달 내역 (확인 여부)
             var l = (db.dms || []).filter(function (x) { return x.fr === me; }).sort(function (a, b) { return b.at - a.at; }).slice(0, 30);
             var close = function () { var o = document.querySelector('[data-fk=dm-list]'); if (o) o.remove(); };
             close();
             var box = h('div', { class: 'dpop-back', 'data-fk': 'dm-list', onclick: function (e) { if (e.target === this) close(); } },
                 h('div', { class: 'dpop', role: 'dialog', 'aria-modal': 'true', 'aria-label': '전달 내역' },
-                    h('div', { class: 'dpop-h' }, h('h3', {}, '📨 전달 내역'), h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-fk': 'dm-new', onclick: function () { close(); dmSend(); } }, '+ 새로 전달'), h('button', { type: 'button', class: 'btn btn-sm', onclick: close }, '닫기 ✕')),
-                    h('div', { class: 'dpop-body' }, l.length ? l.map(function (x) {
+                    h('div', { class: 'dpop-h' }, h('h3', {}, '📨 전달 · 업무 확인'), h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-fk': 'dm-new', onclick: function () { close(); dmSend(); } }, '+ 새로 전달'), h('button', { type: 'button', class: 'btn btn-sm', onclick: close }, '닫기 ✕')),
+                    h('div', { class: 'dpop-body' }, (function () {   // 오늘 업무 확인 응답
+                        var td = ymd(new Date()), w = (db.wck || []).filter(function (x) { return ymd(new Date(x.at)) === td; }).sort(function (a, b) { return b.at - a.at; });
+                        return h('div', { class: 'wck-box', 'data-fk': 'wck-list' }, h('h4', {}, '🔔 오늘 업무 확인 응답 ' + w.length + '건'),
+                            w.length ? w.slice(0, 40).map(function (x) { return h('div', { class: 'wck-r' }, h('span', {}, ibHms(x.at)), h('b', {}, staffName(x.sid)), h('span', { class: 'wck-k' }, wckKind(x)), h('span', {}, (x.tt ? '"' + x.tt + '" → ' : '') + x.a)); }) : h('div', { class: 'dpop-empty' }, '아직 없어요. (스업 예상 시간 반·끝, 15분 빈 시간에 직원이 답하면 여기에 바로 떠요)'),
+                            h('h4', {}, '📨 전달 내역'));
+                    })(), l.length ? l.map(function (x) {
                         return h('div', { class: 'dm-r' + (x.ack ? ' ok' : '') }, h('span', { class: 'dm-st' }, x.ack ? '✅ 확인 ' + ibHms(x.ack) : '⏳ 확인 전'),
                             h('div', {}, h('b', {}, staffName(x.to)), h('small', {}, ' · ' + ibHms(x.at)), h('div', { class: 'dpop-memo' }, x.t + (x.ref ? '\n— ' + x.ref : ''))),
                             h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { if (!confirm('이 전달을 지울까요?')) return; db.dms = db.dms.filter(function (y) { return y.id !== x.id; }); tomb(x.id); commit('전달을 지웠어요.'); close(); dmList(); } }, '지우기'));
@@ -8040,6 +8140,11 @@
             if (!authed || !db || accountGate()) { if (dmEl) { dmEl.remove(); dmEl = null; dmShownId = ''; } return; }
             var l = db.dms || [];
             if (dmSeen === null) { dmSeen = Object.create(null); l.forEach(function (x) { if (x.ack) dmSeen[x.id] = 1; }); }
+            if (isBoss()) {   // 직원 업무 확인 응답 → 바로 알림
+                if (!dmSeen.__w) { dmSeen.__w = 1; (db.wck || []).forEach(function (w) { dmSeen['w' + w.id] = 1; }); }
+                (db.wck || []).forEach(function (w) { if (dmSeen['w' + w.id]) return; dmSeen['w' + w.id] = 1; if (w.sid === me) return; toast('🔔 ' + staffName(w.sid) + ' · ' + wckKind(w) + (w.tt ? ' "' + w.tt.slice(0, 24) + '"' : '') + ' → ' + w.a); });
+                var wc = Date.now() - 7 * 86400000, wo = (db.wck || []).filter(function (w) { return w.at < wc; }); if (wo.length) { db.wck = db.wck.filter(function (w) { return w.at >= wc; }); wo.forEach(function (w) { tomb(w.id); }); saveDb(); }
+            }
             l.forEach(function (x) { if (x.fr === me && x.ack && !dmSeen[x.id]) { dmSeen[x.id] = 1; toast('✅ ' + staffName(x.to) + ' 님이 전달을 확인했어요 (' + ibHms(x.ack) + '): ' + String(x.t).slice(0, 40)); } else if (x.ack) dmSeen[x.id] = 1; });
             if (isBoss()) { var cut = Date.now() - 30 * 86400000, old = l.filter(function (x) { return x.ack && x.ack < cut; }); if (old.length) { db.dms = l.filter(function (x) { return !(x.ack && x.ack < cut); }); old.forEach(function (x) { tomb(x.id); }); commit(''); } }
             var mine = l.filter(function (x) { return x.to === me && !x.ack; }).sort(function (a, b) { return a.at - b.at; }), d = mine[0];
@@ -15927,7 +16032,7 @@
                     isStaffUser()
                         ? h('div', { class: 'rail-foot' }, h('label', {}, '로그인 중'), h('div', { class: 'me-fixed', 'data-fixed-me': 'yes' }, staffName(me)), h('div', { class: 'acct-email' }, db.account.email),
                             h('button', { type: 'button', class: 'btn btn-sm', onclick: acctLogout }, '로그아웃'), h('button', { type: 'button', class: 'btn btn-sm', onclick: lock }, '잠그기'))
-                        : h('div', { class: 'rail-foot' }, isBoss() ? h('button', { type: 'button', class: 'btn btn-sm dm-btn', 'data-fk': 'dm-open', onclick: dmList }, '📨 전달하기' + (dmWait() ? ' (확인 전 ' + dmWait() + ')' : '')) : null, h('label', { for: 'me-sel' }, '내 이름'), meSel, h('button', { type: 'button', class: 'btn btn-sm', onclick: lock }, '잠그기'))),
+                        : h('div', { class: 'rail-foot' }, isBoss() ? h('button', { type: 'button', class: 'btn btn-sm dm-btn', 'data-fk': 'dm-open', onclick: dmList }, '📨 전달 · 업무 확인' + (dmWait() ? ' (확인 전 ' + dmWait() + ')' : '')) : null, h('label', { for: 'me-sel' }, '내 이름'), meSel, h('button', { type: 'button', class: 'btn btn-sm', onclick: lock }, '잠그기'))),
                 h('main', { class: 'main' }, appWarn, verNote(), pendingNote(), note, content, driveFooter())));
             mfMoving = false;
             clMemoPaint();   // 상담 메모 창: 화면을 새로 그려도 적던 내용 그대로
