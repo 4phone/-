@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>사거리인터넷 전화 상담</title>
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; font-family: 'Noto Sans KR', system-ui, -apple-system, sans-serif; background: #F7F8F0; color: #23251A; display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
+  .box { background: #fff; border-radius: 16px; padding: 28px 22px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 8px 28px rgba(0,0,0,.08); }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  p { margin: 6px 0 18px; color: #5B5E4A; font-size: 15px; }
+  .num { font-size: 30px; font-weight: 800; letter-spacing: 1px; margin: 4px 0 18px; color: #3E441E; }
+  a.call { display: block; padding: 15px; border-radius: 12px; background: #3E441E; color: #fff; text-decoration: none; font-size: 18px; font-weight: 800; }
+  a.home { display: inline-block; margin-top: 14px; color: #5B5E4A; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>사거리인터넷 전화 상담</h1>
+  <p id="msg">상담 전화로 연결하고 있어요...</p>
+  <div class="num">1833-2440</div>
+  <a class="call" id="call" href="tel:18332440">📞 지금 전화하기</a>
+  <a class="home" href="./">사거리인터넷 홈페이지 보기</a>
+</div>
+<script>
+/* 블로그·인스타·구글 등에 넣는 전화 링크: call.html?src=blog
+   어디서 눌렀는지(경로)만 사거리온 '콜 인입'에 남기고 바로 전화로 연결해요. 이름·번호 같은 개인정보는 보내지 않아요. */
+(function () {
+  var SRC = { blog: '블로그', insta: '인스타', google: '구글', naver: '네이버', place: '네이버 플레이스', daangn: '당근', kakao: '카카오채널', youtube: '유튜브', band: '밴드', flyer: '전단지·현수막', etc: '기타' };
+  var q = /[?&]src=([a-z]{2,10})/.exec(location.search), key = q && SRC.hasOwnProperty(q[1]) ? q[1] : 'etc';
+  var label = SRC[key] + ' 링크 전화';
+  var mobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '');
+  var URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
+  var go = function () { if (mobile) location.href = 'tel:18332440'; };
+  var done = false, finish = function () { if (done) return; done = true; go(); };
+  if (!mobile) document.getElementById('msg').textContent = '휴대폰으로 아래 번호에 전화 주세요.';
+  try {
+    fetch('ADMIN-01/team.json', { cache: 'no-store', credentials: 'omit' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      var u = j && typeof j.url === 'string' ? j.url : '';
+      if (!URL_OK.test(u)) return finish();
+      var body = JSON.stringify({ action: 'inbound', kind: 'call', label: label, dev: mobile ? 'm' : 'pc' });
+      try { if (navigator.sendBeacon && navigator.sendBeacon(u, new Blob([body], { type: 'text/plain;charset=utf-8' }))) return setTimeout(finish, 150); } catch (e) { /* 아래로 */ }
+      fetch(u, { method: 'POST', mode: 'no-cors', keepalive: true, credentials: 'omit', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: body }).then(finish, finish);
+    }, finish);
+  } catch (e) { finish(); }
+  setTimeout(finish, 1500);   // 기록이 늦어도 1.5초 안에는 전화로
+  document.getElementById('call').addEventListener('click', function () { done = true; });
+})();
+</script>
+</body>
+</html>
