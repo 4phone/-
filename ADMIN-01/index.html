@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8sKKwvKCNQMZWHVMQxNMHzIaIvEC/qVu6jDGQBUly0g='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-htplnlBExb6PyphtuXZCxkDEgzgAPyJDGd/NBqn1fss='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1071,6 +1071,8 @@
         select.ib-src.on { border-color: #3E441E; font-weight: 700; }
         .ib-srcsum { color: #3E441E; font-weight: 700; }
         .bl-link-tip { font-size: 13px; color: #3E441E; background: #F1F2E8; border-radius: 8px; padding: 6px 10px; margin: 6px 0 0; }
+        .act-long { border-top-color: #3E441E; } .act-long-m { margin: 12px 0 0; font-size: 16px; }
+        .act-long-b { display: grid; gap: 8px; margin-top: 14px; } .act-long-b .btn { padding: 11px; font-size: 15px; }
         .est-half { border-top: 5px solid #FF9F1C; }
         .idl-pop { width: min(560px, 100%); }
         .idl-sec { margin-top: 12px; display: grid; gap: 6px; }
@@ -2089,7 +2091,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-05.13';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-05.14';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2280,7 +2282,7 @@
             });
             list(d.wck, 1500).forEach(function (x) {   // 업무 확인 응답: 스업 반·끝 확인 · 15분 빈 시간 → 직원 답 (대표님이 봄)
                 if (!x || !str(x.id, 40) || !str(x.sid, 40)) return;
-                out.wck.push({ id: str(x.id, 40), sid: str(x.sid, 40), tid: str(x.tid, 40), tt: str(x.tt, 80), k: x.k === 'half' || x.k === 'end' || x.k === 'idle' ? x.k : 'idle', a: str(x.a, 100), at: num(x.at), u: num(x.u), b: num(x.b) });
+                out.wck.push({ id: str(x.id, 40), sid: str(x.sid, 40), tid: str(x.tid, 40), tt: str(x.tt, 80), k: x.k === 'half' || x.k === 'end' || x.k === 'idle' || x.k === 'act' ? x.k : 'idle', a: str(x.a, 100), at: num(x.at), u: num(x.u), b: num(x.b) });
             });
             list(d.dms, 600).forEach(function (x) {   // 전달하기: 대표 → 직원 (직원이 [확인했어요] 누르면 ack 시각)
                 if (!x || !str(x.id, 40) || !str(x.to, 40)) return;
@@ -3015,6 +3017,33 @@
             try { if (window.Notification && Notification.permission === 'granted' && document.hidden) new Notification('🕒 지금 어떤 업무를 하고 있나요?', { body: '실업·스업이 15분 동안 비어 있어요', tag: 'sg-idle' }); } catch (e) { /* 무시 */ }
         }
         setInterval(function () { try { idleCheck(); } catch (e) { /* 무시 */ } }, 20000);
+        /* ---------- 실업 30분마다 확인: 30분 · 1시간 · 1시간 30분 … (직원 · 대표님 제외) ---------- */
+        var actLong = { el: null };
+        function actLongClose() { if (actLong.el) { actLong.el.remove(); actLong.el = null; } }
+        function actLongCheck() {
+            if (!authed || !db || accountGate() || isBoss() || actLong.el || estAl.el || idl.el) return;
+            var r = actRunning(me); if (!r) return;
+            var n = Math.floor((Date.now() - r.s) / (30 * 60000)); if (n < 1) return;
+            var key = 'act|' + r.id + '|' + n, seen = estSeen(), mem = estAl.mem || {};
+            if (seen[key] || mem[key]) return;
+            estMark(key); actLongAsk(r, n);
+        }
+        function actLongAsk(r, n) {
+            var dur = actDur(Date.now() - r.s), tag = '실업 "' + r.k + '" ' + dur + '째';
+            actLong.el = h('div', { class: 'dm-back', 'data-fk': 'act-long', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': '실업 진행 확인' },
+                h('div', { class: 'dm-pop act-long' },
+                    h('div', { class: 'dm-h' }, '⏱ 실업 ' + dur + '째 진행 중이에요'),
+                    h('div', { class: 'dm-t' }, h('b', {}, r.k), '  ·  ' + actHm(r.s) + ' 시작'),
+                    h('p', { class: 'act-long-m' }, '잘 하고 계시죠? 👍 이 업무를 계속할까요, 다른 업무로 넘어갈까요?'),
+                    h('div', { class: 'act-long-b' },
+                        h('button', { type: 'button', class: 'btn btn-primary', 'data-fk': 'act-long-go', onclick: function () { actLongClose(); wckAdd('act', null, tag + ' → 계속 진행'); toast('👍 계속 진행해요. 30분 뒤에 다시 여쭤볼게요.'); } }, '👍 계속 진행'),
+                        h('button', { type: 'button', class: 'btn', 'data-fk': 'act-long-next', onclick: function () { actLongClose(); var x = actRunning(me); if (x) actStop(x); wckAdd('act', null, tag + ' → 종료하고 다른 업무'); setTimeout(function () { try { idleAsk(); } catch (e) { /* 무시 */ } }, 150); } }, '🔀 종료하고 다른 업무'),
+                        h('button', { type: 'button', class: 'btn', 'data-fk': 'act-long-stop', onclick: function () { actLongClose(); var x = actRunning(me); if (x) actStop(x); wckAdd('act', null, tag + ' → 종료'); } }, '■ 종료'))));
+            document.body.appendChild(actLong.el);
+            try { estBeep(); } catch (e) { /* 무시 */ }
+            try { if (window.Notification && Notification.permission === 'granted' && document.hidden) new Notification('⏱ 실업 ' + dur + '째 진행 중', { body: r.k + ' · 잘 하고 계시죠? 계속할까요?', tag: 'sg-act-' + r.id }); } catch (e) { /* 무시 */ }
+        }
+        setInterval(function () { try { if (actLong.el && !actRunning(me)) actLongClose(); actLongCheck(); } catch (e) { /* 무시 */ } }, 10000);
         function workMs(t, end) { return Math.max(0, end - t.st - (t.pa || 0) - (t.ps ? Math.max(0, end - t.ps) : 0)); }   // 실제로 일한 시간
         function isBoss() { var m = staffById(me); return !!(m && m.adm) && isAdminUser(); }   // 대표(관리자)
         function canChangeStatus(t) { return t.status !== 'done' || isBoss(); }   // 완료한 업무는 대표만 되돌릴 수 있음
@@ -8116,7 +8145,7 @@
                 }
             });
         }
-        function wckKind(w) { return w.k === 'half' ? '스업 예상 시간 반' : w.k === 'end' ? '스업 예상 시간 끝' : '15분 빈 시간'; }
+        function wckKind(w) { return w.k === 'half' ? '스업 예상 시간 반' : w.k === 'end' ? '스업 예상 시간 끝' : w.k === 'act' ? '실업 30분마다' : '15분 빈 시간'; }
         function dmList() {   // 대표: 전달 내역 (확인 여부)
             var l = (db.dms || []).filter(function (x) { return x.fr === me; }).sort(function (a, b) { return b.at - a.at; }).slice(0, 30);
             var close = function () { var o = document.querySelector('[data-fk=dm-list]'); if (o) o.remove(); };
