@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dPkUib5W9cXlxOLyIaFnbakWOOZVHqYXveBVpp+zcck='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-XvYqjbnijRk/YHpUE3JKEo3pHg47uslxGGr+eYgsYkY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2064,7 +2064,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-05.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-05.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 90000;      // 화면을 열어 두면 90초마다 다른 직원의 변경 사항 확인
@@ -14516,27 +14516,21 @@
                 all.forEach(function (raw) {
                     var ex = haveS[raw.name]; if (!ex) return;
                     var E = gl.sh[ex.id]; if (!E || !E.S) throw new Error('load');
-                    var X0 = glNormSheet(raw), lay = glLayoutDiff(E.S, X0), eA = glErrCount(E.S), eX = eA ? glErrCount(X0) : 0;
-                    if (eA > eX && glHead(X0)) lay = { kind: 'err', n: eA - eX };   // 앱 시트에만 수식 오류가 있음 = 칸이 섞여 들어감 → 엑셀 원본 그대로
-                    if (lay) {   // 칸 순서가 바뀜(칸 추가) 또는 이미 밀려 들어간 시트: 엑셀 모양 그대로 + 앱에만 있는 고객 줄은 머리글 이름으로 맞춰 이어 붙임
-                        var X = glNormSheet(JSON.parse(JSON.stringify(glPack(X0)))); if (E.S.rep) X.rep = E.S.rep;
-                        var oldS = lay.kind === 'data' ? glRealign(E.S, lay.c0, lay.last) : E.S, nFill = lay.kind === 'err' ? 0 : glFillFromApp(oldS, X), extra = glAppOnly(oldS, X), nAp = extra.length ? glAppendRows(oldS, X, extra) : 0;
-                        merges.push({ id: ex.id, name: raw.name, E: E, m: { S: X, cells: glCount(X), rows: nAp, fill: nFill, names: extra.map(function (q) { return q.name; }), chg: [], lay: lay } });
-                        return;
-                    }
-                    var m = glMergeIn(E.S, X0);
-                    if (!m.cells) { same++; return; }
-                    merges.push({ id: ex.id, name: raw.name, E: E, m: m });
+                    var X = glNormSheet(JSON.parse(JSON.stringify(glPack(glNormSheet(raw))))); if (E.S.rep) X.rep = E.S.rep;   // 엑셀 그대로 (값·수식·서식)
+                    if (JSON.stringify(glPack(X)) === JSON.stringify(glPack(glNormSheet(JSON.parse(JSON.stringify(glPack(E.S))))))) { same++; return; }
+                    var A = glKeyRows(E.S), B = glKeyRows(X), xn = {}, gone = [];
+                    if (A && B) { B.rows.forEach(function (q) { xn[q.name] = 1; }); A.rows.forEach(function (q) { if (q.name.charAt(0) !== '=' && !xn[q.name] && gone.indexOf(q.name) < 0) gone.push(q.name); }); }   // 앱에만 있는 고객 (엑셀 기준으로 바꾸면 빠짐)
+                    merges.push({ id: ex.id, name: raw.name, E: E, m: { S: X, cells: glCount(X), rows: 0, names: [], chg: [], full: true, gone: gone } });
                 });
                 var sheets = all.filter(function (s) { return !haveS[s.name]; });
-                if (!sheets.length && !merges.length) { toast('엑셀과 지금 장부 내용이 같아요. 반영할 내용이 없어요.'); return; }
+                if (!sheets.length && !merges.length) { toast('엑셀과 지금 가입고객리스트가 똑같아요. 바꿀 내용이 없어요.'); return; }
                 var who = function (a) { return a.slice(0, 10).join(', ') + (a.length > 10 ? ' 외 ' + (a.length - 10) + '명' : ''); };
-                var msg = '엑셀 내용을 가입고객리스트에 반영할까요?\n'
-                    + merges.map(function (x) { if (x.m.lay) return '\n• ' + x.name + ': ' + (x.m.lay.kind === 'err' ? '칸이 섞여 들어가 수식 오류(#VALUE! 등)가 ' + x.m.lay.n + '칸 있어요' : x.m.lay.kind === 'head' ? '칸이 새로 생겨 칸 순서가 바뀌었어요' : '칸이 한 칸씩 밀려 들어가 있어요 (' + x.m.lay.last + '번 줄까지 · 그 아래 줄은 제자리)') + (x.m.lay.kind === 'err' ? ' → 엑셀 원본 그대로 (값·수식 모두) 바꿔요' : ' → 엑셀 모양 그대로 바꿔요') + (x.m.fill ? ' · 앱에서 적은 값 ' + x.m.fill + '칸은 그대로 살림' : '') + (x.m.rows ? ' (앱에서만 들어간 고객 ' + x.m.rows + '줄은 머리글 이름에 맞춰 이어 붙임: ' + who(x.m.names) + ')' : ''); return '\n• ' + x.name + ': 바뀐 칸 ' + x.m.cells + '개' + (x.m.renum ? ' (순번 다시 매김 ' + x.m.renum + '칸 포함)' : '') + (x.m.rows ? ' · 새 고객 ' + x.m.rows + '줄 추가 (' + who(x.m.names) + ')' : '') + (x.m.chg.length ? '\n   내용이 바뀐 고객: ' + who(x.m.chg) : ''); }).join('')
+                var msg = '엑셀 파일 기준으로 가입고객리스트를 바꿀까요?\n'
+                    + (merges.length ? '\n• 엑셀 내용 그대로 바꿀 시트 ' + merges.length + '개: ' + merges.slice(0, 8).map(function (x) { return x.name; }).join(', ') + (merges.length > 8 ? ' 외 ' + (merges.length - 8) + '개' : '') : '')
+                    + merges.filter(function (x) { return x.m.gone.length; }).map(function (x) { return '\n   ⚠ ' + x.name + ': 엑셀에 없는 고객 ' + x.m.gone.length + '명은 빠져요 — ' + who(x.m.gone); }).join('')
                     + (sheets.length ? '\n• 새로 더할 시트 ' + sheets.length + '개: ' + sheets.slice(0, 6).map(function (s) { return s.name; }).join(', ') + (sheets.length > 6 ? ' 외' : '') : '')
-                    + (same ? '\n• 내용이 같아 그대로 둘 시트 ' + same + '개' : '')
-                    + (merges.some(function (x) { return x.m.lay && x.m.lay.kind === 'err'; }) ? '\n\n[엑셀 원본 그대로]라고 적힌 시트는 엑셀 내용(값·수식)으로 통째로 바뀌어요. 그 밖의 시트는 수식 칸은 그대로 두고, 엑셀에서 비어 있는 칸은 지우지 않아요. 앱에서 들어간 고객 줄도 그대로 남아요.' : '\n\n수식 칸은 그대로 두고, 엑셀에서 비어 있는 칸은 지우지 않아요. 앱에서 들어간 고객 줄도 그대로 남아요.')
-                    + (merges.length ? '\n반영 직전 내용은 [보관본]에 120일 남아서 언제든 되돌릴 수 있어요.' : '');
+                    + (same ? '\n• 엑셀과 똑같아 그대로 둘 시트 ' + same + '개' : '')
+                    + (merges.length ? '\n\n바꾸기 직전 내용은 [보관본]에 120일 남아서 언제든 되돌릴 수 있어요.' : '');
                 if (!confirm(msg)) return;
                 var mi = 0, cells = 0, rowsN = 0;
                 function stepMerge() {
@@ -14551,8 +14545,8 @@
                 }
                 stepMerge().then(function () {
                     if (mineG !== gl) return;
-                    if (!sheets.length) { gl.job = ''; gl.tabX = null; render(); glMirrorSoon(3000); toast('엑셀 내용을 반영했어요. 바뀐 칸 ' + cells + '개' + (rowsN ? ' · 새 고객 ' + rowsN + '줄' : '') + '. (반영 전 내용은 [보관본]에 있어요)'); return; }
-                    glImportAdd(sheets, all, merges.length ? '엑셀 내용 반영 (바뀐 칸 ' + cells + '개' + (rowsN ? ' · 새 고객 ' + rowsN + '줄' : '') + ') · ' : '');
+                    if (!sheets.length) { gl.job = ''; gl.tabX = null; render(); glMirrorSoon(3000); toast('엑셀 파일 그대로 가입고객리스트를 바꿨어요 (시트 ' + merges.length + '개). 바꾸기 전 내용은 [보관본]에 있어요.'); return; }
+                    glImportAdd(sheets, all, merges.length ? '엑셀 그대로 바꾼 시트 ' + merges.length + '개 · ' : '');
                 }).catch(function (e) {
                     gl.job = ''; render();
                     if (e && e.code === 'conflict') { toast('그 사이에 다른 직원이 장부를 고쳤어요. 새로고침 뒤 다시 해 주세요. (이미 반영한 시트는 보관본에 이전 내용이 있어요)'); return; }
@@ -15615,7 +15609,7 @@
                 gl.idx && glLatest() ? h('button', { type: 'button', class: 'btn btn-close', 'data-act': 'gl-report', onclick: glReport, title: '하루 마감 순서: 마감1 상담리스트 → 마감2 실적장표 → 마감3 업무 마감보고 (그날 첫 보고는 시각 칸에 "목표", 그 뒤로는 보고한 시각이 적혀요)' }, h('span', { class: 'rpt-step' }, '마감2'), '실적장표 보고') : null,
                 gl.idx && glIdxList().length && glCanXlsx() ? h('button', { type: 'button', class: 'btn', 'data-act': 'gl-xlsx', onclick: glDownload }, '📥 엑셀 다운로드') : null,
                 boss && gl.idx && glLatest() ? h('button', { type: 'button', class: 'btn', 'data-act': 'gl-new', onclick: glNewMonth }, '+ ' + glNextName()) : null,
-                boss ? h('label', { class: 'btn', 'data-act': 'gl-import', title: '엑셀에서 고친 내용과 새 고객 줄을 반영해요 (수식 칸은 그대로 · 지우지는 않음 · 반영 전 내용은 보관본) · 새 시트는 더해요' }, '엑셀 불러오기', h('input', { type: 'file', accept: '.xlsx', hidden: true, onchange: function () { glImport(this.files && this.files[0]); this.value = ''; } })) : null,
+                boss ? h('label', { class: 'btn', 'data-act': 'gl-import', title: '엑셀 파일이 원본: 같은 이름의 시트는 엑셀 내용 그대로 바꿔요 (바꾸기 전 내용은 보관본) · 새 시트는 더해요' }, '엑셀 불러오기', h('input', { type: 'file', accept: '.xlsx', hidden: true, onchange: function () { glImport(this.files && this.files[0]); this.value = ''; } })) : null,
                 boss && gl.idx && glIdxList().length ? h('label', { class: 'btn', 'data-act': 'gl-update', title: '그동안 엑셀로 일한 완성 파일을 올리면 같은 이름의 시트를 엑셀 내용으로 바꿔요 (바꾸기 전 내용은 보관본으로 남음)' }, '📤 완성 엑셀로 갱신', h('input', { type: 'file', accept: '.xlsx', hidden: true, onchange: function () { glUpdate(this.files && this.files[0]); this.value = ''; } })) : null,
                 boss && gl.idx ? h('button', { type: 'button', class: 'btn', 'data-act': 'gl-snaps', onclick: glSnapsOpen, title: '엑셀로 갱신하기 직전 내용 (120일)' }, '🕘 보관본') : null));
             if (!glCan()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '가입고객리스트는 대표님과 대표님이 권한을 준 직원만 볼 수 있어요.')));
