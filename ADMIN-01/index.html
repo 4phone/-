@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Aiul3AZ6hs0N0kiLp5dcVypaTYNbwUoh92MrYpuPxqg='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2L9Jj2Ut80sPC1b6C/2vTbRiwh10eE2eAZjTfx18RKw='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2137,7 +2137,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-05.23';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-06.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8094,7 +8094,7 @@
             return x && typeof x.id === 'string' && x.id.length <= 40 && typeof x.t === 'number' && IB_KIND.hasOwnProperty(x.kind) && typeof x.label === 'string';
         }
         function ibNorm(x) {
-            return { id: x.id, t: x.t, kind: x.kind, label: String(x.label).slice(0, 60), dev: x.dev === 'm' ? 'm' : 'pc', ph: typeof x.ph === 'string' ? x.ph.slice(0, 12) : '', n4: typeof x.n4 === 'string' ? x.n4.replace(/\D/g, '').slice(-4) : '', ctk: x.ctk === 1 ? 1 : x.ctk === 0 ? 0 : -1, name: typeof x.name === 'string' ? x.name.slice(0, 20) : '', phone: typeof x.phone === 'string' ? x.phone.replace(/\D/g, '').slice(0, 11) : '',
+            return { id: x.id, t: x.t, kind: x.kind, label: String(x.label).slice(0, 60), dev: x.dev === 'm' ? 'm' : 'pc', ph: typeof x.ph === 'string' ? x.ph.slice(0, 12) : '', n4: typeof x.n4 === 'string' ? x.n4.replace(/\D/g, '').slice(-4) : '', ctk: x.ctk === 1 ? 1 : x.ctk === 0 ? 0 : -1, ctn: typeof x.ctn === 'string' ? x.ctn.slice(0, 20) : '', name: typeof x.name === 'string' ? x.name.slice(0, 20) : '', phone: typeof x.phone === 'string' ? x.phone.replace(/\D/g, '').slice(0, 11) : '',
                 chk: x.chk && typeof x.chk.by === 'string' ? { by: x.chk.by.slice(0, 20), at: Number(x.chk.at) || 0 } : null,
                 asg: x.asg && typeof x.asg.to === 'string' && x.asg.to ? { to: x.asg.to.slice(0, 20), by: String(x.asg.by || '').slice(0, 20), at: Number(x.asg.at) || 0 } : null,
                 cm: Array.isArray(x.cm) ? x.cm.filter(function (c) { return c && typeof c.id === 'string' && typeof c.text === 'string'; }).map(function (c) { return { id: c.id, by: String(c.by || '').slice(0, 20), em: String(c.em || ''), text: c.text.slice(0, 500), at: Number(c.at) || 0 }; }) : [] };
@@ -8399,7 +8399,7 @@
             return a;
         }
         function ibEff(x, A) { var m = ibMark(x); if (A && A[x.id] === 'merged') return 'merged'; return m === 'yes' ? '' : m || (A && A[x.id]) || ''; }   // 실제로 쓰는 표시: 직접 표시 > 자동 (yes = 자동 제외 풀기)
-        var IB_SRCS = ['홈페이지', '블로그', '인스타', '구글', '네이버', '당근', '카카오채널', '지인 소개', '전단지·현수막', '기존 고객', '기타'];
+        var IB_SRCS = ['홈페이지', '블로그', '인스타', '구글', '네이버', '당근', '카카오채널', '지인 소개', '전단지·현수막', '기존 고객', '저장 연락처', '기타'];
         function ibSrcMan(x) { var id = 'ibm_' + x.id; return ((db && db.ibm) || []).filter(function (m) { return m.id === id; }).map(function (m) { return m.s || ''; })[0] || ''; }
         function ibSrcGuess(x) {   // 누른 버튼 이름으로 경로 (블로그·인스타 링크 전화 등 · 홈페이지 버튼)
             var l = String(x.label || '');
@@ -8429,6 +8429,7 @@
             var man = ibSrcMan(x); if (man) return { v: man, n: '' };
             if (x.kind !== 'rcv') return { v: ibSrcGuess(x), n: '' };
             var k = ibKnown(x.phone); if (k) return { v: k.k, n: k.name };
+            if (x.ctn) return { v: '저장 연락처', n: x.ctn };   // 구글 연락처에 저장된 번호 (거래처·지인 등)
             var vv = ibVisitNear(x.t); if (vv) return { v: vv.src || '홈페이지', n: '추정 · ' + pad2(new Date(vv.t).getHours()) + ':' + pad2(new Date(vv.t).getMinutes()) + ' 홈페이지 방문' };
             return { v: '모름', n: '직접 전화' };
         }
@@ -8451,7 +8452,7 @@
             commit(v ? '경로를 "' + v + '"(으)로 적었어요.' : '경로를 지웠어요.');
         }
         function ibSrcSel(x, mt) {   // 줄마다 경로 고르는 칸 (자동으로 알 수 있으면 그 값이 기본)
-            var man = ibSrcMan(x), auto = mt ? ibSrcGuess(mt) : x.kind === 'rcv' ? (function () { var i = ibSrcInfo({ id: '-', kind: 'rcv', phone: x.phone, t: x.t }); return i.v + (i.n ? ' · ' + i.n : ''); })() : ibSrcGuess(x);
+            var man = ibSrcMan(x), auto = mt ? ibSrcGuess(mt) : x.kind === 'rcv' ? (function () { var i = ibSrcInfo({ id: '-', kind: 'rcv', phone: x.phone, ctn: x.ctn, t: x.t }); return i.v + (i.n ? ' · ' + i.n : ''); })() : ibSrcGuess(x);
             var sel = h('select', { class: 'ib-src' + (man || auto ? ' on' : ''), 'data-fk': 'ib-src-' + x.id, 'aria-label': '전화 경로', title: '어떻게 알고 연락했는지 (블로그·인스타·구글 등)' },
                 [h('option', { value: '' }, auto ? '경로: ' + auto + ' (자동)' : '경로 선택')].concat(IB_SRCS.map(function (v) { return h('option', { value: v }, '경로: ' + v); })));
             sel.value = man; sel.addEventListener('change', function () { ibSrcSet(x, this.value); });
@@ -8713,7 +8714,7 @@
                     h('div', { class: 'ib-time' }, h('span', { class: 'ib-no' + (mk ? ' off' : '') + (mk === 'dup' || mk === 'pc' || mk === 'nocall' || mk === 'nomatch' || mk === 'nca' ? ' auto' : ''), title: mk === 'nca' ? '자동 비상담: ' + ibMemoWhy(x) + ' 전화라 상담이 아닌 것으로 봤어요. 이 날 이후 상담 리스트에 이 번호로 상담을 적으면 자동으로 실 인입으로 바뀌어요 (또는 [실 인입])' : mk === 'nomatch' ? '자동 미인입: 전화 온 뒤 30분이 지나도 상담 리스트에 이 번호가 없어요. 늦게라도 상담 리스트에 연락처를 적으면 (몇 시간·며칠 뒤라도) 자동으로 실 인입으로 바뀌어요 (또는 [실 인입])' : mk === 'nocall' ? '자동 제외: 버튼을 누른 뒤 3분 안에 착신 휴대폰에 온 전화가 없어요 (전화를 걸지 않음). 실제로 통화했으면 [실 인입]' : mk === 'dup' ? '자동 제외: 바로 전(3분 안)에 모바일에서 누른 전화가 또 있어요 — 같은 손님이 여러 번 누른 것으로 봤어요. 실제로 따로 온 전화면 [실 인입]' : mk === 'pc' ? '자동 제외: PC에서 누른 전화 버튼이에요 (PC는 바로 전화가 걸리지 않아요). 실제로 통화했으면 [실 인입]' : mk ? '실 인입 아님 (순번 없음)' : ymd(new Date(x.t)) + ' 실 인입 ' + no + '번째' }, mk ? IB_MK_TXT[mk] : no + '번'), pickBox ? h('label', { class: 'ib-pick' }, pickBox, ibTime(x.t)) : ibTime(x.t)),
                     h('div', { class: 'ib-kind k-' + x.kind }, k[0] + ' ' + k[1]),
                     h('div', { class: 'ib-main' }, h('div', { class: 'ib-label' }, x.label),
-                        h('div', { class: 'ib-sub' }, x.kind === 'rcv' ? h('span', { class: 'ib-dev' }, '직접 전화', (function () { var w = ibMemoWhy(x); return w && w !== '번호 안 옴' ? h('b', { class: 'ib-ctk' + (w === '유선·대표번호' ? ' tel' : ''), title: '이 전화는 상담 메모를 자동으로 열지 않았어요 (010 휴대폰 · 연락처·가입 장부에 없는 번호만 열어요)' }, w === '유선·대표번호' ? ' ☎ 유선·대표번호' : w === '저장된 연락처' ? ' 📇 저장된 연락처' : ' 📇 가입 고객') : x.ctk === 0 ? h('b', { class: 'ib-ctk new' }, ' 🆕 미등록 번호') : null; })()) : h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC'),
+                        h('div', { class: 'ib-sub' }, x.kind === 'rcv' ? h('span', { class: 'ib-dev' }, '직접 전화', (function () { var w = ibMemoWhy(x); return w && w !== '번호 안 옴' ? h('b', { class: 'ib-ctk' + (w === '유선·대표번호' ? ' tel' : ''), title: '이 전화는 상담 메모를 자동으로 열지 않았어요 (010 휴대폰 · 연락처·가입 장부에 없는 번호만 열어요)' }, w === '유선·대표번호' ? ' ☎ 유선·대표번호' + (x.ctn ? ' · 📇 ' + x.ctn : '') : w === '저장된 연락처' ? ' 📇 저장된 연락처' + (x.ctn ? ' · ' + x.ctn : '') : ' 📇 가입 고객') : x.ctk === 0 ? h('b', { class: 'ib-ctk new' }, ' 🆕 미등록 번호') : null; })()) : h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC'),
                             x.name ? h('b', {}, x.name) : null,
                             x.phone ? h('a', { href: 'tel:' + x.phone, class: 'ib-phone' }, mfPhone(x.phone)) : null,
                             x.kind === 'rcv' && !x.phone ? h('span', { class: 'ib-rcv-n' }, x.n4 ? '번호 끝 ' + x.n4 : '번호 안 옴') : null,
