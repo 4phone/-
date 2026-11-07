@@ -2170,7 +2170,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         const provColor = { 'SK': '#E60012', 'LG': '#E50073', 'KT': '#00B1A0', '스카이': '#E8650A', '헬로': '#C8006E' };   // 요금제 머리말: 통신사 대표 색
 
         function sgSafeCell(c) {   // 시트 글자 안전하게: < > " ' ` 와 문자 코드(&#39; 등)를 지워서 화면 코드로 실행되거나 버튼을 깨뜨리지 않게
-            return String(c).replace(/[<>"'`]/g, '').replace(/&#x?[0-9a-f]*;?/gi, '').replace(/&(quot|apos|lt|gt|amp)(?![a-z0-9=])/gi, '');
+            return String(c).replace(/[<>"'`\\]/g, '').replace(/&#x?[0-9a-f]*;?/gi, '').replace(/&(quot|apos|lt|gt|amp)(?![a-z0-9=])/gi, '');
         }
         function parseCsvText(text) {
             const rows = []; let currentRow = []; let currentCell = ''; let inQuotes = false;
@@ -2765,7 +2765,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                             let dcPriceRaw = parseInt(cleanRow[5] ? cleanRow[5].replace(/[^0-9]/g, "") : "0") || 0;
                             let priceRaw = (dcPriceRaw > 0) ? cleanRow[6] : cleanRow[4];
                             let formatPrice = (parseInt(priceRaw.replace(/[^0-9]/g, "")) || 0).toLocaleString() + "원";
-                            let formatSubsidy = (cleanRow[7] || "0").includes('원') ? cleanRow[7] : (cleanRow[7] || "0") + '원';
+                            let formatSubsidy = !cleanRow[7] ? '상담 시 안내' : cleanRow[7].includes('원') ? cleanRow[7] : cleanRow[7] + '원';
                             
                             let conditionText = (prov === '스카이' || prov === '헬로') ? "알뜰 실속" : "휴대폰 결합 시";
                             
@@ -3227,12 +3227,13 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         function calcMobileResult() {
             let bestPlan = m_filteredData.find(r => r[2].trim() === quickData.speed && (quickData.product === '단독' || r[3].trim() === quickData.tv));
             if (bestPlan) {
-                let priceStr = bestPlan[quickData.product === '결합' ? 6 : 4].trim(); 
-                let giftStr = bestPlan[7] ? bestPlan[7].trim() : '0'; 
+                let dcM = parseInt(String(bestPlan[5] || '').replace(/[^0-9]/g, '')) || 0;   // 요금표와 같은 기준: 결합 할인이 있으면 결합가, 없으면 정상가
+                let priceStr = String((dcM > 0 && bestPlan[6] && bestPlan[6].trim()) ? bestPlan[6] : (bestPlan[4] || '')).trim(); 
+                let giftStr = bestPlan[7] ? bestPlan[7].trim() : ''; 
                 let priceNum = parseInt(priceStr.replace(/[^0-9]/g, "")) || 0; 
                 
                 quickData.price = priceNum > 0 ? priceNum.toLocaleString() + '원' : priceStr; 
-                quickData.gift = giftStr.includes('원') ? giftStr : giftStr + '원';
+                quickData.gift = !giftStr ? '상담 시 안내' : giftStr.includes('원') ? giftStr : giftStr + '원';
                 
                 let conditionText = (quickData.telecom === '스카이' || quickData.telecom === '헬로') ? "알뜰 실속" : "휴대폰 결합시";
                 let prodName = quickData.product === '결합' ? `${quickData.speed} + ${quickData.tv}` : `${quickData.speed} (단독)`;
@@ -3336,7 +3337,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             }
         }
 
-        function execDaumPostcode(prefix) { new daum.Postcode({ oncomplete: function(data) { let addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress; document.getElementById(prefix + '-postcode').value = data.zonecode; document.getElementById(prefix + '-addr1').value = addr; document.getElementById(prefix + '-addr2').focus(); } }).open(); }
+        function execDaumPostcode(prefix) { if (!window.daum || !daum.Postcode) { ['-postcode', '-addr1'].forEach(function (x) { var el = document.getElementById(prefix + x); if (el) { el.readOnly = false; el.removeAttribute('readonly'); } }); var a1 = document.getElementById(prefix + '-addr1'); if (a1) a1.focus(); alert('주소 검색을 불러오지 못했어요. 주소를 직접 입력해 주세요. (우편번호는 몰라도 괜찮아요)'); return; } new daum.Postcode({ oncomplete: function(data) { let addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress; document.getElementById(prefix + '-postcode').value = data.zonecode; document.getElementById(prefix + '-addr1').value = addr; document.getElementById(prefix + '-addr2').focus(); } }).open(); }
         function autoCleanAccount(target) { target.value = target.value.replace(/[^0-9]/g, ''); }
         function autoFormatCardValid(target) { let val = target.value.replace(/[^0-9]/g, ''); if (val.length >= 3) { target.value = val.substring(0, 2) + '/' + val.substring(2, 4); } else { target.value = val; } }
         function toggleDirectBankInput(selectEl, targetId) { const targetEl = document.getElementById(targetId); if (selectEl.value === '직접입력') { targetEl.style.display = 'block'; targetEl.focus(); } else { targetEl.style.display = 'none'; targetEl.value = ''; } }
@@ -3385,7 +3386,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             if (targetRow) {
                 const cleanRow = targetRow.map(cell => cell ? cell.replace(/"/g, '').trim() : "");
                 let dcPriceRaw = parseInt(cleanRow[5] ? cleanRow[5].replace(/[^0-9]/g, "") : "0") || 0; let priceRaw = (dcPriceRaw > 0) ? cleanRow[6] : cleanRow[4];
-                let formatPrice = (parseInt(priceRaw.replace(/[^0-9]/g, "")) || 0).toLocaleString() + "원"; let formatSubsidy = (cleanRow[7] || "0").includes('원') ? cleanRow[7] : (cleanRow[7] || "0") + '원';
+                let formatPrice = (parseInt(priceRaw.replace(/[^0-9]/g, "")) || 0).toLocaleString() + "원"; let formatSubsidy = !cleanRow[7] ? '상담 시 안내' : cleanRow[7].includes('원') ? cleanRow[7] : cleanRow[7] + '원';
                 let prefixText = (tel === '스카이' || tel === '헬로') ? "알뜰 실속 요금" : "휴대폰 결합 시";
                 document.getElementById('sidebar-result-price').innerHTML = `<span style="font-size:14px; color:#1F5A5E; display:block; margin-bottom:4px; font-weight:800;">${prefixText}</span>월 ${formatPrice}`;
                 document.getElementById('sidebar-result-gift').innerText = `현금 ${formatSubsidy} 지원!`;
@@ -3555,7 +3556,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                     selectedGift = { 4: currentViewedPopupGiftName }; currentGiftStatusText = `가전: ${currentViewedPopupGiftName}`; pc_curProd = "결합";
                     if (pc_curProv) {
                         if (!pc_currentActiveSpeed || pc_currentActiveSpeed === "100M") { pc_currentActiveSpeed = "500M"; }
-                        pc_updateOptions(); pc_calcDirectResult();
+                        pc_updateOptions(); var reB = document.querySelector('#pc-tv-product-box .pc-text-btn.active') || document.querySelector('#pc-speed-box .pc-text-btn.active'); if (reB) reB.click();   // (없는 함수 pc_calcDirectResult 대신)
                     } else {
                         pc_updateOptions(); setTimeout(() => { alert(`[${currentViewedPopupGiftName}]\n혜택 조건(결합/500M 이상)으로 자동 세팅되었습니다!\n\n위쪽에서 원하시는 '통신사 브랜드'를 먼저 선택해 주세요.`); }, 300);
                     }
@@ -4119,10 +4120,11 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         if (typeof it.img === 'string' && /^https:\/\/[A-Za-z0-9.-]+\/[^\s"'<>\\`]*$/.test(it.img) && it.img.length < 600) o.img = it.img;
         return o.k && o.title ? o : null;
     }
-    function load() { try { var a = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(a) ? a.map(clean).filter(Boolean).slice(0, MAX) : []; } catch (e) { return mem; } }
+    var lsOk = true;   // 이 브라우저에 보관할 수 있는지 (다른 창에서 빼거나 신청한 상품이 다시 보이지 않게, 보관이 될 때는 항상 보관함 기준)
+    function load() { try { var a = JSON.parse(localStorage.getItem(KEY) || '[]'); lsOk = true; return Array.isArray(a) ? a.map(clean).filter(Boolean).slice(0, MAX) : []; } catch (e) { lsOk = false; return mem; } }
     var mem = [];
-    function save(a) { mem = a; try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) { /* 보관 못 해도 이 화면에서는 그대로 */ } paint(); }
-    function list() { var a = load(); if (!a.length && mem.length) a = mem; return a; }
+    function save(a) { mem = a; try { localStorage.setItem(KEY, JSON.stringify(a)); lsOk = true; } catch (e) { lsOk = false; /* 보관 못 해도 이 화면에서는 그대로 */ } paint(); }
+    function list() { var a = load(); return lsOk ? a : mem; }
     window.addEventListener('storage', function (e) { if (e.key === KEY) paint(); });
 
     /* ---------- 화면 ---------- */

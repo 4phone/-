@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-37b5p+gYMGAs7cUbAL6GsNGltAtPslh4uu1+lbo+QLU='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HDUaBtpqw3o9Ibd3D7DwdHWxVzarr0PePe5TDum2BgU='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2144,7 +2144,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-07.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-07.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2207,8 +2207,9 @@
         function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch (e) { /* 무시 */ } }
         document.addEventListener('keydown', function (e) {   // 로그인한 상태에서 F5·Ctrl+R(맥 Cmd+R): 페이지를 다시 열지 않고 화면만 새로고침
             if (!authed || !db) return;
-            var k = e.key, isR = (k === 'r' || k === 'R' || e.keyCode === 82) && (e.ctrlKey || e.metaKey) && !e.altKey;
-            if (k === 'F5' || e.keyCode === 116 || isR) { e.preventDefault(); viewRefresh(); }
+            var k = e.key, isF5 = k === 'F5' || e.keyCode === 116, isR = (k === 'r' || k === 'R' || e.keyCode === 82) && (e.ctrlKey || e.metaKey) && !e.altKey;
+            if ((isF5 && (e.ctrlKey || e.shiftKey || e.metaKey)) || (isR && e.shiftKey)) return;   // Ctrl+F5 · Shift+F5 · Ctrl+Shift+R = 진짜 새로고침 (새 버전 받기)
+            if (isF5 || isR) { e.preventDefault(); viewRefresh(); }
         }, true);
         function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
         function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
@@ -2529,6 +2530,8 @@
             polOn = Object.create(null); polPick = null; polLast = null;
             authed = false; cryptoKey = null; db = null; me = ''; mforms = {}; if (taskDrag) { document.body.classList.remove('t-dragging'); window.removeEventListener('pointermove', taskDragMove, { passive: false }); window.removeEventListener('pointerup', taskDragEnd); window.removeEventListener('pointercancel', taskDragEnd); taskDrag = null; }   // 작성 중인 가입 확인서(고객 개인정보)도 지움
             uni = { mode: 'login', pending: null }; keysOffered = false; lastRemote = null; meMemo = null;
+            try { estClose(); idleClose(); actLongClose(); clrClose(); } catch (e) { /* 무시 */ }   // 잠금 화면 위에 남는 알림 창 닫기
+            memoEdit = null; memoSel = null; actUi = { pick: '', etc: '' }; dmSeen = null;
             ibStop(); stopPoll(); stopGatePoll(); clearTimeout(pushTimer); teamCache = null; syncQueued = false; driveState = { status: 'idle', at: null, msg: '' }; acctUi = { list: null, err: '', loading: false, at: 0, enforced: null }; gateMode = 'login';
             state.view = 'today'; state.who = 'all'; state.status = 'all'; state.date = ''; state.open = Object.create(null); state.pol.view = '';
             var d = document.getElementById('dlg'); if (d.open) closeDlg(); else d.textContent = '';
@@ -2790,6 +2793,7 @@
         }
 
         /* ---------- 일정 / 공지 / 업무 / 직원 입력 ---------- */
+        function curOf(list, x) { return x && list ? list.filter(function (y) { return y.id === x.id; })[0] || null : null; }   // 창을 연 뒤 동기화로 바뀐 경우 최신 것
         function editEvent(ev, presetDate) {
             var isNew = !ev, linked = evTask(ev);
             openForm({
@@ -2803,6 +2807,7 @@
                 ].concat(linked ? [] : [{ key: 'mkTask', label: '할 일에도 등록 (완료·내일로 옮기기가 캘린더에 같이 반영돼요)', type: 'checkbox', value: isNew }]),
                 validate: function (v) { return isYmd(v.date) ? null : '날짜를 올바르게 입력해 주세요.'; },
                 onSave: function (v) {
+                    if (!isNew) { ev = curOf(db.events, ev); if (!ev) { toast('다른 기기에서 지운 일정이에요.'); return; } }
                     if (isNew) { var ne = stamp({ id: uid(), title: v.title, date: v.date, time: v.time, staffId: v.staffId, memo: v.memo, u: 0, by: me }); db.events.push(ne); if (v.mkTask) { evMakeTask(ne); stamp(ne); } }
                     else { ev.title = v.title; ev.date = v.date; ev.time = v.time; ev.staffId = v.staffId; ev.memo = v.memo; if (linked) evSyncTask(ev); else if (v.mkTask) evMakeTask(ev); stamp(ev); }
                     state.selDate = v.date; var d = parseYmd(v.date); state.calY = d.getFullYear(); state.calM = d.getMonth();
@@ -2830,6 +2835,7 @@
                     { key: 'pinned', label: '목록 맨 위에 고정하기', type: 'checkbox', value: n ? n.pinned : false }
                 ],
                 onSave: function (v) {
+                    if (!isNew) { n = curOf(db.notices, n); if (!n) { toast('다른 기기에서 지운 공지예요.'); return; } }
                     if (isNew) db.notices.push(stamp({ id: uid(), title: v.title, body: v.body, staffId: v.staffId, date: ymd(new Date()), pinned: v.pinned, u: 0 }));
                     else { n.title = v.title; n.body = v.body; n.staffId = v.staffId; n.pinned = v.pinned; stamp(n); }
                     commit(isNew ? '공지를 등록했어요.' : '공지를 수정했어요.');
@@ -2864,6 +2870,7 @@
                     return null;
                 },
                 onSave: function (v) {
+                    if (!isNew) { t = curOf(db.tasks, t); if (!t) { toast('다른 기기에서 지운 업무예요.'); return; } }
                     var pri = ['high', 'normal', 'low'].indexOf(v.priority) >= 0 ? v.priority : 'normal';
                     if (isNew) { var nt = { id: uid(), title: v.title, staffId: v.staffId, due: v.due, priority: pri, status: 'todo', memo: v.memo, u: 0 }; setTaskStatus(nt, v.status); setEst(nt, v.est); taskToTop(nt); db.tasks.push(stamp(nt)); }
                     else { if (t.due && v.due && t.due !== v.due && !closed(t)) tlogAdd('move', t, t.due, v.due); t.title = v.title; t.staffId = v.staffId; t.due = v.due; t.priority = pri; setTaskStatus(t, v.status); t.memo = v.memo; setEst(t, v.est); stamp(t); taskSyncEv(t); }
@@ -2975,7 +2982,8 @@
             estAl.blink = setInterval(function () { document.title = (k++ % 2) ? estAl.title : '⏰ 예상 시간이 됐어요'; }, 900);
         }
         function estClose() { if (estAl.el) { estAl.el.remove(); estAl.el = null; } estBlink(false); }
-        function wckAdd(k, t, a) {   // 직원 답 → 팀 저장소 + 바로 신호 (대표님 화면에 3~5초 안에 알림)
+        function wckAdd(k, t, a) {
+            if (!db) return;   // 잠근 뒤 남은 알림을 누른 경우 · 직원 답 → 팀 저장소 + 바로 신호 (대표님 화면에 3~5초 안에 알림)
             if (!db.wck) db.wck = [];
             db.wck.push(stamp({ id: uid(), sid: me, tid: t ? t.id : '', tt: t ? String(t.title || '').slice(0, 80) : '', k: k, a: String(a || '').slice(0, 100), at: Date.now(), u: 0 }));
             saveDb(); try { dmBump(); } catch (e) { requestSync(0); }
@@ -3037,10 +3045,10 @@
         function idleBusy() { return !!actRunning(me) || db.tasks.some(function (t) { return t.staffId === me && t.status === 'doing' && !t.ps && !t.ext; }); }
         function idleClose() { if (idl.el) { idl.el.remove(); idl.el = null; } }
         var IDLE_MIN = 7;   // 실업·스업이 이 시간(분) 비면 물어봄 (대표님 11/5: 15분 → 7분)
-        function idleCheck() {   // 직원: 실업·스업이 IDLE_MIN분 동안 비어 있으면 물어봄 (근무 시간 · 휴무 아닌 날 · 대표님 제외)
+        function workIdleCheck() {   // 직원: 실업·스업이 IDLE_MIN분 동안 비어 있으면 물어봄 (예전 이름 idleCheck가 30분 자동 잠금 함수를 덮어써서 자동 잠금이 안 됐음) (근무 시간 · 휴무 아닌 날 · 대표님 제외)
             if (!authed || !db || accountGate() || isBoss() || idl.el || estAl.el) { if (idl.el && idleBusy()) idleClose(); return; }
             var now = new Date(), hr = now.getHours(); if (hr < 9 || hr >= 21) return;
-            try { if (hdNames(ymd(now)).indexOf(staffName(me)) >= 0) return; } catch (e) { /* 무시 */ }
+            try { if (hdOff(ymd(now), me) || hdNames(ymd(now)).indexOf(staffName(me)) >= 0) return; } catch (e) { /* 무시 */ }   // 전체 휴무·내 휴무
             if (idleBusy()) { idl.at = Math.max(idl.at, Date.now() - 1); return; }
             if (Date.now() - idleLast() < IDLE_MIN * 60000) return;
             idleAsk();
@@ -3070,7 +3078,7 @@
             try { estBeep(); } catch (e) { /* 무시 */ }
             try { if (window.Notification && Notification.permission === 'granted' && document.hidden) new Notification('🕒 지금 어떤 업무를 하고 있나요?', { body: '실업·스업이 ' + IDLE_MIN + '분 동안 비어 있어요', tag: 'sg-idle' }); } catch (e) { /* 무시 */ }
         }
-        setInterval(function () { try { idleCheck(); } catch (e) { /* 무시 */ } }, 20000);
+        setInterval(function () { try { workIdleCheck(); } catch (e) { /* 무시 */ } }, 20000);
         /* ---------- 실업 30분마다 확인: 30분 · 1시간 · 1시간 30분 … (직원 · 대표님 제외) ---------- */
         var actLong = { el: null };
         function actLongClose() { if (actLong.el) { actLong.el.remove(); actLong.el = null; } }
@@ -3159,7 +3167,7 @@
             commit('연장을 취소했어요.');
         }
         function taskToTop(nt) {   // [업무 추가]로 만든 업무는 목록 맨 위로: 순서를 정해 둔 진행 중 업무를 한 칸씩 내리고 새 업무를 1번으로
-            db.tasks.forEach(function (x) { if (!closed(x) && x.ord > 0) { x.ord += 1; stamp(x); } });
+            db.tasks.forEach(function (x) { if (!closed(x) && x.ord > 0 && x.staffId === nt.staffId) { x.ord += 1; stamp(x); } });   // 같은 담당자 업무만
             nt.ord = 1;
         }
         function taskSort(a, b) {
@@ -3981,9 +3989,10 @@
         var taskDrag = null;
         function taskGroupIds(panel, grp) { return [].map.call(panel.querySelectorAll('.t-row[data-grp="' + grp + '"]'), function (r) { return r.getAttribute('data-id'); }); }
         function taskReorder(ids, isDone) {   // 보이는 업무의 새 순서를 전체 순서에 반영 (필터로 숨은 업무 자리는 그대로)
-            var group = db.tasks.filter(function (t) { return closed(t) === isDone; }).sort(taskSort);
-            var vis = Object.create(null), byId = Object.create(null), queue = ids.slice(), changed = false;
+            var vis = Object.create(null), byId = Object.create(null), queue = ids.slice(), changed = false, sids = Object.create(null);
             ids.forEach(function (id) { vis[id] = 1; }); db.tasks.forEach(function (t) { byId[t.id] = t; });
+            ids.forEach(function (id) { if (byId[id]) sids[byId[id].staffId || ''] = 1; });   // 끌어 옮긴 업무의 담당자 것만 (다른 직원 업무는 그대로)
+            var group = db.tasks.filter(function (t) { return closed(t) === isDone && sids[t.staffId || '']; }).sort(taskSort);
             group.map(function (t) { return vis[t.id] ? byId[queue.shift()] : t; }).forEach(function (t, i) {
                 if (t && t.ord !== i + 1) { t.ord = i + 1; stamp(t); changed = true; }
             });
@@ -4924,6 +4933,8 @@
             if (document.querySelector('dialog[open]')) return true;   // 고치는 창이 열려 있음
             if (document.querySelector('[data-busy]')) return true;    // 드라이브 저장 등 진행 중
             try { if (cl.saving) return true; } catch (e) { /* 무시 */ }
+            try { if (memoEdit || Object.keys(idrDraft).length || qmUi.edit || mgUi.edit || qmUi.add || mgUi.add) return true; } catch (e) { /* 무시 */ }   // 업무 메모·접수 메모·빠른 메모를 쓰는 중
+            try { if (idr.ui && ((idr.ui.name && idr.ui.name.value) || (idr.ui.phone && idr.ui.phone.value))) return true; } catch (e) { /* 무시 */ }   // 신분증 요청 칸을 쓰는 중
             return false;
         }
         function verAuto() {
@@ -6032,7 +6043,7 @@
             };
             sheet.addEventListener('change', function (e) {
                 var n = e.target && e.target.getAttribute ? e.target.getAttribute('data-mf') : '';
-                var put = function (fld, on, val) { var x = q(fld); if (!x) return; var nv = on ? val : (x.value.trim() === val || (fld === 'plan2' && mfPlanKeep(x.value)) ? '' : x.value); if (x.value !== nv) { x.value = nv; x.dispatchEvent(new Event('input', { bubbles: true })); } };
+                var put = function (fld, on, val) { var x = q(fld); if (!x) return; var nv = on ? val : (x.value.trim() === val || (fld === 'plan2' && mfPlanKeep(x.value)) || (fld === 'tvPlan' && mfTvNone(x.value)) ? '' : x.value); if (x.value !== nv) { x.value = nv; x.dispatchEvent(new Event('input', { bubbles: true })); } };
                 if (n === 'p2Keep') put('plan2', e.target.checked, '요금제 유지');
                 if (n === 'tvNone') put('tvPlan', e.target.checked, '없음');
                 keepSync();
@@ -6326,14 +6337,14 @@
         function mfUpload(M, sheet, btn, y, m, d, name, replaceId) {
             var b64;
             try { b64 = mfImg(M, sheet).toDataURL('image/png').split(',')[1]; } catch (e) { toast('가입 확인서 그림을 만들지 못했어요.'); return; }
-            var ct = ctInfo(M, sheet, y, m, d);
+            var ct = ctInfo(M, sheet, y, m, d), ser0 = mfSer(M);   // 올리기 시작할 때 내용
             btn.disabled = true; btn.setAttribute('data-busy', '1'); btn.textContent = '저장 중...';
             var folder = String(y % 100).padStart(2, '0') + '년' + m + '월';
             ensureTeam().then(function (t) {
                 return driveCall(db.drive.url, 'formSave', { token: t.token, kind: M.kind, y: y, m: m, d: d, name: name.slice(0, 20), png: b64, replace: replaceId || '', contact: ct, contactId: M.contactId || '' }, 120000);
             }).then(function (res) {
                 btn.disabled = false; btn.removeAttribute('data-busy');
-                M.saved = String(res.name || ''); M.savedId = String(res.id || ''); M.savedFolder = String(res.folder || folder); M.dirty = false; mfdDel(M);   // 드라이브에 저장 → 이 기기 임시 보관은 지움
+                M.saved = String(res.name || ''); M.savedId = String(res.id || ''); M.savedFolder = String(res.folder || folder); M.dirty = mfSer(M) !== ser0; if (!M.dirty) mfdDel(M);   // 드라이브에 저장 → 이 기기 임시 보관은 지움
                 mfSaveBtn(M);
                 var regMsg = '';
                 var regOk = false; M.calRes = [];
@@ -8106,7 +8117,7 @@
         var IB_POLL_MS = 20000;
         function ibFresh() { return { items: [], rev: -1, at: 0, err: '', known: null, busy: false, timer: null, tick: 0, open: Object.create(null), draft: Object.create(null), kind: 'all', todo: false, pend: false, saving: Object.create(null), sel: Object.create(null), deleting: false, rcv: [], phones: [], ciKey: null, ciBusy: false, ciName: '', ciOpen: false, rcvOld: [] }; }
         var ib = ibFresh();
-        function ibStop() { if (ib.timer) clearInterval(ib.timer); ib = ibFresh(); vs = vsFresh(); idrFresh(); hp = hpFresh(); clStop(); glStop(); mp.data = null; mp.rev = -1; mp.q = ''; hdStop(); }   // 잠그면 콜 인입·홈페이지 인입 기록도 지움
+        function ibStop() { if (ib.timer) clearInterval(ib.timer); if (ib.clT) clearInterval(ib.clT); ai.items = []; ai.rev = -1; ai.tickV = null; ai.doing = Object.create(null); ai.busy = false; ai.up = 0; ai.upIds = Object.create(null); ib = ibFresh(); vs = vsFresh(); idrFresh(); hp = hpFresh(); clStop(); glStop(); mp.data = null; mp.rev = -1; mp.q = ''; hdStop(); }   // 잠그면 콜 인입·홈페이지 인입 기록도 지움
         function ibStart() {   // 로그인하면 시작 (공유 저장소를 쓰는 기기만)
             if (ib.timer || !driveOn()) return;
             ib.timer = setInterval(function () {
@@ -8323,7 +8334,7 @@
                 var iv = r.ib != null ? String(r.ib) : null;   // 콜 인입(착신·홈페이지 버튼)이 바뀜 → 바로 새로 받음
                 if (iv !== null && ibTickV !== null && iv !== ibTickV) { if (ib.busy) iv = ibTickV; else ibLoad(false); }   // 받는 중이면 다음 신호 때 다시
                 if (iv !== null) ibTickV = iv;
-                var av = r.ai != null ? String(r.ai) : null; if (av !== null && av !== ai.tickV && !ai.off) { ai.tickV = av; aiLoad(); }   // 🤖 AI 통화 요약이 새로 생김
+                var av = r.ai != null ? String(r.ai) : null; if (av !== null && av !== ai.tickV && !ai.off && !ai.busy) { ai.tickV = av; aiLoad(); }   // 받는 중이면 다음 3초 때   // 🤖 AI 통화 요약이 새로 생김
                 if (dmTickV !== null && v !== dmTickV) runSync().then(function () { try { dmCheck(); } catch (e) { /* 무시 */ } }, function () { /* 다음에 */ });
                 dmTickV = v;
             }, function (e) { dmTickBusy = false; if (e && e.code === 'bad_action') dmTickOff = true; });   // 서버가 예전 버전이면 30초 동기화로
@@ -8340,7 +8351,10 @@
            - 잘 안 들린 칸은 '❓' · 직원이 고치면 고친 값이 우선 */
         var AI_FLOW_DEF = ['인사: 안녕하세요, 사거리인터넷 ○○○입니다. 어떤 상담 도와드릴까요?', '성함: 상담 기록을 위해 성함이 어떻게 되세요?', '지금 쓰는 통신사·상품: 지금 인터넷·TV는 어느 통신사, 어떤 상품 쓰세요?', '약정: 약정은 언제 끝나세요?', '요금: 지금 매달 얼마 정도 내세요?', '휴대폰 결합: 가족분들 휴대폰은 어느 통신사 쓰세요?', '원하는 것: 요금 절약·속도·사은품 중 가장 원하시는 건요?', '설치: 설치 동네와 희망 날짜 있으세요?', '되묻기(확인): 확인차 말씀드리면 ○○ 쓰시고 ○월 만료, 월 ○원 맞으시죠?', '다음 약속: 그럼 ○일 ○시에 다시 연락드려도 될까요?'];
         var AI_ST_TXT = { save: '세이브', vh: '매우높음', h: '높음', n: '보통', l: '낮음', vl: '매우낮음', fail: '실패' };
-        var ai = { items: [], rev: -1, busy: false, tickV: null, flow: null, auto: true, doing: Object.create(null), up: 0 };
+        var ai = { items: [], rev: -1, busy: false, tickV: null, flow: null, auto: true, doing: Object.create(null), up: 0, upIds: Object.create(null), wait: Object.create(null) };
+        function aiHas(r, id) { return !!(r && r.ai && String(r.ai).split(',').indexOf(id) >= 0); }   // 한 줄에 여러 통화 요약 (ai = 'a1,a2')
+        function aiFix(x) { var r = x && x.res; if (!r) return x; r.fields = Array.isArray(r.fields) ? r.fields.filter(function (f) { return f && typeof f.key === 'string'; }) : []; r.summary = Array.isArray(r.summary) ? r.summary.map(String) : []; ['name', 'st_why', 'next', 'other', 'cur', 'loc', 'src'].forEach(function (k) { r[k] = r[k] == null ? '' : String(r[k]); }); if (!AI_ST_TXT[r.st]) r.st = 'n'; return x; }
+        function aiMarkDone(id) { ai.items.forEach(function (y) { if (y.id === id) { y.done = { by: staffName(me) }; delete y.res; } }); delete ai.doing[id]; }
         function aiFlow() { return ai.flow && ai.flow.length ? ai.flow : AI_FLOW_DEF; }
         function aiLoad() {   // 서버 신호가 바뀌면 목록 받기 → 등록할 것 등록
             if (!authed || !db || !driveOn() || ai.busy || accountGate()) return;
@@ -8351,10 +8365,10 @@
                 if (r && r.auto === false) ai.auto = false; else if (r && r.auto === true) ai.auto = true;
                 if (!r || r.same) { aiAutoReg(); return; }
                 ai.rev = typeof r.rev === 'number' ? r.rev : ai.rev;
-                ai.items = (Array.isArray(r.items) ? r.items : []).filter(function (x) { return x && typeof x.id === 'string' && x.id.length <= 40; });
+                ai.items = (Array.isArray(r.items) ? r.items : []).filter(function (x) { return x && typeof x.id === 'string' && x.id.length <= 40; }).map(aiFix); ai.wait = Object.create(null);
                 aiAutoReg();
                 if (state.view === 'calls') ibPaint();
-            }, function (e) { ai.busy = false; if (e && e.code === 'bad_action') ai.off = true; });
+            }, function (e) { ai.busy = false; ai.tickV = null; if (e && e.code === 'bad_action') ai.off = true; });   // 실패하면 다음 신호 때 다시
         }
         function aiPend() { return ai.items.filter(function (x) { return x.st === 'ok' && !x.done && x.res; }); }
         function aiAutoReg() {   // 아직 상담 리스트에 안 들어간 요약 → 이 화면이 맡을 것만 (올린 직원 · 그 휴대폰 담당 · 대표 · 2분 지나면 아무나)
@@ -8364,12 +8378,13 @@
             var my = staffName(me);
             l.forEach(function (x) {
                 if (ai.doing[x.id]) return;
-                var mine = x.clm && x.clm.by === my, forMe = x.staff && x.staff === my, old = Date.now() - (x.at || 0) > 120000;
+                if (ai.wait[x.id] && Date.now() - ai.wait[x.id] < 120000) return;   // 다른 화면이 맡았거나 시트가 없던 건: 2분 뒤 다시
+                var mine = !!ai.upIds[x.id], forMe = x.staff && x.staff === my, old = Date.now() - (x.at || 0) > 120000;
                 if (!(mine || forMe || isBoss() || old)) return;
                 ai.doing[x.id] = 1;
                 (mine ? Promise.resolve({ ok: true, item: x }) : ibCall('aiClaim', { id: x.id })).then(function (r) {
-                    if (!r || r.done || r.taken || !r.item || !r.item.res) { delete ai.doing[x.id]; if (r && r.done) x.done = { by: '' }; return; }
-                    aiReg(r.item, false);
+                    if (!r || r.done || r.taken || !r.item || !r.item.res) { delete ai.doing[x.id]; if (r && r.done) aiMarkDone(x.id); else ai.wait[x.id] = Date.now(); return; }
+                    try { var o = aiReg(aiFix(r.item), false); if (o && o.how === 'nosheet') ai.wait[x.id] = Date.now(); } catch (er) { delete ai.doing[x.id]; ai.wait[x.id] = Date.now(); }
                 }, function () { delete ai.doing[x.id]; });
             });
         }
@@ -8386,24 +8401,25 @@
             return clRowsOf(s.id).filter(function (r) { return r.ty === 'row' && digitsOnly(r.v[pc.k] || '') === phone && (!dc || String(r.v[dc.k] || '').slice(0, 10) === day) && (!wantAuto || r.aiA === 1); }).sort(function (a, b) { return b.u - a.u; })[0] || null;
         }
         function aiReg(x, fromUp) {   // 요약 1건 → 상담 리스트 (새 줄 또는 같은 날 같은 번호 줄에 합침) → 저장 확인 뒤 서버 aiDone
-            var r = x.res, my = staffName(me);
+            aiFix(x); var r = x.res, my = staffName(me);
             function done(how, rowId) {
                 var tries = 0;
                 (function wait() {   // 상담 리스트 저장(암호화)이 끝난 뒤에 서버 쪽 요약을 지움
                     if (cl.dirty || cl.saving) { if (++tries < 90) { setTimeout(wait, 1000); return; } delete ai.doing[x.id]; return; }
-                    ibCall('aiDone', { id: x.id, row: rowId || '', how: how }).then(function () { x.done = { by: my }; delete x.res; delete ai.doing[x.id]; if (state.view === 'calls') ibPaint(); }, function () { delete ai.doing[x.id]; });
+                    ibCall('aiDone', { id: x.id, row: rowId || '', how: how }).then(function () { x.done = { by: my }; delete x.res; aiMarkDone(x.id); if (state.view === 'calls') ibPaint(); }, function () { delete ai.doing[x.id]; });
                 })();
             }
-            if (!r || r.kind === 'other') { done('other', ''); return { how: 'other' }; }
-            var exist = cl.data.rows.filter(function (y) { return y.ai === x.id; })[0];
+            if (!r) { delete ai.doing[x.id]; return { how: 'fail' }; }   // 요약 실패 건은 서버 기록(실패 이유)을 남겨 둠
+            if (r.kind === 'other') { done('other', ''); return { how: 'other' }; }
+            var exist = cl.data.rows.filter(function (y) { return aiHas(y, x.id); })[0];
             if (exist) { done('dup', exist.id); return { how: 'dup', row: exist }; }
             var shId = clDefaultSheet(), s = cl.data.sheets.filter(function (y) { return y.id === shId; })[0];
             if (!s) { delete ai.doing[x.id]; return { how: 'nosheet' }; }
             var mc = aiMemoCol(s), phone = digitsOnly(x.phone || ''), d = new Date(x.t || x.at || Date.now()), day = ymd(d), block = aiBlock(x);
             var same = aiSameRow(s, phone, day, false);
             if (same) {   // 직원이 이미 적은 줄: 적은 내용은 그대로 두고 아래에 AI 요약만
-                if (mc) { var cur = String(same.v[mc.k] || ''); if (cur.indexOf(block.split('\n')[0]) < 0) same.v[mc.k] = (cur.trim() ? cur.trim() + '\n\n' : '') + block; }
-                same.ai = same.ai || x.id; clStamp(same); clQueue();
+                if (mc) { var cur = String(same.v[mc.k] || ''); same.v[mc.k] = ((cur.trim() ? cur.trim() + '\n\n' : '') + block).slice(0, 3000); }   // 같은 분에 온 다른 통화도 따로 붙음 (한 통화는 ai 번호로 한 번만)
+                same.ai = (same.ai ? same.ai + ',' : '') + x.id; clStamp(same); clQueue();
                 done('merge', same.id);
                 aiToast(x, '이미 적은 상담 줄에 AI 요약을 붙였어요', s, same, fromUp);
                 return { how: 'merge', row: same };
@@ -8467,8 +8483,9 @@
                 ibCall('aiRec', { b64: b64, name: String(f.name || '').slice(0, 120) }, 180000).then(function (r) {
                     ai.up--; aiRepaint();
                     if (!r || !r.item) { toast('AI 요약 결과를 받지 못했어요.'); return; }
-                    ai.items.unshift(r.item); ai.doing[r.item.id] = 1;
+                    aiFix(r.item); ai.items.unshift(r.item); ai.doing[r.item.id] = 1; ai.upIds[r.item.id] = 1;
                     var go = function () {
+                        if (!r.item.res) { delete ai.doing[r.item.id]; toast('🤖 요약하지 못했어요: ' + (r.item.err || '다시 올려 주세요.')); return; }
                         var o = aiReg(r.item, true);
                         if (o.how === 'other') toast('🤖 상담 통화가 아니라서(' + (r.item.res.other || '비상담') + ') 상담 리스트에는 넣지 않았어요.');
                         if (o.row) { state.view = 'consult'; cl.sheet = o.row.sh; cl.st = 'all'; cl.q = ''; cl.hl = o.row.id; render(); setTimeout(function () { var tr = document.querySelector('tr[data-row="' + o.row.id + '"]'); if (tr) tr.scrollIntoView({ block: 'center' }); }, 60); }
@@ -8478,7 +8495,10 @@
             };
             rd.readAsDataURL(f);
         }
-        function aiRepaint() { var M = cl.memo; if (M && M.open) { M.built = ''; clMemoStash(); clMemoPaint(); } if (state.view === 'calls') ibPaint(); }
+        function aiRepaint() {   // 올리는 중 표시: 버튼 글자만 바꿈 (쓰던 메모 칸을 새로 그리지 않음 — 한글 입력이 끊기지 않게)
+            document.querySelectorAll('[data-act=ai-up]').forEach(function (b) { b.disabled = !!ai.up; b.textContent = ai.up ? '🤖 요약하는 중...' : '🎙 통화 녹음 → AI 요약'; });
+            if (state.view === 'calls' && !ai.up) ibPaint();
+        }
         function aiFlowBox(M) {   // 상담 메모 안: 📋 상담 흐름 (이 순서로 물어보면 AI가 칸을 정확히 채워요)
             M.flowDone = M.flowDone || {};
             var fl = aiFlow(), n = Object.keys(M.flowDone).length;
@@ -8558,6 +8578,7 @@
             if (!ibOk(item)) return;
             var n = ibNorm(item);
             ib.items = ib.items.map(function (x) { return x.id === n.id ? n : x; });
+            if (ib.per && Array.isArray(ib.per.items)) ib.per.items = ib.per.items.map(function (x) { return x.id === n.id ? n : x; });   // 지난 기간 보기에도 댓글·체크 반영
         }
         function ibAssign(x, name) {   // 담당자 지정 (모든 직원 가능, 같은 사람을 다시 누르면 지정 해제)
             if (ib.saving[x.id]) return;
@@ -8638,20 +8659,31 @@
             if (x.kind === 'rcv') return '';
             return /블로그/.test(l) ? '블로그' : /인스타/.test(l) ? '인스타' : /구글/.test(l) ? '구글' : /플레이스|네이버/.test(l) ? '네이버' : /당근/.test(l) ? '당근' : /카카오채널/.test(l) ? '카카오채널' : /유튜브/.test(l) ? '기타' : /전단지|현수막/.test(l) ? '전단지·현수막' : '홈페이지';
         }
-        function ibKnown(ph) {   // 걸려 온 번호가 가입 장부 · 상담 리스트에 있으면 → { k, name }
-            ph = digitsOnly(ph || ''); if (ph.length < 9) return null;
-            var r = (db.regs || []).filter(function (x) { return digitsOnly(x.phone || '') === ph; }).sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0];
-            if (r) return { k: '기존 고객', name: r.name || '' };
+        var loadOnceAt = Object.create(null);
+        function loadOnce(k, fn) { var n = Date.now(); if (n - (loadOnceAt[k] || 0) < 8000) return; loadOnceAt[k] = n; setTimeout(fn, 0); }   // 화면 그릴 때 자동 불러오기는 8초에 한 번만
+        var ibKI = { k: '', at: 0, m: null };
+        function ibKnownIdx() {   // 번호 → 가입 장부 최근 줄 · 상담 리스트 줄들 (5초 · 줄 수가 같으면 다시 안 만듦 — 줄마다 전체를 훑던 것을 한 번에)
+            var key = (db.regs || []).length + '|' + (cl.data ? cl.data.rows.length + '|' + cl.rev + '|' + cl.data.sheets.length : 'x');
+            if (ibKI.m && ibKI.k === key && Date.now() - ibKI.at < 5000) return ibKI.m;
+            var m = Object.create(null);
+            (db.regs || []).forEach(function (r) { var p = digitsOnly(r.phone || ''); if (p.length < 9) return; var e = m[p] || (m[p] = { cl: [] }); if (!e.reg || String(r.date || '') > String(e.reg.date || '')) e.reg = r; });
             try {
-                if (cl.data) for (var i = 0; i < cl.data.sheets.length; i++) {
-                    var s = cl.data.sheets[i], pc = s.cols.filter(function (c) { return clColKind(c) === 'ph'; })[0], nc = s.cols.filter(function (c) { return /고객명|성함|이름/.test(c.l); })[0];
-                    if (!pc) continue;
-                    var dcc = s.cols.filter(function (c) { return clColKind(c) === 'date'; })[0], today = ymd(new Date());
-                    var row = cl.data.rows.filter(function (x) { return x.sh === s.id && digitsOnly((x.v || {})[pc.k] || '') === ph && !(dcc && String((x.v || {})[dcc.k] || '') >= today); })[0];   // 오늘 적은 상담은 이번 전화 → 재케어 아님
-                    if (row) return { k: '재케어', name: nc ? String(row.v[nc.k] || '') : '' };
+                if (cl.data) {
+                    var si = Object.create(null);
+                    cl.data.sheets.forEach(function (s, i) { var pc = s.cols.filter(function (c) { return clColKind(c) === 'ph'; })[0]; if (pc) si[s.id] = { i: i, pc: pc, nc: s.cols.filter(function (c) { return /고객명|성함|이름/.test(c.l); })[0], dc: s.cols.filter(function (c) { return clColKind(c) === 'date'; })[0] }; });
+                    cl.data.rows.forEach(function (x) { var S = si[x.sh]; if (!S || !x.v) return; var p = digitsOnly(x.v[S.pc.k] || ''); if (p.length < 9) return; (m[p] || (m[p] = { cl: [] })).cl.push({ i: S.i, d: S.dc ? String(x.v[S.dc.k] || '') : '', n: S.nc ? String(x.v[S.nc.k] || '') : '' }); });
+                    Object.keys(m).forEach(function (p) { m[p].cl.sort(function (a, b) { return a.i - b.i; }); });
                 }
             } catch (e) { /* 무시 */ }
-            return null;
+            ibKI = { k: key, at: Date.now(), m: m };
+            return m;
+        }
+        function ibKnown(ph, t) {   // 걸려 온 번호가 가입 장부 · 상담 리스트에 있으면 → { k, name } · t: 전화 온 시각 (그 날 이후 적은 상담은 이번 전화 → 재케어 아님)
+            ph = digitsOnly(ph || ''); if (ph.length < 9) return null;
+            var e = ibKnownIdx()[ph]; if (!e) return null;
+            if (e.reg) return { k: '기존 고객', name: e.reg.name || '' };
+            var day = ymd(new Date(t || Date.now())), row = e.cl.filter(function (c) { return !(c.d && c.d >= day); })[0];
+            return row ? { k: '재케어', name: row.n } : null;
         }
         function ibVisitNear(t) {   // 전화 오기 10분 안의 홈페이지 방문 (가장 가까운 것) → 그 방문의 유입 경로
             var best = null; (ib.vs || []).forEach(function (v) { if (v.t <= t + 30000 && v.t >= t - 600000 && (!best || v.t > best.t)) best = v; });
@@ -8660,7 +8692,7 @@
         function ibSrcInfo(x) {   // 경로: 직접 고른 값 > 누른 버튼 > (착신) 기존 고객·재케어 > 10분 안 방문 추정 > 모름
             var man = ibSrcMan(x); if (man) return { v: man, n: '' };
             if (x.kind !== 'rcv') return { v: ibSrcGuess(x), n: '' };
-            var k = ibKnown(x.phone); if (k) return { v: k.k, n: k.name };
+            var k = ibKnown(x.phone, x.t); if (k) return { v: k.k, n: k.name };
             if (x.ctn) return { v: '저장 연락처', n: x.ctn };   // 구글 연락처에 저장된 번호 (거래처·지인 등)
             var vv = ibVisitNear(x.t); if (vv) return { v: vv.src || '홈페이지', n: '추정 · ' + pad2(new Date(vv.t).getHours()) + ':' + pad2(new Date(vv.t).getMinutes()) + ' 홈페이지 방문' };
             return { v: '모름', n: '직접 전화' };
@@ -8736,6 +8768,7 @@
                 ib.deleting = false;
                 var del = {}; ids.forEach(function (x) { del[x] = 1; delete ib.sel[x]; delete ib.open[x]; });
                 ib.items = ib.items.filter(function (x) { return !del[x.id]; });
+                if (ib.per && Array.isArray(ib.per.items)) ib.per.items = ib.per.items.filter(function (x) { return !del[x.id]; });   // 지난 기간 보기에서도 바로 사라지게
                 if (typeof res.rev === 'number') ib.rev = res.rev;
                 render(); toast('콜 인입 기록 ' + (res.removed != null ? res.removed : ids.length) + '건을 지웠어요.');
             }, function (e) { ib.deleting = false; render(); toast('지우지 못했어요. ' + driveErrText(e)); });
@@ -8890,9 +8923,9 @@
             var head = h('div', { class: 'page-head' }, h('h1', {}, '콜 인입'),
                 h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'ib-refresh', onclick: function () { ib.busy = false; ibLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침')));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '콜 인입은 구글 드라이브 공유 저장소를 연결한 기기에서 볼 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
-            if (ib.rev < 0 && !ib.busy && !ib.err) setTimeout(function () { ibLoad(true); }, 0);
+            if (ib.rev < 0 && !ib.busy && !ib.err) loadOnce('ib', function () { ibLoad(true); });
             setTimeout(ibVsLoad, 0);
-            if (!cl.data && !cl.busy && !cl.err) setTimeout(function () { clLoad(true); }, 0);   // 착신 번호 ↔ 상담 리스트 맞추기용
+            if (!cl.data && !cl.busy && !cl.err) loadOnce('cl', function () { clLoad(true); });   // 착신 번호 ↔ 상담 리스트 맞추기용
             if (!ib.clT) ib.clT = setInterval(function () { if (state.view === 'calls' && !document.hidden && cl.data && !cl.busy && !cl.dirty && !cl.saving) clLoad(false); }, 60000);   // 다른 기기에서 늦게 적은 상담도 1분 안에 실 인입으로
             var kindSel = h('select', { id: 'ib-kind', 'data-fk': 'ib-kind', 'aria-label': '종류 필터' }, h('option', { value: 'all' }, '전체'),
                 Object.keys(IB_KIND).map(function (k) { return h('option', { value: k }, IB_KIND[k][0] + ' ' + IB_KIND[k][1]); }));
@@ -8903,9 +8936,9 @@
             var P = ibPeriod(), PD = ibPerItems(P), SEQ = ibSeq(PD.items, PD.legacy), AU0 = SEQ.auto, shown = PD.items.filter(function (x) { return AU0[x.id] !== 'merged'; });
             var list = shown.filter(function (x) { return (ib.kind === 'all' || x.kind === ib.kind) && (!ib.todo || !x.chk); });
             var bossDel = isBoss();
-            Object.keys(ib.sel).forEach(function (id) { if (!ib.items.some(function (x) { return x.id === id; })) delete ib.sel[id]; });   // 없어진 기록은 선택에서 뺌
+            Object.keys(ib.sel).forEach(function (id) { if (!PD.items.some(function (x) { return x.id === id; })) delete ib.sel[id]; });   // 보고 있는 기간 목록 기준   // 없어진 기록은 선택에서 뺌
             var selN = list.filter(function (x) { return ib.sel[x.id]; }).length;
-            var n = shown.filter(function (x) { return !x.chk; }).length, AU = SEQ.auto, TB = ibPerTable(P, shown, AU), realN = shown.filter(function (x) { return !ibEff(x, AU); }).length, markN = shown.length - realN,
+            var n = shown.filter(function (x) { return !x.chk; }).length, AU = SEQ.auto, TB = ibPerTable(P, list, AU), realN = shown.filter(function (x) { return !ibEff(x, AU); }).length, markN = shown.length - realN,
                 autoN = shown.filter(function (x) { return !ibMark(x) && AU[x.id]; }).length;
             var IB_SHOW = 500, rows = list.slice(0, IB_SHOW).map(function (x) {
                 var k = IB_KIND[x.kind], open = !!ib.open[x.id];
@@ -9261,7 +9294,7 @@
             var head = h('div', { class: 'page-head' }, h('h1', {}, '홈페이지 인입'),
                 h('div', { class: 'actions' }, excelButtons(vsExcel, 'vs'), h('button', { type: 'button', class: 'btn', 'data-fk': 'vs-refresh', onclick: function () { vs.busy = false; vsLoad(); toast('새로 확인하고 있어요.'); } }, '새로고침')));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '홈페이지 인입은 구글 드라이브 공유 저장소를 연결한 기기에서 볼 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
-            if (vs.items === null && !vs.busy && !vs.err) setTimeout(vsLoad, 0);
+            if (vs.items === null && !vs.busy && !vs.err) loadOnce('vs', vsLoad);
             var tabs = h('div', { class: 'vs-tabs', role: 'group', 'aria-label': '기간' }, PERIODS.map(function (p) {
                 return h('button', { type: 'button', class: 'btn btn-sm' + (vs.pv === p.v ? ' on' : ''), 'aria-pressed': vs.pv === p.v ? 'true' : 'false', 'data-fk': 'vs-pv-' + p.v,
                     onclick: function () { if (vs.pv === p.v) return; vs.pv = p.v; vs.items = null; vs.err = ''; vs.busy = false; render(); vsLoad(); } }, p.s);
@@ -10617,7 +10650,7 @@
             if (!isBoss()) return null;
             var title = h('b', {}, '홈페이지 요금 자동 반영');
             if (!driveOn()) return h('div', { class: 'hp-bar' }, h('div', { class: 'hp-top' }, title, h('span', { class: 'hp-st off' }, '공유 저장소를 연결한 기기에서 쓸 수 있어요.')));
-            if (!hp.loaded && !hp.busy && !hp.err) setTimeout(hpLoad, 0);
+            if (!hp.loaded && !hp.busy && !hp.err) loadOnce('hp', hpLoad);
             var feed = hpFeed(D), same = hp.loaded && !hp.off && JSON.stringify(hp.items) === JSON.stringify(feed);
             var st = hp.err ? ['warn', '⚠ ' + hp.err] : !hp.loaded ? ['off', '홈페이지 상태를 확인하는 중...'] : hp.off ? ['off', hp.at ? '꺼짐 — 홈페이지는 구글 시트에 적힌 값으로 보여요' : '아직 반영한 적 없어요 — [홈페이지에 반영]을 누르면 시작돼요'] : same ? ['ok', '✔ 지금 단가표가 홈페이지에 반영돼 있어요'] : ['warn', '⚠ 홈페이지 값이 지금 단가표와 달라요 — [홈페이지에 반영]을 눌러 주세요'];
             var when = hp.loaded && hp.at ? '마지막 반영 ' + fmtDT(hp.at) + (hp.by ? ' · ' + hp.by : '') + (hp.date && !hp.off ? ' · ' + hp.date + ' 단가표' : '') : '';
@@ -11157,7 +11190,7 @@
             var head = h('div', { class: 'page-head' }, h('h1', {}, '휴무표'),
                 h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-act': 'hd-refresh', onclick: function () { hd.busy = false; hdLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침')));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '휴무표는 구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
-            if (!hd.data) { if (!hd.busy && !hd.err) setTimeout(function () { hdLoad(true); }, 0); return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, hd.err ? '휴무표를 불러오지 못했어요. ' + hd.err : '휴무표를 불러오는 중이에요...'))); }
+            if (!hd.data) { if (!hd.busy && !hd.err) loadOnce('hd', function () { hdLoad(true); }); return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, hd.err ? '휴무표를 불러오지 못했어요. ' + hd.err : '휴무표를 불러오는 중이에요...'))); }
             var note = h('p', { class: 'hd-help' }, boss ? '날짜를 누르면 쉬는 직원을 고를 수 있어요. 휴무가 있는 직원은 [내일로 이동] · 재케어 일정 · 마감보고 익일업무가 모두 휴무 다음 근무일로 자동으로 잡혀요.'
                 : '🔒 휴무표는 대표님만 고칠 수 있어요. 휴무인 날은 [내일로 이동] · 재케어 · 마감보고 익일업무가 다음 근무일로 잡혀요.');
             var bar = h('div', { class: 'cal-bar' },
@@ -11581,7 +11614,7 @@
                 h('span', {}, '📅 ', h('b', {}, koDate(mp.rentHist)), ' 기준 렌탈 수수료표(A단가)를 보는 중이에요 — ', mp.rentSrc ? +mp.rentSrc.slice(5, 7) + '월 ' + +mp.rentSrc.slice(8) + '일에 넣은 수수료표' : '', ' · 이 기기에서만'),
                 h('div', { class: 'ph-btns' }, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'rfh-day', onclick: rfhDialog }, '다른 날짜'),
                     h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'rfh-back', onclick: function () { rfhBack(); } }, '지금 수수료표로 돌아가기'))));
-            if (!rt.data && !rt.busy && !rt.err) setTimeout(function () { rtLoad(false); }, 0);
+            if (!rt.data && !rt.busy && !rt.err) loadOnce('rt', function () { rtLoad(false); });
             if (!rt.data) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, rt.err || '렌탈 상품을 불러오는 중이에요... (홈페이지 렌탈 페이지와 같은 정보)')));
             var items = rt.data.items, words = rtWords(rt.q), cnt = Object.create(null), FR = mp.data && mp.data.rent, hasFee = !!FR;
             items.forEach(function (p) { cnt[p.cat] = (cnt[p.cat] || 0) + 1; });
@@ -11640,7 +11673,7 @@
                 return rank(b) - rank(a) || lowOf(a) - lowOf(b);
             });
             var lim = RT_PAGE * (rt.more + 1), shown = list.slice(0, lim);
-            if (!mp.data && !mp.busy && !mp.err && driveOn()) setTimeout(function () { mpLoad(false); }, 0);   // 수수료표는 모바일 단가표와 같은 곳에
+            if (!mp.data && !mp.busy && !mp.err && driveOn()) loadOnce('mp', function () { mpLoad(false); });   // 수수료표는 모바일 단가표와 같은 곳에
             var cards = shown.map(function (p) {
                 var rows = [], S = rtSum(p, FR);
                 var order = p.cos.map(function (c, ci) { var k = 0; c.plans.forEach(function (x) { var f = hasFee ? rtFeeOf(c.name, p.model, x.m, x.fee) : null; if (f) k = Math.max(k, 2); if (x.g) k = Math.max(k, 1); }); return [ci, k]; });
@@ -11791,7 +11824,7 @@
                     (mp.data.dealers || []).map(function (x) { return x.name + ' ' + (x.hday ? +x.hday.slice(5, 7) + '/' + +x.hday.slice(8) : ''); }).join(' · '), ') · 이 기기에서만'),
                 h('div', { class: 'ph-btns' }, h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mph-day', onclick: mphDialog }, '다른 날짜'),
                     h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'mph-back', onclick: function () { mphBack(); } }, '지금 단가표로 돌아가기'))) : null;
-            if (!mp.data && !mp.busy && !mp.err) setTimeout(function () { mpLoad(false); }, 0);
+            if (!mp.data && !mp.busy && !mp.err) loadOnce('mp', function () { mpLoad(false); });
             if (!mp.data) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, mp.err || '불러오는 중이에요...')));
             var list = mp.data.dealers;
             if (!list.length) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, boss ? '아직 모바일 단가표가 없어요. 거래처별 단가표 사진을 Claude에게 보내 변환 파일을 받은 뒤 [모바일 단가표 불러오기]로 넣어 주세요.' : '아직 모바일 단가표가 없어요. 대표님이 넣으면 여기에 보여요.')));
@@ -12224,8 +12257,8 @@
                 h('div', { class: 'actions idr-head-acts' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'idr-refresh', onclick: function () { idr.busy = false; idrLoad(); dk.busy = false; dkLoad(); toast('새로 확인하고 있어요.'); } }, '새로고침'),
                     driveOn() ? h('button', { type: 'button', class: 'btn idr-dk-btn', 'data-fk': 'idr-dk', 'data-act': 'dk-open', onclick: function () { dkDlg(); if (!dk.busy) dkLoad(); } }, '📥 다이렉트 접수 확인', dkNew ? h('span', { class: 'idr-dk-n', 'aria-label': '새 접수 ' + dkNew + '건' }, String(dkNew)) : null) : null));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '신분증 요청은 구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요.')));
-            if (dk.items === null && !dk.busy && !dk.err) setTimeout(dkLoad, 0);
-            if (idr.items === null && !idr.busy && !idr.err) setTimeout(idrLoad, 0);
+            if (dk.items === null && !dk.busy && !dk.err) loadOnce('dk', dkLoad);
+            if (idr.items === null && !idr.busy && !idr.err) loadOnce('idr', idrLoad);
             if (db.intakes && db.intakes.some(function (x) { return x.t && x.t < Date.now() - INTAKE_KEEP_DAYS * 86400000; })) setTimeout(intakeCleanup, 0);
             var U = idrUI();
             var items = idr.items || [];
@@ -12797,6 +12830,7 @@
             authed = false; cryptoKey = null; db = null; stopPoll(); clearTimeout(pushTimer);
             saveChain.then(function () {
                 [DB_KEY, DB_KEY + '_corrupt', AUTH_KEY, GUARD_KEY, ME_KEY, LEGACY_DB_KEY, LEGACY_AUTH_KEY].forEach(function (k) { lsDel(k); });
+                try { var ks = []; for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); ks.forEach(function (k) { if (/^(sageori_admin_|sg-mfd-|sg-mfs-|sg-blog-|sg-cl|sg_admin)/.test(String(k || '')) || k === LAST_EMAIL_KEY) lsDel(k); }); } catch (e) { /* 무시 */ }   // 가입 확인서 임시 보관·예전 데이터·블로그 초안
                 location.reload();
             });
         }
@@ -12909,8 +12943,8 @@
                 ids[id] = 1;
                 var v = {};
                 if (r.v && typeof r.v === 'object') Object.keys(r.v).slice(0, 40).forEach(function (k) { if ((CL_KEY.test(k) || (r.ty === 'sec' && k === 't')) && typeof r.v[k] === 'string' && r.v[k] !== '') v[k] = r.v[k].slice(0, 3000); });
-                var o = { id: id, sh: r.sh, ty: r.ty, o: num(r.o), v: v, u: num(r.u), by: str(r.by, 20) };
-                if (r.ty === 'row') { o.st = okSt[r.st] ? r.st : 'n'; if (str(r.rc, 40)) o.rc = str(r.rc, 40); if (/^\d{4}-\d{2}-\d{2}$/.test(String(r.rcd || ''))) o.rcd = String(r.rcd); if (/^(ok|fail|cust)$/.test(String(r.ctp || ''))) o.ctp = r.ctp; if (str(r.ai, 40)) o.ai = str(r.ai, 40); if (r.aiA === 1) o.aiA = 1; }   // ai: 🤖 AI 통화 요약 번호 · aiA: AI가 자동으로 만든 줄   // rc: 자동으로 만든 재케어 일정 · rcd: 그때의 등록 날짜
+                var o = { id: id, sh: r.sh, ty: r.ty, o: num(r.o), v: v, u: num(r.u), by: str(r.by, 20) }; if (num(r.ct)) o.ct = num(r.ct);
+                if (r.ty === 'row') { o.st = okSt[r.st] ? r.st : 'n'; if (str(r.rc, 40)) o.rc = str(r.rc, 40); if (/^\d{4}-\d{2}-\d{2}$/.test(String(r.rcd || ''))) o.rcd = String(r.rcd); if (/^(ok|fail|cust)$/.test(String(r.ctp || ''))) o.ctp = r.ctp; if (str(r.ai, 400)) o.ai = str(r.ai, 400); if (r.aiA === 1) o.aiA = 1; }   // ai: 🤖 AI 통화 요약 번호 · aiA: AI가 자동으로 만든 줄   // rc: 자동으로 만든 재케어 일정 · rcd: 그때의 등록 날짜
                 if (CL_HEX.test(String(r.c || ''))) o.c = String(r.c);
                 var cc = hexMap(r.cc), fc = hexMap(r.fc); if (cc) o.cc = cc; if (fc) o.fc = fc;
                 out.rows.push(o);
@@ -12946,9 +12980,17 @@
                 });
                 return Object.keys(map).map(function (k) { return map[k]; }).filter(function (x) { var t = del[x.id]; return !(t !== undefined && t >= x.u); });
             }
-            var sheets = pick(a.sheets, b.sheets), ok = Object.create(null);
-            sheets.forEach(function (s) { ok[s.id] = 1; });
-            return { sheets: sheets, rows: pick(a.rows, b.rows).filter(function (r) { return ok[r.sh]; }), xr: pick(a.xr || [], b.xr || []), drafts: pick(a.drafts || [], b.drafts || []), del: del };
+            var sheets = pick(a.sheets, b.sheets), ok = Object.create(null), noK = Object.create(null);
+            sheets.forEach(function (s) { ok[s.id] = 1; var nc = s.cols.filter(function (c) { return clColKind(c) === 'no'; })[0]; if (nc) noK[s.id] = nc.k; });
+            var rowsM = pick(a.rows, b.rows), other = Object.create(null);
+            a.rows.concat(b.rows).forEach(function (x) { (other[x.id] = other[x.id] || []).push(x); });
+            rowsM = rowsM.map(function (w) {   // 나중 쪽이 순번만 바꿨고, 다른 쪽이 내용을 더 나중에 고쳤으면 → 내용은 그쪽 + 순번은 나중 쪽
+                var ctOf = function (x) { return x.ct || x.u || 0; };   // 내용 시각이 없으면(예전 화면) 고친 시각을 내용 시각으로 봄
+                var l = (other[w.id] || []).filter(function (x) { return x !== w && ctOf(x) > ctOf(w); })[0];
+                if (!l) return w;
+                var m = JSON.parse(JSON.stringify(l)), k = noK[w.sh]; if (k && w.v && w.v[k]) m.v[k] = w.v[k]; m.u = Math.max(w.u, l.u); return m;
+            });
+            return { sheets: sheets, rows: rowsM.filter(function (r) { return ok[r.sh]; }), xr: pick(a.xr || [], b.xr || []), drafts: pick(a.drafts || [], b.drafts || []), del: del };
         }
         function clRowsOf(shId) { return cl.data.rows.filter(function (r) { return r.sh === shId; }).sort(function (p, q) { return (p.o - q.o) || (p.id < q.id ? -1 : 1); }); }
         function clDataRows() { return cl.data ? cl.data.rows.filter(function (r) { return r.ty === 'row'; }).length : 0; }
@@ -12963,10 +13005,11 @@
             ibCall('clGet', { rev: force || !cl.data ? -1 : cl.rev }).then(function (res) {
                 if (mine !== cl) return null;
                 if (res.same) { cl.busy = false; cl.err = ''; cl.at = Date.now(); clStatusPaint(); return null; }
+                if (typeof res.rev === 'number' && cl.data && res.rev < cl.rev) { cl.busy = false; return null; }   // 저장보다 늦게 도착한 예전 내용은 버림
                 return clDecode(res.blob).then(function (remote) {
                     if (mine !== cl) return;
                     cl.busy = false; cl.err = ''; cl.at = Date.now(); cl.rev = typeof res.rev === 'number' ? res.rev : 0;
-                    cl.data = cl.data && cl.dirty ? clMerge(cl.data, remote) : remote;
+                    cl.data = cl.data && (cl.dirty || cl.saving) ? clMerge(cl.data, remote) : remote;
                     cl.base = clDataRows();
                     if (clAutoRenum()) cl.dirty = true;   // 지운 번호가 남아 있으면 순번 다시 맞춰서 저장
                     if (!cl.sheet || !cl.data.sheets.some(function (s) { return s.id === cl.sheet; })) cl.sheet = clDefaultSheet();
@@ -13103,7 +13146,7 @@
         }
         function clTplClean(t) { return String(t || '').split('\n').filter(function (l) { return !/^■ [^:]+:\s*$/.test(l); }).join('\n').replace(/\n{3,}/g, '\n\n').trim(); }   // 저장할 때 비어 있는 양식 줄은 뺌
         function clMask(v) { return String(v).replace(/(\d{2,3})([-\s.]?)(\d{3,4})([-\s.]?)(\d{4})/g, function (m, a, s1, b, s2, c) { return a + s1 + '****' + s2 + c; }); }
-        function clStamp(x) { x.u = Math.max(Date.now(), (x.u || 0) + 1); x.by = staffName(me); }
+        function clStamp(x) { x.u = Math.max(Date.now(), (x.u || 0) + 1); x.ct = x.u; x.by = staffName(me); }   // ct: 내용을 고친 시각 (순번만 바꾼 건 u만)
         function clCan(what) {   // 지우기·불러오기·엑셀은 대표님만
             if (isBoss()) return true;
             toast(what + '은(는) 대표님만 할 수 있어요.'); return false;
@@ -13150,6 +13193,7 @@
             showDlg(dlg);
         }
         function clEdit(s, r) {   // 상담 한 줄 쓰기·고치기 (r 없으면 새 줄)
+            var orig0 = r ? JSON.parse(JSON.stringify(r.v || {})) : {}, origSt = r ? (r.st || 'n') : 'n';   // 창을 열 때 내용 (바꾼 칸만 저장)
             var isNew = !r, row = r ? JSON.parse(JSON.stringify(r)) : { id: uid(), sh: s.id, ty: 'row', o: 0, v: {}, st: 'n' };
             if (isNew) row.v = clNewRowVals(s);
             var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'cl-dlg';
@@ -13178,7 +13222,9 @@
                 if (!clHasText(s, v)) { toast('내용을 하나 이상 적어 주세요.'); return; }
                 var cur = isNew ? row : clFind(row.id);
                 if (!cur) { toast('다른 직원이 이 줄을 지웠어요. 화면을 새로고침해 주세요.'); closeDlg(); render(); return; }
-                cur.v = v; cur.st = P.st || 'n'; if (P.keepC) cur.c = P.keepC; else delete cur.c;
+                if (isNew) cur.v = v;
+                else Object.keys(v).concat(Object.keys(orig0)).forEach(function (k) { var nv = v[k] || '', ov = orig0[k] || ''; if (nv !== ov) { if (nv) cur.v[k] = nv; else delete cur.v[k]; } });
+                if (isNew || (P.st || 'n') !== origSt) cur.st = P.st || 'n'; if (P.keepC) cur.c = P.keepC; else delete cur.c;
                 if (isNew) { var mo = 0; clRowsOf(s.id).forEach(function (x) { mo = Math.max(mo, x.o); }); cur.o = mo + 1; cl.data.rows.push(cur); }
                 var rcMsg = clRecare(cur, s);
                 clStamp(cur); closeDlg(); clQueue(); render(); toast((isNew ? '상담을 추가했어요.' : '상담 내용을 고쳤어요.') + rcMsg);
@@ -13435,7 +13481,7 @@
             var n = 0, evCh = false;
             list.forEach(function (r, i) {
                 var want = String(i + 1); if (String(r.v[nc.k]).trim() === want) return;
-                r.v[nc.k] = want; clStamp(r); n++;
+                if (!r.ct) r.ct = r.u || 0; r.v[nc.k] = want; r.u = Math.max(Date.now(), (r.u || 0) + 1); n++;   // 번호만 바꿈 (내용 시각 ct는 그대로)
                 var ev = r.rc && db ? db.events.filter(function (e) { return e.id === r.rc; })[0] : null;   // 재케어 일정 제목의 'N번'도 새 순번으로
                 if (ev) { var info = clRecareInfo(r, s); if (ev.title !== info.title) { ev.title = info.title; ev.memo = info.memo; evSyncTask(ev); stamp(ev); evCh = true; } }
             });
@@ -13541,7 +13587,7 @@
                     boss && cl.data ? h('button', { type: 'button', class: 'btn', 'data-act': 'cl-import', onclick: function () { fileIn.click(); } }, '변환 파일 불러오기') : null, fileIn));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '상담 리스트는 구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
             if (!cl.timer) cl.timer = setInterval(function () { if (state.view === 'consult' && !document.hidden && !cl.dirty && !cl.saving && !clEditing()) clLoad(false); }, 30000);   // 다른 직원이 고친 내용 30초마다 확인
-            if (!cl.data && !cl.busy && !cl.err) setTimeout(function () { clLoad(true); }, 0);
+            if (!cl.data && !cl.busy && !cl.err) loadOnce('cl', function () { clLoad(true); });
             var note = h('div', { class: 'cl-sec-note' }, '🔒', h('span', {}, '고객 개인정보라 팀 키로 암호화해서 드라이브에 보관하고, 이 기기에는 저장하지 않아요. 잠그면 화면에서도 지워져요. 번호는 [번호 보기]를 눌러야 보여요.'));
             var status = h('span', { class: 'cl-status' + (cl.err ? ' err' : ''), id: 'cl-status', role: 'status' }, clStatusText());
             var retry = cl.err && cl.data ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { cl.err = ''; cl.shrinkOk = false; clSave(0); } }, '저장 다시 시도') : null;
@@ -13606,7 +13652,7 @@
                         var kd = kinds[i], v = r.v[c.k] || '', shownV = kd === 'ph' && !cl.showPh ? clMask(v) : /^\d{4}-\d{2}-\d{2}/.test(v) ? clDay(v) : v, cc = r.cc && r.cc[c.k], fc = r.fc && r.fc[c.k];
                         var css = (cc ? 'background:rgba(' + clRgb(cc) + ',' + (clLight(cc) ? '.5' : '.3') + ');' : '') + (fc ? 'color:#' + fc + ';font-weight:700;' : '');
                         var longV = (kd === 'wide' || kd === 'mid') && (String(shownV).length > (kd === 'mid' ? 50 : 90) || String(shownV).split('\n').length > 4), opened = cl.openAll || !!cl.open[r.id];
-                        var cellBody = longV ? [h('div', { class: 'cl-clip' + (opened ? ' open' : '') }, shownV), h('button', { type: 'button', class: 'cl-more', 'data-act': 'cl-more', onclick: function (e) { e.stopPropagation(); var on = !this.previousSibling.classList.contains('open'); this.previousSibling.classList.toggle('open', on); this.textContent = on ? '▲ 접기' : '▼ 더보기'; if (on) cl.open[r.id] = 1; else delete cl.open[r.id]; } }, opened ? '▲ 접기' : '▼ 더보기')] : shownV;
+                        var cellBody = longV ? [h('div', { class: 'cl-clip' + (opened ? ' open' : '') }, shownV), h('button', { type: 'button', class: 'cl-more', 'data-act': 'cl-more', onkeydown: function (e) { e.stopPropagation(); }, onclick: function (e) { e.stopPropagation(); var on = !this.previousSibling.classList.contains('open'); this.previousSibling.classList.toggle('open', on); this.textContent = on ? '▲ 접기' : '▼ 더보기'; if (on) cl.open[r.id] = 1; else delete cl.open[r.id]; } }, opened ? '▲ 접기' : '▼ 더보기')] : shownV;
                         var td = h('td', { 'data-l': clHead(c), class: (kd === 'wide' ? 'wide' : kd === 'mid' ? 'mid' : kd === 'ph' ? 'ph' : (kd === 'date' || kd === 'time' || kd === 'staff' || kd === 'no') ? 'nw' : /위치/.test(c.l) ? 'loc' : '') + (v ? '' : ' blank'), style: css || false }, cellBody);
                         if (i === 0) { td.classList.remove('blank'); var kk = kOf(r); if (kk !== 'net') td.appendChild(h('span', { class: 'cl-ktag k-' + kk }, kk === 'mob' ? '📱 모바일' : '🧴 렌탈')); td.appendChild(h('div', {}, h('span', { class: 'cl-st' + (hex && clLight(hex) ? ' lt' : ''), style: hex ? '--sb:#' + hex : '--sb:#9AA088' }, si && r.st !== 'etc' ? si[1] : (r.st === 'etc' ? '기타 색' : '보통')), r.ctp === 'ok' ? h('span', { class: 'cl-ctp', title: '구글 연락처에 가망 번호로 저장됨' }, '📇저장') : r.ctp === 'cust' ? h('span', { class: 'cl-ctp', title: '이미 가입 고객 번호' }, '📇가입') : r.ctp === 'fail' ? h('span', { class: 'cl-ctp bad', title: '가망 번호 저장 실패 — 줄을 눌러 다시 저장' }, '📇실패') : null));
                             if (r.st === 'sale') td.appendChild(h('button', { type: 'button', class: 'cl-idr', 'data-act': 'cl-row-idr', title: '신분증 요청으로 가서 이 상담 내용으로 채우기', onclick: function (e) { e.stopPropagation(); clRowToIdr(s, r); }, onkeydown: function (e) { e.stopPropagation(); } }, h('span', {}, '🪪신분증'), h('span', {}, '요청'))); }
@@ -13687,7 +13733,7 @@
             toast(pk.c.name + ' · ' + pk.r.n + ' 을(를) 상담 메모에 넣었어요.');
         }
         function clMemoStash() { var M = cl.memo; if (M && M.P) { M.vals = M.P.values(); M.st = M.P.st; if (M.P.memoEl) M.raw = M.P.memoEl.value; } }
-        function clMemoBlank(M) { M.P = null; M.built = ''; M.vals = null; M.st = 'n'; M.raw = null; M.sig = null; M.asig = null; M.draftId = ''; M.cu = {}; }
+        function clMemoBlank(M) { M.P = null; M.built = ''; M.vals = null; M.st = 'n'; M.raw = null; M.sig = null; M.asig = null; M.draftId = ''; M.cu = {}; M.flowDone = {}; }
         /* 상담 메모 '고객 정보' 칸: 판매성공 → 신분증 요청 접수 메모로 그대로 (상담 리스트 줄에는 저장하지 않음 · 보관본은 팀 키 암호화로 2일만) */
         var CL_CU = [   // [키, 이름, 자리(6칸 중), 묶음, 접수 메모 줄 이름, 보조]
             ['nm', '이름', 2, 'c', '이름'], ['rrn', '주민번호(전체)', 2, 'c', '주민번호(전체)', 'rrn'], ['tel', '휴대폰 통신사', 2, 'c', '휴대폰통신사'],
@@ -13838,7 +13884,7 @@
             if (!cl.data) { toast('상담 리스트를 불러오는 중이에요. 잠시 뒤에 눌러 주세요.'); return; }
             var saved = clDraftSave(true);
             if (saved && M.draftId) { var T = clTabsGet().filter(function (x) { return x !== M.draftId; }); T.push(M.draftId); clTabsSet(T); }
-            clMemoBlank(M); M.sig = clPkSig(); M.asig = null; M.min = false; M.open = true; M.built = '';
+            clMemoBlank(M); M.sig = clPkSig(); M.asig = polAddSig(); M.min = false; M.open = true; M.built = '';
             clMemoPaint();
             toast(saved ? '적던 상담은 위 탭에 접어 뒀어요. 새 상담을 적어 주세요.' : '새 상담 메모를 열었어요.');
             setTimeout(function () { var t = cl.memo && cl.memo.P && cl.memo.P.memoEl; if (t) { try { t.focus({ preventScroll: true }); } catch (e) { /* 무시 */ } } }, 60);
@@ -13852,7 +13898,7 @@
             if (T.indexOf(id) < 0) T.push(id);
             clTabsSet(T);
             if (d.sh && cl.data.sheets.some(function (x) { return x.id === d.sh; })) M.sheet = d.sh;
-            M.P = null; M.built = ''; M.vals = JSON.parse(JSON.stringify(d.v || {})); M.cu = JSON.parse(JSON.stringify(d.cu || {})); M.st = d.st || 'n'; M.raw = d.raw || null; M.sig = clPkSig(); M.asig = null; M.draftId = d.id; M.min = false; M.open = true;
+            M.P = null; M.built = ''; M.vals = JSON.parse(JSON.stringify(d.v || {})); M.cu = JSON.parse(JSON.stringify(d.cu || {})); M.st = d.st || 'n'; M.raw = d.raw || null; M.sig = clPkSig(); M.asig = polAddSig(); M.draftId = d.id; M.min = false; M.open = true;
             if (M.raw != null && /(^|\n)■ /.test(M.raw)) M.kind = clKindOf(M.raw);
             clMemoPaint();
         }
@@ -13879,7 +13925,7 @@
         /* 자동 보관: 적는 동안 3초 쉬면 · 다른 창으로 가거나 닫을 때 바로 (팀 키로 암호화해서 상담 리스트와 함께) */
         function clAutoKick() { clearTimeout(cl.autoT); cl.autoT = setTimeout(clAutoSave, 3000); }
         function clAutoSave() { clearTimeout(cl.autoT); var M = cl.memo; if (!M || !M.open || !cl.data || !authed) return false; var ok = clDraftSave(true); if (ok) clTabLabelNow(); return ok; }
-        document.addEventListener('visibilitychange', function () { if (document.hidden && typeof cl !== 'undefined' && cl && clAutoSave()) { clearTimeout(cl.saveT); clSave(0); } });
+        document.addEventListener('visibilitychange', function () { if (document.hidden && typeof cl !== 'undefined' && cl && clAutoSave() && cl.dirty) { clearTimeout(cl.saveT); clSave(0); } });   // 바뀐 게 없으면 올리지 않음
         function clDraftDrop(id) { if (!cl.data || !cl.data.drafts || !id) return; cl.data.drafts = cl.data.drafts.filter(function (x) { return x.id !== id; }); cl.data.del[id] = Date.now(); clQueue(); }
         function clDraftLoad(d) {   // 📂 불러오기: 적던 메모가 있으면 먼저 임시 저장
             var M = cl.memo; if (!M || !d) return;
@@ -14037,6 +14083,7 @@
             if (!M || !M.P || !s) return;
             var v = M.P.values();
             if (!clHasText(s, v)) { toast('상담 내용을 하나 이상 적어 주세요.'); return; }
+            var noC = clColBy(s, 'no'); if (noC && /^\d+$/.test(String(v[noC.k] || '').trim())) v[noC.k] = clNewRowVals(s)[noC.k];   // 순번은 저장하는 지금 기준
             var row = { id: uid(), sh: s.id, ty: 'row', o: 0, v: v, st: M.P.st || 'n' };
             var mo = 0; clRowsOf(s.id).forEach(function (x) { mo = Math.max(mo, x.o); }); row.o = mo + 1;
             var aiR = (function () { var pc = clColBy(s, 'ph'), dc = clColBy(s, 'date'), ph = pc ? digitsOnly(v[pc.k] || '') : ''; return ph ? aiSameRow(s, ph, dc ? String(v[dc.k] || '').slice(0, 10) : '', true) : null; })();
@@ -16491,7 +16538,7 @@
             if (!glCan()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '가입고객리스트는 대표님과 대표님이 권한을 준 직원만 볼 수 있어요.')));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요.')));
             if (!gl.timer) gl.timer = setInterval(function () { if (state.view === 'gl' && !document.hidden && !glDirty() && !gl.busy && !gl.job) glLoad(false); }, 30000);
-            if (!gl.idx && !gl.busy && !gl.err) setTimeout(function () { glLoad(false); }, 0);
+            if (!gl.idx && !gl.busy && !gl.err) loadOnce('gl', function () { glLoad(false); });
             var note = h('div', { class: 'cl-sec-note' }, '🔒', h('span', {}, '주민번호·계좌·정산이 들어 있는 장부라 팀 키로 암호화해서 드라이브에 보관하고, 이 기기에는 저장하지 않아요. 대표님과 권한 받은 직원만 열 수 있고, 잠그면 화면에서도 지워져요.'));
             var status = h('span', { class: 'gl-status', id: 'gl-status', role: 'status' }, glStatusText());
             if (!gl.idx) return h('div', {}, head, note, h('div', { class: 'panel' }, h('div', { class: 'empty' }, gl.job || gl.err || '불러오는 중이에요...')));
@@ -16595,7 +16642,8 @@
             var nav = h('nav', { class: 'nav', 'aria-label': '메뉴' }, VIEWS.filter(function (v) { return v.v !== 'gl' || glCan(); }).map(function (v) {
                 var xw = v.v === 'consult' && isBoss() && cl.data ? clXrWait().length : 0;
                 if (xw) return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; render(); window.scrollTo(0, 0); cl.busy = false; clLoad(false); } }, v.t, navStep(v), h('span', { class: 'nav-badge', 'aria-label': '엑셀 내려받기 요청 ' + xw + '건' }, String(xw)));
-                var badge = v.v === 'calls' && ibUnchecked() ? h('span', { class: 'nav-badge', 'aria-label': '확인 안 한 콜 ' + ibUnchecked() + '건' }, String(Math.min(ibUnchecked(), 99))) : null;
+                var unN = v.v === 'calls' ? ibUnchecked() : 0;   // 한 번만 셈 (화면 그릴 때마다 세 번 하던 것)
+                var badge = unN ? h('span', { class: 'nav-badge', 'aria-label': '확인 안 한 콜 ' + unN + '건' }, String(Math.min(unN, 99))) : null;
                 return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; if (v.v === 'forms') state.form = ''; if (v.v === 'daily') state.date = ymd(new Date()); render(); window.scrollTo(0, 0); if (v.v === 'settings') refreshAccounts(false); if (v.v === 'calls') { ib.busy = false; ibLoad(false); } if (v.v === 'visits') { vs.busy = false; vsLoad(); } if (v.v === 'consult') { cl.busy = false; clLoad(false); } if (v.v === 'gl') { gl.busy = false; glLoad(false); } } }, v.t, navStep(v), badge);
             }));
             var note = driveBanner();

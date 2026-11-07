@@ -259,9 +259,11 @@ window.__sgServer.catch(function () {});
         });
     }
 
+    var dead = false;   // 오류 화면이 뜬 뒤에는 카메라를 다시 켜지 않음
     function bad(title, text) {
-        stopCam();
-        ['info', 'cam-card', 'shot-card', 'send-card', 'done'].forEach(function (x) { $(x).hidden = true; });
+        dead = true; stopCam();
+        ['info', 'cam-card', 'shot-card', 'send-card', 'done', 'docs-card', 'need'].forEach(function (x) { var el = $(x); if (el) el.hidden = true; });
+        try { $('shot-img').removeAttribute('src'); document.querySelectorAll('.slot-img img').forEach(function (i) { i.removeAttribute('src'); }); } catch (e) { /* 무시 */ }   // 신분증·서류 사진을 화면에서 지움
         $('bad-title').textContent = title; $('bad-text').textContent = text; $('bad').hidden = false; window.scrollTo(0, 0);
     }
     function call(payload) {
@@ -279,7 +281,7 @@ window.__sgServer.catch(function () {});
         if (res.state === 'expired') return bad('접수 기간이 지났어요', '보안을 위해 주소는 정해진 시간 동안만 열려요. 담당자에게 새 주소를 요청하시거나 1833-2440으로 연락해 주세요.');
         if (res.state !== 'ready') return bad('접수 주소를 확인할 수 없어요', '받으신 문자의 주소를 다시 눌러 주시거나, 대표번호 1833-2440으로 연락해 주세요.');
         info = res; setKind(res.kind);
-        $('cust-name').textContent = (res.name || '') + ' 고객'; $('staff-name').textContent = (res.staff || '담당자') + ' (사거리인터넷)'; $('exp-text').textContent = fmt(res.exp);
+        $('cust-name').textContent = (res.name || '') + ' 고객'; $('staff-name').textContent = (res.staff || '담당자') + ' (사거리인터넷)'; $('exp-text').textContent = res.exp ? fmt(res.exp) : '담당자에게 확인해 주세요';
         ['cust-name', 'staff-name', 'exp-text'].forEach(function (x) { $(x).classList.remove('sk'); });
         refresh();
     }).catch(function () { bad('잠시 연결이 원활하지 않아요', '잠시 뒤 다시 열어 주시거나, 대표번호 1833-2440으로 연락해 주세요.'); });
@@ -438,7 +440,9 @@ window.__sgServer.catch(function () {});
     function startCam() {
         $('cam-start').hidden = true; setStatus('카메라를 켜는 중이에요...');
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { noCam('이 화면에서는 자동 촬영을 쓸 수 없어요. 아래 [카메라로 찍기] 또는 [사진첩에서 선택]를 눌러 주세요.'); return; }
+        if (dead) return;
         navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } } }).then(function (s) {
+            if (dead) { s.getTracks().forEach(function (t) { t.stop(); }); return; }   // 그새 오류 화면이 떴으면 카메라 끔
             stream = s; video.srcObject = s;
             try { var tr = s.getVideoTracks()[0], cap = tr.getCapabilities ? tr.getCapabilities() : {}; if (cap.focusMode && cap.focusMode.indexOf('continuous') >= 0) tr.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(function () {}); } catch (e) { /* 무시 */ }
             var p = video.play(); if (p && p.catch) p.catch(function () { /* 자동 재생 안 되면 아래 버튼 */ });
@@ -485,13 +489,14 @@ window.__sgServer.catch(function () {});
     // 개인사업자·법인 서류: 기본 카메라로 촬영하거나 앨범에서 선택 (글자가 읽히게 조금 더 크게 저장)
     function onDoc() {
         var f = this.files && this.files[0], k = docFor; if (!f || !k) return;
-        if (f.type && !/^image\//.test(f.type)) { $('msg').textContent = '사진(그림) 파일만 올릴 수 있어요. PDF는 화면을 캡처해서 올려 주세요.'; return; }
+        if (f.type && !/^image\//.test(f.type)) { docMsg('사진(그림) 파일만 올릴 수 있어요. PDF는 화면을 캡처해서 올려 주세요.'); return; }
         shrink(f, 2200).then(function (o) {
             docShots[k] = o; $('msg').textContent = ''; paintNeed(); refresh();
             var next = document.querySelector('.slot:not(.ok)');
             setTimeout(function () { (next || (shot ? $('send-card') : $('cam-card'))).scrollIntoView({ behavior: 'smooth', block: next ? 'center' : 'start' }); }, 60);
-        }, function () { $('msg').textContent = '사진을 불러오지 못했어요. 다시 촬영해 주세요.'; $('send-card').hidden = !shot; });
+        }, function () { docMsg('사진을 불러오지 못했어요. 다시 촬영해 주세요.'); });
     }
+    function docMsg(t) { $('msg').textContent = t; if ($('send-card').hidden) alert(t); }   // 접수 칸이 아직 숨어 있으면 바로 보이게
     $('doc-cam').addEventListener('change', onDoc);
     $('doc-pick').addEventListener('change', onDoc);
 
@@ -510,7 +515,7 @@ window.__sgServer.catch(function () {});
         var docs = K().docs.map(function (d) { return { k: d[0], b64: docShots[d[0]].b64 }; });
         call({ action: 'idUpload', code: code, agree: true, front: shot.b64, extra: '', docs: docs }).then(function (res) {
             sending = false;
-            if (res && res.ok) { shot = null; docShots = {}; $('docs-card').hidden = true; $('need').hidden = true; ['info', 'cam-card', 'shot-card', 'send-card'].forEach(function (x) { $(x).hidden = true; }); $('done').hidden = false; window.scrollTo(0, 0); return; }
+            if (res && res.ok) { try { $('shot-img').removeAttribute('src'); document.querySelectorAll('.slot-img img').forEach(function (i) { i.removeAttribute('src'); }); } catch (e) { /* 무시 */ } shot = null; docShots = {}; $('docs-card').hidden = true; $('need').hidden = true; ['info', 'cam-card', 'shot-card', 'send-card'].forEach(function (x) { $(x).hidden = true; }); $('done').hidden = false; window.scrollTo(0, 0); return; }
             var e = res && res.error;
             if (e === 'done') return bad('이미 접수가 완료되었어요', '같은 주소로는 한 번만 접수할 수 있어요.');
             if (e === 'expired') return bad('접수 기간이 지났어요', '담당자에게 새 주소를 요청하시거나 1833-2440으로 연락해 주세요.');

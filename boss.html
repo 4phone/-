@@ -1390,11 +1390,11 @@
 
                     <div class="b2b-privacy-box">
                         <label class="privacy-check-item">
-                            <input type="checkbox" id="mainAgreeReq" checked required>
+                            <input type="checkbox" id="mainAgreeReq" required>
                             <span><span class="req">[필수]</span> 개인정보 수집 및 이용 동의</span>
                         </label>
                         <label class="privacy-check-item">
-                            <input type="checkbox" id="mainAgreeOpt" checked>
+                            <input type="checkbox" id="mainAgreeOpt">
                             <span><span class="opt">[선택]</span> 특별 혜택 및 프로모션 안내 수신 동의</span>
                         </label>
                     </div>
@@ -1709,7 +1709,7 @@
 
                     <div class="b2b-privacy-box">
                         <label class="privacy-check-item">
-                            <input type="checkbox" checked required>
+                            <input type="checkbox" required>
                             <span><span class="req">[필수]</span> 개인정보 수집 및 이용 동의</span>
                         </label>
                     </div>
@@ -2122,13 +2122,16 @@
             return rows;
         }
 
+        function toNum(v) { return parseInt(String(v == null ? '' : v).replace(/[^0-9]/g, ''), 10) || 0; }   // '33,000' → 33000
         async function loadBossData() {
             try { 
                 const response = await fetch(bossCsvUrl); 
+                if (!response.ok) throw new Error('http ' + response.status);
                 const text = await response.text(); 
+                if (/^\s*</.test(text)) throw new Error('not csv');   // 로그인 화면 등 요금표가 아닌 답
                 bossData = parseCsvText(text).slice(1).filter(r => r[0] && r[0].trim() !== ""); 
                 calculateReceipt(); 
-            } catch(e) { console.error("BOSS 요금표 로드 실패", e); }
+            } catch(e) { var pw = document.getElementById('live-price-wrapper'); if (pw) pw.innerHTML = '<span style="font-size:18px;">요금표를 불러오지 못했어요 · 1833-2440으로 문의해 주세요</span>'; }
         }
 
         window.onload = function() { loadBossData(); };
@@ -2258,8 +2261,8 @@
                     telecomTotals[telecom].valid = false;
                     return;
                 }
-                telecomTotals[telecom].price += parseInt(validRow[2]) || 0;
-                telecomTotals[telecom].gift += parseInt(validRow[4]) || 0;
+                telecomTotals[telecom].price += toNum(validRow[2]);
+                telecomTotals[telecom].gift += toNum(validRow[4]);
             };
 
             const addTopping = (cat, opt, count, telecom) => {
@@ -2270,8 +2273,8 @@
                     telecomTotals[telecom].valid = false;
                     return;
                 }
-                let unitPrice = parseInt(validRow[2]) || parseInt(validRow[3]) || 0;
-                let unitGift = parseInt(validRow[4]) || 0;
+                let unitPrice = toNum(validRow[2]) || toNum(validRow[3]);
+                let unitGift = toNum(validRow[4]);
                 telecomTotals[telecom].price += (unitPrice * count);
                 telecomTotals[telecom].gift += (unitGift * count);
             };
@@ -2363,7 +2366,7 @@
             let maxGift = Math.max(...bestTelecoms.map(t => telecomTotals[t].gift));
 
             document.getElementById('live-price-wrapper').innerHTML = `월 <span id="live-price">${minPrice.toLocaleString()}</span>원 <span class="price-sub-txt">(3사 최저가 기준)</span>`;
-            document.getElementById('live-gift').innerHTML = `🎁 <b>설치 당일 떡값 <span class="highlight-gift">${maxGift.toLocaleString()}원</span> 지원!</b>`;
+            document.getElementById('live-gift').innerHTML = `🎁 <b>설치 당일 현금 지원 <span class="highlight-gift">${maxGift.toLocaleString()}원</span> 지원!</b>`;
             renderTelecomLogos(bestTelecoms); 
         }
 

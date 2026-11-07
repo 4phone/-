@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-JA7MQakWAZKgwb7/oBndrAj1nwp2s7nds7QrEK14ziM='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-oku+htudimHHK5DtRxnPTYvQ5UKU92v5lyPTHJsw2nM='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -672,10 +672,11 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         if (typeof it.img === 'string' && /^https:\/\/[A-Za-z0-9.-]+\/[^\s"'<>\\`]*$/.test(it.img) && it.img.length < 600) o.img = it.img;
         return o.k && o.title ? o : null;
     }
-    function load() { try { var a = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(a) ? a.map(clean).filter(Boolean).slice(0, MAX) : []; } catch (e) { return mem; } }
+    var lsOk = true;   // 이 브라우저에 보관할 수 있는지 (다른 창에서 빼거나 신청한 상품이 다시 보이지 않게, 보관이 될 때는 항상 보관함 기준)
+    function load() { try { var a = JSON.parse(localStorage.getItem(KEY) || '[]'); lsOk = true; return Array.isArray(a) ? a.map(clean).filter(Boolean).slice(0, MAX) : []; } catch (e) { lsOk = false; return mem; } }
     var mem = [];
-    function save(a) { mem = a; try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) { /* 보관 못 해도 이 화면에서는 그대로 */ } paint(); }
-    function list() { var a = load(); if (!a.length && mem.length) a = mem; return a; }
+    function save(a) { mem = a; try { localStorage.setItem(KEY, JSON.stringify(a)); lsOk = true; } catch (e) { lsOk = false; /* 보관 못 해도 이 화면에서는 그대로 */ } paint(); }
+    function list() { var a = load(); return lsOk ? a : mem; }
     window.addEventListener('storage', function (e) { if (e.key === KEY) paint(); });
 
     /* ---------- 화면 ---------- */
@@ -715,7 +716,9 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         fab.hidden = !a.length; fab.querySelector('.sgc-fab-n').textContent = String(a.length);
         Array.prototype.forEach.call(document.querySelectorAll('[data-sgc-k]'), function (b) {
             var on = a.some(function (x) { return x.k === b.getAttribute('data-sgc-k'); });
-            b.classList.toggle('on', on); b.textContent = on ? '✓ 담음' : (b.getAttribute('data-sgc-label') || '담기');
+            var tx = on ? '✓ 담음' : (b.getAttribute('data-sgc-label') || '담기');   // 바뀔 때만 고침 (index.html과 같게)
+            if (b.classList.contains('on') !== on) b.classList.toggle('on', on);
+            if (b.textContent !== tx) b.textContent = tx;
         });
         if (!ov.hidden && view === 'list') renderList();
     }
@@ -1460,7 +1463,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
     function planOf(p, k) { var m = /^(\d+)-(\d+)$/.exec(k || ''); if (!m) return null; var c = p.cos[+m[1]], x = c && c.plans[+m[2]]; return x ? { c: c, x: x } : null; }
     function planText(c, x) { return (c.name || '렌탈사 상담 시 안내') + ' · ' + mon(x.m) + ' 약정' + (x.mm != null ? ' (의무 ' + mon(x.mm) + ')' : '') + ' · 월 ' + won(x.fee) + (x.g ? ' · 사은품 ' + x.g : ''); }
     function openModal() { var m = $('modal'); m.classList.add('open'); document.body.style.overflow = 'hidden'; setTimeout(function () { var f = m.querySelector('select, input'); if (f) try { f.focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }, 30); }
-    function closeModal() { $('modal').classList.remove('open'); document.body.style.overflow = ''; formP = null; }
+    function closeModal() { if (sending) { var fm = $('f-msg'); if (fm) fm.textContent = '보내는 중이에요. 잠시만 기다려 주세요.'; return; } $('modal').classList.remove('open'); document.body.style.overflow = ''; formP = null; }
     $('m-x').addEventListener('click', closeModal);
     $('modal').addEventListener('click', function (e) { if (e.target === $('modal')) closeModal(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && $('modal').classList.contains('open')) closeModal(); });
