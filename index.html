@@ -4162,7 +4162,9 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         fab.hidden = !a.length; fab.querySelector('.sgc-fab-n').textContent = String(a.length);
         Array.prototype.forEach.call(document.querySelectorAll('[data-sgc-k]'), function (b) {
             var on = a.some(function (x) { return x.k === b.getAttribute('data-sgc-k'); });
-            b.classList.toggle('on', on); b.textContent = on ? '✓ 담음' : (b.getAttribute('data-sgc-label') || '담기');
+            var tx = on ? '✓ 담음' : (b.getAttribute('data-sgc-label') || '담기');   // 바뀔 때만 고침 (요금표 감시가 다시 그리기를 끝없이 부르지 않게 · 11-07 담은 상품 [빼기]·[신청] 안 눌림 수정)
+            if (b.classList.contains('on') !== on) b.classList.toggle('on', on);
+            if (b.textContent !== tx) b.textContent = tx;
         });
         if (!ov.hidden && view === 'list') renderList();
     }
