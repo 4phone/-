@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-oku+htudimHHK5DtRxnPTYvQ5UKU92v5lyPTHJsw2nM='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-p0XwCnoQ7oRbmF4J4SVizS0ozPY+snqG2GXkyynMtw4='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -1651,6 +1651,59 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
     route();
 })();
 
+
+/* ---------- TOP 버튼 (맨 위로) — 화면 높이의 일정 부분 이상 내리면 나타남 ---------- */
+(function () {
+    if (window.__sgTop) return; window.__sgTop = 1;
+    var SHOW = 500, btn = null, on = false, raf = 0;
+    function make() {
+        if (btn || !document.body) return btn;
+        var st = document.createElement('style');
+        st.textContent = '.sg-top{position:fixed;right:18px;bottom:20px;z-index:2147480000;width:52px;height:52px;border-radius:50%;border:2px solid #E9CF8F;background:#0A2B32;color:#E9CF8F;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.22);font:800 10.5px/1 system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;letter-spacing:.06em;opacity:0;transform:translateY(14px) scale(.9);pointer-events:none;transition:opacity .22s ease,transform .22s ease,bottom .18s ease;-webkit-tap-highlight-color:transparent}'
+            + '.sg-top.on{opacity:1;transform:none;pointer-events:auto}.sg-top:hover{filter:brightness(1.12);transform:translateY(-2px)}.sg-top:active{transform:scale(.94)}'
+            + '.sg-top:focus-visible{outline:3px solid #E9CF8F;outline-offset:3px}.sg-top svg{width:20px;height:20px;margin-bottom:1px}'
+            + '@media (max-width:700px){.sg-top{right:12px;width:46px;height:46px;font-size:9.5px}.sg-top svg{width:18px;height:18px}}'
+            + '@media (prefers-reduced-motion:reduce){.sg-top{transition:opacity .01s}}@media print{.sg-top{display:none!important}}';
+        document.head.appendChild(st);
+        btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'sg-top'; btn.setAttribute('aria-label', '맨 위로 올라가기'); btn.title = '맨 위로'; btn.tabIndex = -1;
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 14l6-6 6 6"/></svg><span>TOP</span>';
+        btn.addEventListener('click', function () {
+            var smooth = !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+            try { window.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' }); } catch (e) { window.scrollTo(0, 0); }
+            var f = document.querySelector('h1, [role=main], main'); if (f && f.focus) { try { if (!f.hasAttribute('tabindex')) f.setAttribute('tabindex', '-1'); f.focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }
+        });
+        document.body.appendChild(btn);
+        return btn;
+    }
+    function place() {   // 오른쪽 아래에 떠 있는 다른 버튼·바 위로 (가리지 않게)
+        if (!btn) return;
+        var H = window.innerHeight, W = window.innerWidth, need = 0;
+        var all = document.body.getElementsByTagName('*');
+        for (var i = 0; i < all.length; i++) {
+            var el = all[i]; if (el === btn || btn.contains(el)) continue;
+            if (el.offsetParent !== null) continue;   // 고정(fixed)된 것만 offsetParent가 없음 → 나머지는 바로 건너뜀 (빠르게)
+            var cs = getComputedStyle(el);
+            if (cs.position !== 'fixed' || cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0) continue;
+            var r = el.getBoundingClientRect(); if (!r.width || !r.height) continue;
+            if (r.height > H * 0.6 || r.top < H * 0.5 || r.right < W - 80 || r.left > W) continue;   // 화면을 덮는 창 · 위쪽 · 오른쪽 끝이 아닌 것은 빼고
+            need = Math.max(need, H - r.top);
+        }
+        btn.style.bottom = (need ? need + 12 : 20) + 'px';
+    }
+    function y() { return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0; }
+    function check() {
+        raf = 0;
+        var want = y() > SHOW;
+        if (want && !make()) return;
+        if (want !== on) { on = want; btn.classList.toggle('on', on); btn.tabIndex = on ? 0 : -1; }
+        if (on) place();
+    }
+    function onScroll() { if (!raf) raf = (window.requestAnimationFrame || setTimeout)(check); }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    setInterval(function () { if (on) place(); }, 1500);   // 장바구니·메모 창이 새로 떠도 따라 올라감
+})();
 </script>
 </body>
 </html>
