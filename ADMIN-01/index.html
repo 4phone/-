@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Zyon/lF8CVcqABBN2ll3IfRS9Qb14v63GIYFX3zT+Mo='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-xiotRLW3FKyduUj+2EljjuTcYym/xjtGIpsYJjrzgJY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1409,6 +1409,12 @@
         .mf-sheet .mf-area { flex-basis: 100%; min-height: 70px; border: 1px solid #D6D0BC; border-radius: 6px; background: rgba(255,255,255,.7); resize: vertical; }
         .mf-ck { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; padding: 4px 2px; font-weight: 600; }
         .mf-ck input { width: 21px; height: 21px; margin: 0; flex: none; accent-color: var(--mf-green); }
+        @media screen {   /* 가입 확인서: 아직 안 쓴 필수 칸·체크 = 주황 (채우면 바로 원래 색 · 저장 그림·인쇄에는 안 나옴) */
+            .mf-sheet:not(.mf-snap) .mf-in.mf-need { background: #FFE6C2; box-shadow: inset 0 0 0 2px #FF8A1F; border-radius: 4px; }
+            .mf-sheet:not(.mf-snap) .mf-in.mf-need:focus { background: #FFF6CC; }
+            .mf-sheet:not(.mf-snap) .mf-ck.mf-need { background: #FFE6C2; box-shadow: 0 0 0 2px #FF8A1F; border-radius: 6px; }
+            .mf-sheet:not(.mf-snap) .mf-sign.mf-need { background-color: #FFF1DE; box-shadow: inset 0 0 0 3px #FF8A1F; }
+        }
         .mf-xend { display: inline-block; min-width: 92px; min-height: 1.45em; padding: 2px 6px; border-bottom: 1px solid #B8BEC6; font-weight: 700; color: #0B4F9C; text-align: center; font-variant-numeric: tabular-nums; }
         .mf-xpol { margin: 0; padding: 6px 10px; font-size: 12.5px; font-weight: 700; line-height: 1.45; color: #146B3A; background: #EEF8F1; border-top: 1px dashed #CFE3D6; word-break: keep-all; overflow-wrap: anywhere; }
         .mf-xpol.warn { color: #7A5200; background: #FFF6DD; border-top-color: #EBD9A6; }
@@ -2164,7 +2170,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-09.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-09.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -6203,8 +6209,8 @@
             var tools = h('div', { class: 'mf-tools' },
                 M.paperBox = h('div', { class: 'mf-paper-box', role: 'status', 'aria-live': 'polite' }),
                 h('p', { class: 'mf-tip' }, M.kind === 'mobile'
-                    ? '다 쓰면 [드라이브/연락처 저장]으로 구글 드라이브 월별 폴더와 구글 연락처(휴대폰에서 바로 보임)에 보관하거나, [복사보고]로 카카오톡·텔레그램에 붙여넣거나, [PDF 파일 받기]를 이용해 주세요. 종이에 서명을 받을 때는 [✍ 서명 직접 받기]로 인쇄하고, 서명 받은 종이를 [🖨 스캔]으로 넣으면 그 스캔본이 드라이브에 저장돼요. ([🖨 스캔]은 이 PC에 연결된 스캐너로 바로 스캔 · 스캔 파일(JPG·PNG·PDF)이나 휴대폰 사진은 [📁 파일로 업로드]) 이 화면의 작성 내용은 잠그거나 새로고침하면 지워져요.'
-                    : '다 쓰면 [드라이브/연락처 저장]으로 구글 드라이브 월별 폴더와 구글 연락처(휴대폰에서 바로 보임)에 보관하거나, [복사보고]로 카카오톡·텔레그램에 붙여넣거나, [인쇄]·[PDF 파일 받기]를 이용해 주세요. 태블릿에서 인쇄 창이 안 뜨면 [PDF 파일 받기] → 받은 파일 열기 → 인쇄로 하면 돼요. 이 화면의 작성 내용은 잠그거나 새로고침하면 지워져요.'),
+                    ? '다 쓰면 [드라이브/연락처 저장]으로 구글 드라이브 월별 폴더와 구글 연락처(휴대폰에서 바로 보임)에 보관하거나, [복사보고]로 카카오톡·텔레그램에 붙여넣고, 마지막에 [8 출력(고객교부)]로 인쇄해서 고객님께 드려요. 주황색 칸은 아직 안 쓴 칸이에요(쓰면 바로 원래 색). 종이에 서명을 받을 때는 [✍ 서명 직접 받기]로 인쇄하고, 서명 받은 종이를 [🖨 스캔]으로 넣으면 그 스캔본이 드라이브에 저장돼요. ([🖨 스캔]은 이 PC에 연결된 스캐너로 바로 스캔 · 스캔 파일(JPG·PNG·PDF)이나 휴대폰 사진은 [📁 파일로 업로드]) 이 화면의 작성 내용은 잠그거나 새로고침하면 지워져요.'
+                    : '다 쓰면 [드라이브/연락처 저장]으로 구글 드라이브 월별 폴더와 구글 연락처(휴대폰에서 바로 보임)에 보관하거나, [복사보고]로 카카오톡·텔레그램에 붙여넣고, 마지막에 [8 출력(고객교부)]로 인쇄해서 고객님께 드려요. 주황색 칸은 아직 안 쓴 칸이에요(쓰면 바로 원래 색). 인쇄 창을 열 수 없는 기기에서는 PDF 파일로 받아져요(받은 파일 열기 → 인쇄). 이 화면의 작성 내용은 잠그거나 새로고침하면 지워져요.'),
                 h('div', { class: 'actions' },
                     h('span', { class: 'mf-act mf-act-new' }, h('button', { type: 'button', class: 'btn', 'data-act': 'mf-new', onclick: function () {
                         if (!confirm('작성한 내용과 서명을 모두 지우고 새로 작성할까요?' + (M.did && lsGet(MFD_PRE + M.did) ? '\n(이 확인서의 임시 보관본도 지워요)' : ''))) return;
@@ -6213,20 +6219,17 @@
                         render(); window.scrollTo(0, 0); toast('새 가입 확인서를 열었어요.');
                     } }, '새로 작성'), h('small', { class: 'mf-cnt' })),
                     mfAct('save', h('button', { type: 'button', class: 'btn btn-step', 'data-step': '7', 'data-act': 'mf-drive', onclick: function () { mfDriveSave(M, sheet, this); } }, '드라이브/연락처 저장')),
+                    mfAct('out', h('button', { type: 'button', class: 'btn btn-step', 'data-step': '8', 'data-act': 'mf-out', title: '고객님께 드릴 가입 확인서를 인쇄해요', onclick: function () {
+                        if (!mfReady(M, '출력')) return;
+                        mfPrintImage(sheet, M, opt.file, function () { mfCount(M, 'out'); }, true);   // 스캔본이 있으면 서명 받은 스캔본으로
+                    } }, '출력(고객교부)')),
                     mfAct('copy', h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'mf-copy', onclick: function () {
                         if (!mfReady(M, '복사')) return;
                         mfCopyReport(sheet, opt.file, function () { mfCount(M, 'copy'); }, M);
                     } }, '복사보고')),
-                    mfAct('pdf', h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'mf-pdf', onclick: function () {
-                        if (!mfReady(M, 'PDF로 저장')) return;
-                        mfPdf(M, sheet, opt.file, function () { mfCount(M, 'pdf'); });
-                    } }, 'PDF 파일 받기')),
                     M.kind === 'mobile'
                         ? mfAct('print', h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-print', title: '서명란을 비운 가입 확인서를 인쇄해요. 종이에 서명을 받은 뒤 [🖨 스캔]으로 넣어 주세요.', onclick: function () { mfPaperPrint(M, sheet, opt.file); } }, '✍ 서명 직접 받기'))
-                        : mfAct('print', h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'mf-print', onclick: function () {
-                            if (!mfReady(M, '인쇄')) return;
-                            mfPrintImage(sheet, M, opt.file, function () { mfCount(M, 'print'); });
-                        } }, '인쇄')),
+                        : null,
                     M.kind === 'mobile' ? h('span', { class: 'mf-act' }, mfDirectBtn(M, '🖨 스캔', 'btn btn-scan', 'mf-scan')) : null,
                     M.kind === 'mobile' ? h('span', { class: 'mf-act' }, mfScanBtn(M, '📁 파일로 업로드', 'btn btn-up', 'mf-scan-file')) : null,
                     M.kind === 'mobile' ? h('span', { class: 'mf-act mf-act-qc' }, h('button', { type: 'button', class: 'btn btn-qc', 'data-act': 'mf-qc', hidden: true, title: '드라이브 저장 결과를 다시 열어 하나씩 검수해요', onclick: function () { if (M.doneArgs) mfDonePopup(M, M.doneArgs[0], M.doneArgs[1], M.doneArgs[2]); } }, '🔍 검수'), h('small', { class: 'mf-cnt', 'data-qc-st': '1', 'aria-live': 'polite' })) : null));
@@ -6241,11 +6244,11 @@
             }
             return M;
         }
-        /* ---------- 버튼 아래 작은 글씨: 1회 저장완료 · 1회 복사완료 · 1회 받기완료 · 1회 인쇄완료 (누를 때마다 숫자만 늘어남) ---------- */
-        var MF_CNT = { save: '저장완료', copy: '복사완료', pdf: '받기완료', print: '인쇄완료' };
+        /* ---------- 버튼 아래 작은 글씨: 1회 저장완료 · 1회 복사완료 · 1회 출력완료 · 1회 인쇄완료 (누를 때마다 숫자만 늘어남) ---------- */
+        var MF_CNT = { save: '저장완료', copy: '복사완료', out: '출력완료', print: '인쇄완료' };
         function mfAct(key, btn) { return h('span', { class: 'mf-act' }, btn, h('small', { class: 'mf-cnt', 'data-cnt': key, 'aria-live': 'polite' })); }
         function mfCount(M, key) {
-            if (!M.cnt) M.cnt = { save: 0, copy: 0, pdf: 0, print: 0 };
+            if (!M.cnt) M.cnt = { save: 0, copy: 0, out: 0, print: 0 };
             M.cnt[key] = (M.cnt[key] || 0) + 1;
             mfCntPaint(M);
         }
@@ -6566,7 +6569,7 @@
                 if (r[3] && !cond(r[3])) return;   // 조건부: 해당될 때만
                 if (rentF && MF_RENT_LAB[r[0]]) r = [r[0], MF_RENT_LAB[r[0]]].concat(r.slice(2));   // 렌탈: 칸 이름도 렌탈로
                 if (r[0].charAt(0) === '#') { var k = r[0].slice(1); if (!(M && M.sig[k])) out.push({ t: r[1], el: M ? M.box[k] : null, sig: true }); return; }   // 서명
-                if (r[0].charAt(0) === '@') { var any = r[2].some(function (n) { var x = q(n); return x && x.checked; }); if (!any) out.push({ t: r[1], el: q(r[2][0]) }); return; }
+                if (r[0].charAt(0) === '@') { var any = r[2].some(function (n) { var x = q(n); return x && x.checked; }); if (!any) out.push({ t: r[1], el: q(r[2][0]), els: r[2].map(q) }); return; }
                 var el = q(r[0]); if (el && !String(el.value || '').trim()) out.push({ t: r[1], el: el });
             });
             return out;
@@ -6696,7 +6699,7 @@
             box.textContent = ''; box.className = 'mf-paper-box';
             if (M.scan) {
                 box.classList.add('on', 'scan');
-                box.appendChild(h('div', { class: 'mf-paper-head' }, h('b', {}, '✓ 서명 받은 스캔본이 들어갔어요'), h('span', {}, '[드라이브/연락처 저장]을 누르면 이 스캔본이 드라이브에 저장돼요. (복사보고 · PDF 파일 받기도 스캔본으로) 고객 이름 · 번호 · 날짜는 위 칸에 적은 그대로 연락처와 장부에 들어가요.')));
+                box.appendChild(h('div', { class: 'mf-paper-head' }, h('b', {}, '✓ 서명 받은 스캔본이 들어갔어요'), h('span', {}, '[드라이브/연락처 저장]을 누르면 이 스캔본이 드라이브에 저장돼요. (복사보고 · 8 출력(고객교부)도 스캔본으로) 고객 이름 · 번호 · 날짜는 위 칸에 적은 그대로 연락처와 장부에 들어가요.')));
                 box.appendChild(h('div', { class: 'mf-paper-img' }, h('img', { src: M.scan.toDataURL('image/jpeg', 0.82), alt: '서명 받은 가입 확인서 스캔본' })));
                 box.appendChild(h('div', { class: 'mf-paper-btns' },
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mf-scan-rot', onclick: function () { M.scan = mfRot(M.scan); if (M.markDirty) M.markDirty(); mfPaperPaint(M); } }, '↻ 돌리기'),
@@ -6823,23 +6826,24 @@
             g.putImageData(im, 0, 0);
             return cv;
         }
-        function mfGate(M) {   // 빈칸이 있으면 [드라이브/연락처 저장]·[복사보고]·[PDF 파일 받기]·[인쇄]를 끄고, 빠진 칸을 눌러 바로 갈 수 있게
+        function mfGate(M) {   // 빈칸이 있으면 [드라이브/연락처 저장]·[복사보고]·[8 출력(고객교부)]를 끄고, 빠진 칸을 눌러 바로 갈 수 있게
             if (!M.gateOn || !M.el || !M.sheet) return;
             var all = mfMissing(M.sheet, M), box = M.el.querySelector('.mf-miss');
             var mob = M.kind === 'mobile', noSig = all.filter(function (x) { return !x.sig; }), scan = mob && !!M.scan, wait = mob && M.paper === 'wait' && !M.scan;
             var WAITT = '서명 받은 종이를 [🖨 스캔]으로 넣으면 눌러져요';
-            ['mf-drive', 'mf-copy', 'mf-pdf', 'mf-print'].forEach(function (a) {
+            ['mf-drive', 'mf-copy', 'mf-out', 'mf-print'].forEach(function (a) {
                 var b = M.el.querySelector('[data-act="' + a + '"]'); if (!b) return;
                 var mm = scan || (mob && a === 'mf-print') ? noSig : all, lock = a === 'mf-drive' && wait;   // 서명 직접 받기: 서명 칸은 종이에 · 스캔본이 있으면 서명 칸은 스캔본으로
                 b.disabled = !!mm.length || lock || b.getAttribute('data-busy') === '1';
-                b.title = mm.length ? '빈칸을 모두 채우면 눌러져요' : lock ? WAITT : a === 'mf-drive' ? (b.title === WAITT || b.title === '빈칸을 모두 채우면 눌러져요' ? '' : b.title) : a === 'mf-print' && mob ? '서명란을 비운 가입 확인서를 인쇄해요. 종이에 서명을 받은 뒤 [🖨 스캔]으로 넣어 주세요.' : '';
+                b.title = mm.length ? '빈칸을 모두 채우면 눌러져요' : lock ? WAITT : a === 'mf-drive' ? (b.title === WAITT || b.title === '빈칸을 모두 채우면 눌러져요' ? '' : b.title) : a === 'mf-out' ? '고객님께 드릴 가입 확인서를 인쇄해요' : a === 'mf-print' && mob ? '서명란을 비운 가입 확인서를 인쇄해요. 종이에 서명을 받은 뒤 [🖨 스캔]으로 넣어 주세요.' : '';
             });
-            if (!box) return;
             var miss = scan || wait ? noSig : all;
+            mfNeedPaint(M, miss);   // 안 쓴 칸은 주황, 채우면 바로 원래 색
+            if (!box) return;
             box.textContent = ''; box.className = 'mf-miss' + (miss.length ? '' : ' ok');
             if (!miss.length) {
                 box.appendChild(h('b', {}, '✓ 모두 작성했어요.'));
-                box.appendChild(h('span', {}, scan ? '서명 받은 스캔본으로 저장 · 복사 · 파일 받기를 할 수 있어요.' : wait ? '종이에 서명을 받은 뒤 [🖨 스캔]으로 넣어 주세요. 그러면 [드라이브/연락처 저장]이 켜져요.' : mob ? '저장 · 복사 · 파일 받기를 할 수 있어요.' : '저장 · 복사 · 파일 받기 · 인쇄를 할 수 있어요.'));
+                box.appendChild(h('span', {}, scan ? '서명 받은 스캔본으로 저장 · 복사 · 출력(고객교부)을 할 수 있어요.' : wait ? '종이에 서명을 받은 뒤 [🖨 스캔]으로 넣어 주세요. 그러면 [드라이브/연락처 저장]·[8 출력(고객교부)]이 켜져요.' : '[7 드라이브/연락처 저장] → [8 출력(고객교부)]로 마무리해 주세요.'));
                 return;
             }
             box.appendChild(h('b', {}, '아직 안 쓴 곳 ' + miss.length + '개'));
@@ -6848,6 +6852,17 @@
                 box.appendChild(h('button', { type: 'button', onclick: function () { if (!m.el) return; try { m.el.focus({ preventScroll: true }); } catch (e) { m.el.focus(); } m.el.scrollIntoView({ block: 'center' }); } }, m.t));
             });
             if (miss.length > 14) box.appendChild(h('span', {}, '외 ' + (miss.length - 14) + '개'));
+        }
+        function mfNeedPaint(M, miss) {   // 아직 안 쓴 필수 칸(체크는 그 줄 선택지 모두 · 서명 칸)에 주황 표시
+            if (!M.sheet) return;
+            [].forEach.call(M.sheet.querySelectorAll('.mf-need'), function (x) { x.classList.remove('mf-need'); });
+            miss.forEach(function (m) {
+                (m.els || [m.el]).forEach(function (el) {
+                    if (!el || !el.classList) return;
+                    var t = el.type === 'checkbox' && el.closest ? (el.closest('.mf-ck') || el) : el;
+                    t.classList.add('mf-need');
+                });
+            });
         }
         function mfReady(M, what) {   // 고객이 쓸 칸이 비었으면 한 번 더 확인
             if (M.kind === 'wired' || M.scan) return true;   // 유선: 녹취 가입 (서명 없음) · 스캔본: 서명은 종이에 · 빈칸은 버튼이 꺼져서 막힘
@@ -6899,18 +6914,18 @@
         /* ---------- 인쇄 / PDF: 드라이브 저장 그림과 똑같은 A4 그림으로 (태블릿·휴대폰도 같은 결과) ---------- */
         var mfPiClean = null;
         function mfPrintDone() { document.documentElement.classList.remove('mf-pi'); var box = document.getElementById('mf-print'); if (box) box.textContent = ''; }
-        function mfPrintImage(sheet, M, file, done) {
-            if (inAppBrowser()) { alert('카카오톡·네이버 같은 앱 안에서는 인쇄가 되지 않아요.\n화면 메뉴(⋯)에서 "다른 브라우저로 열기"로 크롬·삼성 인터넷·사파리에서 열어 주세요.\n지금은 [PDF 파일 받기]로 파일을 받아서 인쇄할 수 있어요.'); return; }
-            if (typeof window.print !== 'function') { toast('이 기기에서는 인쇄 창을 열 수 없어요. [PDF 파일 받기]로 받아서 인쇄해 주세요.'); return; }
+        function mfPrintImage(sheet, M, file, done, useScan) {   // useScan: [8 출력(고객교부)] — 스캔본이 있으면 스캔본으로
+            if (inAppBrowser()) { if (confirm('카카오톡·네이버 같은 앱 안에서는 인쇄가 되지 않아요.\n화면 메뉴(⋯)에서 "다른 브라우저로 열기"로 크롬·삼성 인터넷·사파리에서 열어 주세요.\n\n[확인]을 누르면 지금은 PDF 파일로 받아요(받은 파일 열기 → 인쇄).')) mfPdf(M, sheet, file, done); return; }
+            if (typeof window.print !== 'function') { toast('이 기기에서는 인쇄 창을 열 수 없어 PDF 파일로 받아요. 받은 파일을 열고 인쇄해 주세요.'); mfPdf(M, sheet, file, done); return; }
             var cv;
-            try { cv = mfSnapshot(sheet); } catch (e) { toast('인쇄할 그림을 만들지 못했어요. 다시 눌러 주세요.'); return; }
+            try { cv = useScan ? mfImg(M, sheet) : mfSnapshot(sheet); } catch (e) { toast('인쇄할 그림을 만들지 못했어요. 다시 눌러 주세요.'); return; }
             var box = document.getElementById('mf-print'); box.textContent = '';
             var img = new Image(); img.alt = '가입 확인서'; img.src = cv.toDataURL('image/png'); box.appendChild(img);
             if (mfPiClean) { document.removeEventListener('pointerdown', mfPiClean, true); mfPiClean = null; }
             document.documentElement.classList.add('mf-pi');
             var go = function () {
                 var t0 = Date.now();
-                try { window.print(); } catch (e) { mfPrintDone(); toast('인쇄 창을 열지 못했어요. [PDF 파일 받기]로 받아서 인쇄해 주세요.'); return; }
+                try { window.print(); } catch (e) { mfPrintDone(); toast('인쇄 창을 열지 못해 PDF 파일로 받아요. 받은 파일을 열고 인쇄해 주세요.'); mfPdf(M, sheet, file, done); return; }
                 if (done) try { done(); } catch (x) { /* 무시 */ }   // 인쇄 창이 열렸으면 '인쇄완료' 횟수
                 if (Date.now() - t0 > 800) { mfPrintDone(); return; }   // PC: 인쇄 창을 닫은 뒤 바로 정리
                 // 태블릿·휴대폰: 인쇄 화면이 따로 뜨는 동안 그림을 그대로 두고, 돌아와서 화면을 누르면 정리
