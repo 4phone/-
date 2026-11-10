@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-xiotRLW3FKyduUj+2EljjuTcYym/xjtGIpsYJjrzgJY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6RaqZ+wHbEjVTMwuGcR4gG3J0gzXaI7GYEek7/6Po3I='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2170,7 +2170,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-09.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-10.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -7458,7 +7458,7 @@
         }
         function regFeeWired(rec, Pin) {
             var P = Pin || polCur(); if (!P || !P.data) return { why: '유선 단가표가 없어요' };
-            var co = ctCarrier(rec.carrier, 'wired').tag, raw = String(rec.carrier || '').toUpperCase(), plan = String(rec.plan || ''), soho = /소호/.test(plan + ' ' + (rec.type || ''));   // 접수처(안모·스카이 등)와 상관없이 같은 유선 단가 · 소호 상품만 소호 단가
+            var co = ctCarrier(rec.carrier, 'wired').tag, raw = String(rec.carrier || '').toUpperCase(), plan = String(rec.plan || ''), soho = /소호/.test(plan + ' ' + (rec.type || '') + ' ' + (rec.carrier || ''));   // 접수처(안모·스카이 등)와 상관없이 같은 유선 단가 · 소호 상품만 소호 단가
             var comb = /결합하기|기결합/.test(rec.comb || '');
             var ids = co === 'U+' ? (soho ? ['lgsoho'] : ['lgu']) : co === 'KT' ? ['kt'] : co === '스카이라이프' ? ['sky'] : co === '헬로비전' ? ['hello']
                 : co === 'SK' ? (soho ? ['skbsoho'] : /SKT/.test(raw) ? ['skt'] : /SKB|브로드/.test(raw) ? ['skb'] : []) : [];   // SKT → SKT 단가표 · SKB → SKB 단가표 (절대 섞지 않음)
@@ -7494,14 +7494,15 @@
                     var rp = polParts(r.n), tv = rp.slice(1).filter(function (x) { return !polNotTv(x); }).join(' ');
                     if (tvW !== !!tv) return;
                     var score = 1;
-                    if (tv) { var tk = feeNorm(tv).replace(/iptv/g, '').replace(/basic/g, '베이직'); if (!tk || pn.indexOf(tk) < 0) return; score = 10 + tk.length; }
-                    if (!best || score > best.score) best = { r: r, g: g, score: score };
+                    var part = false;
+                    if (tv) { var tk = feeNorm(tv).replace(/iptv/g, '').replace(/basic/g, '베이직'); if (!tk) return; if (pn.indexOf(tk) >= 0) score = 10 + tk.length; else { var uk = feeNorm(parts).replace(/iptv/g, '').replace(/basic/g, '베이직').replace(/^(인|티)$/, ''); if (uk.length < 2 || tk.indexOf(uk) !== 0) return; score = 5 + uk.length; part = true; } }   // '스탠다드'만 적어도 '스탠다드 스마트3'
+                    if (!best || score > best.score) best = { r: r, g: g, score: score, part: part };
                 });
             });
             if (!best) return { why: c.name + ' · ' + sp + (tvW ? ' + ' + parts : '') + ' 상품을 단가표에서 찾지 못했어요' };
             var f = polFee(best.r), tvN = Math.max(0, (String(rec.model || '').match(/티/g) || []).length - 1), add = 0, addTxt = '';
             if (tvN && tvW) { var o = polTvOpts(c, best.r).filter(function (x) { return x.d; })[0]; if (o) { add = Math.round(o.a * 10000) * tvN; addTxt = ' + TV 추가 ' + tvN + '대(' + (o.l === 'TV 추가' ? '추가셋탑' : o.l) + ' +' + o.a + '만)'; } else addTxt = ' · TV 추가 ' + tvN + '대 수수료는 직접 확인'; }
-            return { fee: f.fee + add, chk: !!(tvN && !add && tvW), gv: best.r.g > 0 ? Math.round(best.r.g * 10000) : 0, src: c.name + ' ' + best.r.n + ' 합계 ' + (f.fee / 10000) + '만' + addTxt + (best.r.g > 0 ? ' (상품권 ' + best.r.g + '만)' : '') + ' · ' + polLabel(P) };
+            return { fee: f.fee + add, chk: !!(tvN && !add && tvW) || !!best.part, gv: best.r.g > 0 ? Math.round(best.r.g * 10000) : 0, src: c.name + ' ' + best.r.n + ' 합계 ' + (f.fee / 10000) + '만' + (best.part ? ' (TV 이름 앞부분으로 찾음 · 확인)' : '') + addTxt + (best.r.g > 0 ? ' (상품권 ' + best.r.g + '만)' : '') + ' · ' + polLabel(P) };
         }
         function feeMdlKey(t) {   // 모델 이름 → 비교용 (아이폰18프로 512 → iphone18pro / Z Fold8 → fold8)
             return String(t || '').toLowerCase().replace(/\(dp\s*진열\)|\(.*?\)/g, '').replace(/갤럭시|galaxy/g, '').replace(/아이폰/g, 'iphone').replace(/프로/g, 'pro').replace(/맥스/g, 'max').replace(/에어/g, 'air')
@@ -7531,8 +7532,9 @@
         }
         function regFeeMobile(rec) {
             var model = String(rec.model || ''), ty = String(rec.type || '');
-            if (/중고|비구매|유심|usim|선불|후불|모빙/i.test(model + ' ' + ty + ' ' + (rec.dealer || ''))) return { why: '중고·유심·선불 개통은 단가표 밖이라 직접 적어 주세요' };
-            var b = mfPolBase(rec.dealer, rec.carrier); if (b.st !== 'dl') return { why: b.st === 'nodealer' ? '거래처 ' + rec.dealer + ' 모바일 단가표가 없어요' : b.st === 'car' ? '거래처 단가표 통신사(' + b.pc + ')와 가입 통신사(' + b.fc + ')가 달라요' : '모바일 단가표를 아직 못 불러왔어요' };
+            if (/선불|모빙/i.test(model + ' ' + ty + ' ' + (rec.dealer || ''))) return { why: '선불 개통은 단가표 밖이라 직접 적어 주세요' };
+            var b = mfPolBase(rec.dealer, rec.carrier); if (b.st !== 'dl') return { why: b.st === 'nodealer' ? '거래처 ' + rec.dealer + ' 모바일 단가표가 없어요' : b.st === 'car' ? '거래처 단가표 통신사(' + b.pc + ')와 가입 통신사(' + b.fc + ')가 달라요 — 거래처나 통신사 칸을 확인해 주세요' : '모바일 단가표를 아직 못 불러왔어요' };
+            if (feeUsedOf(rec)) return regFeeUsed(rec, b.dl);   // 비구매(중고폰·자급제·유심단독) → 거래처 중고 정책
             if (fee2ndCode(model)) return regFee2nd(rec, b.dl);   // 워치 · 탭 (2nd Device)
             var dl = b.dl, mk = feeMdlKey(model), cap = feeCap(model), tyK = /번호이동|MNP/i.test(ty) ? 'MNP' : /신규|010/.test(ty) ? '010' : /재가입|기변/.test(ty) ? '기변' : '';
             if (!mk) return { why: '모델이 없어요' };
@@ -7587,6 +7589,90 @@
             });
             var pd = feePayDeduct(dl, rec, hit, mk, lte); if (pd.amt) { adj += pd.amt; notes.push(pd.note); } else if (pd.warn) warn.push(pd.warn);
             return { fee: fee, adj: adj, src: dl.name + ' ' + model + (cap ? '' : '(256G)') + ' · ' + tyK + (dc ? '·' + dc : '') + ' · ' + tierTxt + ' ' + hit.v + '만' + (notes.length ? ' · 부가 ' + notes.join(', ') : '') + (warn.length ? ' · ' + warn.join(' / ') : '') };
+        }
+        /* ---------- 💰 모바일 비구매(중고폰·자급제·유심단독) → 거래처 중고 정책 금액 (11-10.1) ---------- */
+        function feeUsedOf(rec) { return /비구매/.test(String(rec.type || '')) || /중고|자급|유심|usim|omd|후불/i.test(String(rec.model || '')); }
+        function feeManN(s) { var m = /([\d.]+)\s*만/.exec(String(s || '')); return m ? parseFloat(m[1]) : NaN; }
+        function feeUsedTier(dl, plan) {   // 요금제 → 구간 금액(K): 표 이름에 요금제 이름이 있으면 그 표(신창 S_33 등) · 아니면 요금제 이름 숫자
+            var best = 0, bt = '';
+            (dl.tables || []).forEach(function (t) { if (!t.cm) return; var hh = feePlanHit(t.name, plan); if (hh > best) { best = hh; bt = t.name; } });
+            return best ? feeTier(bt) : mpTierNum(plan);
+        }
+        function regFeeUsed(rec, dl) {
+            var ty = String(rec.type || ''), tyK = /번호이동|MNP/i.test(ty) ? 'MNP' : /신규|010/.test(ty) ? '010' : /재가입|기변/.test(ty) ? '기변' : '';
+            var plan = String(rec.plan || ''), dc = rec.disc === '공시' ? '공시' : rec.disc === '선약' ? '선약' : '', comb = rec.comb === '결합하기', parts = [], warn = [], fee = 0, chk = false;
+            if (!tyK) return { why: '가입 유형(신규 · 번호이동 · 재가입)이 없어요 — 비구매만 체크돼 있어요' };
+            if (tyK === '기변') return { why: dl.name + ' 중고(비구매) 정책은 신규·번호이동만 있어요 — 중고 재가입(기변)은 직접 적어 주세요' };
+            var K = feeUsedTier(dl, plan);
+            if (!K) return { why: '요금제 금액을 알 수 없어요 (' + (plan || '요금제 없음') + ') — 중고 정책 구간을 직접 확인해 주세요' };
+            var add = function (v, t) { fee += v; parts.push(t + ' ' + v + '만'); };
+            var adds = dl.adds || [], A = function (re) { return adds.filter(function (a) { return re.test(String(a.name || '')); })[0]; };
+            var tb = (dl.tables || []).filter(function (t) { return /중고/.test(t.name) && t.cols.indexOf('MNP') >= 0 && t.cols.some(function (c) { return /010/.test(c); }); })[0];
+            var tg = (dl.tables || []).filter(function (t) { return /중고/.test(t.name) && t.cols.some(function (c) { return /개통/.test(c); }); })[0];
+            var sMnp = A(/중고\s*MNP\s*개통\s*활성화/), sBase = A(/중고신규정책/), sMnp2 = A(/중고\s*MNP\s*활성화/), s010 = A(/중고\s*010\s*활성화/);
+            if (tb) {   // 반추·에이탑: '37K이상' 줄 × 010신규·MNP
+                var ci = tyK === 'MNP' ? tb.cols.indexOf('MNP') : tb.cols.map(function (c) { return /010/.test(c); }).indexOf(true), row = null, rk = 0;
+                tb.rows.forEach(function (r) { var n = feeTier(r[0]); if (n && n <= K + 0.5 && n > rk) { rk = n; row = r; } });
+                if (!row) return { why: dl.name + ' 중고 정책은 ' + tb.rows.map(function (r) { return r[0]; })[0] + '부터예요 (지금 ' + K + 'K)' };
+                var v = parseFloat(String(row[ci]).replace(/,/g, '')); if (!isFinite(v)) return { why: dl.name + ' 중고 정책 ' + row[0] + ' ' + tyK + ' 금액이 없어요' };
+                add(v, '중고 ' + tyK + ' ' + row[0]);
+                var cb = A(/중고\s*MNP\s*결합|010\s*&\s*중고/), cm = cb ? /중고신규\s*\([^)]*\)\s*([^/]*)/.exec(String(cb.cond || '')) : null;
+                if (cm) {   // 반추: 010 & 중고MNP 결합 활성화 — 중고신규 37K 15만·69K 15만 (당월 결합)
+                    var cv = NaN, ck = 0; (cm[1].match(/(\d+)\s*K\s*([\d.]+)\s*만/g) || []).forEach(function (x) { var q = /(\d+)\s*K\s*([\d.]+)\s*만/.exec(x); if (+q[1] <= K + 0.5 && +q[1] > ck) { ck = +q[1]; cv = parseFloat(q[2]); } });
+                    if (isFinite(cv)) { if (comb) add(cv, '중고 결합 활성화'); else warn.push('당월 결합하면 +' + cv + '만 (' + String(cb.name).slice(0, 16) + ')'); }
+                }
+            } else if (tg) {   // 성연: 요금제군 줄 × 개통·결합 (MNP · 선택약정)
+                if (tyK !== 'MNP') return { why: dl.name + ' 중고 정책은 번호이동(MNP)만 있어요 — 010 신규 비구매는 직접 적어 주세요' };
+                if (dc === '공시') return { why: dl.name + ' 중고 MNP는 선택약정만 지급돼요 (공시로 적혀 있어요)' };
+                var gi = tg.cols.map(function (c) { return /개통/.test(c); }).indexOf(true), bi = tg.cols.map(function (c) { return /결합/.test(c); }).indexOf(true), gr = null, gk = 0;
+                tg.rows.forEach(function (r) { (String(r[0]).match(/\d+/g) || []).map(Number).filter(function (n) { return n >= 20 && n <= 400; }).forEach(function (n) { if (n <= K + 0.5 && n > gk) { gk = n; gr = r; } }); });
+                if (!gr) return { why: dl.name + ' 중고 MNP 표에서 ' + K + '군을 찾지 못했어요' };
+                var gv = feeManN(gr[gi] + '만'); if (!isFinite(gv)) return { why: dl.name + ' 중고 MNP ' + gk + '군 금액이 없어요' };
+                add(gv, '중고 MNP 개통 ' + gk + '군');
+                var bv = bi >= 0 ? parseFloat(String(gr[bi])) : NaN;
+                if (isFinite(bv)) { if (comb) add(bv, '중고 MNP 결합'); else warn.push('당월 결합하면 +' + bv + '만'); }
+                else if (comb) warn.push(gk + '군은 결합 수수료 미지급');
+            } else if (sMnp) {   // 수석: '85~130군 15만 / 61~75군 9만 / 33~55군·주니어 … 4만' (MNP · 선택약정)
+                if (tyK !== 'MNP') return { why: dl.name + ' 중고 정책은 번호이동(MNP)만 있어요 — 010 신규 비구매는 직접 적어 주세요' };
+                if (dc === '공시') return { why: dl.name + ' 중고 MNP는 선택약정 필수예요 (공시로 적혀 있어요)' };
+                var cond = String(sMnp.cond || ''), sv = NaN, sl = '', jun = /주니어/.test(plan), sen = /시니어/.test(plan);
+                cond.split(/\s*\/\s*/).forEach(function (seg) {
+                    var mm = /(\d+)\s*~\s*(\d+)\s*군/.exec(seg), am = /([\d.]+)\s*만\s*$/.exec(seg.trim()) || /([\d.]+)\s*만/.exec(seg); if (!am) return;
+                    var hit = mm && K >= +mm[1] - 0.5 && K <= +mm[2] + 0.5;
+                    if (jun && /주니어/.test(seg) && !(K >= 61 && K <= 85)) hit = true;
+                    if (sen && /시니어\s*(\d+)/.test(seg) && Math.abs(K - +/시니어\s*(\d+)/.exec(seg)[1]) < 1) hit = true;
+                    if (hit && !isFinite(sv)) { sv = parseFloat(am[1]); sl = mm ? mm[1] + '~' + mm[2] + '군' : '주니어·시니어'; }
+                });
+                if (!isFinite(sv)) return { why: dl.name + ' 중고 MNP 정책에 ' + K + '군이 없어요 (표기 외 요금제는 지급 없음)' };
+                add(sv, '중고 MNP 개통 ' + sl);
+                var sc = A(/중고\s*MNP\s*결합/), scv = sc ? feeManN(sc.amount) : NaN, scm = sc ? /(\d+)\s*~\s*(\d+)\s*군/.exec(String(sc.cond || '')) : null;
+                if (isFinite(scv) && (!scm || K >= +scm[1] - 0.5)) { if (comb) add(scv, '중고 MNP 결합'); else warn.push('당월 결합하면 +' + scv + '만'); }
+            } else if (sMnp2 || s010 || sBase) {   // 신창: 중고신규 기본 + (MNP 활성화 S_33 이상 · 결합 · ZEM / 010 활성화 R_43 이상 · ZEM·Easy 따로)
+                if (dc === '공시') return { why: dl.name + ' 중고 정책은 선택약정만 지급돼요 (공시로 적혀 있어요)' };
+                chk = true;
+                var zem = /zem/i.test(plan), easy = /easy/i.test(plan), bvv = sBase ? feeManN(sBase.amount) : NaN;
+                if (isFinite(bvv)) add(bvv, '중고신규 기본');
+                if (tyK === '010' && (zem || easy)) {
+                    var za = zem ? A(/ZEM\s*요금제/) : A(/Easy\s*요금제/), zv = za ? (zem ? feeManN((/중고\s*H\/S\s*([\d.]+\s*만)/.exec(String(za.cond || '')) || [])[1]) : feeManN(za.amount)) : NaN;
+                    if (isFinite(zv)) add(zv, (zem ? 'ZEM' : 'Easy') + ' 요금제 중고'); else warn.push((zem ? 'ZEM' : 'Easy') + ' 요금제 중고 금액을 못 찾았어요');
+                } else if (tyK === 'MNP' && sMnp2) {
+                    var c2 = String(sMnp2.cond || ''), mn = /S_(\d+)\s*이상/.exec(c2), b1 = feeManN((/기본\s*([\d.]+\s*만)/.exec(c2) || [])[1]), b2 = feeManN((/결합\s*([\d.]+\s*만)/.exec(c2) || [])[1]), b3 = feeManN((/ZEM\s*요금제\s*([\d.]+\s*만)/.exec(c2) || [])[1]);
+                    if (mn && K < +mn[1] - 0.5) warn.push('중고MNP 활성화는 S_' + mn[1] + ' 이상 요금제만');
+                    else if (isFinite(b1)) {
+                        add(b1, '중고MNP 활성화 기본');
+                        if (isFinite(b2)) { if (comb) add(b2, '중고 결합'); else warn.push('당월 결합하면 +' + b2 + '만'); }
+                        if (isFinite(b3) && zem) { if (comb) add(b3, '결합+ZEM'); else warn.push('결합+ZEM이면 +' + b3 + '만'); }
+                    }
+                } else if (tyK === '010' && s010) {
+                    var c3 = String(s010.cond || ''), rn = /R_(\d+)\s*이상/.exec(c3), v3 = feeManN(s010.amount);
+                    if (rn && K < +rn[1] - 0.5) warn.push('중고 010 활성화는 R_' + rn[1] + ' 이상 요금제만');
+                    else if (isFinite(v3)) add(v3, '중고 010 활성화(수도권)');
+                }
+                warn.push('신창 중고 = 중고신규 기본 + 활성화 정책 합계 (확인 필요)');
+            } else return { why: dl.name + ' 단가표에 중고(비구매) 정책이 없어요 — 직접 적어 주세요' };
+            if (!fee) return { why: dl.name + ' 중고 정책에서 금액을 찾지 못했어요 (' + tyK + ' · ' + K + 'K)' + (warn.length ? ' — ' + warn.join(' / ') : '') };
+            if (!dc) warn.push('할인 방법(선약)이 비어 있어요 — 중고는 보통 선택약정만 지급');
+            return { fee: Math.round(fee * 10000), adj: 0, chk: chk, src: dl.name + ' 중고·비구매 · ' + tyK + (dc ? '·' + dc : '') + ' · ' + K + 'K · ' + parts.join(' + ') + (parts.length > 1 ? ' = ' + (Math.round(fee * 10) / 10) + '만' : '') + (warn.length ? ' · ' + warn.join(' / ') : '') + ' · 부가 추가·차감은 중고라 계산 안 함' };
         }
         function feeKwMode(dl) { return (dl.addons || []).some(function (a) { return /키워드\s*:/.test(a.note || ''); }); }
         function feeKw(note, lab) { var m = new RegExp(lab + '\\s*:\\s*([^·\\n]+)').exec(String(note || '')); return m ? m[1].split('|').map(mfXNorm).filter(Boolean) : []; }
