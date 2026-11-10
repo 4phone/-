@@ -5240,6 +5240,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
             + '.sgfav-go{display:block;width:100%;border:0;border-radius:14px;padding:15px;font-size:16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#F3D58F,#E2BA62);color:#0E343B;margin-bottom:8px}'
             + '.sgfav-ok{display:block;width:100%;border:1px solid #CBD5E0;border-radius:14px;padding:12px;font-size:14.5px;font-weight:700;cursor:pointer;background:#FFFFFF;color:#2D3748}'
             + '.sgfav-tip{font-size:12px;color:#718096;margin:10px 0 0}'
+            + '.sgfav-or{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:700;color:#718096;margin:12px 0 6px}.sgfav-or:before,.sgfav-or:after{content:"";flex:1;height:1px;background:#E2E8F0}'
             + '.pc-fav-btn{display:flex;align-items:center;justify-content:center;gap:4px;width:85px;height:38px;border-radius:999px;border:1px solid rgba(233,207,143,.7);background:#FFFFFF;color:#134047;font:800 12.5px/1 Pretendard,system-ui,sans-serif;cursor:pointer;box-shadow:0 8px 18px rgba(3,20,24,.18);transition:transform .2s}'
             + '.pc-fav-btn span{color:#C99A2E;font-size:15px}.pc-fav-btn:hover{transform:translateX(-8px)}.pc-fav-btn:focus-visible{outline:3px solid #E2BA62;outline-offset:2px}'
             + '@media print{.sgfav-ov,.pc-fav-btn{display:none!important}}';
@@ -5295,9 +5296,22 @@ if (typeof module !== 'undefined') module.exports = SGAI;
             box.appendChild(ok);
         } else {
             shortTitle();
-            box.appendChild(el('p', 'sgfav-h', '즐겨찾기에 추가하기'));
+            if (deferred) {   // PC 크롬·엣지: 버튼 한 번 → 브라우저 [설치] 창 → 바탕화면·시작 메뉴에 사거리 아이콘 (2026-11-10)
+                box.appendChild(el('p', 'sgfav-h', '바탕화면에 바로가기 만들기'));
+                var n5 = el('p', 'sgfav-n'); n5.appendChild(document.createTextNode('아래 버튼 → [설치]만 누르면 바탕화면에 ')); n5.appendChild(el('b', '', SHORT)); n5.appendChild(document.createTextNode(' 아이콘이 생겨요.')); box.appendChild(n5);
+                var go2 = el('button', 'sgfav-go', '🖥 바탕화면에 바로가기 만들기'); go2.type = 'button';
+                go2.onclick = function () {
+                    var d = deferred; if (!d) { close(); return; }
+                    deferred = null; close();
+                    try { d.prompt(); } catch (er) { /* 무시 */ }
+                };
+                box.appendChild(go2);
+                box.appendChild(el('p', 'sgfav-or', '또는 즐겨찾기(북마크)에 넣기'));
+            } else {
+                box.appendChild(el('p', 'sgfav-h', '즐겨찾기에 추가하기'));
+            }
             var keys = el('div', 'sgfav-keys'); keys.appendChild(el('span', 'sgfav-k', isMac ? '⌘' : 'Ctrl')); keys.appendChild(document.createTextNode('+')); keys.appendChild(el('span', 'sgfav-k', 'D')); box.appendChild(keys);
-            var n4 = el('p', 'sgfav-n'); n4.appendChild(document.createTextNode('키보드에서 두 키를 함께 누르고 [완료]만 눌러 주세요. 이름은 ')); n4.appendChild(el('b', '', SHORT)); n4.appendChild(document.createTextNode('으로 들어가 있어요.')); box.appendChild(n4);
+            var n4 = el('p', 'sgfav-n'); n4.appendChild(document.createTextNode('두 키를 함께 누르거나 주소창 오른쪽 끝의 ☆(별)을 누르고 [완료]만 눌러 주세요. 이름은 ')); n4.appendChild(el('b', '', SHORT)); n4.appendChild(document.createTextNode('으로 들어가 있어요.')); box.appendChild(n4);
             box.appendChild(ok);
             box.appendChild(el('p', 'sgfav-tip', '즐겨찾기 바에 바로 보이게 하려면 ' + (isMac ? '⌘+Shift+B' : 'Ctrl+Shift+B') + '로 즐겨찾기 바를 켜 주세요.'));
         }
