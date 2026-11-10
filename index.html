@@ -12,7 +12,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'">
-    <title>사거리인터넷 - 털보아저씨가 최대 사은품 쏘는 곳!</title>
+    <title>사거리인터넷 - 인터넷·TV·렌탈, 털보아저씨가 사은품 끝까지 챙겨요</title>
+    <!-- 즐겨찾기 · 홈 화면 추가: 이름은 짧게 '사거리인터넷' + 정사각형 아이콘 (2026-11-10) -->
+    <meta name="application-name" content="사거리인터넷">
+    <meta name="apple-mobile-web-app-title" content="사거리인터넷">
+    <meta name="theme-color" content="#0E343B">
+    <link rel="apple-touch-icon" href="icon-180.png">
+    <link rel="manifest" href="manifest.webmanifest">
     <!-- 투명 파비콘 적용 완료 -->
     <link rel="icon" href="사거리로고_투명.png" type="image/png">
     
@@ -1342,6 +1348,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             </div>
             <a href="#" onclick="openGiftPopup(event); closeMobileMenu();">사은품 라인업</a>
             <a href="boss.html" target="_blank" class="boss-highlight-btn" onclick="closeMobileMenu();">사장님전용</a>
+            <a href="#" class="m-fav-link" onclick="closeMobileMenu(); sgFavOpen(event);">⭐ 홈 화면에 추가</a>
         </div>
 
         <div class="nav-phone-call-zone">
@@ -1955,6 +1962,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         <a href="#" onclick="openPcDirectForm(event)" class="pc-q-btn pc-btn-direct">
             <span class="pc-q-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8M9 4v3M15 4v3"></path><rect x="4" y="6" width="16" height="15" rx="2"></rect><path d="M8 12h8M8 16h5"></path></svg></span>다이렉트접수
         </a>
+        <button type="button" class="pc-fav-btn" onclick="sgFavOpen(event)" aria-haspopup="dialog"><span aria-hidden="true">☆</span>즐겨찾기</button>
     </div>
 
     <style>
@@ -5186,6 +5194,118 @@ if (typeof module !== 'undefined') module.exports = SGAI;
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
     setInterval(function () { if (on) place(); }, 1500);   // 장바구니·메모 창이 새로 떠도 따라 올라감
+})();
+</script>
+<script>
+/* ---------- ⭐ 즐겨찾기 · 홈 화면 추가 (2026-11-10) ----------
+   브라우저는 홈페이지가 즐겨찾기를 몰래 넣는 걸 막아요 → 기기에 맞는 방법을 안내하고,
+   안내 창이 열려 있는 동안 페이지 이름을 '사거리인터넷'으로 바꿔 두어 [완료]만 누르면 되게 함.
+   안드로이드 크롬·삼성 인터넷처럼 바로 추가 창을 주는 브라우저는 그 창을 띄움. 손님 정보는 다루지 않음 */
+(function () {
+    var SHORT = '사거리인터넷', full = '', ov = null, deferred = null, keyTimer = 0;
+    var ua = navigator.userAgent || '';
+    var isIOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    var isAndroid = /Android/i.test(ua);
+    var isMac = /Mac/.test(navigator.platform || ua) && !isIOS;
+    var inApp = /KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|DaumApps|everytimeApp|BAND\//i.test(ua);
+    var isMobile = isIOS || isAndroid || /Mobi/i.test(ua);
+    function installed() { try { return (window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: minimal-ui)').matches)) || navigator.standalone === true; } catch (e) { return false; } }
+
+    window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; });
+    window.addEventListener('appinstalled', function () { deferred = null; });
+
+    function shortTitle() { if (document.title !== SHORT) { full = document.title; document.title = SHORT; } }
+    function restoreTitle() { if (full && document.title === SHORT) document.title = full; full = ''; }
+    /* 안내 창 없이 Ctrl+D(⌘+D)를 눌러도 이름이 짧게 들어가도록 (브라우저가 허락하는 경우) */
+    document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === 'd' || e.key === 'D')) {
+            shortTitle(); clearTimeout(keyTimer);
+            keyTimer = setTimeout(function () { if (!ov || ov.hidden) restoreTitle(); }, 5000);
+        }
+    }, true);
+
+    function el(tag, cls, txt) { var x = document.createElement(tag); if (cls) x.className = cls; if (txt != null) x.textContent = txt; return x; }
+    function css() {
+        if (document.getElementById('sgfav-css')) return;
+        var st = document.createElement('style'); st.id = 'sgfav-css';
+        st.textContent = '.sgfav-ov{position:fixed;inset:0;z-index:2147481000;background:rgba(6,24,28,.55);display:flex;align-items:center;justify-content:center;padding:16px}.sgfav-ov[hidden]{display:none}'
+            + '.sgfav-box{position:relative;width:100%;max-width:400px;background:#FFFFFF;border-radius:20px;padding:26px 22px 20px;box-shadow:0 20px 50px rgba(0,0,0,.3);text-align:center;color:#13262A;font-family:Pretendard,system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}'
+            + '.sgfav-x{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:1px solid #E2E8F0;background:#FFFFFF;color:#4A5568;font-size:16px;cursor:pointer}'
+            + '.sgfav-ic{width:64px;height:64px;border-radius:16px;margin:0 auto 10px;display:block;box-shadow:0 4px 12px rgba(0,0,0,.12)}'
+            + '.sgfav-h{font-size:19px;font-weight:800;margin:0 0 4px}.sgfav-n{font-size:13.5px;color:#4A5568;margin:0 0 16px}.sgfav-n b{color:#134047}'
+            + '.sgfav-keys{display:flex;align-items:center;justify-content:center;gap:8px;margin:4px 0 14px;font-size:15px;font-weight:700;color:#4A5568}'
+            + '.sgfav-k{display:inline-block;min-width:48px;padding:10px 14px;border-radius:10px;background:#0E343B;color:#FFD86B;font-size:20px;font-weight:800;box-shadow:0 3px 0 #061C20}'
+            + '.sgfav-steps{text-align:left;margin:0 0 14px;padding:0;list-style:none;counter-reset:s}.sgfav-steps li{counter-increment:s;position:relative;padding:10px 12px 10px 42px;margin-bottom:6px;background:#F4F8F7;border-radius:12px;font-size:14.5px;line-height:1.45}'
+            + '.sgfav-steps li:before{content:counter(s);position:absolute;left:12px;top:10px;width:22px;height:22px;border-radius:50%;background:#1F5A5E;color:#FFFFFF;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}'
+            + '.sgfav-go{display:block;width:100%;border:0;border-radius:14px;padding:15px;font-size:16px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#F3D58F,#E2BA62);color:#0E343B;margin-bottom:8px}'
+            + '.sgfav-ok{display:block;width:100%;border:1px solid #CBD5E0;border-radius:14px;padding:12px;font-size:14.5px;font-weight:700;cursor:pointer;background:#FFFFFF;color:#2D3748}'
+            + '.sgfav-tip{font-size:12px;color:#718096;margin:10px 0 0}'
+            + '.pc-fav-btn{display:flex;align-items:center;justify-content:center;gap:4px;width:85px;height:38px;border-radius:999px;border:1px solid rgba(233,207,143,.7);background:#FFFFFF;color:#134047;font:800 12.5px/1 Pretendard,system-ui,sans-serif;cursor:pointer;box-shadow:0 8px 18px rgba(3,20,24,.18);transition:transform .2s}'
+            + '.pc-fav-btn span{color:#C99A2E;font-size:15px}.pc-fav-btn:hover{transform:translateX(-8px)}.pc-fav-btn:focus-visible{outline:3px solid #E2BA62;outline-offset:2px}'
+            + '@media print{.sgfav-ov,.pc-fav-btn{display:none!important}}';
+        document.head.appendChild(st);
+    }
+    function close() { if (!ov || ov.hidden) return; ov.hidden = true; restoreTitle(); document.removeEventListener('keydown', onEsc, true); }
+    function onEsc(e) { if (e.key === 'Escape') close(); }
+    function steps(list) { var ol = el('ol', 'sgfav-steps'); list.forEach(function (t) { ol.appendChild(el('li', '', t)); }); return ol; }
+
+    window.sgFavOpen = function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        css();
+        if (!ov) {
+            ov = el('div', 'sgfav-ov'); ov.hidden = true; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-modal', 'true'); ov.setAttribute('aria-label', '즐겨찾기 추가');
+            ov.addEventListener('click', function (x) { if (x.target === ov) close(); });
+            document.body.appendChild(ov);
+        }
+        while (ov.firstChild) ov.removeChild(ov.firstChild);
+        var box = el('div', 'sgfav-box'), x = el('button', 'sgfav-x', '✕'); x.type = 'button'; x.setAttribute('aria-label', '닫기'); x.onclick = close; box.appendChild(x);
+        var ic = el('img', 'sgfav-ic'); ic.src = 'icon-180.png'; ic.alt = ''; box.appendChild(ic);
+        var ok = el('button', 'sgfav-ok', '닫기'); ok.type = 'button'; ok.onclick = close;
+
+        if (installed()) {
+            box.appendChild(el('p', 'sgfav-h', '이미 홈 화면에서 열었어요 😊'));
+            box.appendChild(el('p', 'sgfav-n', '다음에도 홈 화면의 사거리인터넷 아이콘을 눌러 들어오시면 돼요.'));
+            box.appendChild(ok);
+        } else if (inApp) {
+            box.appendChild(el('p', 'sgfav-h', '이 앱 안에서는 추가가 안 돼요'));
+            box.appendChild(el('p', 'sgfav-n', '카카오톡·네이버 같은 앱 안의 화면은 즐겨찾기를 막아 두었어요.'));
+            box.appendChild(steps(['화면 오른쪽 위(또는 아래)의 ⋮ / ··· 메뉴를 눌러요', '[다른 브라우저로 열기] (크롬·사파리·삼성 인터넷)를 눌러요', '열린 화면에서 ☰ 메뉴 → ⭐ 홈 화면에 추가를 다시 눌러요']));
+            box.appendChild(ok);
+        } else if (deferred && isMobile) {
+            box.appendChild(el('p', 'sgfav-h', '홈 화면에 바로 추가할까요?'));
+            var n = el('p', 'sgfav-n'); n.appendChild(document.createTextNode('아이콘 이름은 ')); n.appendChild(el('b', '', SHORT)); n.appendChild(document.createTextNode('으로 자동으로 들어가요.')); box.appendChild(n);
+            var go = el('button', 'sgfav-go', '📲 홈 화면에 추가'); go.type = 'button';
+            go.onclick = function () {
+                var d = deferred; if (!d) { close(); return; }
+                deferred = null; close();
+                try { d.prompt(); } catch (er) { /* 무시 */ }
+            };
+            box.appendChild(go); box.appendChild(ok);
+        } else if (isIOS) {
+            shortTitle();
+            box.appendChild(el('p', 'sgfav-h', '홈 화면에 추가하기'));
+            var n2 = el('p', 'sgfav-n'); n2.appendChild(document.createTextNode('이름은 ')); n2.appendChild(el('b', '', SHORT)); n2.appendChild(document.createTextNode('으로 들어가 있어요. 고칠 필요 없어요.')); box.appendChild(n2);
+            box.appendChild(steps(['화면 아래(아이패드는 위)의 공유 버튼 ⬆︎ 을 눌러요', '아래로 내려 [홈 화면에 추가]를 눌러요', '오른쪽 위 [추가]를 누르면 끝!']));
+            box.appendChild(ok);
+        } else if (isMobile) {
+            shortTitle();
+            box.appendChild(el('p', 'sgfav-h', '홈 화면에 추가하기'));
+            var n3 = el('p', 'sgfav-n'); n3.appendChild(document.createTextNode('이름은 ')); n3.appendChild(el('b', '', SHORT)); n3.appendChild(document.createTextNode('으로 들어가 있어요.')); box.appendChild(n3);
+            box.appendChild(steps(['브라우저 메뉴(오른쪽 위 ⋮ · 삼성 인터넷은 아래 ≡)를 눌러요', '[홈 화면에 추가] (삼성 인터넷: [현재 페이지 추가] → [홈 화면])를 눌러요', '[추가]를 누르면 끝!']));
+            box.appendChild(ok);
+        } else {
+            shortTitle();
+            box.appendChild(el('p', 'sgfav-h', '즐겨찾기에 추가하기'));
+            var keys = el('div', 'sgfav-keys'); keys.appendChild(el('span', 'sgfav-k', isMac ? '⌘' : 'Ctrl')); keys.appendChild(document.createTextNode('+')); keys.appendChild(el('span', 'sgfav-k', 'D')); box.appendChild(keys);
+            var n4 = el('p', 'sgfav-n'); n4.appendChild(document.createTextNode('키보드에서 두 키를 함께 누르고 [완료]만 눌러 주세요. 이름은 ')); n4.appendChild(el('b', '', SHORT)); n4.appendChild(document.createTextNode('으로 들어가 있어요.')); box.appendChild(n4);
+            box.appendChild(ok);
+            box.appendChild(el('p', 'sgfav-tip', '즐겨찾기 바에 바로 보이게 하려면 ' + (isMac ? '⌘+Shift+B' : 'Ctrl+Shift+B') + '로 즐겨찾기 바를 켜 주세요.'));
+        }
+        ov.appendChild(box); ov.hidden = false;
+        document.addEventListener('keydown', onEsc, true);
+        setTimeout(function () { try { (box.querySelector('.sgfav-go') || ok).focus(); } catch (er) { /* 무시 */ } }, 30);
+    };
+    css();
 })();
 </script>
 </body>
