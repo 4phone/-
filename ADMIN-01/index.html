@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6RaqZ+wHbEjVTMwuGcR4gG3J0gzXaI7GYEek7/6Po3I='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-BQ4lwulB2T//4iKSKoRjcMsXu50MGn6UM0F1PAMP3Xw='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2170,7 +2170,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-10.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-10.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2784,6 +2784,25 @@
             if (!db || !db.events) return 0;
             var today = ymd(new Date()), n = 0;
             db.events.forEach(function (e) { if (e.date >= today && autoTaskFix(e)) n++; });
+            try { n += regPevDealerHeal(today); } catch (pe) { }
+            return n;
+        }
+        function regPevDealerHeal(today) {   // 11-10.2 전에 만든 '요금제 변경' 일정 (오늘·앞으로 · 안 끝난 것) → 제목·메모에 거래처 넣기 (한 번만)
+            if (!db.regs) return 0;
+            var n = 0;
+            db.regs.forEach(function (r) {
+                if (!r || r.kind !== 'mobile' || !r.pev || !r.dealer) return;
+                var ev = regEvOf(r, 'pev');
+                if (!ev || ev.date < today || !/^📱 요금제 변경 · /.test(ev.title || '') || /(^|\n)거래처: /.test(ev.memo || '')) return;
+                var t = evTask(ev); if (t && closed(t)) return;
+                var pre = '📱 요금제 변경 · ' + (r.name || '고객') + ' · ';
+                if (ev.title.indexOf(pre) === 0 && ev.title.indexOf(pre + r.dealer + ' · ') !== 0) ev.title = (pre + r.dealer + ' · ' + ev.title.slice(pre.length)).slice(0, 120);
+                var m = String(ev.memo || '').replace(/^가입 통신사: (.*) · 접수처: .*$/m, function (a, c) { return '거래처: ' + r.dealer + '\n가입 통신사: ' + c; });
+                if (!/(^|\n)거래처: /.test(m)) m = '거래처: ' + r.dealer + (m ? '\n' + m : '');
+                ev.memo = m.slice(0, 1900);
+                stamp(ev); if (t) evSyncTask(ev);
+                n++;
+            });
             return n;
         }
         function idTime(id) {   // uid()로 만든 번호 'i' + 만든 시각(36진수 8자리) + 임의 6자리 → 만든 시각 (모르면 0)
@@ -7413,7 +7432,8 @@
             var memo = [
                 '고객명: ' + (r.name || '-'),
                 '휴대폰: ' + (r.phone || '-'),
-                '가입 통신사: ' + (r.carrier || '-') + ' · 접수처: ' + (r.dealer || '-'),
+                '거래처: ' + (r.dealer || '-'),
+                '가입 통신사: ' + (r.carrier || '-'),
                 P ? '가입 유형: ' + (r.type || '-') + (x.f.disc ? ' · ' + (x.f.disc === 'sel' ? '선택약정' : '공시지원금') : '') + (x.f.pay ? ' · 유통망지원금 ' + (+x.f.payAmt).toLocaleString('ko-KR') + '원' : '') : '부가서비스: ' + x.svc,
                 P ? '가입 요금제: ' + x.svc : '',
                 P ? '변경 요금제: ' + x.plan2 + (x.keep2 ? ' (유지 ' + x.keep2 + '개월)' : '') + (x.bill2 ? ' · 청구금액 ' + x.bill2 + '원' : '') : '',
@@ -7425,7 +7445,7 @@
                 '판매자: ' + (r.seller || staffName(sid)),
                 P ? '※ 변경 날짜에 고객에게 전화(부재 시 문자)한 뒤 변경 요금제로 바꿔 주세요.' : '※ 고객에게 먼저 안내한 뒤 부가서비스를 해지해 주세요.'
             ].filter(Boolean).join('\n').slice(0, 1900);
-            var title = P ? '📱 요금제 변경 · ' + (r.name || '고객') + ' · ' + x.svc + ' → ' + x.plan2 : '📵 부가서비스 해지 가능 · ' + (r.name || '고객') + ' · ' + x.svc;
+            var title = P ? '📱 요금제 변경 · ' + (r.name || '고객') + (r.dealer ? ' · ' + r.dealer : '') + ' · ' + x.svc + ' → ' + x.plan2 : '📵 부가서비스 해지 가능 · ' + (r.name || '고객') + ' · ' + x.svc;
             return { title: title.slice(0, 120), memo: memo, sid: sid, date: x.date };
         }
         function regKCal(M, r, k) {   // 드라이브 저장 때마다: 일정 만들기 / 바뀌면 고치기 / 없어지면 지우기 → 결과 (팝업·알림용)
