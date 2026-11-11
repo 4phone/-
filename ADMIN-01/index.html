@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-s7W/CeMPBwNJRqAlXCqH5dUtvmQaqY1WkMfHt2nbV4c='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-/RlOr0H/xFUx8Wj8KO2CxZOKehV3ENToul11xtHyYf4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -830,6 +830,9 @@
         .idr-dk-btn { border-color: #2F6B9A; color: #1E4E78; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; }
         .idr-dk-n { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #D32F2F; color: #fff; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
         .dk-dlg { width: min(640px, calc(100vw - 24px)); }
+        .ci-health { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; font-size: 12.5px; }
+        .ci-hl { padding: 2px 8px; border-radius: 999px; background: #EEF6EE; color: #2F5D2F; font-weight: 700; }
+        .ci-hl.warn { background: #FDECEC; color: #B42318; }
         .dk-list { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow: auto; }
         .dk-item { border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; background: #fff; }
         .dk-item.got { background: #F7F8F2; }
@@ -2170,7 +2173,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-11.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-11.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -9104,7 +9107,7 @@
             if (!l || !l.length) return null;
             return l.slice().sort(function (a, b) { return a.day < b.day ? 1 : a.day > b.day ? -1 : 0; })[0];
         }
-        var CI_BEFORE = 60000, CI_AFTER = 180000, CI_WAIT = 240000;   // 착신 대조: 버튼 누르기 1분 전 ~ 3분 뒤에 온 전화 · 4분 지나도 없으면 '통화 없음'
+        var CI_BEFORE = 60000, CI_AFTER = 600000, CI_WAIT = 660000;   // 착신 대조: 버튼 누르기 1분 전 ~ 10분 뒤에 온 전화 · 11분 지나도 없으면 '통화 없음' (11-11.2: 3분 → 10분 · 페이지 보다가 나중에 거는 손님)
         function ibRcvNorm(l) { return (Array.isArray(l) ? l : []).filter(function (r) { return r && typeof r.id === 'string' && typeof r.t === 'number' && typeof r.ph === 'string'; }).map(function (r) { return { id: r.id.slice(0, 40), t: r.t, ph: r.ph.slice(0, 12), n4: typeof r.n4 === 'string' ? r.n4.replace(/\D/g, '').slice(-4) : '' }; }).sort(function (a, b) { return a.t - b.t; }); }
         function ibRcvAll(items, legacy) {   // 착신 기록: 목록 줄(종류 rcv · 미인입·테스트 표시한 것은 빼고) + 예전 방식(11-05.2 첫 시험)
             return ibRcvNorm((legacy || []).concat(items.filter(function (x) { var m = ibMark(x); return x.kind === 'rcv' && m !== 'no' && m !== 'test' && m !== 'nc'; })));
@@ -9311,7 +9314,15 @@
             var matched = {}; Object.keys(SEQ.mt).forEach(function (pid) { matched[SEQ.mt[pid].id] = pid; });
             var stOf = Object.create(null); ib.phones.forEach(function (p) { stOf[p.ph] = p.st || ''; });
             var recent = ib.rcv.slice(-5).reverse();
+            var lastOf = Object.create(null); ib.rcv.forEach(function (r) { if (!lastOf[r.ph] || r.t > lastOf[r.ph]) lastOf[r.ph] = r.t; });
+            var nowD = new Date(), hm = nowD.getHours() * 60 + nowD.getMinutes(), work = hm >= 600 && hm <= 1170, t0 = new Date(nowD.getFullYear(), nowD.getMonth(), nowD.getDate()).getTime();
+            var health = ib.phones.map(function (p) {   // 11-11.2: 착신 휴대폰마다 마지막으로 전화 신호가 온 시각 (오래 안 오면 MacroDroid 꺼짐 의심)
+                var t = lastOf[p.ph] || 0, gap = t ? Date.now() - t : Infinity, warn = work && (t < t0 ? hm >= 720 : gap > 3 * 3600000);
+                return h('span', { class: 'ci-hl' + (warn ? ' warn' : ''), 'data-fk': 'ci-health', title: warn ? '전화 신호가 오래 안 왔어요. 그 휴대폰의 MacroDroid가 켜져 있는지, 1833-2440이 이 휴대폰으로 착신되는지 확인해 주세요.' : '' },
+                    (warn ? '⚠ ' : '📶 ') + p.ph + (p.st ? '(' + p.st + ')' : '') + ' · ' + (t ? (t >= t0 ? '오늘 ' : '') + ibHms(t) : '착신 기록 없음'));
+            });
             return h('div', { class: 'panel ci-rcv-top', 'data-fk': 'ci-recent' },
+                health.length ? h('div', { class: 'ci-health' }, h('small', {}, '착신 휴대폰 마지막 신호: '), health) : null,
                 h('div', { class: 'ci-rcv-h' }, h('b', {}, '📱 최근 착신 ' + recent.length + '건'), h('small', {}, ' 휴대폰에 실제로 온 전화 (최근 5건)'),
                     isAdminUser() ? h('button', { type: 'button', class: 'link-btn', 'data-fk': 'ci-go-set', onclick: function () { state.view = 'settings'; render(); setTimeout(function () { var el = document.querySelector('[data-fk=ci-set]'); if (el) el.scrollIntoView({ block: 'start' }); }, 50); } }, '⚙ 휴대폰 연결 설정') : null),
                 recent.length ? recent.map(function (r) {
@@ -9515,7 +9526,7 @@
                 TB ? TB.el : null,
                 list.length > IB_SHOW ? h('p', { class: 'ib-help' }, '※ 목록은 최근 ' + IB_SHOW + '건만 보여요 (전체 ' + list.length + '건은 [📥 이 기간 엑셀]에 모두 들어가요).') : null,
                 h('div', { class: 'panel' }, rows.length ? rows : h('div', { class: 'empty' }, PD.loading ? P.label + ' 기록을 불러오는 중이에요...' : PD.err ? '불러오지 못했어요. ' + PD.err : P.future ? '아직 오지 않은 기간이에요.' : ib.at && !P.now ? '이 기간에는 기록이 없어요.' : ib.at || ib.err ? (ib.items.length ? '조건에 맞는 기록이 없어요.' : '아직 들어온 기록이 없어요. 고객이 홈페이지에서 전화·카톡·문자 버튼을 누르면 여기에 올라와요.') : '불러오는 중이에요...')),
-                h('p', { class: 'ib-help' }, '※ 착신 휴대폰을 연결하면 전화 버튼마다 실제로 전화가 왔는지 자동으로 맞춰요: 왔으면 그 줄에 📱 통화 확인, 3분 안에 안 왔으면 \'통화 없음\'으로 빠져요. 버튼 없이 온 전화(네이버·전단지 번호로 직접 건 전화)는 📱 착신 줄로 올라와요(개인 전화면 [미인입]). ※ 자동 제외: PC에서 누른 전화 버튼(PC 클릭)과 모바일에서 3분 안에 다시 누른 전화(중복?)는 실 인입 순번에서 자동으로 빠져요. 실제로 통화한 전화면 대표님이 [실 인입]을 눌러 되살려 주세요. ※ 홈페이지에서는 고객이 어떤 버튼을 언제 눌렀는지만 알 수 있어요. 전화를 건 고객의 번호나 실제 통화 연결 여부는 알 수 없어서 기록되지 않아요. 접수 완료 건은 고객이 적은 성함·연락처가 함께 보여요(번호를 누르면 전화 연결).'));
+                h('p', { class: 'ib-help' }, '※ 착신 휴대폰을 연결하면 전화 버튼마다 실제로 전화가 왔는지 자동으로 맞춰요: 왔으면 그 줄에 📱 통화 확인 + 손님 번호, 10분 안에 안 왔으면 \'통화 없음\'(손님이 통화를 안 눌렀거나, 연결 안 된 휴대폰·유선전화로 받은 전화)으로 빠져요. 버튼 없이 온 전화(네이버·전단지 번호로 직접 건 전화)는 📱 착신 줄로 올라와요(개인 전화면 [미인입]). ※ 자동 제외: PC에서 누른 전화 버튼(PC 클릭)과 모바일에서 3분 안에 다시 누른 전화(중복?)는 실 인입 순번에서 자동으로 빠져요. 실제로 통화한 전화면 대표님이 [실 인입]을 눌러 되살려 주세요. ※ 홈페이지에서는 고객이 어떤 버튼을 언제 눌렀는지만 알 수 있어요. 전화를 건 고객의 번호나 실제 통화 연결 여부는 알 수 없어서 기록되지 않아요. 접수 완료 건은 고객이 적은 성함·연락처가 함께 보여요(번호를 누르면 전화 연결).'));
         }
 
         /* ---------- 엑셀(.xlsx) 파일 만들기: 외부 프로그램 없이 이 화면에서 직접 ---------- */
