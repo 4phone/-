@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-BQ4lwulB2T//4iKSKoRjcMsXu50MGn6UM0F1PAMP3Xw='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-s7W/CeMPBwNJRqAlXCqH5dUtvmQaqY1WkMfHt2nbV4c='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2170,7 +2170,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-10.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-11.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2569,8 +2569,10 @@
             clearTimeout(idleTimer); idleHide(); render();
         }
         var lastAct = Date.now();
-        function idleHide() { var d = document.getElementById('idle-dlg'); if (d && d.open) { try { d.close(); } catch (e) { d.removeAttribute('open'); } } if (d) d.textContent = ''; }
+        function idleHide() {
+            try { idr.vIdle = 0; } catch (eV) { /* 무시 */ } var d = document.getElementById('idle-dlg'); if (d && d.open) { try { d.close(); } catch (e) { d.removeAttribute('open'); } } if (d) d.textContent = ''; }
         function idleShow(left) {   // 30분 동안 조작이 없으면: [유지하기] 안내 (1분 안에 안 누르면 잠금)
+            try { if (!idr.vIdle) { idr.vIdle = 1; if (clMemoUnsaved()) clDraftSave(true); idrVaultSave(); if (cl.dirty) clSave(0); } } catch (eV) { /* 무시 */ }   // 잠기기 전에 적던 것 보관
             var d = document.getElementById('idle-dlg'), n = Math.max(0, Math.ceil(left / 1000));
             var num = d.querySelector('.idle-n');
             if (d.open && num) { num.textContent = n + '초'; return; }
@@ -8118,6 +8120,7 @@
             svBusy = true; saveFabPaint();
             var did = [], forms = svUnsavedForms(), jobs = forms.map(function (M) { return mfdSave(M).then(function () { did.push((M.kind === 'mobile' ? '모바일' : '유선') + ' 확인서 임시 보관'); }); });
             if (clMemoUnsaved() && clDraftSave(true)) did.push('상담 메모 임시 저장');
+            try { if (idrVaultSave()) did.push('신분증 요청 보관'); } catch (eV) { /* 무시 */ }
             try { if (glDirty()) { glSaveNow(); did.push('가입고객리스트'); } } catch (e) { /* 무시 */ }
             saveDb();
             return Promise.all(jobs).then(function () {
@@ -9930,9 +9933,10 @@
             var U = idrUI(), d = x.d;
             if ((U.name.value.trim() || U.phone.value.trim() || (U.memo.value !== INTAKE_TPL && intakeHas(U.memo.value))) && !confirm('지금 적던 내용 대신 ' + (d.name || '이 고객') + '님 다이렉트 접수 내용을 넣을까요?')) return;
             closeDlg();
+            idrVaultNew();
             idr.last = null; idrSetKind('person');
             U.name.value = d.name; U.phone.value = mfPhone(d.phone); U.memo.value = dkMemo(d);
-            idrPaint();
+            idrPaint(); idrVaultSave();
             ibCall('dkMark', { ids: [x.id] }).then(function () { x.got = { t: Date.now(), by: staffName(me) }; render(); }, function () { /* 표시 실패는 넣은 내용에 영향 없음 */ });
             setTimeout(function () { try { U.form.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* 무시 */ } }, 50);
             toast((d.name || '고객') + '님 다이렉트 접수 내용을 넣었어요. 빨간 글씨는 아직 비어 있는 칸이에요.');
@@ -12663,6 +12667,7 @@
             } }, '양식 다시 넣기');
             U.phone.addEventListener('input', function () { var d = this.value.replace(/\D/g, '').slice(0, 11); this.value = d.length > 7 ? d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7) : d.length > 3 ? d.slice(0, 3) + '-' + d.slice(3) : d; });
             [U.name, U.phone].forEach(function (x) { x.addEventListener('input', function () { idrPaint(); }); });
+            [U.name, U.phone].concat(U.parts).forEach(function (x) { x.addEventListener('input', idrVaultKick); });   // 🗂 적는 대로 보관함에 (잠금·새로고침에도 안 사라지게)
             U.kind = 'person';
             U.kindBtns = ['person', 'biz', 'corp'].map(function (k) {
                 return h('button', { type: 'button', 'data-kind': k, 'aria-pressed': k === 'person' ? 'true' : 'false', onclick: function () { idrSetKind(k); } }, IDR_KINDS[k].label);
@@ -12681,7 +12686,8 @@
                 ibCall('idCreate', { name: nm, phone: ph, memo: intakeShort(note), kind: kind }).then(function (res) {   // 서버에는 상품 요약만 (주민번호·계좌 등은 보내지 않음)
                     U.make.disabled = false; U.make.textContent = '전용 링크 만들기';
                     if (kind !== 'person' && (!res || res.kind !== kind)) { toast('서버가 예전 버전이라 ' + IDR_KINDS[kind].label + ' 서류 요청을 만들 수 없어요. 구글 Apps Script(drive-storage.gs)를 새 버전으로 바꿔 [배포] 해 주세요.'); return; }
-                    if (intakeHas(U.memo.value) && res && res.code) intakeSave(String(res.code), nm, note);   // 빈 양식(이름·번호만)은 저장하지 않음
+                    if (intakeHas(U.memo.value) && res && res.code) intakeSave(String(res.code), nm, note);
+                    try { var vx2 = idrVaultSave(); if (vx2) cuvPut({ id: vx2.id, sent: Date.now() }); } catch (eV) { /* 무시 */ }   // 빈 양식(이름·번호만)은 저장하지 않음
                     idr.last = { name: nm, phone: ph, kind: kind, code: res.code, exp: res.exp, text: idrMessage(nm, res.staff || '담당자', res.code, res.exp, kind) };
                     idrPaint(); idr.items = null; idr.busy = false; idrLoad();
                     toast('고객 전용 링크를 만들었어요. 아래에서 문자로 보내 주세요.');
@@ -12733,21 +12739,25 @@
         }
         function idrReset() {   // 다른 고객: 적던 내용과 만든 링크를 지우고 처음부터
             var U = idrUI();
+            idrVaultNew();   // 적던 고객은 보관함에 남겨 둠
             U.name.value = ''; U.phone.value = ''; U.memo.value = INTAKE_TPL;
             idr.last = null; idrSetKind('person');
             try { U.name.focus(); } catch (e) { /* 무시 */ }
-            toast('새 고객 정보를 입력해 주세요.');
+            toast('새 고객 정보를 입력해 주세요. (적던 고객은 🗂 고객 정보 보관함에 남겨 뒀어요)');
         }
         function renderIdreq() {
             var dkNew = (dk.items || []).filter(function (x) { return !x.bad && !(x.got && x.got.t); }).length;
             var head = h('div', { class: 'page-head' }, h('h1', {}, '신분증 요청'),
                 h('div', { class: 'actions idr-head-acts' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'idr-refresh', onclick: function () { idr.busy = false; idrLoad(); dk.busy = false; dkLoad(); toast('새로 확인하고 있어요.'); } }, '새로고침'),
+                    driveOn() ? h('button', { type: 'button', class: 'btn', 'data-fk': 'idr-cuv', 'data-act': 'cuv-open', onclick: function () { cuvDlg(); } }, '🗂 고객 정보 보관함' + (cuvAll().length ? ' (' + cuvAll().length + ')' : '')) : null,
                     driveOn() ? h('button', { type: 'button', class: 'btn idr-dk-btn', 'data-fk': 'idr-dk', 'data-act': 'dk-open', onclick: function () { dkDlg(); if (!dk.busy) dkLoad(); } }, '📥 다이렉트 접수 확인', dkNew ? h('span', { class: 'idr-dk-n', 'aria-label': '새 접수 ' + dkNew + '건' }, String(dkNew)) : null) : null));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '신분증 요청은 구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요.')));
             if (dk.items === null && !dk.busy && !dk.err) loadOnce('dk', dkLoad);
             if (idr.items === null && !idr.busy && !idr.err) loadOnce('idr', idrLoad);
             if (db.intakes && db.intakes.some(function (x) { return x.t && x.t < Date.now() - INTAKE_KEEP_DAYS * 86400000; })) setTimeout(intakeCleanup, 0);
             var U = idrUI();
+            if (!cl.data && !cl.busy && !cl.err) loadOnce('cl', function () { clLoad(true); });
+            idrVaultRestore();
             var items = idr.items || [];
             var ST = { ready: ['대기', 'idr-st-ready'], done: ['접수 완료', 'idr-st-done'], expired: ['만료', 'idr-st-exp'] };
             var bossDel = isBoss(), selN = items.filter(function (x) { return idr.sel[x.code]; }).length;
@@ -13452,6 +13462,19 @@
                 var dd = { id: id, sh: str(x.sh, 40), st: okSt[x.st] ? x.st : 'n', v: v, raw: str(x.raw, 6000), by: str(x.by, 20), at: num(x.at), u: num(x.u) }; if (Object.keys(cu).length) dd.cu = cu;
                 out.drafts.push(dd);
             });
+            out.cuv = [];
+            var vCut = Date.now() - CUV_KEEP;
+            (Array.isArray(d.cuv) ? d.cuv.slice(-300) : []).forEach(function (x) {   // 🗂 고객 정보 보관함 (7일)
+                var id = x && str(x.id, 40); if (!id || ids[id] || num(x.at) < vCut) return;
+                ids[id] = 1;
+                var cu = {}; if (x.cu && typeof x.cu === 'object') { CL_CU.forEach(function (f) { var t = str(x.cu[f[0]], 150); if (t) cu[f[0]] = t; }); if (x.cu.pself === '1') cu.pself = '1'; }
+                var o = { id: id, src: x.src === 'idr' ? 'idr' : 'memo', ph: digitsOnly(str(x.ph, 20)).slice(0, 11), nm: str(x.nm, 20), rid: str(x.rid, 40), sh: str(x.sh, 40), by: str(x.by, 20), at: num(x.at), at0: num(x.at0), u: num(x.u), ct: num(x.ct) };
+                if (num(x.sent)) o.sent = num(x.sent);
+                if (Object.keys(cu).length) o.cu = cu;
+                if (x.idr && typeof x.idr === 'object') o.idr = { name: str(x.idr.name, 20), phone: str(x.idr.phone, 13), memo: str(x.idr.memo, 4000), kind: /^(person|biz|corp)$/.test(String(x.idr.kind)) ? x.idr.kind : 'person' };
+                if (!o.cu && !o.idr) return;
+                out.cuv.push(o);
+            });
             var dd = d.del && typeof d.del === 'object' ? d.del : {};
             Object.keys(dd).slice(0, 40000).forEach(function (id) { var t = num(dd[id]); if (id.length <= 40 && t > 0) out.del[id] = t; });
             return out;
@@ -13477,7 +13500,7 @@
                 if (!l) return w;
                 var m = JSON.parse(JSON.stringify(l)), k = noK[w.sh]; if (k && w.v && w.v[k]) m.v[k] = w.v[k]; m.u = Math.max(w.u, l.u); return m;
             });
-            return { sheets: sheets, rows: rowsM.filter(function (r) { return ok[r.sh]; }), xr: pick(a.xr || [], b.xr || []), drafts: pick(a.drafts || [], b.drafts || []), del: del };
+            return { sheets: sheets, rows: rowsM.filter(function (r) { return ok[r.sh]; }), xr: pick(a.xr || [], b.xr || []), drafts: pick(a.drafts || [], b.drafts || []), cuv: pick(a.cuv || [], b.cuv || []), del: del };
         }
         function clRowsOf(shId) { return cl.data.rows.filter(function (r) { return r.sh === shId; }).sort(function (p, q) { return (p.o - q.o) || (p.id < q.id ? -1 : 1); }); }
         function clDataRows() { return cl.data ? cl.data.rows.filter(function (r) { return r.ty === 'row'; }).length : 0; }
@@ -13523,7 +13546,7 @@
                 cl.err = '상담 줄이 갑자기 많이 줄어서(' + cl.base + ' → ' + n + '줄) 저장을 멈췄어요. 새로고침 후 다시 확인해 주세요.'; render(); return;
             }
             cl.saving = true;
-            var mine = cl, at = cl.editAt, plain = JSON.stringify({ v: 1, sheets: cl.data.sheets, rows: cl.data.rows, xr: (cl.data.xr || []).filter(function (x) { return x.at > Date.now() - 30 * 86400000; }), drafts: (cl.data.drafts || []).filter(function (x) { return x.at > Date.now() - 14 * 86400000; }), del: cl.data.del });
+            var mine = cl, at = cl.editAt, plain = JSON.stringify({ v: 1, sheets: cl.data.sheets, rows: cl.data.rows, xr: (cl.data.xr || []).filter(function (x) { return x.at > Date.now() - 30 * 86400000; }), drafts: (cl.data.drafts || []).filter(function (x) { return x.at > Date.now() - 14 * 86400000; }), cuv: (cl.data.cuv || []).filter(function (x) { return x.at > Date.now() - CUV_KEEP; }), del: cl.data.del });
             clStatusPaint();
             ensureTeam().then(function (t) {
                 return encryptText(t.encKey, plain, CL_AAD).then(function (blob) { return ibCall('clPut', { baseRev: Math.max(0, cl.rev), blob: blob }); });
@@ -14221,6 +14244,100 @@
             toast(pk.c.name + ' · ' + pk.r.n + ' 을(를) 상담 메모에 넣었어요.');
         }
         function clMemoStash() { var M = cl.memo; if (M && M.P) { M.vals = M.P.values(); M.st = M.P.st; if (M.P.memoEl) M.raw = M.P.memoEl.value; } }
+        /* ---------- 🗂 고객 정보 보관함 (11-11.1): 상담 메모 '고객 정보'·신분증 요청에 적은 내용이 어떤 경우에도 사라지지 않게 ----------
+           상담 리스트와 같은 팀 저장소(팀 키 암호화 · 우리 Apps Script)에 7일 보관 · 상담 리스트 줄·엑셀에는 들어가지 않음
+           지워지던 곳: 상담 완료(판매성공 아닌 상태) · 30분 자동 잠금 · 새로고침 · [+ 다른 고객 기입] · '다른 고객 적던 내용' 창 [취소] */
+        var CUV_KEEP = 7 * 86400000;
+        function cuvAll() { return cl.data && cl.data.cuv ? cl.data.cuv : []; }
+        function cuvPut(o) {
+            if (!authed || !db) return null;
+            if (!o.id) o.id = uid();   // 상담 리스트가 아직 안 왔어도 같은 보관본 번호로 이어서 저장
+            if (!cl.data) { if (!cl.busy) clLoad(true); var n = 0; (function w() { if (cl.data) cuvPut(o); else if (++n < 30) setTimeout(w, 1000); })(); return { id: o.id, pending: 1 }; }
+            if (!cl.data.cuv) cl.data.cuv = [];
+            var x = o.id ? cuvAll().filter(function (y) { return y.id === o.id; })[0] : null;
+            if (!x) { x = { id: o.id || uid(), at0: Date.now() }; cl.data.cuv.push(x); }
+            ['src', 'ph', 'nm', 'rid', 'sh', 'sent'].forEach(function (k) { if (o[k] !== undefined) x[k] = o[k]; });
+            if (o.cu) x.cu = JSON.parse(JSON.stringify(o.cu));
+            if (o.idr) x.idr = JSON.parse(JSON.stringify(o.idr));
+            x.at = Date.now(); clStamp(x);
+            clQueue();
+            return x;
+        }
+        function cuvFind(rid, ph) {   // 상담 리스트 줄 → 그 줄을 저장할 때 보관한 고객 정보 (없으면 같은 번호의 가장 최근 것)
+            var L = cuvAll().filter(function (x) { return x.cu; }).sort(function (a, b) { return b.at - a.at; }), d = digitsOnly(ph || '');
+            return (rid && L.filter(function (x) { return x.rid === rid; })[0]) || (d.length >= 10 && L.filter(function (x) { return x.ph === d; })[0]) || null;
+        }
+        function cuvBits(x) {   // 무엇이 적혀 있는지 (내용은 안 보여 줌)
+            var cu = x.cu || {}, m = x.idr ? String(x.idr.memo || '') : '', has = function (k, re) { return String(cu[k] || '').trim() || (re && re.test(m)); }, b = [];
+            if (has('rrn', /주민번호\(전체\)\s*:\s*\d{6}/)) b.push('주민번호');
+            if (has('addr', /설치주소\s*:\s*\S/)) b.push('주소');
+            if (has('pn', /계좌\/카드번호\s*:\s*\S/)) b.push('납부');
+            if (has('ga', /은행\+계좌\s*:\s*\S/)) b.push('사은품 계좌');
+            if (has('email', /이메일주소\(필수\)\s*:\s*\S/)) b.push('이메일');
+            return b;
+        }
+        function idrVaultKick() { clearTimeout(idr.vT); idr.vT = setTimeout(idrVaultSave, 1200); }
+        function idrVaultSave() {   // 신분증 요청 칸을 적는 대로 보관 (1.2초 뒤) — 다른 고객으로 바뀌면 새 보관본
+            clearTimeout(idr.vT); var U = idr.ui; if (!U || !authed || !db) return null;
+            var nm = U.name.value.trim().slice(0, 20), ph = digitsOnly(U.phone.value), memo = U.memo.value;
+            if (!nm && !ph && !(intakeHas(memo) && memo !== INTAKE_TPL)) return null;
+            var old = U.vid ? cuvAll().filter(function (y) { return y.id === U.vid; })[0] : null;
+            if (old && ((old.ph && ph && old.ph !== ph) || (old.nm && nm && old.nm !== nm))) U.vid = null;
+            var x = cuvPut({ id: U.vid || undefined, src: 'idr', ph: ph.slice(0, 11), nm: nm, idr: { name: nm, phone: U.phone.value.slice(0, 13), memo: memo.slice(0, 4000), kind: U.kind } });
+            if (x) U.vid = x.id;
+            return x;
+        }
+        function idrVaultNew() { var U = idr.ui; if (!U) return; idrVaultSave(); U.vid = null; }   // 칸을 다른 고객 내용으로 바꾸기 직전: 지금 것 먼저 보관
+        function idrVaultRestore() {   // 잠금·새로고침 뒤 신분증 요청을 다시 열면: 내가 적다가 링크를 안 만든 것(24시간 안)을 다시 채움
+            var U = idr.ui; if (!U || idr.vDone || !cl.data) return;
+            idr.vDone = true;
+            if (U.name.value.trim() || U.phone.value.trim() || (intakeHas(U.memo.value) && U.memo.value !== INTAKE_TPL)) return;
+            var me2 = staffName(me), x = cuvAll().filter(function (y) { return y.src === 'idr' && y.idr && !y.sent && y.by === me2 && y.at > Date.now() - 86400000; }).sort(function (a, b) { return b.at - a.at; })[0];
+            if (!x) return;
+            idrVaultFill(x, true);
+            toast('🗂 적던 신분증 요청(' + (x.nm || '이름 없음') + ')을 보관함에서 다시 불러왔어요.');
+        }
+        function idrVaultFill(x, quiet) {   // 보관본 → 신분증 요청 칸
+            var U = idrUI();
+            if (!quiet) idrVaultNew();
+            idr.last = null;
+            if (x.idr) { idrSetKind(x.idr.kind || 'person'); U.name.value = x.idr.name || ''; U.phone.value = x.idr.phone || ''; U.memo.value = x.idr.memo || INTAKE_TPL; }
+            else {
+                idrSetKind('person');
+                var row = x.rid ? cl.data.rows.filter(function (r) { return r.id === x.rid; })[0] : null, s = row ? cl.data.sheets.filter(function (q) { return q.id === row.sh; })[0] : null, mc = s ? clColBy(s, '', /상담내용/) : null;
+                var memo = row && mc ? String(row.v[mc.k] || '') : '';
+                U.name.value = String(x.cu.nm || x.nm || '').trim().slice(0, 20); U.phone.value = x.ph ? mfPhone(x.ph) : ''; U.memo.value = clIntakeText({ cu: x.cu }, memo, x.ph || '');
+            }
+            U.vid = x.id; idrPaint();
+        }
+        function cuvDlg() {
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'dk-dlg';
+            var me2 = staffName(me), boss = isBoss();
+            var L = cuvAll().filter(function (x) { return x.at > Date.now() - CUV_KEEP; }).sort(function (a, b) { var ma = a.by === me2 ? 0 : 1, mb = b.by === me2 ? 0 : 1; return (ma - mb) || (b.at - a.at); });
+            var body = !cl.data ? h('p', { class: 'cl-empty' }, '불러오는 중이에요... 잠시 뒤 다시 열어 주세요.')
+                : L.length ? h('div', { class: 'dk-list' }, L.map(function (x) {
+                    var bits = cuvBits(x);
+                    return h('div', { class: 'dk-item' + (x.sent ? ' got' : ''), 'data-cuv': x.id },
+                        h('div', { class: 'dk-t' }, h('b', {}, ibTime(x.at)), ' · ' + (x.by || '') + ' · ' + (x.src === 'idr' ? '신분증 요청에 적던 것' : '상담 메모 고객 정보'), x.sent ? h('span', { class: 'dk-got' }, '링크 만듦 ' + ibTime(x.sent)) : h('span', { class: 'dk-new' }, '보관 중')),
+                        h('div', { class: 'dk-s' }, h('b', {}, x.nm || (x.cu && x.cu.nm) || '(이름 없음)'), ' ', x.ph ? clMask(mfPhone(x.ph)) : '', bits.length ? h('span', { class: 'dk-p' }, '✓ ' + bits.join(' · ')) : null),
+                        h('div', { class: 'dk-a' },
+                            h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'cuv-fill', onclick: function () {
+                                var U = idrUI();
+                                if ((U.name.value.trim() || U.phone.value.trim() || (U.memo.value !== INTAKE_TPL && intakeHas(U.memo.value))) && U.vid !== x.id && !confirm('지금 적던 내용은 보관함에 남겨 두고, ' + (x.nm || '이 고객') + '님 내용으로 바꿀까요?')) return;
+                                closeDlg(); idrVaultFill(x, false); state.view = 'idreq'; render();
+                                setTimeout(function () { try { U.form.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* 무시 */ } }, 50);
+                                toast((x.nm || '고객') + '님 보관해 둔 고객 정보를 신분증 요청에 넣었어요.');
+                            } }, '신분증 요청에 넣기'),
+                            (boss || x.by === me2) ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cuv-del', onclick: function () {
+                                if (!confirm((x.nm || '이 고객') + '님 보관본을 지울까요?\n(주민번호·납부 정보가 들어 있으면 다시 받아야 해요)')) return;
+                                cl.data.cuv = cuvAll().filter(function (y) { return y.id !== x.id; }); cl.data.del[x.id] = Date.now(); clQueue(); cuvDlg(); toast('지웠어요.');
+                            } }, '지우기') : null));
+                })) : h('p', { class: 'cl-empty' }, '보관된 고객 정보가 없어요. 상담 메모 [고객 정보]나 신분증 요청에 적으면 자동으로 여기에 모여요.');
+            dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '🗂 고객 정보 보관함' + (L.length ? ' (' + L.length + ')' : '')),
+                h('div', { class: 'dlg-body' }, body, h('p', { class: 'hd-help' }, '🔒 팀 키로 잠가서 상담 리스트와 같은 곳에 7일 보관해요 · 상담 리스트·엑셀에는 안 들어가요 · 잠금·새로고침·상담 완료 뒤에도 여기서 다시 꺼낼 수 있어요')),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'))));
+            if (!dlg.open) showDlg(dlg);
+        }
         function clMemoBlank(M) { M.P = null; M.built = ''; M.vals = null; M.st = 'n'; M.raw = null; M.sig = null; M.asig = null; M.draftId = ''; M.cu = {}; M.flowDone = {}; }
         /* 상담 메모 '고객 정보' 칸: 판매성공 → 신분증 요청 접수 메모로 그대로 (상담 리스트 줄에는 저장하지 않음 · 보관본은 팀 키 암호화로 2일만) */
         var CL_CU = [   // [키, 이름, 자리(6칸 중), 묶음, 접수 메모 줄 이름, 보조]
@@ -14271,7 +14388,7 @@
             if (P.phLab) { P.phLab.classList.remove('full'); P.phLab.classList.add('cl-cu-f', 's2'); grp.c.splice(1, 0, P.phLab); }   // 연락처는 이름 옆 (상담 리스트에도 저장되는 칸)
             var sec = function (t, k, list) { return h('div', { class: 'cl-cu-sec k-' + k }, h('b', { class: 'cl-cu-t' }, t), h('div', { class: 'cl-cu-g' }, list)); };
             return h('details', { class: 'cl-cu', open: M.cuOpen === false ? null : true, ontoggle: function () { M.cuOpen = this.open; } },
-                h('summary', {}, '👤 고객 정보 ', h('small', {}, '판매성공 → 신분증 요청에 자동으로 들어가요 · 상담 리스트에는 저장 안 돼요 (개인정보)')),
+                h('summary', {}, '👤 고객 정보 ', h('small', {}, '판매성공 → 신분증 요청에 자동으로 들어가요 · 상담 리스트에는 저장 안 돼요 (개인정보) · 🗂 보관함에 7일 안전 보관')),
                 sec('👤 고객', 'c', grp.c), sec('💳 납부', 'p', grp.p), sec('🎁 고객 사은품', 'g', grp.g), h('small', { class: 'cl-cu-note' }, '사은품 입금은 본인 · 납부자 외 불가'));
         }
         function clIntakeLine(t, key, val) {   // 접수 메모 양식의 'key :' 줄에 값 (이미 적힌 값은 그대로 두지 않고 바꿈)
@@ -14547,7 +14664,9 @@
             var fill = !busy || confirm('신분증 요청에 다른 고객을 적던 내용이 있어요.\n지우고 이 고객(' + (nm || fm || '이름 없음') + ') 내용으로 채울까요?\n\n[취소]를 누르면 적던 내용은 그대로 두고 신분증 요청으로만 가요.');
             var feeMsg = '';
             if (fill) {
-                var t = clIntakeText({ cu: {} }, memo, okPh ? dig : ''), kd = clKindOf(memo);
+                idrVaultNew();
+                var vx = cuvFind(r.id, dig), t = clIntakeText({ cu: vx && vx.cu ? vx.cu : {} }, memo, okPh ? dig : ''), kd = clKindOf(memo);
+                if (vx && vx.cu) { if (!nm && vx.cu.nm) nm = String(vx.cu.nm).trim().slice(0, 20); feeMsg = ' 🗂 보관해 둔 고객 정보(' + (cuvBits(vx).join('·') || '이름·연락처') + ')도 채웠어요.'; }
                 if (kd === 'net') {   // 유선: 상담 통신사 · 상품으로 단가표 수수료(액면단가) — 가입 장부 · 가입고객리스트로
                     var L = function (k) { return clRtLine(memo, k); }, a = null;
                     try { a = regFeeWired({ kind: 'wired', carrier: L('상담 통신사'), plan: L('상담 상품'), comb: /^\s*(y|예|네|o|결합)/i.test(L('휴대폰 결합')) ? '결합하기' : '', model: '', dealer: '' }); } catch (e) { a = null; }
@@ -14558,12 +14677,12 @@
                         t = ls.join('\n'); feeMsg = ' 수수료 ' + (a.fee / 10000) + '만(' + a.src.split(' 합계')[0] + ')도 넣었어요.';
                     } else feeMsg = ' 수수료는 단가표에서 못 찾아서 비워 뒀어요' + (a && a.why ? ' (' + a.why + ')' : '') + '.';
                 }
-                U.name.value = nm; U.phone.value = fm; U.memo.value = t;
+                U.name.value = nm; U.phone.value = fm; U.memo.value = t; idrVaultSave();
             }
             state.view = 'idreq'; render();
             setTimeout(function () {
                 try { var el = U.parts ? U.parts[0] : U.memo; el.scrollIntoView({ block: 'center' }); (U.name.value ? el : U.name).focus({ preventScroll: true }); } catch (e) { /* 무시 */ }
-                toast(fill ? '신분증 요청에 휴대폰 · 접수정보를 채웠어요.' + feeMsg + ' 고객 정보(이름·주민번호·주소·납부)는 빨간 칸에 마저 적어 주세요.' : '적던 내용은 그대로 두고 신분증 요청으로 왔어요.');
+                toast(fill ? '신분증 요청에 휴대폰 · 접수정보를 채웠어요.' + feeMsg + ' 비어 있는 빨간 칸만 마저 적어 주세요.' : '적던 내용은 그대로 두고 신분증 요청으로 왔어요.');
             }, 40);
         }
         function clMemoSave() {   // 상담 완료: 상담 리스트에 한 줄로 저장하고 상담 리스트로 이동
@@ -14583,6 +14702,7 @@
             }
             var rcMsg = clRecare(row, s);
             clStamp(row); if (!aiR) cl.data.rows.push(row);
+            if (clCuHas(M.cu)) { var pcV = clColBy(s, 'ph'), nmV = clColBy(s, '', /고객명|성함|이름/); cuvPut({ src: 'memo', rid: row.id, sh: s.id, ph: pcV ? digitsOnly(row.v[pcV.k] || '').slice(0, 11) : '', nm: String(M.cu.nm || (nmV ? row.v[nmV.k] : '') || '').trim().slice(0, 20), cu: M.cu }); }   // 🗂 판매성공이 아니어도 고객 정보는 보관함에 (나중에 신분증 요청으로 넘길 때 다시 채움)
             clearTimeout(cl.autoT);
             if (M.draftId) { var did = M.draftId; clDraftDrop(did); M.draftId = ''; clTabsSet(clTabsGet().filter(function (x) { return x !== did; })); }   // 이어 쓰던 보관본은 완료했으니 지움
             clQueue();
@@ -14605,7 +14725,8 @@
                 var okPh = /^01\d{8,9}$/.test(dig), fm = okPh ? dig.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3') : '';
                 var busy = intakeHas(U.memo.value) && U.memo.value !== INTAKE_TPL && (digitsOnly(U.phone.value) !== dig || (U.name.value.trim() && cu.nm && U.name.value.trim() !== cu.nm.trim()));
                 var fill = !busy || confirm('신분증 요청에 다른 고객을 적던 내용이 있어요.\n지우고 이 고객(' + (cu.nm || fm || '이름 없음') + ') 내용으로 채울까요?\n\n[취소]를 누르면 적던 내용은 그대로 두고 신분증 요청으로만 가요.');
-                if (fill) { U.name.value = String(cu.nm || '').trim().slice(0, 20); U.phone.value = fm; U.memo.value = clIntakeText(M, rentMemo, okPh ? dig : ''); }
+                idrVaultNew();
+                if (fill) { U.name.value = String(cu.nm || '').trim().slice(0, 20); U.phone.value = fm; U.memo.value = clIntakeText(M, rentMemo, okPh ? dig : ''); idrVaultSave(); }
                 M.open = false; clMemoBlank(M); clMemoPaint();
                 if (fill && kdS === 'net' && (polPick || polLast)) polToIdr(); else { state.view = 'idreq'; render(); }
                 polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null; polTv = { key: '', n: {} };
