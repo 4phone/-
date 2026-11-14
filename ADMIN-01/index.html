@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-r2iqHkZxis9Ov9TW/uEkmw6d9tswEiXZ+DVsk6rhwEM='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4Yi9xlHunezMH0YuLOVSeeXmVWm3kZE5HX4Sa43sZwI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2178,7 +2178,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-12.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-14.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -6172,6 +6172,18 @@
             };
             sheet.addEventListener('change', function (e) { var n = e.target && e.target.getAttribute ? e.target.getAttribute('data-mf') : ''; if (/^(tNew|tPort|tRe|tTrans|tRenew|tRent)$/.test(n)) prevSync(true); else if (n === 'carrier') prevSync(false); });
             sheet.addEventListener('input', function (e) { if (e.target && e.target.getAttribute && e.target.getAttribute('data-mf') === 'carrier') prevSync(false); });
+            var dealerCar = function () {   // 11-14.1 모바일: 접수처를 고르면 가입 통신사 자동 (성연·수석 U+ · 신창 SK · 에이탑·반추 KT — 모바일 단가표 거래처 통신사 기준) · 스카이 등 여러 통신사 거래처는 그대로
+                if (M.kind !== 'mobile') return;
+                var dl = q('netUse'), car = q('carrier'); if (!dl || !car) return;
+                var want = mfDealerCar(dl.value), auto = car.getAttribute('data-auto'), isAuto = auto != null && car.value === auto;
+                if (want) {
+                    if (car.value.trim() !== want) { car.value = want; dirty(); toast('접수처 ' + dl.value.trim() + ' → 가입 통신사를 ' + want + '(으)로 맞췄어요.'); }
+                    car.setAttribute('data-auto', want);
+                    car.dispatchEvent(new Event('input', { bubbles: true }));   // 재가입이면 이전 통신사도 같이 · 빈칸 표시도 다시
+                } else if (isAuto) { car.value = ''; car.removeAttribute('data-auto'); car.dispatchEvent(new Event('input', { bubbles: true })); }
+            };
+            sheet.addEventListener('input', function (e) { if (e.target && e.target.getAttribute && e.target.getAttribute('data-mf') === 'netUse') dealerCar(); });
+            sheet.addEventListener('change', function (e) { if (e.target && e.target.getAttribute && e.target.getAttribute('data-mf') === 'netUse') dealerCar(); });
             var giftOff = function () {   // 유선: 사은품 총 '없음' → 나머지 사은품 칸 잠금
                 var tot = q('giftT'); if (!tot) return;
                 var off = /^없음$/.test(String(tot.value || '').trim());
@@ -7250,6 +7262,14 @@
         function mfPlanKeep(v) { return /^(요금제\s*)?유지$/.test(String(v || '').replace(/\s+/g, ' ').trim()); }   // 변경 요금제 칸 '요금제 유지' (가입 요금제 계속 사용)
         function mfTvNone(v) { return /^(없음|x|-|미신청)$/i.test(String(v || '').trim()); }   // 유선 TV 요금제 '없음' (인터넷 단독)
         function mfXSvc(t) { t = String(t || '').trim(); return t && !MF_XNONE.test(t) ? t : ''; }
+        var MF_DEALER_CAR = { '성연': 'U+', '수석': 'U+', '신창': 'SK', '에이탑': 'KT', '반추': 'KT' };   // 모바일 단가표가 없을 때 쓰는 기본값
+        function mfDealerCar(dealer) {   // 접수처 → 가입 통신사 (U+ · SK · KT) · 여러 통신사를 받는 거래처(스카이·이티·안모·모빙 등)는 ''
+            var d = String(dealer || '').trim(); if (!d) return '';
+            var dl = mp.data && mp.data.dealers ? mp.data.dealers.filter(function (x) { return x.name === d; })[0] : null;
+            var k = dl ? mfCarKey(dl.carrier) : '';
+            if (k) return { U: 'U+', S: 'SK', K: 'KT' }[k];
+            return MF_DEALER_CAR[d] || '';
+        }
         function mfCarKey(s) { s = String(s || '').toUpperCase().replace(/\s/g, ''); return /U\+|LG|유플/.test(s) ? 'U' : /SK/.test(s) ? 'S' : /KT/.test(s) ? 'K' : ''; }
         function mfXPer(p) {   // 정책서 유지기간 글 → { k: 'M'|'D', n, t }
             p = String(p || '').replace(/\s/g, '').toUpperCase(); var m;
