@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mquCxpyKbsbM6lzmZnmpf0veqhsdNi/3HzrDhDtA0w8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4q44/gXUr+aECShp6nk6UDGY2lKIkhNAb69tHMCI1WY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2181,7 +2181,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-16.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-16.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2747,6 +2747,7 @@
             var save = h('button', { type: 'submit', class: 'btn btn-primary' }, cfg.saveText || '저장');
             var foot = h('div', { class: 'dlg-foot' });
             if (cfg.onDelete) foot.appendChild(h('button', { type: 'button', class: 'btn btn-danger left', onclick: function () { if (confirm(cfg.deleteConfirm || '정말 삭제할까요?')) { cfg.onDelete(); closeDlg(); } } }, '삭제'));
+            if (cfg.extra) foot.appendChild(h('button', { type: 'button', class: 'btn' + (cfg.onDelete ? '' : ' left'), 'data-act': cfg.extra.act || null, title: cfg.extra.title || null, onclick: function () { if (cfg.extra.run() !== false) closeDlg(); } }, cfg.extra.text));
             foot.appendChild(cancel); foot.appendChild(save);
             var form = h('form', { novalidate: true }, h('div', { class: 'dlg-head' }, cfg.title), body, err, foot);
             form.addEventListener('submit', function (e) {
@@ -7852,7 +7853,7 @@
             stamp(ex || rec);
             state.regYm = rec.date.slice(0, 7);
             commit();
-            glQueueReg(ex || rec);   // 사거리가입고객리스트에도 한 줄 (암호화해서)
+            glQueueReg(ex || rec, null, !!ex);   // 사거리가입고객리스트에도 한 줄 (암호화해서) · 같은 확인서를 다시 저장한 경우만 그 고객 줄을 고침
             return true;
         }
         function regLine(r0, n) {   // 장부 엑셀에 붙여넣을 한 줄 (칸 사이는 Tab · C열부터)
@@ -8323,6 +8324,10 @@
             ];
             openForm({
                 title: isNew ? '가입 장부에 한 줄 직접 추가' : '가입 장부 고치기', saveText: isNew ? '장부에 추가' : '변경 저장', cls: 'wide wide3', fields: fields,
+                extra: !isNew && r.name && driveOn() ? { act: 'reg-gl-add', text: '📤 가입고객리스트에 새 줄로 넣기', title: '가입고객리스트에서 이 줄이 빠졌을 때 (한 고객 두 건 가입 등) 이 장부 줄을 가입고객리스트에 새 줄로 넣어요', run: function () {
+                    if (!confirm('가입고객리스트 ' + regYmName(r.date) + ' 장부에 ' + r.name + ' 님 줄을 새로 넣을까요?\n(' + [r.kind === 'wired' ? '유선' : '모바일', r.carrier, r.plan || r.model].filter(Boolean).join(' · ') + ')\n\n이미 가입고객리스트에 이 건이 있으면 [취소] — 같은 줄이 두 번 들어가요.')) return false;
+                    glQueueReg(r); toast('가입고객리스트에 ' + r.name + ' 님 줄을 넣고 있어요. 잠시 뒤 가입고객리스트에서 확인해 주세요.');
+                } } : null,
                 validate: function (v) { return isYmd(v.date) ? (v.instDate && !isYmd(v.instDate) ? '설치일을 올바르게 입력해 주세요.' : null) : '가입날짜를 올바르게 입력해 주세요.'; },
                 onSave: function (v) {
                     var before = JSON.parse(JSON.stringify(r));
@@ -8353,7 +8358,7 @@
                     if (ch.length && before.name) {   // 고친 칸만 가입고객리스트 같은 고객 줄에도 (액면단가·부가는 리스트 칸이 예전 값일 때만 바꿈)
                         var rq = JSON.parse(JSON.stringify(r)), fx = {};
                         ['fee', 'adj'].forEach(function (f) { if (ch.indexOf(f) < 0) return; fx[f] = +before[f] || 0; if (!rq[f]) rq[f] = '0'; });
-                        glQueueReg(rq, { only: ch, match: { name: before.name, phone: before.phone || '', kind: before.kind }, fix: fx });
+                        glQueueReg(rq, { only: ch, match: { name: before.name, phone: before.phone || '', kind: before.kind, plan: before.plan || '', model: before.model || '' }, fix: fx });
                     }
                     var formCh = MFS_MAP.some(function (m) { return m[0] !== 'fee' && (r[m[0]] || '') !== (before[m[0]] || ''); }) || (r.type || '') !== (before.type || '') || (r.disc || '') !== (before.disc || '') || (r.wdp || '') !== (before.wdp || '') || (r.ins || '') !== (before.ins || '');
                     var hasSnap = formCh && mfsHasR(r);
@@ -16516,12 +16521,14 @@
         function glNewMonth() { glMonthMake(false).then(function (id) { if (id) { gl.cur = id; gl.tabX = null; render(); } }); }
 
         /* ---------- 가입 확인서 → 가입고객리스트 한 줄 (권한이 없어도 넣기만 가능 · 암호화해서 받은 편지함으로) ---------- */
-        function glQueueReg(rec, upd) {   // upd: { only: [고친 칸], match: { name, phone, kind } } → 같은 고객 줄의 그 칸만 고침 (줄이 없으면 넣지 않음)
+        function regYmName(dt) { var d = parseYmd(dt); return (d.getFullYear() % 100) + '년 ' + (d.getMonth() + 1) + '월'; }
+        function glQueueReg(rec, upd, re) {   // re: 같은 확인서를 다시 저장 → 같은 고객 줄을 고침 (아니면 같은 고객이라도 새 줄 — 한 고객 두 건 가입)   // upd: { only: [고친 칸], match: { name, phone, kind } } → 같은 고객 줄의 그 칸만 고침 (줄이 없으면 넣지 않음)
             if (!rec || !rec.date || !db || !driveOn()) return;
             var d = parseYmd(rec.date), ymName = (d.getFullYear() % 100) + '년 ' + (d.getMonth() + 1) + '월';
             var body = { v: 1, ym: ymName, day: d.getDate(), reg: {} };
             REG_FIELDS.concat(['kind']).forEach(function (f) { if (rec[f] && (!upd || f === 'kind' || upd.only.indexOf(f) >= 0)) body.reg[f] = String(rec[f]).slice(0, 300); });
-            if (upd) { body.only = upd.only.slice(0, 40); body.match = { name: String(upd.match.name || '').slice(0, 40), phone: String(upd.match.phone || '').slice(0, 20), kind: upd.match.kind === 'wired' ? 'wired' : 'mobile' }; }
+            if (re && !upd) body.re = 1;
+            if (upd) { body.only = upd.only.slice(0, 40); body.match = { name: String(upd.match.name || '').slice(0, 40), phone: String(upd.match.phone || '').slice(0, 20), kind: upd.match.kind === 'wired' ? 'wired' : 'mobile' }; if (upd.match.plan) body.match.plan = String(upd.match.plan).slice(0, 300); if (upd.match.model) body.match.model = String(upd.match.model).slice(0, 300); }
             if (upd && upd.fix) { body.fix = {}; Object.keys(upd.fix).forEach(function (k) { if (GL_REG_COL[k] && isFinite(+upd.fix[k])) body.fix[k] = +upd.fix[k]; }); }   // 잘못 계산됐던 값: 시트가 그 값(또는 빈칸)일 때만 고침
             glEnc(body, GL_IN_AAD).then(function (blob) { return glCall('glAdd', { blob: blob, key: String(rec.id + '-' + (rec.u || 0)).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) }); })
                 .then(function () { if (glCan() && gl.idx) glInboxPull(); }, function () { /* 가입 장부에는 이미 저장됨 — 가입고객리스트는 다음 저장 때 */ });
@@ -16556,13 +16563,18 @@
             var lab = {}, hr = S.cv[H.r] || {};
             Object.keys(hr).forEach(function (c) { var t = String(hr[c]).replace(/\s/g, ''); if (!lab[t]) lab[t] = +c; });
             var colOf = function (l) { var ls = String(l).split('|'); for (var i = 0; i < ls.length; i++) { var c = lab[ls[i].replace(/\s/g, '')]; if (c) return c; } return 0; };   // '복지여부|복지': 머리글 이름이 둘 중 하나
-            var nameC = colOf('고객명'), phoneC = colOf('번호'), target = 0, maxNo = 0, r, mt = x.match || reg, only = Array.isArray(x.only) ? x.only : null;
+            var nameC = colOf('고객명'), phoneC = colOf('번호'), target = 0, maxNo = 0, r, mt = x.match || reg, only = Array.isArray(x.only) ? x.only : null, sames = [];
+            var findSame = !!(x.match || x.re);   // 새 가입 확인서는 같은 고객이 있어도 새 줄 (예전엔 한 고객 두 건이면 두 번째가 첫 줄을 덮었음)
             for (r = H.r + 1; r <= Math.max(S.nr, H.r + 1); r++) {
                 var row = S.cv[r] || {};
                 if (H.no && typeof row[H.no] === 'number') maxNo = Math.max(maxNo, row[H.no]);
                 if (H.no && String(row[H.no] || '').toLowerCase() === 'ex') continue;
                 var same = mt.name && nameC && String(row[nameC] || '') === mt.name && phoneC && String(row[phoneC] || '') === String(mt.phone || '') && (mt.kind === 'wired' ? /^(유선|렌탈)/ : /^모바일/).test(String(row[H.kind] || ''));
-                if (same) { target = r; break; }   // 같은 고객·같은 구분 줄이 이미 있으면 그 줄을 고침
+                if (same && findSame) sames.push(r);   // 같은 고객·같은 구분 줄 (고친 칸 · 같은 확인서 다시 저장일 때만 그 줄을 고침)
+            }
+            if (sames.length) {   // 같은 고객 줄이 여럿이면 상품(요금제·모델)까지 같은 줄
+                var pc = colOf(GL_REG_COL.plan), mc = colOf(GL_REG_COL.model), pv = String((x.match && x.match.plan) || reg.plan || ''), mv = String((x.match && x.match.model) || reg.model || '');
+                target = sames.filter(function (q) { var rw0 = S.cv[q] || {}; return (!pc || !pv || String(rw0[pc] || '') === pv) && (!mc || !mv || String(rw0[mc] || '') === mv); })[0] || sames[0];
             }
             if (!target && only) return -1;   // 장부에서 고친 칸만 보낸 경우: 같은 고객 줄이 없으면 새 줄을 만들지 않음 (받은 편지함에서는 지움)
             if (!target) for (r = H.r + 1; r <= S.nr + 1; r++) {
