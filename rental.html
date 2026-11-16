@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-p0XwCnoQ7oRbmF4J4SVizS0ozPY+snqG2GXkyynMtw4='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-rq1U5/tbwqnhx4pUHRlRygppyjU3ZYUYHJ6dYV5ixUo='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -632,6 +632,9 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
+/* ★ 렌탈 사은품·지원금 표시 스위치 (2026-11-16 대표님 지시: 잠깐 손님 화면에서 숨김)
+   다시 보이게 하려면 false → true 로만 바꾸면 됨 (index.html 의 SG_RENT_GIFT_SHOW 도 같이) */
+var RENT_GIFT_SHOW = false;
 (function () {
     'use strict';
     /* 사거리인터넷 담기 (인터넷 · TV · 렌탈 한 번에 상담 신청) — 홈페이지 · 렌탈 페이지 공통
@@ -670,6 +673,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         if (!it || typeof it !== 'object') return null;
         var o = { k: S(it.k, 160), t: it.t === 'rent' ? 'rent' : 'net', title: S(it.title, 120), sub: S(it.sub, 200), fee: N(it.fee), feeTxt: S(it.feeTxt, 60), gift: S(it.gift, 120), note: S(it.note, 120), co: S(it.co, 40), img: '', at: N(it.at) || 0 };
         if (typeof it.img === 'string' && /^https:\/\/[A-Za-z0-9.-]+\/[^\s"'<>\\`]*$/.test(it.img) && it.img.length < 600) o.img = it.img;
+        if (o.t === 'rent' && !RENT_GIFT_SHOW) o.gift = '';   // 렌탈 사은품 숨김 중: 예전에 담아 둔 렌탈 상품의 사은품 글자도 안 보이게
         return o.k && o.title ? o : null;
     }
     var lsOk = true;   // 이 브라우저에 보관할 수 있는지 (다른 창에서 빼거나 신청한 상품이 다시 보이지 않게, 보관이 될 때는 항상 보관함 기준)
@@ -744,7 +748,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         body.appendChild(h('div', { class: 'sgc-sum' },
             h('div', { class: 'sgc-sum-r' }, h('span', {}, '월 요금 합계'), h('b', {}, T.feeN ? '월 ' + won(T.fee) : '상담 때 안내')),
             T.other ? h('div', { class: 'sgc-sum-n' }, '요금이 상담 때 정해지는 상품 ' + T.other + '개는 합계에서 빠져 있어요.') : null,
-            h('div', { class: 'sgc-sum-r sgc-sum-g' }, h('span', {}, '🎁 지원금 합계'), h('b', {}, T.giftN ? manwon(T.gift) : '상담 때 안내')),
+            (T.giftN || a.some(function (x) { return x.t === 'net'; })) ? h('div', { class: 'sgc-sum-r sgc-sum-g' }, h('span', {}, '🎁 지원금 합계'), h('b', {}, T.giftN ? manwon(T.gift) : '상담 때 안내')) : null,   // 렌탈만 담았고 사은품 표시를 숨겼으면 지원금 줄도 숨김
             T.extra.length ? h('div', { class: 'sgc-sum-n' }, '+ ' + T.extra.join(' · ')) : null,
             T.alt && T.giftN ? h('div', { class: 'sgc-sum-n' }, '현금 사은품 기준 금액이에요. 가전 사은품으로 고르시면 달라져요.') : null,
             h('div', { class: 'sgc-sum-n' }, '담은 상품의 표시 금액을 더한 참고 금액이에요. 결합 · 할인 조건에 따라 달라질 수 있고, 최종 금액은 상담 때 안내해 드려요.')));
@@ -882,7 +886,12 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
        - 못 받으면 "상품 정보를 불러오지 못했습니다" (예전 값을 지어내지 않음)
        - 접수: 이 기기에서 암호화한 내용만 우리 서버(관리자 페이지 [다이렉트 접수 확인])로 보냄 */
     var FEED = 'https://modil.co.kr/api/feed/rental';
-    var CK = 'sg-rental-feed-v2', TTL = 30 * 60 * 1000, PAGE = 24;   // v2: 상세 칸이 더해진 자료
+    function NG(t) {   // 사은품 숨김 중: 안내 글의 '렌탈료와 사은품은' → '렌탈료는', 그래도 사은품·지원금 말이 남은 문장은 뺌
+        if (RENT_GIFT_SHOW || !t) return t;
+        t = t.replace(/(와|과)\s*사은품(은|이)/g, function (m0, a, b) { return b === '은' ? (a === '와' ? '는' : '은') : (a === '와' ? '가' : '이'); });
+        return t.replace(/([.!?。])\s+/g, '$1\n').split('\n').filter(function (x) { return !/사은품|지원금/.test(x); }).join(' ').trim();
+    }
+    var CK = RENT_GIFT_SHOW ? 'sg-rental-feed-v2' : 'sg-rental-feed-v2n', TTL = 30 * 60 * 1000, PAGE = 24;   // v2: 상세 칸이 더해진 자료
     var URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
     var MAIL_URL = 'https://script.google.com/macros/s/AKfycby_1x_FqN2kW6FJyoHDXw7IF_-Rgl4lD1n_msdM48sgXG7Ch1lMCnTKz5ytcylQAy-P/exec';   // 홈페이지 · 사장님전용 상담 접수와 같은 접수 메일
     var CAT_ORDER = ['정수기', '가전렌탈'];
@@ -935,7 +944,8 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                     var fee = N(x.monthlyFee); if (fee === null || fee === 0) return;
                     var g = S(x.gift, 300), gw = Object.prototype.hasOwnProperty.call(GIFT, S(c.name, 40) + '|' + model + '|' + N(x.contractMonths) + '|' + fee) ? GIFT[S(c.name, 40) + '|' + model + '|' + N(x.contractMonths) + '|' + fee] : null;
                     if (!g && typeof gw === 'number' && gw > 0) g = giftTxt(gw);
-                    plans.push({ pid: S(x.planId, 80), m: N(x.contractMonths), mm: N(x.mandatoryMonths), fee: fee, pm: N(x.promoMonths), af: N(x.afterPromoMonthlyFee), g: g, gn: !g && gw === 0,
+                    if (!RENT_GIFT_SHOW) g = '';   // 사은품 숨김 중 → 사은품 배지·혜택 칸·사은품/최저가 나눠 보기·접수 사은품 줄이 모두 안 보임
+                    plans.push({ pid: S(x.planId, 80), m: N(x.contractMonths), mm: N(x.mandatoryMonths), fee: fee, pm: N(x.promoMonths), af: N(x.afterPromoMonthlyFee), g: g, gn: RENT_GIFT_SHOW && !g && gw === 0,
                         w: N(x.warrantyMonths), etf: S(x.earlyTerminationFee, 300) });   // 무상 A/S 개월 · 중도해지 안내
                 });
                 if (plans.length) cos.push({ name: S(c.name, 40), plans: plans });
@@ -957,7 +967,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         });
         var nt = j.notices && typeof j.notices === 'object' ? j.notices : {}, pr = nt.promo && typeof nt.promo === 'object' ? nt.promo : {};
         return { at: S(j.updatedAt, 40), full: true, items: out,
-            nt: { ch: S(nt.contractHint, 300), co: S(nt.companyHint, 300), pt: S(pr.title, 100), pb: S(pr.body, 600), pb2: S(nt.priceBasis, 500), dc: S(nt.disclaimer, 500) } };
+            nt: { ch: NG(S(nt.contractHint, 300)), co: NG(S(nt.companyHint, 300)), pt: NG(S(pr.title, 100)), pb: NG(S(pr.body, 600)), pb2: NG(S(nt.priceBasis, 500)), dc: NG(S(nt.disclaimer, 500)) } };
     }
 
     /* ---------- 데이터 받기 (한 번만) ---------- */

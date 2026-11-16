@@ -20,6 +20,8 @@
     <meta name="theme-color" content="#0E343B">
     <link rel="apple-touch-icon" href="icon-180.png">
     <link rel="manifest" href="manifest.webmanifest">
+    <!-- ★ 렌탈 사은품·지원금 표시 스위치 (2026-11-16 대표님 지시: 잠깐 숨김 · 다시 보이게 하려면 true, rental.html 의 RENT_GIFT_SHOW 도 같이) -->
+    <script>window.SG_RENT_GIFT_SHOW = false;</script>
     <!-- 투명 파비콘 적용 완료 -->
     <link rel="icon" href="사거리로고_투명.png" type="image/png">
     
@@ -4125,6 +4127,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         if (!it || typeof it !== 'object') return null;
         var o = { k: S(it.k, 160), t: it.t === 'rent' ? 'rent' : 'net', title: S(it.title, 120), sub: S(it.sub, 200), fee: N(it.fee), feeTxt: S(it.feeTxt, 60), gift: S(it.gift, 120), note: S(it.note, 120), co: S(it.co, 40), img: '', at: N(it.at) || 0 };
         if (typeof it.img === 'string' && /^https:\/\/[A-Za-z0-9.-]+\/[^\s"'<>\\`]*$/.test(it.img) && it.img.length < 600) o.img = it.img;
+        if (o.t === 'rent' && window.SG_RENT_GIFT_SHOW !== true) o.gift = '';   // 렌탈 사은품 숨김 중: 담아 둔 렌탈 상품의 사은품 글자도 안 보이게
         return o.k && o.title ? o : null;
     }
     var lsOk = true;   // 이 브라우저에 보관할 수 있는지 (다른 창에서 빼거나 신청한 상품이 다시 보이지 않게, 보관이 될 때는 항상 보관함 기준)
@@ -4199,7 +4202,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         body.appendChild(h('div', { class: 'sgc-sum' },
             h('div', { class: 'sgc-sum-r' }, h('span', {}, '월 요금 합계'), h('b', {}, T.feeN ? '월 ' + won(T.fee) : '상담 때 안내')),
             T.other ? h('div', { class: 'sgc-sum-n' }, '요금이 상담 때 정해지는 상품 ' + T.other + '개는 합계에서 빠져 있어요.') : null,
-            h('div', { class: 'sgc-sum-r sgc-sum-g' }, h('span', {}, '🎁 지원금 합계'), h('b', {}, T.giftN ? manwon(T.gift) : '상담 때 안내')),
+            (T.giftN || a.some(function (x) { return x.t === 'net'; })) ? h('div', { class: 'sgc-sum-r sgc-sum-g' }, h('span', {}, '🎁 지원금 합계'), h('b', {}, T.giftN ? manwon(T.gift) : '상담 때 안내')) : null,   // 렌탈만 담았고 사은품 표시를 숨겼으면 지원금 줄도 숨김
             T.extra.length ? h('div', { class: 'sgc-sum-n' }, '+ ' + T.extra.join(' · ')) : null,
             T.alt && T.giftN ? h('div', { class: 'sgc-sum-n' }, '현금 사은품 기준 금액이에요. 가전 사은품으로 고르시면 달라져요.') : null,
             h('div', { class: 'sgc-sum-n' }, '담은 상품의 표시 금액을 더한 참고 금액이에요. 결합 · 할인 조건에 따라 달라질 수 있고, 최종 금액은 상담 때 안내해 드려요.')));
@@ -4970,7 +4973,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
     if (!window.SGAI) return;
     var A = window.SGAI;
     var st = { topic: '', n: {}, r: {}, cards: [], hist: [], rentItems: null, busy: false };
-    var FEED = 'https://modil.co.kr/api/feed/rental', CK = 'sg-ai-rent-v1', TTL = 30 * 60 * 1000;
+    var FEED = 'https://modil.co.kr/api/feed/rental', CK = window.SG_RENT_GIFT_SHOW === true ? 'sg-ai-rent-v1' : 'sg-ai-rent-v1n', TTL = 30 * 60 * 1000;
     var TEL = '1833-2440', KAKAO = 'https://pf.kakao.com/_PxjsKG/chat';
     var $ = function (id) { return document.getElementById(id); };
     function h(tag, attrs) {
@@ -5102,7 +5105,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
         setChips(['인터넷+TV 추천', '정수기 추천', '가전 렌탈 보기', ['상담원 연결', function () { me('상담원 연결'); bot('네, 번호 남겨 주시면 바로 연락드릴게요.'); offerHuman(); }]]);
     }
     function followChips() {
-        if (st.topic === 'rent') setChips(['사은품 많은 순으로', '월 요금 싼 순으로', '다른 가전 렌탈', '인터넷도 알아볼래요']);
+        if (st.topic === 'rent') setChips((RG() ? ['사은품 많은 순으로', '월 요금 싼 순으로'] : ['월 요금 싼 순으로']).concat(['다른 가전 렌탈', '인터넷도 알아볼래요']));
         else setChips(['인터넷+TV 사은품 많은 곳', '인터넷만 싸게', '정수기 추천해줘', ['상담원 연결', function () { me('상담원 연결'); offerHuman(); }]]);
     }
 
@@ -5147,6 +5150,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
     }
 
     /* ---------- 렌탈 추천 ---------- */
+    function RG() { return window.SG_RENT_GIFT_SHOW === true; }   // 렌탈 사은품 보이기 (지금은 숨김)
     function giftTxt(v) { return v % 10000 === 0 ? (v / 10000) + '만원' : (Math.round(v / 1000) / 10) + '만원'; }
     function S(v, n) { return typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f\u2028\u2029]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n || 200) : ''; }
     function N(v) { return typeof v === 'number' && isFinite(v) && v >= 0 ? v : null; }
@@ -5168,6 +5172,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
                         if (!x || typeof x !== 'object') return; var fee = N(x.monthlyFee); if (!fee) return;
                         var g = S(x.gift, 120), k = cn + '|' + model + '|' + N(x.contractMonths) + '|' + fee, gw = Object.prototype.hasOwnProperty.call(G, k) ? G[k] : null;
                         if (!g && typeof gw === 'number' && gw > 0) g = giftTxt(gw);
+                        if (!RG()) g = '';   // 렌탈 사은품 숨김 중
                         plans.push({ m: N(x.contractMonths), fee: fee, g: g });
                     });
                     if (plans.length) cos.push({ name: cn, plans: plans });
@@ -5195,10 +5200,10 @@ if (typeof module !== 'undefined') module.exports = SGAI;
             var top = list.slice(0, 3);
             st.cards = top.map(function (x) { return { kind: 'rent', x: x }; });
             var cond = []; if (r.brands) cond.push(r.brands.join('·')); if (r.feat) cond.push(r.feat.join('·')); if (r.pyeong) cond.push(r.pyeong + '평 이상'); if (r.inch) cond.push(r.inch + '인치'); if (r.liter) cond.push(r.liter + 'L'); if (r.kg) cond.push(r.kg + 'kg'); if (r.budget) cond.push('월 ' + won(r.budget) + ' 이하');
-            bot(r.kind + ' ' + list.length + '개 중에서 ' + (r.prio === 'cheap' ? '월 요금 싼 순' : '사은품 많은 순') + '으로 골랐어요' + (cond.length ? ' (' + cond.join(' · ') + ')' : '') + '.',
+            bot(r.kind + ' ' + list.length + '개 중에서 ' + (r.prio === 'cheap' || !RG() ? '월 요금 싼 순' : '사은품 많은 순') + '으로 골랐어요' + (cond.length ? ' (' + cond.join(' · ') + ')' : '') + '.',
                 h('div', { class: 'sga-cards' }, top.map(function (x, i) { return rentCard(x, i); })),
                 h('a', { class: 'sga-link', href: rentListUrl(r) }, '🔎 ' + r.kind + ' 전체 ' + list.length + '개 비교하기'));
-            var ch = [r.prio === 'cheap' ? '사은품 많은 순으로' : '월 요금 싼 순으로'];
+            var ch = RG() ? [r.prio === 'cheap' ? '사은품 많은 순으로' : '월 요금 싼 순으로'] : [];
             if (r.kind === '정수기') ['얼음 정수기', '냉온 정수기', '직수 정수기'].forEach(function (x) { ch.push(x); });
             var brands = []; list.slice(0, 40).forEach(function (x) { var b = x.p.brand; if (b && brands.indexOf(b) < 0) brands.push(b); });
             brands.filter(function (b) { var q = A.parse(b + ' ' + r.kind); return q.brands && q.brands.length && (!r.brands || r.brands.indexOf(q.brands[0]) < 0); }).slice(0, 4).forEach(function (b) { ch.push(b + ' ' + r.kind); });
@@ -5215,7 +5220,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
         var q = new URLSearchParams();
         if (r.kind === '정수기') q.set('type', '정수기'); else { q.set('type', '가전렌탈'); if (r.kind) q.append('kind', r.kind); }
         (r.brands || []).forEach(function (b) { q.append('brand', b); });
-        if (r.prio !== 'cheap') q.append('gift', 'y');
+        if (r.prio !== 'cheap' && RG()) q.append('gift', 'y');
         return 'rental.html?' + q.toString();
     }
     function rentCard(x, i) {
@@ -5225,7 +5230,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
                 p.img ? h('img', { class: 'sga-img', src: p.img, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : null,
                 h('b', { text: p.name })),
             h('div', { class: 'sga-c-r' }, h('span', { class: 'sga-fee' }, '월 ' + won(x.low) + '~'), h('small', { text: p.brand || '' })),
-            h('div', { class: 'sga-gift' }, x.maxG ? '🎁 사은품 최대 ' + x.maxG + '만원' : '사은품은 상담 시 안내'),
+            RG() ? h('div', { class: 'sga-gift' }, x.maxG ? '🎁 사은품 최대 ' + x.maxG + '만원' : '사은품은 상담 시 안내') : null,
             h('a', { class: 'sga-apply', href: 'rental.html?id=' + encodeURIComponent(p.id) }, '자세히 보고 바로 접수'));
     }
 
