@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-rq1U5/tbwqnhx4pUHRlRygppyjU3ZYUYHJ6dYV5ixUo='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-Ts6av5Y5Y+Ta2c/lkPkRH71pln7Ruk+GpVulk+YVfcw='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -971,13 +971,22 @@ var RENT_GIFT_SHOW = false;
     }
 
     /* ---------- 데이터 받기 (한 번만) ---------- */
-    var DATA = null, loading = null;
+    var DATA = null, loading = null, LS_TTL = 24 * 3600 * 1000;
+    function liteOf(d) { return { at: d.at, full: false, nt: d.nt, items: d.items.map(function (p) { var q = {}; Object.keys(p).forEach(function (k) { if (k !== 'spec' && k !== 'bul' && k !== 'desc' && k !== 'dimg') q[k] = p[k]; }); return q; }) }; }
     function getFeed(force) {
         if (DATA && !force) return Promise.resolve(DATA);
         if (!force) {
             try {
                 var c = JSON.parse(sessionStorage.getItem(CK) || 'null');
                 if (c && typeof c.t === 'number' && Date.now() - c.t < TTL && Date.now() >= c.t && c.d && Array.isArray(c.d.items) && c.d.items.length) { DATA = c.d; return Promise.resolve(DATA); }
+            } catch (e) { /* 보관함을 못 쓰면 새로 받음 */ }
+            try {   // 다시 온 손님: 지난번(하루 안) 목록을 먼저 바로 보여주고, 새 목록은 뒤에서 받아 바뀐 게 있으면 다시 그림 (렌탈 자료가 3초 넘게 걸려서)
+                var lc = JSON.parse(localStorage.getItem(CK) || 'null');
+                if (lc && typeof lc.t === 'number' && Date.now() - lc.t < LS_TTL && Date.now() >= lc.t && lc.d && Array.isArray(lc.d.items) && lc.d.items.length) {
+                    DATA = lc.d; var old = JSON.stringify(lc.d.items);
+                    getFeed(true).then(function (d) { if (JSON.stringify(liteOf(d).items) !== old && !$('list-view').hidden) { fixCart(); renderList(); } }, function () { /* 지난 목록 그대로 */ });
+                    return Promise.resolve(DATA);
+                }
             } catch (e) { /* 보관함을 못 쓰면 새로 받음 */ }
         }
         if (loading) return loading;
@@ -989,8 +998,9 @@ var RENT_GIFT_SHOW = false;
                 var d = norm(j); if (!d || !d.items.length) throw new Error('empty');
                 DATA = d;
                 try {
-                    var lite = { at: d.at, full: false, nt: d.nt, items: d.items.map(function (p) { var q = {}; Object.keys(p).forEach(function (k) { if (k !== 'spec' && k !== 'bul' && k !== 'desc' && k !== 'dimg') q[k] = p[k]; }); return q; }) };
+                    var lite = liteOf(d);
                     sessionStorage.setItem(CK, JSON.stringify({ t: Date.now(), d: lite }));
+                    try { localStorage.setItem(CK, JSON.stringify({ t: Date.now(), d: lite })); } catch (e2) { /* 보관 못 해도 화면은 그대로 */ }
                 } catch (e) { /* 보관 못 해도 화면은 그대로 */ }
                 return d;
             })

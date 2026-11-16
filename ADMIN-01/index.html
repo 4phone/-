@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4Yi9xlHunezMH0YuLOVSeeXmVWm3kZE5HX4Sa43sZwI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mquCxpyKbsbM6lzmZnmpf0veqhsdNi/3HzrDhDtA0w8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -482,6 +482,9 @@
         .t-row:last-child { border-bottom: none; }
         .t-row.hi { border-left-color: var(--orange); }
         .t-row.done .t-title { color: var(--hint); text-decoration: line-through; }
+        .panel > .t-row.done { content-visibility: auto; contain-intrinsic-size: auto 64px; }   /* 빠르게: 완료 업무는 화면에 보일 때만 배치 계산 */
+        .t-old { padding: 12px 16px; font-size: 13px; color: var(--muted); border-top: 1px dashed var(--line); } .t-old span { margin-left: 6px; }
+        @media (max-width: 1279px) { .panel > .t-row.done { contain-intrinsic-size: auto 250px; } }
         .t-title { font-weight: 700; overflow-wrap: anywhere; }
         .t-memo { font-size: 13px; color: var(--muted); font-weight: 400; overflow-wrap: anywhere; white-space: pre-wrap; line-height: 1.55; margin-top: 3px; }
         button.t-memo { display: block; width: 100%; text-align: left; background: #FAFBF5; border: 1px solid transparent; border-radius: 6px; padding: 5px 8px; font: inherit; font-size: 13px; color: var(--muted); cursor: text; }
@@ -2178,7 +2181,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-14.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-16.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -3229,6 +3232,7 @@
             db.tasks.forEach(function (x) { if (!closed(x) && x.ord > 0 && x.staffId === nt.staffId) { x.ord += 1; stamp(x); } });   // 같은 담당자 업무만
             nt.ord = 1;
         }
+        var TK_RECENT_DAYS = 7;   // 업무 목록: 이 날짜보다 오래된 완료 업무는 접어서 (목록이 쌓여도 화면이 느려지지 않게)
         function taskSort(a, b) {
             var da = closed(a) ? 1 : 0, dbb = closed(b) ? 1 : 0; if (da !== dbb) return da - dbb;
             var oa = a.ord || 0, ob = b.ord || 0;   // 끌어서 바꾼 순서 (순서를 정한 업무가 먼저, 새 업무는 그 아래에 예전 규칙대로)
@@ -4046,8 +4050,14 @@
             var todayS = ymd(new Date()), ydS = ymd(yd), isToday = state.date === todayS, isYday = state.date === ydS;
             var seq = 0;   // 해야 할 업무(할 일·진행 중)에만 1, 2, 3… 번호를 붙임 (완료한 업무는 번호 없이 지금처럼 유지)
             var openN = list.filter(function (t) { return !closed(t); }).length;
+            var tkCut = Date.now() - TK_RECENT_DAYS * 86400000, tkCutD = ymd(new Date(tkCut));
+            var tkAllShown = !!(state.date || state.status === 'done' || state.tkAll);   // 날짜·완료 필터를 고르면 전부 그대로
+            var tkRecent = function (t) { return !closed(t) || (t.fin && t.fin >= tkCut) || (t.due && t.due >= tkCutD) || (t.ext && t.ext >= tkCutD) || (!t.fin && !t.due); };
+            var tkShow = tkAllShown ? list : list.filter(tkRecent), tkOldN = list.length - tkShow.length;
+            var tkMore = tkOldN > 0 ? h('div', { class: 't-old' }, h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'tk-old', onclick: function () { state.tkAll = true; render(); } }, '지난 완료 업무 ' + tkOldN + '건 더 보기 (' + TK_RECENT_DAYS + '일 전)'), h('span', {}, ' 화면이 느려지지 않게 오래된 완료 업무는 접어 두었어요.'))
+                : (state.tkAll && !state.date && state.status !== 'done' && list.some(function (t) { return !tkRecent(t); }) ? h('div', { class: 't-old' }, h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'tk-old', onclick: function () { state.tkAll = false; render(); } }, '지난 완료 업무 접기')) : null);
 
-            var rows = list.map(function (t) {
+            var rows = tkShow.map(function (t) {
                 var num = closed(t) ? '' : String(++seq);
                 var sel = h('select', { class: 'st-' + t.status, 'data-fk': 'st-' + t.id, 'aria-label': t.title + ' 진행 상태' }, STATUS.map(function (s) { return h('option', { value: s.v }, s.t); }));
                 sel.value = t.status;
@@ -4098,7 +4108,7 @@
                         h('button', { type: 'button', class: 'btn btn-sm btn-close', 'data-fk': 'report', title: '하루 마감 순서: 마감1 상담리스트 → 마감2 실적장표 → 마감3 업무 마감보고', onclick: function () { openCloseReport(); } }, h('span', { class: 'rpt-step' }, '마감3'), '업무 마감보고'))),
                 h('div', { class: 'panel' }, actBar(),
                     h('div', { class: 'sch-ttl', 'data-fk': 'sch-ttl' }, '📋 스케줄업무(스업)'),
-                    rows.length ? [h('div', { class: 't-head' }, h('div', {}, '번호'), h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows]
+                    rows.length || tkMore ? [h('div', { class: 't-head' }, h('div', {}, '번호'), h('div', {}, '업무'), h('div', {}, '담당'), h('div', {}, '마감'), h('div', {}, '우선순위'), h('div', {}, '상태'), h('div', {})), rows, tkMore]
                         : h('div', { class: 'empty' }, state.date ? '이 날(' + koDate(state.date) + ') 마감인 업무가 없어요. 담당·상태 필터를 걸어 두었다면 함께 확인해 보세요.' : (db.tasks.length ? '조건에 맞는 업무가 없어요. 필터를 바꿔 보세요.' : '아직 등록된 업무가 없어요. 오른쪽 위 [업무 추가]로 시작해 보세요.')))), h('div', { class: 'tk-side' }, qmPanel(), mgPanel()));
         }
 
