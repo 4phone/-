@@ -280,6 +280,8 @@
         #best-plan-section { max-width: 1200px; margin: 0 auto; padding-top: 20px; }
         .prov-section { margin-bottom: 40px; background: #FFFFFF; padding: 20px 25px; border-radius: 20px; border: 1px solid var(--line); box-shadow: 0 8px 24px rgba(10,43,50,0.05); }
         .prov-title { display: flex; align-items: center; gap: 15px; font-size: 24px; font-weight: 800; color: var(--ink); margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #E6EFED; padding-bottom: 12px; justify-content: flex-start; }
+        .prov-note { margin: -4px 0 16px; padding: 10px 14px; border-radius: 12px; background: #EAF4F1; border: 1px solid #CFE3DE; color: #134047; font-size: 15px; font-weight: 600; line-height: 1.45; }   /* 알뜰형: 결합 없이 이용 가능 안내 */
+        .prov-note b { color: #0E6B5C; font-weight: 800; }
         .prov-title img { width: 90px; height: 35px; background: #fff; padding: 4px 8px; border-radius: 8px; object-fit: contain; border: 1px solid var(--line); }
         .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .plan-card { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(10,43,50,0.06); text-align: left; display: flex; flex-direction: column; }
@@ -2288,7 +2290,18 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         const SG_CSV_KEY = 'sg_rate_csv', SG_CSV_MAX_AGE = 3 * 86400000;   // 요금표 원본(구글 시트)도 지난번 것을 먼저 보여주고 새 값은 받는 대로 바꿈
         function sgCsvCached() { try { const c = JSON.parse(localStorage.getItem(SG_CSV_KEY) || 'null'); return c && Date.now() - c.t < SG_CSV_MAX_AGE && typeof c.v === 'string' && c.v.indexOf(',') > 0 ? c.v : null; } catch (e) { return null; } }
         function sgCsvKeep(t) { try { localStorage.setItem(SG_CSV_KEY, JSON.stringify({ t: Date.now(), v: t })); } catch (e) { /* 저장 못 해도 화면에는 영향 없음 */ } }
-        function sgSetRows(text) { allData = parseCsvText(text).slice(1).filter(r => r[0] && r[0].trim() !== ""); allData.forEach(r => { if (r[7]) r[7] = sgGiftClean(r[7]); }); sgSheetRows = allData.map(r => r.slice()); }
+        /* ★ 알뜰형 요금 바로잡기 (2026-11-17 대표님 지시: SK 알뜰형 100M+Btv 23,100원 · 500M+Btv 29,700원)
+           구글 시트에 아직 예전 요금(22,000 · 28,600)이 있을 때만 바꿈 → 나중에 시트를 고치면 시트 값이 그대로 쓰임 */
+        const SG_RATE_FIX = [{ c: 'SK', t: '요금할인형', p: '100M + Btv', old: 22000, now: '23,100' }, { c: 'SK', t: '요금할인형', p: '500M + Btv', old: 28600, now: '29,700' }];
+        function sgRateFix(r) {
+            const n = v => parseInt(String(v || '').replace(/[^0-9]/g, ''), 10) || 0, k = v => String(v || '').replace(/\s+/g, '').toUpperCase();
+            SG_RATE_FIX.forEach(f => {
+                if (k(r[0]) !== k(f.c) || String(r[1] || '').trim() !== f.t || k(r[2]) !== k(f.p)) return;
+                if (n(r[4]) === f.old) r[4] = f.now;
+                if (n(r[6]) === f.old) r[6] = f.now;
+            });
+        }
+        function sgSetRows(text) { allData = parseCsvText(text).slice(1).filter(r => r[0] && r[0].trim() !== ""); allData.forEach(r => { if (r[7]) r[7] = sgGiftClean(r[7]); sgRateFix(r); }); sgSheetRows = allData.map(r => r.slice()); }
         async function loadData() {
             const feedP = sgFeedFetch();   // 관리자 단가표(요금 자동 반영)도 함께 받기 시작
             const csvP = sgFetchCsv(csvUrl, 3);   // 요금표 · 가용지역은 동시에 받기 (예전엔 차례로 받아서 느렸음)
@@ -2709,6 +2722,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             const discountProvs = ['SK', '스카이'];
             let discountHtml = `<div class="prov-section" id="prov-section-알뜰">
                 <h2 class="prov-title">알뜰형 (요금할인형)</h2>
+                <p class="prov-note"><b>휴대폰 결합 없이</b> 이 요금 그대로 이용 가능해요</p>
                 <div class="plan-grid">`;
 
             discountProvs.forEach(prov => {
