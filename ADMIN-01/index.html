@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-qNRUz2Pbed4Rdm+D0vzdlYFNqzIjcsMMSFwmHIJP7Bs='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-xdmeDensWnw3HPEHi72yjOOCsAb/X6L27GVH3/6nuOc='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2268,7 +2268,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-17.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-17.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -10633,7 +10633,8 @@
            U+: 인터넷 36,300 / 인터넷+TV 56,100(인터넷 34,100+U+TV 22,000) · 주말·공휴일·평일 야간(19시~다음날 9시) 25% 할증
            KT: 인터넷 36,000 / 인터넷+TV 56,200 · 주말·야간 25% 할증
            스카이라이프: 인터넷 36,000 · 주말·공휴일 45,000 (TV 동시 설치는 할인 — 금액 공식 미공개)
-           헬로비전: 공식 금액 미공개 (상담 1855-1082) */
+           헬로비전 (11/17 공지): 인터넷+TV 번들 56,100 → 12/1 개통건부터 58,300 · 후번들(기존 헬로 TV 고객이 인터넷 추가) 34,100 → 36,300 · 주말 할증·인터넷 단독은 공지 없음 → 상담 확인 */
+        var HELLO_INST = { from: '2026-12-01', tv: [56100, 58300], hu: [34100, 36300] };
         function polWon(n) { return Math.round(n).toLocaleString('ko-KR') + '원'; }
         function polInstallInfo(c, r, g) {   // { wd: 평일, we: 주말·야간(할증 계산한 금액), weLabel, note } 또는 { none: 안내 }
             var parts = polParts(r.n), tv = !!r.tv || parts.slice(1).some(function (p) { return !polNotTv(p); });
@@ -10657,20 +10658,25 @@
                 if (!/\d+\s*[MG]/i.test(r.n)) return { none: 'TV 설치비 상담 확인 (1588-9944)' };
                 return { wd: 36000, we: 45000, weLabel: '주말·공휴일', note: tv ? 'TV 동시 설치 할인 — TV 금액은 상담 확인 (1588-9944)' : '' };
             }
-            if (id === 'hello') return { none: '공식 금액 미공개 · 상담 확인 (1855-1082)' };
+            if (id === 'hello') {   // 12/1 개통건부터 인상 — 그 전에는 지금 금액 + 12/1 금액을 같이 보여 줌
+                var nw = ymd(new Date()) >= HELLO_INST.from, hu = '후번들(기존 헬로 TV 고객이 인터넷 추가) ' + polWon(HELLO_INST.hu[nw ? 1 : 0]) + (nw ? '' : ' → 12/1 개통부터 ' + polWon(HELLO_INST.hu[1]));
+                if (!tv) return { none: '인터넷 단독 설치비 상담 확인 (1855-1082) · ' + hu };
+                return nw ? { wd: HELLO_INST.tv[1], we: null, wdLabel: '12/1 개통부터', weLabel: '', note: '인터넷+TV 번들 · 주말 할증은 상담 확인' }
+                    : { wd: HELLO_INST.tv[0], we: HELLO_INST.tv[1], wdLabel: '11/30 개통까지', weLabel: '12/1 개통부터', note: '인터넷+TV 번들 · 12/1 개통건부터 인상 · 주말 할증은 상담 확인' };
+            }
             return { none: '상담 시 확인' };
         }
         function polInstall(c, r, g) {   // 신분증 요청 접수 메모의 '설치비' 한 줄
             var f = polInstallInfo(c, r, g);
             if (f.none) return f.none;
-            return '평일 ' + polWon(f.wd) + ' / ' + f.weLabel + ' ' + polWon(f.we) + (f.note ? ' (' + f.note + ')' : '');
+            return (f.wdLabel || '평일') + ' ' + polWon(f.wd) + (f.we != null ? ' / ' + f.weLabel + ' ' + polWon(f.we) : '') + (f.note ? ' (' + f.note + ')' : '');
         }
         function polInstCell(c, r, g) {   // 단가표 '설치비' 칸
             var f = polInstallInfo(c, r, g);
             if (f.none) return h('td', { class: 'p-inst', 'data-l': '설치비' }, h('span', { class: 'p-none' }, f.none));
             return h('td', { class: 'p-inst', 'data-l': '설치비', title: f.note || '' },
-                h('span', { class: 'pi-wd' }, h('i', {}, '평일'), polWon(f.wd)),
-                h('span', { class: 'pi-we', title: f.weLabel + ' 설치' }, h('i', {}, f.weLabel === '주말·공휴일' ? '주말·공휴일' : '주말·야간'), polWon(f.we)),
+                h('span', { class: 'pi-wd' }, h('i', {}, f.wdLabel || '평일'), polWon(f.wd)),
+                f.we != null ? h('span', { class: 'pi-we', title: f.weLabel + ' 설치' }, h('i', {}, f.wdLabel ? f.weLabel : f.weLabel === '주말·공휴일' ? '주말·공휴일' : '주말·야간'), polWon(f.we)) : null,
                 f.note ? h('small', {}, f.note) : null);
         }
         function polIntake(c, r, g) {   // 신분증 요청 접수 메모의 ● 접수정보 ● 칸
