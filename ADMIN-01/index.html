@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-K0RKR+VMmJh+uE0VL58EqYKevBro0WWuKzYlIjHj2OA='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Ibcss5sznI9rKDElqtm9E5aHMtvsEjB+LIRxbSS6CNU='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1069,6 +1069,10 @@
         .gll-rt td.f { color: #2B3A12; }
         .gll-rt td.ed { cursor: pointer; } .gll-rt td.ed:hover { outline: 2px solid var(--gold-edge); outline-offset: -2px; }
         .gll-off { position: fixed; left: -100000px; top: 0; background: #fff; }
+        .kc-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 10px; padding: 9px 14px; background: #FFFBEA; border: 1px solid #EED98A; border-radius: 12px; font-size: 13px; color: #5B4A0C; }
+        .kc-line b { color: #3D3206; }
+        .kc-body .kc-h { font-size: 14px; margin: 14px 0 6px; }
+        .kc-ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; max-height: 260px; overflow: auto; }
         .gl-wrap { border: 1px solid #C9CDB8; border-radius: 0 0 10px 10px; background: #fff; overflow: hidden; }
         .gl-g { overflow: auto; max-height: calc(100vh - 270px); min-height: 320px; outline: none; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
         .gl-g:focus-visible { box-shadow: inset 0 0 0 2px #1A73E8; }
@@ -2253,7 +2257,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-17.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-17.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -7427,6 +7431,8 @@
             (dl.keep || []).forEach(function (k) {
                 var it = String(k.item || '').trim(), nt = String(k.note || ''), p = String(k.period || '').trim();
                 if (!it || /하향|105|2nd|device|결합|부가|구독|폰케어|직전|유선|회선/i.test(it)) return;   // 요금제 기간이 아닌 줄
+                if (/청소년|키즈|주니어|시니어/.test(it)) return;   // 나이 대상 추가 정책 줄 (일반 고객 요금제 기간이 아님)
+                if (/\//.test(p)) { var pp = p.split('/').filter(function (q) { return /요금제/.test(q); })[0]; if (pp) p = pp.replace(/^.*?([DM]\s*\+\s*\d+).*$/i, '$1'); }   // '요금제 D+93 / 회선 D+183' → D+93
                 var used = /중고|자급제/.test(it);
                 if (!/요금제/.test(it) && !(used && (/요금제/.test(nt) || same))) return;
                 if (used && !f.used) return;                                     // 중고·자급제 줄 = 비구매 개통만
@@ -17701,6 +17707,121 @@
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'gll-copyimg', onclick: function () { gllCopyImage(gllTableCanvas(tbl, title), title); } }, '🖼 그림으로 복사'));
             return h('div', { class: 'gll-region' }, tools, h('div', { class: 'gll-rwrap' }, tbl), h('p', { class: 'ib-help' }, '흰 칸은 눌러서 고칠 수 있고(목표 등), 회색 글자 칸은 장부로 자동 계산돼요.'));
         }
+        /* ---------- 매일 저녁 8시 일정 점검 (11-17 대표님): 가입고객리스트 · 가입 장부의 모바일 고객 → 요금제 변경일 · 부가서비스 해지 가능일
+           거래처 정책서(모바일 단가표) 기준으로 날짜를 다시 계산해서, 캘린더에 없으면 넣고 이미 있으면(같은 고객·같은 종류) 넣지 않음
+           · 오늘 이후 날짜만 · 직접 지운 일정은 다시 넣지 않음 · 일정 번호를 고객·종류·날짜로 정해서 여러 기기가 같이 돌아도 두 번 안 생김
+           · 장부는 팀 키로 암호화돼 있어서 서버가 혼자 못 함 → 8시 넘어 켜져 있는 사거리온(가입고객리스트 권한)이 함 · 못 했으면 다음에 켤 때 */
+        var KC_HOUR = 20, KC_LS = 'sg_kchk_v1', kc = { busy: false };
+        function kcState() { try { return JSON.parse(localStorage.getItem(KC_LS) || 'null') || {}; } catch (e) { return {}; } }
+        function kcSave(o) { try { localStorage.setItem(KC_LS, JSON.stringify(o)); } catch (e) { /* 이 기기에 못 남겨도 다음에 다시 함 */ } }
+        function kcHash(s) { var h1 = 5381, h2 = 52711; for (var i = 0; i < s.length; i++) { var ch = s.charCodeAt(i); h1 = (h1 * 33) ^ ch; h2 = (h2 * 31) ^ ch; } return (h1 >>> 0).toString(36) + (h2 >>> 0).toString(36); }
+        function kcSheet(vals, checks) {   // 가입 확인서처럼 읽히는 가짜 확인서 (확인서 저장 때와 똑같은 계산을 쓰려고)
+            return { querySelector: function (sel) { var m = /data-mf="([^"]+)"/.exec(sel), n = m && m[1]; if (!n) return null; if (Object.prototype.hasOwnProperty.call(checks, n)) return { checked: !!checks[n], value: '' }; if (Object.prototype.hasOwnProperty.call(vals, n)) return { value: vals[n] == null ? '' : String(vals[n]) }; return null; } };
+        }
+        function kcFromRec(r) {   // 장부 한 줄 → 가짜 확인서
+            var t = String(r.type || ''), d = parseYmd(r.date || ''), keep = String(r.keep || '');
+            return kcSheet({ netUse: r.dealer, carrier: r.carrier, extra: r.extra, xKeep: '', plan1: r.plan, keep1: /^\d+$/.test(keep) ? keep : '', plan2: r.plan2, keep2: '', bill2: r.bill2, payAmt: r.pay, y: d ? d.getFullYear() : '', m: d ? d.getMonth() + 1 : '', d: d ? d.getDate() : '' },
+                { tNew: /신규/.test(t), tPort: /번호\s*이동|MNP/i.test(t), tRe: /재가입|기기\s*변경|기변/.test(t), noBuy: /비구매|중고|자급|유심/.test(t + ' ' + (r.kindT || '')), dSel: /선약|선택/.test(r.disc || ''), dSub: /공시/.test(r.disc || '') });
+        }
+        function kcGlRows(E) {   // 가입고객리스트 한 시트의 모바일 고객 → 장부 줄 모양
+            var S = E.S, H = glHead(S), ym = glYm(S.name), out = []; if (!H || !ym) return out;
+            var L = gllLabOf(S), g = function (r, n) { var c = L[gllKey(n)]; if (!c) return ''; var v = glCalcOf(E).get(r, c); return v == null || v instanceof GlErr ? '' : String(v).trim(); };
+            for (var r = H.r + 1; r <= S.nr; r++) {
+                var w = S.cv[r]; if (!w) continue;
+                var kind = String(w[H.kind] == null ? '' : w[H.kind]).trim();
+                if (kind.indexOf('모바일') !== 0 || glIsCancel(kind) || (H.no && String(w[H.no] || '').trim().toLowerCase() === 'ex')) continue;
+                var day = parseInt(g(r, '가입날짜'), 10); if (!(day >= 1 && day <= 31)) continue;
+                var dt = new Date(ym.y, ym.m - 1, day); if (dt.getMonth() !== ym.m - 1) continue;
+                var pay = digitsOnly(g(r, '유통망지원금'));
+                out.push({ src: S.name + ' ' + r + '번 줄', date: ymd(dt), kindT: kind, dealer: g(r, '거래처'), carrier: g(r, '통신사'), name: g(r, '고객명'), phone: g(r, '번호'), model: g(r, '모델'), seller: g(r, '담당자'), plan: g(r, '요금제'), extra: g(r, '부가서비스'), keep: g(r, '요금제유지개월'), plan2: g(r, '변경요금제'), bill2: digitsOnly(g(r, '3개월후요금')), type: g(r, '가입유형'), disc: g(r, '공시&선약(프약)'), pay: +pay ? pay : '' });
+            }
+            return out;
+        }
+        function kcHave(P, r, date) {   // 같은 고객의 같은 종류 일정 (휴대폰 번호, 없으면 이름) → 그 일정
+            var pre = P ? '📱 요금제 변경 · ' : '📵 부가서비스 해지 가능 · ', ph = digitsOnly(r.phone), nm = String(r.name || '').trim();
+            return db.events.filter(function (e) {
+                if (String(e.title || '').indexOf(pre) !== 0) return false;
+                var m = /휴대폰:\s*([\d-]+)/.exec(e.memo || ''), eph = m ? digitsOnly(m[1]) : '';
+                if (ph.length >= 9 && eph) return eph === ph;
+                return !!nm && String(e.title).indexOf(' · ' + nm) > 0;
+            }).sort(function (a, b) { return Math.abs(parseYmd(a.date) - parseYmd(date)) - Math.abs(parseYmd(b.date) - parseYmd(date)); })[0] || null;
+        }
+        function kcRun(auto) {   // → Promise<결과>
+            if (kc.busy) return Promise.resolve(null);
+            if (!authed || !db || !driveOn() || !glCan()) return Promise.resolve(null);
+            kc.busy = true;
+            var today = ymd(new Date()), res = { d: today, at: Date.now(), auto: !!auto, add: [], have: 0, diff: [], none: [], n: 0 };
+            var wait = function (ok, ms) { return new Promise(function (done) { var t0 = Date.now(); (function tick() { if (ok() || Date.now() - t0 > ms) done(); else setTimeout(tick, 400); })(); }); };
+            if (!gl.idx) glLoad(false);
+            if (!mp.data && !mp.busy) mpLoad();
+            return wait(function () { return gl.idx && !gl.busy && (mp.data || mp.err); }, 30000).then(function () {
+                if (!gl.idx) throw new Error('가입고객리스트를 불러오지 못했어요');
+                var now = new Date(), nowK = now.getFullYear() * 12 + now.getMonth() + 1;
+                var recent = glIdxList().filter(function (s) { var y = glYm(s.name); return y && /장부/.test(s.name) && nowK - (y.y * 12 + y.m) <= 7 && nowK - (y.y * 12 + y.m) >= -1; });
+                return recent.reduce(function (p, s) { return p.then(function () { return glOpenSheet(s.id, false).catch(function () { /* 못 연 시트는 건너뜀 */ }); }); }, Promise.resolve()).then(function () { return recent; });
+            }).then(function (recent) {
+                var list = [], seen = {}, keyOf = function (r) { return (digitsOnly(r.phone) || String(r.name || '').trim()) + '|' + r.date; };
+                (db.regs || []).forEach(function (r) { if (r.kind !== 'mobile' || !r.date || /취소/.test(String(r.type || ''))) return; var k = keyOf(r); if (seen[k]) return; seen[k] = 1; list.push({ rec: r, reg: true, src: '가입 장부' }); });
+                recent.forEach(function (s) { var E = gl.sh[s.id]; if (!E || !E.S) return; kcGlRows(E).forEach(function (r) { var k = keyOf(r); if (seen[k]) return; seen[k] = 1; list.push({ rec: r, reg: false, src: r.src }); }); });
+                var added = false;
+                list.forEach(function (it) {
+                    var r = it.rec, sh = kcFromRec(r);
+                    [['p', mfPCalc(sh)], ['x', mfXCalc(sh)]].forEach(function (q) {
+                        var k = q[0], x = q[1], P = k === 'p';
+                        if (!x.svc || (P && !x.plan2)) return;   // 부가서비스 없음 · 요금제 유지 고객은 일정 없음
+                        if (!x.date) { if (x.open && x.open >= ymd(new Date(Date.now() - 200 * 86400000))) res.none.push({ name: r.name || '이름 없음', what: P ? '요금제 변경' : '부가서비스 해지', why: mfXWhy(x).replace(/^⚠ /, ''), src: it.src }); return; }
+                        if (x.date < today) return;   // 지난 날짜는 넣지 않음
+                        res.n++;
+                        var ev0 = it.reg ? regEvOf(r, P ? 'pev' : 'xev') : null, have = ev0 || kcHave(P, r, x.date);
+                        if (!have && it.reg && r[P ? 'pev' : 'xev']) { res.have++; return; }   // 확인서 저장 때 넣었다가 캘린더에서 직접 지운 일정
+                        if (have) { res.have++; if (have.date !== x.date) res.diff.push({ name: r.name || '', what: P ? '요금제 변경' : '부가서비스 해지', cal: have.date, want: x.date, src: it.src }); return; }
+                        var id = 'kc' + k + kcHash([k, digitsOnly(r.phone) || r.name, r.date, x.date].join('|')).slice(0, 24);
+                        if (db.del[id] || db.events.some(function (e) { return e.id === id; })) { res.have++; return; }   // 직접 지운 일정은 다시 넣지 않음
+                        var info = regKInfo(r, x);
+                        info.memo = (info.memo + '\n(매일 저녁 8시 일정 점검이 ' + it.src + ' 기준으로 넣었어요)').slice(0, 1990);
+                        var ne = stamp({ id: id, title: info.title, date: info.date, time: '', staffId: info.sid, memo: info.memo, u: 0, by: me });
+                        db.events.push(ne);
+                        if (info.sid && staffById(info.sid) && !db.del[id + '-t']) { db.tasks.push(stamp({ id: id + '-t', title: ne.title, staffId: ne.staffId, due: ne.date, priority: 'normal', status: 'todo', memo: evTaskMemo(ne), u: 0, evId: ne.id })); ne.taskId = id + '-t'; stamp(ne); }
+                        if (it.reg && !r[P ? 'pev' : 'xev']) { r[P ? 'pev' : 'xev'] = id; stamp(r); }
+                        res.add.push({ name: r.name || '', what: P ? '요금제 변경' : '부가서비스 해지', date: x.date, staff: staffName(info.sid), src: it.src });
+                        added = true;
+                    });
+                });
+                res.cust = list.length;
+                if (added) commit();
+                kc.busy = false; kcSave(res);
+                if (res.add.length) toast('🗓 일정 점검: 요금제 변경·부가서비스 해지 일정 ' + res.add.length + '건을 캘린더에 새로 넣었어요. (이미 있음 ' + res.have + '건)');
+                else if (!auto) toast('🗓 일정 점검: 빠진 일정이 없어요. (이미 있음 ' + res.have + '건' + (res.none.length ? ' · 기준 없음 ' + res.none.length + '건' : '') + ')');
+                if (state.view === 'gl') render();
+                return res;
+            }).catch(function (e) { kc.busy = false; if (!auto) toast('일정 점검을 하지 못했어요. ' + (e && e.message ? e.message : '')); return null; });
+        }
+        setInterval(function () {   // 매일 저녁 8시 넘어 한 번 (못 했으면 다음에 켤 때) · 가입고객리스트 권한이 있는 기기
+            if (!authed || !db || kc.busy || !driveOn() || !glCan()) return;
+            var now = new Date(), st = kcState(), today = ymd(now), yest = ymd(new Date(now.getTime() - 86400000));
+            if (st.d === today) return;
+            if (now.getHours() >= KC_HOUR || (st.d && st.d < yest)) kcRun(true);
+        }, 60000);
+        function kcOpen() {   // 결과 자세히
+            var st = kcState(), dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide';
+            var sec = function (t, arr, f) { return arr && arr.length ? [h('h3', { class: 'kc-h' }, t + ' ' + arr.length + '건'), h('ul', { class: 'kc-ul' }, arr.slice(0, 200).map(function (x) { return h('li', {}, f(x)); }))] : null; };
+            dlg.appendChild(h('div', { class: 'dlg-head' }, '🗓 요금제 변경 · 부가서비스 해지 일정 점검'));
+            dlg.appendChild(h('div', { class: 'dlg-body kc-body' },
+                h('p', {}, st.d ? '마지막 점검 ' + mfXDay(st.d) + ' ' + new Date(st.at).toTimeString().slice(0, 5) + (st.auto ? ' (자동)' : ' (직접)') + ' · 모바일 고객 ' + (st.cust || 0) + '명 · 앞으로 일정 ' + (st.n || 0) + '건 중 이미 있음 ' + (st.have || 0) + '건' : '아직 점검한 적이 없어요.'),
+                h('p', { class: 'ib-help' }, '매일 저녁 8시가 넘으면 켜져 있는 사거리온이 가입고객리스트(최근 7달)·가입 장부의 모바일 고객을 거래처 정책서 기준으로 다시 계산해서, 캘린더에 없는 일정만 넣어요. 같은 고객의 같은 일정이 이미 있으면 넣지 않고, 직접 지운 일정은 다시 넣지 않아요. 8시에 켜진 기기가 없으면 다음에 켤 때 해요.'),
+                sec('새로 넣은 일정', st.add, function (x) { return mfXDay(x.date) + ' · ' + x.what + ' · ' + x.name + ' · ' + x.staff + ' (' + x.src + ')'; }),
+                sec('캘린더 날짜가 계산과 다른 일정 (그대로 둠 — 확인해 주세요)', st.diff, function (x) { return x.name + ' · ' + x.what + ' · 캘린더 ' + mfXDay(x.cal) + ' / 계산 ' + mfXDay(x.want) + ' (' + x.src + ')'; }),
+                sec('날짜를 계산할 기준이 없는 고객 (정책서·유지기간 확인)', st.none, function (x) { return x.name + ' · ' + x.what + ' · ' + x.why + ' (' + x.src + ')'; })));
+            dlg.appendChild(h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', 'data-act': 'kc-run', disabled: kc.busy, onclick: function () { closeDlg(); kcRun(false).then(function (r) { if (r) kcOpen(); }); } }, kc.busy ? '점검 중...' : '지금 다시 점검'), h('button', { type: 'button', class: 'btn btn-primary', onclick: closeDlg }, '닫기')));
+            showDlg(dlg);
+        }
+        function kcLine() {   // 가입고객리스트 위 한 줄
+            var st = kcState();
+            return h('div', { class: 'kc-line' }, h('span', {}, '🗓 매일 저녁 8시 일정 점검 (요금제 변경·부가서비스 해지): '),
+                h('b', {}, kc.busy ? '점검 중...' : st.d ? mfXDay(st.d) + ' ' + new Date(st.at).toTimeString().slice(0, 5) + ' · 새로 넣음 ' + (st.add || []).length + ' · 이미 있음 ' + (st.have || 0) + ((st.diff || []).length ? ' · 날짜 다름 ' + st.diff.length : '') + ((st.none || []).length ? ' · 기준 없음 ' + st.none.length : '') : '아직 안 함'),
+                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'kc-open', onclick: kcOpen }, '자세히'),
+                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'kc-now', disabled: kc.busy, onclick: function () { kcRun(false); render(); } }, '지금 점검'));
+        }
         function renderGl() {
             var boss = isBoss();
             var head = h('div', { class: 'page-head' }, h('h1', {}, '사거리가입고객리스트'), h('div', { class: 'actions' },
@@ -17737,7 +17858,7 @@
                 status);
             var body = gl.view === 'book' ? gllBook(E) : gllRegionView(E, gl.view === 'all' ? R.all : R[gl.view], gl.view === 'all' ? '' : { dash: '실적장표', flyer: '전단배포', side: '전단부업' }[gl.view]);
             if (gl.flash) setTimeout(function () { gl.flash = 0; }, 0);
-            return h('div', { class: 'gl-page gll' }, head, note, gl.inbox ? h('p', { class: 'gl-inbox' }, '가입 확인서에서 들어온 ' + gl.inbox + '줄을 장부에 넣는 중이에요...') : null, tabs, vbar, body);
+            return h('div', { class: 'gl-page gll' }, head, note, gl.inbox ? h('p', { class: 'gl-inbox' }, '가입 확인서에서 들어온 ' + gl.inbox + '줄을 장부에 넣는 중이에요...') : null, kcLine(), tabs, vbar, body);
         }
         function glAfterRender() {   // 화면을 다시 그린 뒤: 표 스크롤 위치·선택 칸 · 탭 위치 · 가로 이동바
             if (state.view !== 'gl') return;
