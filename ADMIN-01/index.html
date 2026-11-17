@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-/8nDBBfP17/iIVS0bdrOBNsCctvCfzSlhB2CBrJv4T8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MqzC5X579njDKJryXUtWbWjiaEBxQy3++5vwKvMNAuo='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2268,7 +2268,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-17.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-17.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -17852,9 +17852,23 @@
             for (var r2 = hit.r + 1; r2 <= A.r2; r2++) { var v = glNum(calc.get(r2, hit.c)); if (typeof v === 'number' && isFinite(v) && v) { n += v; d++; } }
             return { n: n, d: d };
         }
+        function gllTimeCell(S) {   // 실적장표 보고 시각 칸 ('잔여 영업일수' 옆 '14시13분' 칸)
+            var c0 = glReportCell(S); if (c0) return c0;
+            var A = glRegions(S).dash; if (!A) return null;
+            for (var r = A.r1; r <= Math.min(A.r2, A.r1 + 8); r++) { var w = S.cv[r] || {}; var k = Object.keys(w).map(Number).filter(function (c) { return c >= A.c1 && gllKey(w[c]) === '잔여영업일수'; })[0]; if (!k) continue;
+                var g = (S.mg || []).filter(function (m) { return m[0] === r && m[1] === k; })[0], c = (g ? g[3] : k) + 1, v = S.cv[r][c];
+                if (v == null || v === '' || /시\s*\d*\s*분|목표|마감/.test(String(v))) return { r: r, c: c }; }
+            return null;
+        }
+        function gllSetNow(E) {   // [🕐 현시간으로]: 보고 시각 칸을 지금 시각으로
+            var t = gllTimeCell(E.S); if (!t) { toast('보고 시각 칸(잔여 영업일수 옆)을 찾지 못했어요.'); return; }
+            var d = glNow(), lab = d.getHours() + '시' + pad2(d.getMinutes()) + '분';
+            if (glSet(E, [[t.r, t.c, lab]])) { render(); toast('실적장표 시각을 ' + lab + '(으)로 바꿨어요.'); } else toast('이미 ' + lab + '이에요.');
+        }
         function gllRegionView(E, A, name) {
             var S = E.S, title = (S.name || '') + ' ' + name, tbl = gllRegionTable(E, A), qs = name === '전단배포' || name === '전단부업' ? gllQtySum(E, A) : null;
             var tools = h('div', { class: 'gll-rtools' }, h('b', { class: 'gll-rtitle' }, title),
+                name === '실적장표' && glCan() && gllTimeCell(S) ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'gll-now', title: '잔여 영업일수 옆 시각 칸을 지금 시각으로 (예: 12시28분)', onclick: function () { gllSetNow(E); } }, '🕐 현시간으로 세팅') : null,
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'gll-copytext', onclick: function () { var t = gllRegionText(E, A, title); copyText(t).then(function (ok) { if (ok) toast(name + ' 내용을 글자로 복사했어요. 카톡 공지에 붙여넣으세요.'); else prompt('아래 내용을 복사해 주세요.', t); }); } }, '📋 글자로 복사'),
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'gll-copyimg', onclick: function () { gllCopyImage(gllXlCanvas(E, A, name) || gllTableCanvas(tbl, title), title); } }, '🖼 그림으로 복사'));
             var side = qs ? h('div', { class: 'gll-rside', 'data-act': 'gll-qty' }, h('small', {}, '총 수량'), h('b', {}, gllWon(qs.n)), h('small', {}, '배포 ' + qs.d + '번')) : null;
