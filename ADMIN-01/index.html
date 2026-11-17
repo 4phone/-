@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MqzC5X579njDKJryXUtWbWjiaEBxQy3++5vwKvMNAuo='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-qNRUz2Pbed4Rdm+D0vzdlYFNqzIjcsMMSFwmHIJP7Bs='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2268,7 +2268,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-17.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-17.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -17465,6 +17465,7 @@
         /* 실적장표 자동 칸 (이름표로 위치 찾기 — 엑셀에서 칸을 옮겨도 따라감)
            당일 실적의 모바일·유선 옆 = 오늘 가입날짜 건수 · 콜인입 옆 = 콜 인입 화면 오늘 실 인입 · 당일 매출 아래 = 오늘 운영비포함총매출 합
            동판·전략 줄의 '실적' 칸 = 자동_동판() / 자동_전략() */
+        var GLL_TODAY_F = '=DAY(TODAY())&"일"';
         function glAutoLabels(S) {   // → [[r, c, 수식], ...] (지금 값과 같아도 전부)
             var hadR = '_reg' in S, hadH = '_head' in S, out = [];
             try {
@@ -17485,6 +17486,8 @@
                     if (typeof cur === 'string' && cur.trim() && cur.charAt(0) !== '=' && !/^[-₩\s\d,.원]+$/.test(cur.trim())) return;   // 글자(이름표)가 있는 칸은 안 건드림
                     out.push([t.r, t.c, f]);
                 };
+                labs.forEach(function (L) { if (L.r <= A.r1 + 4 && /^\d{1,2}일$/.test(L.k)) { seen[K(L.r, L.c)] = 1; out.push([L.r, L.c, GLL_TODAY_F]); } });   // 맨 위 '16일' 같은 날짜 글자 → 오늘 날짜 수식
+                for (var rr = A.r1; rr <= A.r1 + 4; rr++) { var ww = S.cv[rr] || {}; Object.keys(ww).forEach(function (c) { c = +c; if (c >= A.c1 && ww[c] === GLL_TODAY_F && !seen[K(rr, c)]) { seen[K(rr, c)] = 1; out.push([rr, c, GLL_TODAY_F]); } }); }
                 var day = labs.filter(function (L) { return L.k === '당일실적'; })[0];
                 if (day) {
                     var g0 = mgAt[K(day.r, day.c)], c2 = g0 ? g0[3] : day.c;
@@ -17863,7 +17866,8 @@
         function gllSetNow(E) {   // [🕐 현시간으로]: 보고 시각 칸을 지금 시각으로
             var t = gllTimeCell(E.S); if (!t) { toast('보고 시각 칸(잔여 영업일수 옆)을 찾지 못했어요.'); return; }
             var d = glNow(), lab = d.getHours() + '시' + pad2(d.getMinutes()) + '분';
-            if (glSet(E, [[t.r, t.c, lab]])) { render(); toast('실적장표 시각을 ' + lab + '(으)로 바꿨어요.'); } else toast('이미 ' + lab + '이에요.');
+            var list = [[t.r, t.c, lab]].concat(glAutoLabelsNeed(E.S).filter(function (x) { return x[2] === GLL_TODAY_F; }));   // 날짜 칸이 글자('16일')면 오늘 날짜 수식으로 같이
+            if (glSet(E, list)) { render(); toast('실적장표 시각을 ' + lab + '(으)로 바꿨어요.'); } else toast('이미 ' + lab + '이에요.');
         }
         function gllRegionView(E, A, name) {
             var S = E.S, title = (S.name || '') + ' ' + name, tbl = gllRegionTable(E, A), qs = name === '전단배포' || name === '전단부업' ? gllQtySum(E, A) : null;
