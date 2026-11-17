@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-4q44/gXUr+aECShp6nk6UDGY2lKIkhNAb69tHMCI1WY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-K0RKR+VMmJh+uE0VL58EqYKevBro0WWuKzYlIjHj2OA='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -997,6 +997,78 @@
         .gl-tip { margin: 0; min-height: 0; font-size: 12.5px; color: #8A5A00; }
         .gl-tip:empty { display: none; }
         .gl-inbox { margin: 0 0 8px; font-size: 13px; color: #1F5FAF; font-weight: 700; }
+        /* ---------- 가입고객리스트 새 화면 (카드 목록 · 고르기 창 · 새 스타일 실적장표) ---------- */
+        .gll-vbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 12px; }
+        .gll-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .gll-q { flex: 1 1 220px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+        .gll-ssel { width: auto; flex: 0 0 auto; max-width: 180px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+        .gll-sum { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; padding: 10px 14px; margin-bottom: 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; font-size: 13px; color: var(--muted); }
+        .gll-sum b { color: var(--ink); font-size: 15px; margin-left: 2px; }
+        .gll-sum-n { margin-left: auto; }
+        .gll-list { display: flex; flex-direction: column; gap: 8px; }
+        .gll-card { background: #fff; border: 1px solid var(--line); border-left: 5px solid #B9C29F; border-radius: 12px; padding: 10px 12px 8px; }
+        .gll-card.mobile { border-left-color: #2F55B8; } .gll-card.wired { border-left-color: #2E7D32; } .gll-card.rent { border-left-color: #7B4FB5; } .gll-card.cancel { border-left-color: #C0392B; background: #FCF6F5; }
+        .gll-card.flash { box-shadow: 0 0 0 3px var(--gold); }
+        .gll-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+        .gll-no { min-width: 28px; font-size: 12px; font-weight: 800; color: var(--hint); text-align: center; }
+        .gll-date { padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: #F7F8F1; font-weight: 800; font-size: 13px; }
+        .gll-kind { padding: 5px 10px; border-radius: 999px; border: 1px solid transparent; font-weight: 800; font-size: 12.5px; background: #EEF0E6; color: var(--ink); }
+        .gll-kind.mobile { background: #E7EDFB; color: #1F3F95; } .gll-kind.wired { background: #E5F2E4; color: #1E5E22; } .gll-kind.rent { background: #F0E8FA; color: #5B3592; } .gll-kind.cancel { background: #FBE3E0; color: #A3271B; text-decoration: line-through; }
+        .gll-f { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; min-width: 64px; max-width: 100%; padding: 4px 10px 5px; border: 1px solid #DCE1CC; border-radius: 9px; background: #FDFDF9; text-align: left; line-height: 1.25; }
+        .gll-f:hover { border-color: var(--olive-700); background: #F6F8EE; }
+        .gll-f small { font-size: 10.5px; color: var(--hint); font-weight: 600; white-space: nowrap; }
+        .gll-f span { font-size: 13.5px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+        .gll-f.empty span { color: #B9BFAA; font-weight: 400; }
+        .gll-f.gll-calc { background: #F1F2EC; border-style: dashed; } .gll-f.gll-calc span { color: var(--muted); }
+        .gll-f.name span { font-size: 16px; font-weight: 800; }
+        .gll-bm { margin-left: auto; display: inline-flex; flex-direction: column; align-items: flex-end; font-weight: 800; font-size: 15px; color: var(--ink); }
+        .gll-bm small { font-size: 10.5px; color: var(--hint); font-weight: 600; }
+        .gll-bm.low { color: var(--danger); }
+        .gll-mid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .gll-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #E3E6DA; }
+        .gll-calls { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; flex: 1 1 520px; min-width: 0; }
+        .gll-call { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid #E0E4D3; border-radius: 8px; background: #FBFBF7; font-size: 12.5px; }
+        .gll-call.on { background: #FFF8D6; border-color: #EAD27A; }
+        .gll-more-b { margin-left: auto; padding: 6px 12px; border: 0; background: none; color: var(--olive-700); font-weight: 700; font-size: 13px; }
+        .gll-detail { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding: 10px; background: #F8F9F3; border-radius: 10px; }
+        .gll-clear { margin-left: auto; }
+        @media (max-width: 700px) {
+            .gll-calls { grid-template-columns: repeat(3, minmax(0, 1fr)); flex-basis: 100%; }
+            .gll-bm { margin-left: 0; flex-direction: row; gap: 6px; align-items: baseline; }
+            .gll-f { min-width: 0; }
+        }
+        .gll-pop { position: fixed; z-index: 1200; width: min(420px, calc(100vw - 16px)); max-height: min(70vh, 560px); display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 36px rgba(27, 30, 12, .22); }
+        .gll-pop.sheet { left: 0; right: 0; bottom: 0; width: auto; max-height: 75vh; border-radius: 16px 16px 0 0; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+        .gll-pop-h { display: flex; align-items: center; gap: 8px; }
+        .gll-pop-h b { font-size: 15px; }
+        .gll-pop-ref { font-size: 11px; color: var(--hint); }
+        .gll-pop-x { margin-left: auto; border: 0; background: none; font-size: 18px; padding: 2px 8px; color: var(--muted); }
+        .gll-pop-in { padding: 10px 12px; border: 1px solid #BFC7AA; border-radius: 10px; font-size: 15px; }
+        .gll-pop-list { overflow: auto; display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+        .gll-opt-g { display: flex; flex-wrap: wrap; gap: 6px; }
+        .gll-opt-g.days .gll-opt { min-width: 52px; justify-content: center; }
+        .gll-opt-sub { font-size: 11.5px; color: var(--hint); font-weight: 700; margin-top: 4px; border-top: 1px dashed var(--line); padding-top: 6px; }
+        .gll-opt { display: inline-flex; padding: 7px 12px; border: 1px solid #D5DBC3; border-radius: 999px; background: #fff; font-size: 13.5px; font-weight: 600; }
+        .gll-opt:hover { background: #F4F6EA; border-color: var(--olive-700); }
+        .gll-opt.on { background: var(--olive-700); color: #fff; border-color: var(--olive-700); }
+        .gll-opt-none { font-size: 13px; color: var(--muted); }
+        .gll-pop-f { font-size: 13.5px; color: var(--muted); }
+        .gll-pop-f2 { display: flex; gap: 8px; justify-content: flex-end; }
+        .gll-region { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 12px; }
+        .gll-rtools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+        .gll-rtitle { font-size: 16px; margin-right: auto; }
+        .gll-rwrap { overflow: auto; padding: 4px 2px 8px; }
+        .gll-rt { border-collapse: separate; border-spacing: 0; margin: 0 auto; font-size: 13.5px; }
+        .gll-rt td { padding: 9px 14px; border-right: 1px solid #E8EBDF; border-bottom: 1px solid #E8EBDF; text-align: center; vertical-align: middle; white-space: pre-line; min-width: 64px; background: color-mix(in srgb, var(--tint, #FFFFFF) 28%, #FFFFFF); color: var(--ink); }
+        .gll-rt tr:first-child td { border-top: 1px solid #E8EBDF; } .gll-rt td:first-child { border-left: 1px solid #E8EBDF; }
+        .gll-rt td.nm { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+        .gll-rt td.tx { word-break: keep-all; max-width: 220px; }
+        .gll-rt td.tx { font-weight: 600; color: #3B4228; }
+        .gll-rt td.b { font-weight: 800; }
+        .gll-rt td.neg, .gll-rt td.red { color: #C0392B; }
+        .gll-rt td.f { color: #2B3A12; }
+        .gll-rt td.ed { cursor: pointer; } .gll-rt td.ed:hover { outline: 2px solid var(--gold-edge); outline-offset: -2px; }
+        .gll-off { position: fixed; left: -100000px; top: 0; background: #fff; }
         .gl-wrap { border: 1px solid #C9CDB8; border-radius: 0 0 10px 10px; background: #fff; overflow: hidden; }
         .gl-g { overflow: auto; max-height: calc(100vh - 270px); min-height: 320px; outline: none; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
         .gl-g:focus-visible { box-shadow: inset 0 0 0 2px #1A73E8; }
@@ -2136,8 +2208,8 @@
         var INTAKE_TPL = "이름 : \n주민번호(전체) : \n휴대폰번호 : \n휴대폰통신사 : \n설치주소 : \n이메일주소(필수) : \n인증가능시간(필수) : \n\n■ 납부정보 ■ \n은행 /카드사 : \n계좌/카드번호 : \n카드유효기간 : \n예금주 성함/주민번호 : \n본인이면 \"본인\" \n\n● 접수정보 ● \n인터넷통신사 : \n인터넷상품: \nWIFI 유,무: \nTV상품+셋탑1 : \n전화상품 : X \n월요금 : \n설치비 : \n\n◆ 고객사은품 ◆ \n상품권 : 원 \n현금 : 원 \n상품권종류 : \n은행+계좌 : \n예금주: \n(본인,납부자외 불가)";   // 신분증 요청: 고객 접수 메모 양식 (복사해서 그대로 사용)
         var INTAKE_KEEP_DAYS = 30;   // 접수 메모(주민번호·계좌 등)는 30일 지나면 자동으로 지움
         var DEALERS = ['스카이', '이티', '안모', '성연', '수석', '신창', '에이탑', '반추', '모빙'];
-        var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo', 'addr', 'bank', 'pay', 'fre', 'fee', 'gv', 'gh', 'ga', 'adj', 'fa', 'wdp', 'welf'];
-        var REG_LONG = { fa: 200, plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120, addr: 150, bank: 80 };
+        var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo', 'addr', 'bank', 'pay', 'fre', 'fee', 'gv', 'gh', 'ga', 'gat', 'sn', 'snt', 'adj', 'fa', 'wdp', 'welf'];
+        var REG_LONG = { gat: 200, snt: 200, fa: 200, plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120, addr: 150, bank: 80 };
         var REG_MANUAL = { price: 1, memo: 1 };   // 장부에서만 적는 칸 (확인서를 다시 저장해도 지우지 않음)
         var REG_NEGF = function (k) { return function (r) { var d = String(r[k] || '').replace(/\D/g, ''); return +d ? '-' + (+d) : ''; }; };   // 가입고객리스트처럼 -(마이너스)
         var REG_DAY = function (r) { return parseInt(r.date.slice(8), 10) + '일'; };
@@ -2181,7 +2253,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-16.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-17.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -5758,7 +5830,7 @@
         /* ---------- 가입 확인서(모바일·유선): 이 화면에서 바로 작성하고, 고객이 터치로 서명 ---------- */
         // 작성 내용은 어디에도 저장하지 않고 이 화면(메모리)에만 있어요. 잠그거나 새로고침하면 지워져요(고객 개인정보 보호).
         var mforms = {}, mfMoving = false;   // mforms.mobile / mforms.wired: { kind, el, sheet, sig: { guard, apply }, box: {} }
-        var MF_ONE = { type: 1, disc: 1, ins: 1, card: 1, comb: 1, used: 1, add: 1 };   // 하나만 고르는 칸 (다른 칸을 누르면 앞의 체크가 풀림)
+        var MF_ONE = { type: 1, disc: 1, ins: 1, card: 1, comb: 1, used: 1, add: 1, esp: 1 };   // 하나만 고르는 칸 (다른 칸을 누르면 앞의 체크가 풀림)
         var MF_LINK = {   // '가입자와 동일' 체크: [가입자 정보 칸, 따라 채울 칸]
             cardSame: [['name', 'cardOwner'], ['birth', 'cardBirth'], ['phone', 'cardPhone']],
             paySame: [['name', 'payOwner'], ['birth', 'payBirth']],
@@ -5931,6 +6003,7 @@
                     row(wcell(k('중고폰 보상신청 -'), chk('usedY', '신청', 'used'), k('( 모델명 :'), inp('usedModel', '중고폰 모델명'), k(')'), chk('usedN', '미신청', 'used'))),
                     row(wcell(k('잔여 할부금 - ('), inp('remain', '잔여 할부금(원)', MONEY), k('원) ['), chk('rPay', '수납지원'), chk('rSup', '입금지원'), chk('rDbl', '지속청구'), k(']'))),
                     row(wcell(k('할인 위약금 - ('), inp('penalty', '할인 위약금(원)', MONEY), k('원) ['), chk('pPay', '납부지원'), chk('pSup', '입금지원'), chk('pFree', '청구면제'), k(']'))),
+                    row(wcell(k('기타 지원금 - ( 항목'), inp('etcSupName', '기타 지원금 내용 (예: 요금·유심비)', { max: 20, cls: 'mid' }), k('/ 금액'), inp('etcSup', '기타 지원금(원)', MONEY), k('원) ['), chk('ePay', '수납지원', 'esp'), chk('eSup', '입금지원', 'esp'), k(']'))),
                     row(wcell(k('지원금 입금계좌 - 은행'), inp('spBank', '지원금 입금 은행', { max: 20, cls: 'bank' }), k('계좌번호'), inp('spNo', '지원금 입금 계좌번호', { mode: 'numeric', max: 30, cls: 'acct' }), k('예금주'), inp('spOwner', '지원금 입금 예금주', { max: 20, cls: 'bank' })))),
 
                 sec('케이스 주문', 'beige', row(wcell(inp('caseOrder', '케이스 주문', { max: 150 })))),
@@ -7227,7 +7300,12 @@
                 r.extra = v('extra') || (used ? '중고없음' : '미유치');   // 부가서비스: 적은 것 / 없으면 미유치 / 중고는 중고없음
                 r.ins = c('insY') ? (v('insName') || '가입') : used ? '중고없음' : c('insN') ? '없음' : '';
                 if (v('spNo')) r.bank = [v('spBank'), v('spNo')].filter(Boolean).join(' ') + (v('spOwner') && v('spOwner') !== r.name ? ' (' + v('spOwner') + ')' : '');   // 지원금 입금계좌
-                r.pay = digitsOnly(v('payAmt')).replace(/^0+$/, ''); r.fre = digitsOnly(v('freAmt')).replace(/^0+$/, '');   // PAY → 유통망지원금 · FRE → 프리 (가입고객리스트에는 -로)
+                r.pay = digitsOnly(v('payAmt')).replace(/^0+$/, ''); r.fre = digitsOnly(v('freAmt')).replace(/^0+$/, '');
+                var supIn = [], supSn = [];   // 잔여 할부금·할인 위약금·기타 지원금: [입금지원] → 지원금(입금하기) · [수납지원·납부지원] → 수납건(수납하기)
+                [['할부금', 'remain', 'rSup', 'rPay'], ['위약금', 'penalty', 'pSup', 'pPay'], [v('etcSupName') || '기타', 'etcSup', 'eSup', 'ePay']].forEach(function (q) { var a = +digitsOnly(v(q[1])) || 0; if (!a) return; if (c(q[2])) supIn.push([q[0], a]); else if (c(q[3])) supSn.push([q[0], a]); });
+                var supTxt = function (L) { return L.map(function (x) { return x[0] + ' ' + x[1].toLocaleString('ko-KR') + '원'; }).join(' '); }, supSum = function (L) { return String(L.reduce(function (t, x) { return t + x[1]; }, 0)); };
+                if (supIn.length) { r.ga = supSum(supIn); r.gat = '입금하기(' + supTxt(supIn) + ')'; }
+                if (supSn.length) { r.sn = supSum(supSn); r.snt = '수납하기(' + supTxt(supSn) + ')'; }   // PAY → 유통망지원금 · FRE → 프리 (가입고객리스트에는 -로)
             } else if (c('tRent')) {   // 렌탈: 통신사 = 제조사 · 이전 통신사 = 렌탈사 · 요금제 = 렌탈 상품 · 모델 = 모델명 · 청구금액 = 월 렌탈료
                 r.type = '렌탈';
                 r.plan = [v('tvPlan'), v('netPlan')].filter(Boolean).join(' · ');
@@ -8317,7 +8395,10 @@
                 { key: 'adj', label: '부가 추가&차감', value: r.adj || '', half: true, max: 12, hint: '원 · 차감은 앞에 - (예: -20000)' },
                 { key: 'gv', label: '유선상품권 (확인서 상품권)', value: r.gv || '', half: true, max: 12, hint: '숫자만 · 리스트에는 -로' },
                 { key: 'gh', label: '유선직정산 (확인서 본사)', value: r.gh || '', half: true, max: 12, hint: '숫자만 · 리스트에는 -로' },
-                { key: 'ga', label: '지원금 (확인서 추가지원금)', value: r.ga || '', half: true, max: 12, hint: '숫자만 · 리스트에는 -로, 입금 칸은 "입금하기"' },
+                { key: 'ga', label: '지원금 (입금해 드릴 금액 합계)', value: r.ga || '', half: true, max: 12, hint: '숫자만 · 리스트에는 -로 · 유선은 확인서 추가지원금, 모바일은 [입금지원] 고른 금액 합' },
+                { key: 'gat', label: '입금 칸 내용', value: r.gat || '', half: true, max: 200, hint: '예: 입금하기(할부금 120,000원 위약금 50,000원) · 비우면 "입금하기"' },
+                { key: 'sn', label: '수납건 (선수납 금액 합계)', value: r.sn || '', half: true, max: 12, hint: '숫자만 · 리스트에는 -로 · 모바일 [수납지원·납부지원] 고른 금액 합' },
+                { key: 'snt', label: '선납내용', value: r.snt || '', half: true, max: 200, hint: '예: 수납하기(위약금 58,280원)' },
                 { key: 'instDate', label: '설치일 · 개통일', type: 'date', value: r.instDate || '', half: true },
                 { key: 'memo', label: '진행상태 메모', value: r.memo || '', max: 300, half: true },
                 { key: 'addr', label: '주소', value: r.addr || regAddrFromIntake(r) || '', half: true, max: 150, hint: !r.addr && regAddrFromIntake(r) ? '신분증 요청 접수 메모의 설치주소를 가져왔어요. [변경 저장]을 누르면 저장돼요.' : '' }
@@ -15703,6 +15784,7 @@
         function glNormSheet(x) {   // 받은 시트는 항상 걸러서 사용 (글자 수 · 개수 · 색 형식)
             if (!x || typeof x !== 'object') return null;
             var S = { name: String(x.name || '시트').slice(0, 60), nr: Math.min(5000, Math.max(0, +x.nr || 0)), nc: Math.min(400, Math.max(0, +x.nc || 0)), cw: {}, hc: {}, rh: {}, dh: Math.min(200, Math.max(8, +x.dh || 20)), dw: Math.min(600, Math.max(8, +x.dw || 64)), mg: [], st: [], rs: {}, cv: {}, zoom: Math.min(400, Math.max(10, +x.zoom || 100)), auto: x.auto ? 1 : 0 };
+            if (x.calls) { var cl0 = gllCallsClean(x.calls); if (Object.keys(cl0).length) S.calls = cl0; }   // 콜1~5 기록 (고객별)
             if (x.rep && /^\d{4}-\d{2}-\d{2}$/.test(String(x.rep.d || ''))) S.rep = { d: String(x.rep.d), n: Math.min(999, Math.max(0, Math.round(+x.rep.n || 0))) };   // 실적장표 그날 보고 횟수
             var n = function (v, lo, hi) { v = +v; return isFinite(v) ? Math.min(hi, Math.max(lo, Math.round(v))) : lo; };
             Object.keys(x.cw || {}).forEach(function (c) { if (+c >= 1 && +c <= 400) S.cw[+c] = n(x.cw[c], 0, 2000); });
@@ -15846,7 +15928,7 @@
                     glDec(rp.blob, GL_AAD + E.id).then(function (x) {
                         if (mine !== gl) return;
                         var S2 = glNormSheet(x);
-                        E.edits.forEach(function (v, k) { if (k === 'rep') { S2.rep = v; return; } if (k.indexOf('cx:') === 0) return; var p = k.split(','), r = +p[0], c = +p[1]; if (v === null) { if (S2.cv[r]) delete S2.cv[r][c]; } else { if (!S2.cv[r]) S2.cv[r] = {}; S2.cv[r][c] = v; if (r > S2.nr) S2.nr = r; if (c > S2.nc) S2.nc = c; } });
+                        E.edits.forEach(function (v, k) { if (k === 'rep') { S2.rep = v; return; } if (k.indexOf('call:') === 0) { var ck = k.slice(5); if (!S2.calls) S2.calls = {}; if (v) S2.calls[ck] = v; else delete S2.calls[ck]; return; } if (k.indexOf('cx:') === 0) return; var p = k.split(','), r = +p[0], c = +p[1]; if (v === null) { if (S2.cv[r]) delete S2.cv[r][c]; } else { if (!S2.cv[r]) S2.cv[r] = {}; S2.cv[r][c] = v; if (r > S2.nr) S2.nr = r; if (c > S2.nc) S2.nc = c; } });
                         S2._head = undefined; E.edits.forEach(function (v, k) { if (k.indexOf('cx:') === 0) glCancelPaint(S2, +k.slice(3), !!v); });   // 취소 줄 색도 다시 얹음
                         E.S = S2; E.rev = rp.rev; E.dom = {}; E.calc = null; E.saving = false;
                         glRenumberNow(E); clearTimeout(E.saveT);
@@ -16107,7 +16189,7 @@
             if (glDirty() || gl.job) { toast('아직 저장 중인 칸이 있어요. 상태줄이 "저장됨"이 된 뒤 다시 해 주세요.'); return; }
             var mineG = gl, haveS = {};
             gl.job = '엑셀을 이 기기에서 읽는 중이에요... (서버로 보내지 않아요)'; render();
-            glReadXlsx(file).then(function (all) {
+            glReadXlsx(file).then(gllCallsSplit).then(function (all) {
                 glIdxList().forEach(function (s) { haveS[s.name] = s; });
                 var olds = all.filter(function (s) { return haveS[s.name]; }), k = 0;
                 function next() {
@@ -16123,7 +16205,7 @@
                 all.forEach(function (raw) {
                     var ex = haveS[raw.name]; if (!ex) return;
                     var E = gl.sh[ex.id]; if (!E || !E.S) throw new Error('load');
-                    var X = glNormSheet(JSON.parse(JSON.stringify(glPack(glNormSheet(raw))))); if (E.S.rep) X.rep = E.S.rep;   // 엑셀 그대로 (값·수식·서식)
+                    var X = glNormSheet(JSON.parse(JSON.stringify(glPack(glNormSheet(raw))))); if (E.S.rep) X.rep = E.S.rep; if (E.S.calls) X.calls = E.S.calls;   // 엑셀 그대로 (값·수식·서식)
                     if (JSON.stringify(glPack(X)) === JSON.stringify(glPack(glNormSheet(JSON.parse(JSON.stringify(glPack(E.S))))))) { same++; return; }
                     var A = glKeyRows(E.S), B = glKeyRows(X), xn = {}, gone = [];
                     if (A && B) { B.rows.forEach(function (q) { xn[q.name] = 1; }); A.rows.forEach(function (q) { if (q.name.charAt(0) !== '=' && !xn[q.name] && gone.indexOf(q.name) < 0) gone.push(q.name); }); }   // 앱에만 있는 고객 (엑셀 기준으로 바꾸면 빠짐)
@@ -16341,7 +16423,7 @@
             if (glDirty() || gl.job) { toast('아직 저장 중인 칸이 있어요. 상태줄이 "저장됨"이 된 뒤 다시 해 주세요.'); return; }
             var mine = gl, all = null, have = {};
             gl.job = '엑셀을 이 기기에서 읽는 중이에요... (서버로 보내지 않아요)'; render();
-            glReadXlsx(file).then(function (x) {
+            glReadXlsx(file).then(gllCallsSplit).then(function (x) {
                 all = x; glIdxList().forEach(function (s) { have[s.name] = s; });
                 var olds = all.filter(function (s) { return have[s.name]; }), i = 0;
                 function next() {
@@ -16363,7 +16445,7 @@
                     if (!ex) { adds.push({ name: raw.name, S: S }); return; }
                     var E = gl.sh[ex.id];
                     if (!E || !E.S) throw new Error('load');
-                    if (E.S.rep) S.rep = E.S.rep;
+                    if (E.S.rep) S.rep = E.S.rep; if (E.S.calls) S.calls = E.S.calls;
                     if (glSame(E.S, S)) { same++; return; }
                     var extra = glAppOnly(E.S, S);
                     reps.push({ id: ex.id, name: raw.name, E: E, S: S, extra: extra });
@@ -16484,7 +16566,7 @@
             }
             if (R.dash && oldYm && ny) Object.keys(S.cv).forEach(function (r) { Object.keys(S.cv[r]).forEach(function (c) { var v = S.cv[r][c]; if (+c >= R.dash.c1 && typeof v === 'string' && v.charAt(0) !== '=') S.cv[r][c] = v.replace(new RegExp(String(oldYm.y % 100) + '\\s*년\\s*' + oldYm.m + '\\s*월', 'g'), (ny.y % 100) + '년 ' + ny.m + '월'); }); });
             glAutoApply(S);
-            delete S.rep; var cq0 = glReportCell(S); if (cq0) { if (!S.cv[cq0.r]) S.cv[cq0.r] = {}; S.cv[cq0.r][cq0.c] = '목표'; }   // 새 달은 보고 시각을 '목표'부터
+            delete S.rep; delete S.calls; var cq0 = glReportCell(S); if (cq0) { if (!S.cv[cq0.r]) S.cv[cq0.r] = {}; S.cv[cq0.r][cq0.c] = '목표'; }   // 새 달은 보고 시각을 '목표'부터
             gl.job = auto ? name + '를 자동으로 만드는 중...' : '새 장부를 만드는 중...'; glStatusPaint();
                 return glEnc(glPack(S), GL_AAD + id).then(function (blob) { return glCall('glPut', { id: id, baseRev: 0, blob: blob }); }).then(function (res) {
                     var E = glEntry(id); E.S = S; E.rev = res.rev; E.base = glCount(S);
@@ -16552,12 +16634,12 @@
                     if (!sh) return;
                     (bySheet[sh.id] = bySheet[sh.id] || []).push(p);
                 });
-                Object.keys(bySheet).forEach(function (id) { jobs.push(glOpenSheet(id, false).then(function () { var E = gl.sh[id]; if (!E || !E.S) return; bySheet[id].forEach(function (p) { if (glPutReg(E, p.x)) E.acks.push(p.it.id); }); E.dom = {}; E.calc = null; glQueue(E); })); });
+                Object.keys(bySheet).forEach(function (id) { jobs.push(glOpenSheet(id, false).then(function () { var E = gl.sh[id]; if (!E || !E.S) return; var tg = []; bySheet[id].forEach(function (p) { var t = glPutReg(E, p.x); if (t) { E.acks.push(p.it.id); if (t > 0) tg.push(t); } }); E.dom = {}; E.calc = null; var rch = glRowRules(E, tg); if (rch.length) glSet(E, rch, true); glQueue(E); })); });
                 return Promise.all(jobs);
             }).then(function () { gl.inboxBusy = false; gl.inbox = 0; if (state.view === 'gl') render(); }, function () { gl.inboxBusy = false; });
         }
-        var GL_REG_NEG = { pay: 1, fre: 1, gv: 1, gh: 1, ga: 1 };   // 가입고객리스트에 -(마이너스) 숫자로 적는 칸
-        var GL_REG_COL = { kind: '모바일&유선', seller: '담당자', dealer: '거래처', carrier: '통신사', model: '모델', serial: '일련번호', phone: '번호', name: '고객명', birth: '생년월일', welf: '복지여부|복지', disc: '공시&선약(프약)', subsidy: '공시금액', price: '할부원금', months: '할부개월', plan: '요금제', extra: '부가서비스', ins: '보험가입여부(종류)', combKind: '결합종류', comb: '결합여부', keep: '요금제유지개월', plan2: '변경요금제', bill1: '가입후요금', bill2: '3개월후 요금', prev: '이전사업자', type: '가입유형', bank: '입금계좌', pay: '유통망지원금', fre: '프리', fee: '액면단가', adj: '부가 추가&차감', gv: '유선상품권', gh: '유선직정산', ga: '지원금' };
+        var GL_REG_NEG = { pay: 1, fre: 1, gv: 1, gh: 1, ga: 1, sn: 1 };   // 가입고객리스트에 -(마이너스) 숫자로 적는 칸
+        var GL_REG_COL = { kind: '모바일&유선', seller: '담당자', dealer: '거래처', carrier: '통신사', model: '모델', serial: '일련번호', phone: '번호', name: '고객명', birth: '생년월일', welf: '복지여부|복지', disc: '공시&선약(프약)', subsidy: '공시금액', price: '할부원금', months: '할부개월', plan: '요금제', extra: '부가서비스', ins: '보험가입여부(종류)', combKind: '결합종류', comb: '결합여부', keep: '요금제유지개월', plan2: '변경요금제', bill1: '가입후요금', bill2: '3개월후 요금', prev: '이전사업자', type: '가입유형', bank: '입금계좌', pay: '유통망지원금', fre: '프리', fee: '액면단가', adj: '부가 추가&차감', gv: '유선상품권', gh: '유선직정산', ga: '지원금', gat: '입금', sn: '수납건', snt: '선납내용' };
         function glPutReg(E, x) {   // 장부의 다음 빈 줄(모바일&유선·고객명이 빈 줄)에 가입 확인서 내용 쓰기 → 쓴 줄 번호
             var S = E.S, H = glHead(S), reg = x && x.reg; if (!H || !reg) return 0;
             var lab = {}, hr = S.cv[H.r] || {};
@@ -16599,8 +16681,8 @@
             if (H.date && !only) put(H.date, (x.day || '') + '일');
             if (H.no && !only && (row2[H.no] == null || row2[H.no] === '')) put(H.no, maxNo + 1);
             if (reg.kind === 'wired' && reg.addr && (!only || only.indexOf('addr') >= 0)) put(colOf('고객약속및수납유형'), reg.addr);
-            if (reg.ga && +String(reg.ga).replace(/\D/g, '') && (!only || only.indexOf('ga') >= 0)) put(colOf('입금'), '입금하기');   // 추가지원금은 우리가 입금 → 입금 칸 자동   // 유선: 설치 주소 (엑셀에서 쓰던 자리)
-            if (reg.kind === 'wired' && /스카이/.test(String(reg.dealer || '')) && !only && H.tax && row2[H.tax] != null && row2[H.tax] !== '') { delete row2[H.tax]; E.edits.set(target + ',' + H.tax, null); }   // 스카이 접수 유선만 세금 없음 (성연·에이탑 동판 등은 세금 그대로)   // 유선(스카이 접수)은 세금 없음 — 윗줄에서 내려온 세금 수식·값도 지움
+            if (reg.ga && +String(reg.ga).replace(/\D/g, '') && !reg.gat && (!only || only.indexOf('ga') >= 0)) put(colOf('입금'), '입금하기');   // 추가지원금은 우리가 입금 → 입금 칸 자동   // 유선: 설치 주소 (엑셀에서 쓰던 자리)
+            if (/스카이/.test(String(reg.dealer || '')) && !only && H.tax && row2[H.tax] != null && row2[H.tax] !== '') { delete row2[H.tax]; E.edits.set(target + ',' + H.tax, null); }   // 스카이 접수 유선만 세금 없음 (성연·에이탑 동판 등은 세금 그대로)   // 유선(스카이 접수)은 세금 없음 — 윗줄에서 내려온 세금 수식·값도 지움
             if (target > S.nr) S.nr = target;
             return target;
         }
@@ -17014,7 +17096,8 @@
             var S = E.S, now = new Date(), day = ymd(now), cell = glReportCell(S), rep = S.rep && S.rep.d === day ? S.rep : { d: day, n: 0 }, label = rep.n ? now.getHours() + '시' + pad2(now.getMinutes()) + '분' : '목표';
             if (cell) { glSet(E, [[cell.r, cell.c, label]], true); }
             S.rep = { d: day, n: rep.n + 1 }; E.edits.set('rep', S.rep); glQueue(E);
-            var cv; try { cv = glRangeCanvas(E, glRegions(S).img); } catch (e) { cv = null; }
+            var cv; try { cv = gllRegionCanvas(E, glRegions(S).img, S.name + ' 실적장표'); } catch (e) { cv = null; }
+            if (!cv) try { cv = glRangeCanvas(E, glRegions(S).img); } catch (e) { cv = null; }
             if (!cv) { toast('실적장표 그림을 만들지 못했어요.'); return; }
             var file = '실적장표-' + day + '-' + pad2(now.getHours()) + pad2(now.getMinutes()) + '.png', png = glCanvasBlob(cv);
             var phone = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -17040,7 +17123,7 @@
             if (!glCanXlsx()) { toast('엑셀 다운로드는 대표님과 권한 받은 분만 할 수 있어요.'); return; }
             if (!confirm('가입고객리스트 전체를 엑셀 파일(.xlsx)로 받을까요?\n주민번호·계좌가 들어 있어요. 다 쓴 뒤 안전하게 보관하거나 지워 주세요.')) return;
             gl.job = '엑셀 파일을 만드는 중...'; glStatusPaint();
-            glLoadAll().then(function (sheets) { return glXlsxBuild(sheets); }).then(function (u8) {
+            glLoadAll().then(function (sheets) { var cm = gllCallsModel(sheets); return glXlsxBuild(cm ? sheets.concat([cm]) : sheets); }).then(function (u8) {
                 gl.job = ''; glStatusPaint();
                 downloadBlob('사거리가입고객리스트-' + ymd(new Date()) + '.xlsx', new Blob([u8], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
                 toast('엑셀 파일을 받았어요.');
@@ -17053,7 +17136,7 @@
             if (glDirty()) { glMirrorSoon(30000); return; }
             glMirrorBusy = true;
             var mine = gl;
-            glLoadAll().then(function (sheets) { return glXlsxBuild(sheets); }).then(function (u8) {
+            glLoadAll().then(function (sheets) { var cm = gllCallsModel(sheets); return glXlsxBuild(cm ? sheets.concat([cm]) : sheets); }).then(function (u8) {
                 if (mine !== gl) return null;
                 var s = '', CH = 0x8000; for (var i = 0; i < u8.length; i += CH) s += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
                 return glCall('glXlsx', { b64: btoa(s) }, 180000);
@@ -17215,6 +17298,409 @@
         }
 
         /* ---------- 화면 ---------- */
+        /* ---------- 가입고객리스트 새 화면 (11-17 대표님): 엑셀 화면 대신 고객 카드 목록 ----------
+           장부 데이터(칸·수식·서식)는 그대로 쓰고 화면만 바꿈 → 엑셀 불러오기·갱신·다운로드·실적장표 계산은 예전과 같음
+           · 칸을 누르면 고르기 창: 기본 선택지(예: 인입방법 내방·홈페이지·기타) + 그 아래 지금 장부에 적힌 값들 · 직접 적기
+           · 줄 끝 콜1~5 (누르면 오늘 날짜 자동 + 메모) → 시트의 calls 에 고객별로 보관 (엑셀에는 '콜기록' 시트로)
+           · 실적장표·전단배포·전단부업은 새 스타일 표 + [글자로 복사]·[그림으로 복사] · 휴무표는 여기서 안 보여 줌 */
+        var GLL_PRESET = {
+            '인입방법': ['내방', '홈페이지', '기타'],
+            '모바일&유선': ['모바일', '유선', '모바일(단가제외)', '유선(단가제외)', '유선(렌탈)', '유선(동판)', '모바일(중고)', '모바일(취소)', '유선(취소)'],
+            '공시&선약(프약)': ['공시', '선약'],
+            '결합여부': ['결합하기', '기결합', '미결합'],
+            '가입유형': ['신규', '번호이동', '재가입', '기기변경', '동판', '재약정', '렌탈'],
+            '통신사': ['SK', 'KT', 'U+'],
+            '입금': ['입금하기', '입금완료'],
+            '복지': ['없음'], '복지여부': ['없음']
+        };
+        var GLL_TOP = ['인입방법', '담당자', '거래처', '통신사', '모델', '요금제', '가입유형', '입금'];   // 카드에 바로 보이는 칸 (나머지는 [자세히])
+        var GLL_DANGA = 200000;   // 운영비포함총매출이 이보다 작으면 구분에 (단가제외) 자동 추가 (20만원 딱은 그대로 — 지금 장부 기준)
+        function gllKey(t) { return String(t == null ? '' : t).replace(/\s/g, ''); }
+        function gllLabOf(S) {   // 머리글 이름(공백 뺌) → 칸 번호 (장부 칸만)
+            var H = glHead(S); if (!H) return {};
+            var last = glLedgerLast(S, H), lab = {}, hr = S.cv[H.r] || {};
+            Object.keys(hr).forEach(function (c) { c = +c; if (c > last) return; var t = gllKey(hr[c]); if (t && t.charAt(0) !== '=' && !lab[t]) lab[t] = c; });
+            if (!lab['복지'] && lab['복지여부']) lab['복지'] = lab['복지여부'];
+            return lab;
+        }
+        function gllCols(S) {   // [자세히]에 보여 줄 장부 칸 (머리글이 있는 칸 · 숨긴 칸 빼고)
+            var H = glHead(S); if (!H) return [];
+            var last = glLedgerLast(S, H), hr = S.cv[H.r] || {}, out = [];
+            for (var c = 1; c <= last; c++) { var t = hr[c]; if (t == null || String(t).trim() === '' || S.hc[c]) continue; out.push({ c: c, lab: String(t).charAt(0) === '=' ? String(glCalcOf(gl.sh[gl.cur] || { S: S }).get(H.r, c) || '').trim() || glColName(c) : String(t).replace(/\s+/g, ' ').trim() }); }
+            return out;
+        }
+        function gllHeadText(S, c) { var H = glHead(S), t = H && S.cv[H.r] ? S.cv[H.r][c] : ''; t = t == null ? '' : String(t); return t && t.charAt(0) !== '=' ? t.replace(/\s+/g, ' ').trim() : glColName(c) + '열'; }
+        function gllRaw(S, r, c) { var v = S.cv[r] ? S.cv[r][c] : undefined; return v == null ? null : v; }
+        function gllIsF(v) { return typeof v === 'string' && v.charAt(0) === '='; }
+        function gllTxt(E, r, c) {   // 칸에 보이는 글자 (엑셀 표시 형식 그대로)
+            var S = E.S, raw = gllRaw(S, r, c);
+            if (raw == null || raw === '') return '';
+            var si = glStOf(S, r, c), st = si ? S.st[si - 1] : null, v = glCalcOf(E).get(r, c), f = glFormat(v, st ? st.nf : 'General');
+            return ((f.l != null ? f.l : '') + (f.t == null ? '' : f.t)).replace(/\s+/g, ' ').trim();
+        }
+        function gllNum(E, r, c) { if (!c) return null; var v = glNum(glCalcOf(E).get(r, c)); return v instanceof GlErr || typeof v !== 'number' || !isFinite(v) ? null : v; }
+        function gllWon(n) { return n == null ? '' : (n < 0 ? '-' : '') + Math.abs(Math.round(n)).toLocaleString('ko-KR'); }
+        function gllDanga(k) { k = String(k || '').trim(); return /\)$/.test(k) ? k.replace(/\)$/, '단가제외)') : k + '(단가제외)'; }
+
+        /* 장부 줄 규칙 (칸을 고치거나 가입 확인서가 들어올 때): ① 스카이 건은 세금 칸 비움 (스카이에서 바꾸면 세금 수식 되살림)
+           ② 액면단가가 적혀 있고 운영비포함총매출이 20만원 미만이면 구분에 (단가제외) 자동 추가 (취소 줄·이미 단가제외는 그대로) */
+        function glRowRules(E, rows, cols) {
+            var S = E.S, H = glHead(S), out = []; if (!H) return out;
+            var lab = gllLabOf(S), cFee = lab['액면단가'], cDeal = lab['거래처'], cTax = H.tax || lab['세금'], calc = glCalcOf(E), seen = {};
+            (rows || []).forEach(function (r) {
+                if (seen[r] || r <= H.r) return; seen[r] = 1;
+                var row = S.cv[r] || {}, kind = String(row[H.kind] == null ? '' : row[H.kind]).trim();
+                if (!kind || gllIsF(kind) || (H.no && String(row[H.no] || '').trim().toLowerCase() === 'ex')) return;
+                if (cTax && cDeal) {
+                    var sky = /스카이/.test(String(row[cDeal] || '')), tx = row[cTax];
+                    if (sky && tx != null && tx !== '') out.push([r, cTax, null]);
+                    else if (!sky && (tx == null || tx === '') && cols && cols.indexOf(cDeal) >= 0) { var tf = glTaxAbove(S, H, r); if (tf) out.push([r, cTax, tf]); }
+                }
+                if (!glIsCancel(kind) && kind.indexOf('단가제외') < 0 && cFee && H.bm) {
+                    var fee = row[cFee], feeN = typeof fee === 'number' ? fee : gllIsF(fee) ? gllNum(E, r, cFee) : null;
+                    if (feeN) { var bm = glNum(calc.get(r, H.bm)); if (typeof bm === 'number' && isFinite(bm) && bm < GLL_DANGA) out.push([r, H.kind, gllDanga(kind)]); }
+                }
+            });
+            return out;
+        }
+        function glSetR(E, list) {   // 칸 고치기 + 줄 규칙 (자동으로 바뀐 칸도 같은 되돌리기 묶음)
+            var n = glSet(E, list); if (!n) return 0;
+            var rows = [], cols = []; list.forEach(function (x) { if (rows.indexOf(x[0]) < 0) rows.push(x[0]); if (cols.indexOf(x[1]) < 0) cols.push(x[1]); });
+            E.calc = null;
+            var ch = glRowRules(E, rows, cols);
+            if (ch.length && glSet(E, ch)) {
+                var a = E.undo.pop(), b = E.undo.pop(); E.undo.push((a || []).concat(b || []));
+                var H = glHead(E.S), dk = ch.filter(function (x) { return x[1] === H.kind; })[0];
+                if (dk) toast('운영비포함총매출이 20만원 미만이라 구분을 "' + dk[2] + '"로 바꿨어요.');
+            }
+            return n;
+        }
+
+        /* 콜 기록 (줄 끝 콜1~5): 고객(이름+번호)별 · 시트 안 calls 에 보관 */
+        function gllCallKey(S, r) {
+            var lab = gllLabOf(S), H = glHead(S), nm = String(gllRaw(S, r, H && H.name || lab['고객명']) || '').trim(), ph = digitsOnly(String(gllRaw(S, r, lab['번호']) || ''));
+            return (nm || ph) ? (nm + '|' + ph).slice(0, 60) : 'r' + r;
+        }
+        function gllCalls(S, r) { var a = S.calls && S.calls[gllCallKey(S, r)]; return Array.isArray(a) ? a : ['', '', '', '', '']; }
+        function gllCallSet(E, key, i, val) {
+            var S = E.S; if (!S.calls) S.calls = {};
+            var a = (S.calls[key] || ['', '', '', '', '']).slice(0, 5); while (a.length < 5) a.push('');
+            val = String(val || '').slice(0, 200); if (a[i] === val) return;
+            a[i] = val;
+            if (a.every(function (x) { return !x; })) delete S.calls[key]; else S.calls[key] = a;
+            E.edits.set('call:' + key, S.calls[key] ? a.slice() : null); glQueue(E);
+        }
+        function gllCallsClean(x) {   // 받은 calls 걸러서
+            var o = {}, n = 0;
+            if (x && typeof x === 'object') Object.keys(x).forEach(function (k) { if (n >= 5000 || typeof k !== 'string' || k.length > 60 || !Array.isArray(x[k])) return; var a = x[k].slice(0, 5).map(function (v) { return typeof v === 'string' ? v.slice(0, 200) : ''; }); while (a.length < 5) a.push(''); if (a.some(Boolean)) { o[k] = a; n++; } });
+            return o;
+        }
+        function gllCallsModel(sheets) {   // 엑셀 받기: '콜기록' 시트 하나 더 (시트·고객명·번호·콜1~5)
+            var rows = [];
+            sheets.forEach(function (S) { if (!S.calls) return; Object.keys(S.calls).forEach(function (k) { var p = k.split('|'); rows.push([S.name, p[0] || '', p[1] || ''].concat(S.calls[k])); }); });
+            if (!rows.length) return null;
+            var M = { name: '콜기록', nr: rows.length + 1, nc: 8, cw: { 1: 120, 2: 90, 3: 110, 4: 160, 5: 160, 6: 160, 7: 160, 8: 160 }, hc: {}, rh: {}, dh: 20, dw: 64, mg: [], st: [{ nf: 'General', b: 1, bg: 'EFF3E6' }], rs: { 1: [[1, 8, 1]] }, cv: {}, zoom: 100 };
+            M.cv[1] = { 1: '시트', 2: '고객명', 3: '번호', 4: '콜1', 5: '콜2', 6: '콜3', 7: '콜4', 8: '콜5' };
+            rows.forEach(function (x, i) { var row = {}; x.forEach(function (v, j) { if (v !== '' && v != null) row[j + 1] = String(v); }); M.cv[i + 2] = row; });
+            return glNormSheet(M);
+        }
+        function gllCallsSplit(all) {   // 엑셀 불러오기·갱신: '콜기록' 시트는 시트로 더하지 않고 콜 기록으로 (시트를 열 때 반영)
+            var out = [];
+            (all || []).forEach(function (s) {
+                if (gllKey(s.name) !== '콜기록') { out.push(s); return; }
+                var pend = gl.callsIn = gl.callsIn || {};
+                for (var r = 2; r <= s.nr; r++) { var w = s.cv[r] || {}, sh = String(w[1] || '').trim(); if (!sh) continue; var key = (String(w[2] || '').trim() + '|' + digitsOnly(String(w[3] || ''))).slice(0, 60); var a = [4, 5, 6, 7, 8].map(function (c) { return w[c] == null ? '' : String(w[c]).slice(0, 200); }); (pend[sh] = pend[sh] || {})[key] = a; }
+            });
+            return out;
+        }
+        function gllCallsPending(E) {   // 받아 둔 엑셀 콜 기록 → 이 시트에 (다른 일 중이 아닐 때)
+            if (!gl.callsIn || gl.job || !E.S || !gl.callsIn[E.S.name]) return;
+            var m = gl.callsIn[E.S.name]; delete gl.callsIn[E.S.name];
+            Object.keys(m).forEach(function (k) { var a = m[k]; if (!E.S.calls) E.S.calls = {}; var cur = E.S.calls[k] || ['', '', '', '', '']; if (JSON.stringify(cur) === JSON.stringify(a)) return; if (a.some(Boolean)) E.S.calls[k] = a; else delete E.S.calls[k]; E.edits.set('call:' + k, a.some(Boolean) ? a.slice() : null); });
+            if (E.edits.size) glQueue(E);
+        }
+
+        /* 고르기 창 */
+        var gllPop = null;
+        function gllPopClose() { if (gllPop) { var p = gllPop; gllPop = null; p.remove(); document.removeEventListener('mousedown', gllPopOut, true); document.removeEventListener('touchstart', gllPopOut, true); } }
+        function gllPopOut(e) { if (gllPop && !gllPop.contains(e.target)) gllPopClose(); }
+        function gllOptions(E, c) {   // [기본 선택지, 지금 장부에 적힌 값(많이 쓴 순)]
+            var S = E.S, lab = gllHeadText(S, c), k = gllKey(lab), pre = (GLL_PRESET[k] || []).slice();
+            if (k === '담당자') pre = db.staff.map(function (s) { return s.name; });
+            if (k === '가입날짜') { var T = glTodayOf(S); pre = []; for (var d = 1; d <= T.dim; d++) pre.push(d + '일'); }
+            var cnt = {}, add = function (S2, c2) { var H2 = glHead(S2); if (!H2 || !c2) return; for (var r = H2.r + 1; r <= S2.nr; r++) { var v = gllRaw(S2, r, c2); if (v == null || v === '' || gllIsF(v)) continue; v = String(v).trim(); if (!v || v.length > 60) continue; cnt[v] = (cnt[v] || 0) + 1; } };
+            add(S, c);
+            glIdxList().slice(-4).forEach(function (s) { var E2 = gl.sh[s.id]; if (E2 && E2.S && E2 !== E) add(E2.S, gllLabOf(E2.S)[k]); });   // 최근 장부들 것도
+            var seen = {}; pre.forEach(function (v) { seen[v] = 1; });
+            var used = Object.keys(cnt).filter(function (v) { return !seen[v]; }).sort(function (a, b) { return cnt[b] - cnt[a] || (a < b ? -1 : 1); }).slice(0, 60);
+            return [pre, used];
+        }
+        function gllCellIn(S, c, t) {   // 고르기 창에 적은 글자 → 칸 값
+            var k = gllKey(gllHeadText(S, c)); t = String(t == null ? '' : t);
+            if (k === '가입날짜' && /^\s*\d{1,2}\s*$/.test(t)) t = (+t) + '일';
+            if (k === '번호' && /^[\d\s-]+$/.test(t) && digitsOnly(t).length >= 9) return mfPhone(t);
+            if (k === '번호' || k === '일련번호') return t.trim() ? t.trim().slice(0, 8000) : null;
+            return glParseInput(t);
+        }
+        function gllPick(E, r, c, anchor, after) {
+            gllPopClose();
+            var S = E.S, raw = gllRaw(S, r, c), isF = gllIsF(raw), H0 = glHead(S), inBook = !!(H0 && r > H0.r && c <= glLedgerLast(S, H0)), lab = inBook ? gllHeadText(S, c) : glColName(c) + r + ' 칸', can = glCan(), boss = isBoss();
+            var box = h('div', { class: 'gll-pop', role: 'dialog', 'aria-label': lab + ' 고르기' });
+            var close = h('button', { type: 'button', class: 'gll-pop-x', 'aria-label': '닫기', onclick: gllPopClose }, '✕');
+            box.appendChild(h('div', { class: 'gll-pop-h' }, h('b', {}, lab), h('span', { class: 'gll-pop-ref' }, glColName(c) + r), close));
+            var done = function (v) { gllPopClose(); if (glSetR(E, [[r, c, v]])) { if (after) after(); render(); } };
+            if (isF && !E.fOk) {
+                box.appendChild(h('p', { class: 'gll-pop-f' }, '자동 계산 칸이에요 (엑셀 수식): ', h('b', {}, gllTxt(E, r, c) || '빈칸')));
+                if (boss) box.appendChild(h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { if (!confirm(lab + ' 칸은 수식으로 계산돼요. 수식 대신 직접 값을 적을까요?\n(되돌리기로 수식을 되살릴 수 있어요)')) return; E.fOk = true; gllPick(E, r, c, anchor, after); E.fOk = false; } }, '수식 대신 직접 적기'));
+            } else {
+                var inp = h('input', { type: 'text', class: 'gll-pop-in', value: isF ? '' : glRawText(raw), 'aria-label': lab + ' 직접 적기', placeholder: '직접 적기 (Enter)', autocomplete: 'off', spellcheck: 'false', maxlength: 300 });
+                var list = h('div', { class: 'gll-pop-list' });
+                var O = inBook ? gllOptions(E, c) : [[], []];   // 실적장표 등은 선택지 없이 직접 적기
+                var typed = false, paint = function () {
+                    list.textContent = '';
+                    var q = typed ? gllKey(inp.value).toLowerCase() : '', cur = glRawText(raw), fl = function (v) { return !q || v === cur || gllKey(v).toLowerCase().indexOf(q) >= 0; };
+                    var opt = function (v) { return h('button', { type: 'button', class: 'gll-opt' + (String(v) === cur ? ' on' : ''), onclick: function () { done(gllCellIn(S, c, v)); } }, String(v)); };
+                    var a = O[0].filter(fl), b = O[1].filter(fl);
+                    if (a.length) list.appendChild(h('div', { class: 'gll-opt-g' + (gllKey(lab) === '가입날짜' ? ' days' : '') }, a.map(opt)));
+                    if (b.length) { list.appendChild(h('div', { class: 'gll-opt-sub' }, '지금 장부에 적힌 값')); list.appendChild(h('div', { class: 'gll-opt-g' }, b.map(opt))); }
+                    if (!a.length && !b.length) list.appendChild(h('p', { class: 'gll-opt-none' }, inp.value ? 'Enter를 누르면 "' + inp.value + '"로 적어요.' : '선택지가 없어요. 직접 적어 주세요.'));
+                };
+                inp.addEventListener('input', function () { typed = true; paint(); });
+                inp.addEventListener('keydown', function (e) { if (e.isComposing) return; if (e.key === 'Enter') { e.preventDefault(); done(gllCellIn(S, c, inp.value)); } else if (e.key === 'Escape') { e.preventDefault(); gllPopClose(); } });
+                paint();
+                if (!can) inp.disabled = true;
+                box.appendChild(inp); box.appendChild(list);
+                box.appendChild(h('div', { class: 'gll-pop-f2' },
+                    raw != null && can ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { done(null); } }, '지우기') : null,
+                    h('button', { type: 'button', class: 'btn btn-sm btn-primary', disabled: !can, onclick: function () { done(gllCellIn(S, c, inp.value)); } }, '적기')));
+                if (window.innerWidth >= 700) setTimeout(function () { try { inp.focus({ preventScroll: true }); inp.select(); } catch (e) { /* */ } }, 30);   // 휴대폰은 자판이 선택지를 가리지 않게 (적을 때만 눌러서)
+            }
+            document.body.appendChild(box); gllPop = box;
+            var narrow = window.innerWidth < 700;
+            if (narrow) box.classList.add('sheet');
+            else if (anchor && anchor.getBoundingClientRect) {
+                var a = anchor.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight;
+                var x = Math.min(Math.max(8, a.left), window.innerWidth - bw - 8), y = a.bottom + 6;
+                if (y + bh > window.innerHeight - 8) y = Math.max(8, a.top - bh - 6);
+                box.style.left = x + 'px'; box.style.top = y + 'px';
+            }
+            setTimeout(function () { document.addEventListener('mousedown', gllPopOut, true); document.addEventListener('touchstart', gllPopOut, true); }, 0);
+        }
+
+        /* 새 고객 줄 (다음 빈 줄 · 윗줄 수식 이어받기) */
+        function gllNewRow(E, kindText) {
+            var S = E.S, H = glHead(S); if (!H) return 0;
+            var target = 0, nameC = H.name || gllLabOf(S)['고객명'];
+            for (var r = H.r + 1; r <= S.nr + 1; r++) { var rw = S.cv[r] || {}; if (H.no && String(rw[H.no] || '').toLowerCase() === 'ex') continue; if ((rw[H.kind] == null || rw[H.kind] === '') && (!nameC || rw[nameC] == null || rw[nameC] === '')) { target = r; break; } }
+            if (!target) return 0;
+            var list = [], cur = S.cv[target] || {}, prev = S.cv[target - 1] || {};
+            Object.keys(prev).forEach(function (c) { var v = prev[c]; if (cur[c] == null && typeof v === 'string' && v.charAt(0) === '=' && !/^=자동_/.test(v)) list.push([target, +c, '=' + glShift(v.slice(1), 1, 0)]); });
+            if (H.tax && cur[H.tax] == null && !list.some(function (x) { return x[1] === H.tax; })) { var tf = glTaxAbove(S, H, target); if (tf) list.push([target, H.tax, tf]); }
+            list.push([target, H.kind, kindText]);
+            var T = glTodayOf(S); if (H.date && T.cur) list.push([target, H.date, Math.min(T.d, T.dim) + '일']);
+            glSetR(E, list);
+            return target;
+        }
+
+        /* 고객 카드 목록 */
+        function gllBook(E) {
+            var S = E.S, H = glHead(S), lab = gllLabOf(S), can = glCan(), f = gl.lf || (gl.lf = { q: '', k: 'all', st: '', desc: false, open: {} });
+            var nameC = H.name || lab['고객명'], phC = lab['번호'], stC = H.staff || lab['담당자'], ym = glYm(S.name);
+            var rows = [];
+            for (var r = H.r + 1; r <= S.nr; r++) {
+                var w = S.cv[r]; if (!w) continue;
+                var kd = w[H.kind], nm = nameC ? w[nameC] : null;
+                if ((kd == null || kd === '') && (nm == null || nm === '')) continue;
+                if (H.no && String(w[H.no] || '').trim().toLowerCase() === 'ex') continue;
+                rows.push(r);
+            }
+            var kindOf = function (r) { return String(glCalcOf(E).get(r, H.kind) == null ? '' : glCalcOf(E).get(r, H.kind)).trim(); };
+            var staffs = {}; rows.forEach(function (r) { var s = stC ? String(gllRaw(S, r, stC) || '').trim() : ''; if (s && !gllIsF(s)) staffs[s] = 1; });
+            var q = gllKey(f.q).toLowerCase(), qd = digitsOnly(f.q);
+            var shown = rows.filter(function (r) {
+                var k = kindOf(r);
+                if (f.k === 'mobile' && (k.indexOf('모바일') !== 0 || glIsCancel(k))) return false;
+                if (f.k === 'wired' && (!/^유선/.test(k) || /렌탈/.test(k) || glIsCancel(k))) return false;
+                if (f.k === 'rent' && (!/렌탈/.test(k) || glIsCancel(k))) return false;
+                if (f.k === 'cancel' && !glIsCancel(k)) return false;
+                if (f.k === 'danga' && k.indexOf('단가제외') < 0) return false;
+                if (f.st && String(gllRaw(S, r, stC) || '').trim() !== f.st) return false;
+                if (q) { var hay = gllKey([gllRaw(S, r, nameC), gllRaw(S, r, phC), gllRaw(S, r, lab['모델']), gllRaw(S, r, lab['요금제']), gllRaw(S, r, lab['거래처']), k].join(' ')).toLowerCase(); if (hay.indexOf(q) < 0 && !(qd.length >= 3 && digitsOnly(String(gllRaw(S, r, phC) || '')).indexOf(qd) >= 0)) return false; }
+                return true;
+            });
+            if (f.desc) shown.reverse();
+            var nMob = 0, nWire = 0, nCan = 0, sum = 0;
+            rows.forEach(function (r) { var k = kindOf(r); if (glIsCancel(k)) { nCan++; return; } if (k.indexOf('모바일') === 0) nMob++; else nWire++; var b = gllNum(E, r, H.bm); if (b) sum += b; });
+            var qIn = h('input', { type: 'search', class: 'gll-q', 'data-fk': 'gll-q', placeholder: '찾기 (이름·번호 뒷자리·모델·거래처)', 'aria-label': '고객 찾기', value: f.q });
+            qIn.addEventListener('input', function () { f.q = this.value; clearTimeout(gl.qT); gl.qT = setTimeout(render, 180); });
+            var kseg = h('div', { class: 'gl-seg gll-kseg', role: 'group', 'aria-label': '구분' }, [['all', '전체'], ['mobile', '모바일'], ['wired', '유선'], ['rent', '렌탈'], ['danga', '단가제외'], ['cancel', '취소']].map(function (x) { return h('button', { type: 'button', 'data-gk': x[0], 'aria-pressed': f.k === x[0] ? 'true' : 'false', onclick: function () { f.k = x[0]; render(); } }, x[1]); }));
+            var ssel = h('select', { 'aria-label': '담당자', class: 'gll-ssel', 'data-fk': 'gll-st' }, h('option', { value: '' }, '담당자 전체'), Object.keys(staffs).sort().map(function (s) { return h('option', { value: s }, s); }));
+            ssel.value = f.st; ssel.addEventListener('change', function () { f.st = this.value; render(); });
+            var tools = h('div', { class: 'gll-tools' }, qIn, kseg, ssel,
+                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'gll-sort', onclick: function () { f.desc = !f.desc; render(); } }, f.desc ? '↑ 최근 가입이 위' : '↓ 순번 순서'),
+                can ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'gll-add', onclick: function () { gllAddAsk(E, this); } }, '+ 고객 줄 추가') : null,
+                can ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'gl-undo', onclick: function () { glUndo(E); render(); } }, '↶ 되돌리기') : null);
+            var sumBar = h('div', { class: 'gll-sum' }, h('span', {}, '모바일 ', h('b', {}, nMob)), h('span', {}, '유선·렌탈 ', h('b', {}, nWire)), h('span', {}, '취소 ', h('b', {}, nCan)), H.bm ? h('span', {}, '운영비포함총매출 ', h('b', {}, gllWon(sum) + '원')) : null, h('span', { class: 'gll-sum-n' }, shown.length + ' / ' + rows.length + '줄'));
+            var cards = shown.map(function (r) { return gllCard(E, r, ym); });
+            return h('div', { class: 'gll-book' }, tools, sumBar, cards.length ? h('div', { class: 'gll-list' }, cards) : h('div', { class: 'panel' }, h('div', { class: 'empty' }, rows.length ? '찾는 고객이 없어요.' : '아직 고객 줄이 없어요.' + (can ? ' [+ 고객 줄 추가]로 넣거나 가입 확인서를 저장하면 자동으로 들어와요.' : ''))),
+                h('p', { class: 'ib-help' }, '칸을 누르면 고르기 창이 떠요: 위에는 기본 선택지, 아래에는 지금 장부에 적힌 값 · 직접 적고 Enter도 돼요. 회색 칸은 자동 계산(엑셀 수식)이에요. 운영비포함총매출이 20만원 미만이면 구분에 (단가제외)가, 스카이 건은 세금 칸이 자동으로 정리돼요. 콜1~5는 누르면 오늘 날짜가 들어가요.'));
+        }
+        function gllAddAsk(E, btn) {   // 구분 먼저 고르고 새 줄
+            gllPopClose();
+            var S = E.S, H = glHead(S), O = gllOptions(E, H.kind);
+            var box = h('div', { class: 'gll-pop', role: 'dialog', 'aria-label': '새 고객 줄' }, h('div', { class: 'gll-pop-h' }, h('b', {}, '새 고객 줄 — 구분 고르기'), h('button', { type: 'button', class: 'gll-pop-x', 'aria-label': '닫기', onclick: gllPopClose }, '✕')),
+                h('div', { class: 'gll-pop-list' }, h('div', { class: 'gll-opt-g' }, O[0].concat(O[1].filter(function (v) { return !glIsCancel(v); }).slice(0, 12)).filter(function (v) { return !glIsCancel(v); }).map(function (v) {
+                    return h('button', { type: 'button', class: 'gll-opt', onclick: function () {
+                        gllPopClose(); var r = gllNewRow(E, v); if (!r) { toast('빈 줄을 찾지 못했어요.'); return; }
+                        gl.lf.q = ''; gl.lf.k = 'all'; gl.lf.open[r] = true; gl.flash = r; render();
+                        setTimeout(function () { var el = document.querySelector('.gll-card[data-r="' + r + '"]'); if (el) { el.scrollIntoView({ block: 'center' }); var nb = el.querySelector('[data-lab="고객명"]'); if (nb) nb.click(); } }, 60);
+                    } }, v);
+                }))));
+            document.body.appendChild(box); gllPop = box;
+            if (window.innerWidth < 700) box.classList.add('sheet'); else { var a = btn.getBoundingClientRect(); box.style.left = Math.max(8, Math.min(a.left, window.innerWidth - box.offsetWidth - 8)) + 'px'; box.style.top = (a.bottom + 6) + 'px'; }
+            setTimeout(function () { document.addEventListener('mousedown', gllPopOut, true); document.addEventListener('touchstart', gllPopOut, true); }, 0);
+        }
+        function gllKindCls(k) { return glIsCancel(k) ? 'cancel' : /렌탈/.test(k) ? 'rent' : k.indexOf('모바일') === 0 ? 'mobile' : /^유선/.test(k) ? 'wired' : 'etc'; }
+        function gllCard(E, r, ym) {
+            var S = E.S, H = glHead(S), lab = gllLabOf(S), can = glCan(), f = gl.lf, open = !!f.open[r];
+            var kind = gllTxt(E, r, H.kind), kc = gllKindCls(kind);
+            var fld = function (name, cls) {
+                var c = lab[gllKey(name)]; if (!c) return null;
+                var t = gllTxt(E, r, c), isF = gllIsF(gllRaw(S, r, c));
+                return h('button', { type: 'button', class: 'gll-f ' + (cls || '') + (t ? '' : ' empty') + (isF ? ' gll-calc' : ''), 'data-lab': gllKey(name), title: name + (isF ? ' (자동 계산)' : '') + (can ? ' — 눌러서 고르기' : ''), onclick: function (e) { e.stopPropagation(); gllPick(E, r, c, this); } },
+                    h('small', {}, name), h('span', {}, t || '—'));
+            };
+            var day = H.date ? gllTxt(E, r, H.date) : '', dnum = parseInt(day, 10);
+            var dateTxt = ym && dnum ? ym.m + '/' + dnum : day || '날짜';
+            var bm = gllNum(E, r, H.bm), noT = H.no ? gllTxt(E, r, H.no) : '';
+            var top = h('div', { class: 'gll-top' },
+                h('span', { class: 'gll-no', title: '순번' }, noT || '·'),
+                h('button', { type: 'button', class: 'gll-date', 'data-lab': '가입날짜', title: '가입날짜', onclick: function (e) { e.stopPropagation(); if (H.date) gllPick(E, r, H.date, this); } }, dateTxt),
+                h('button', { type: 'button', class: 'gll-kind ' + kc, 'data-lab': '모바일&유선', title: '모바일&유선 (구분)', onclick: function (e) { e.stopPropagation(); gllPick(E, r, H.kind, this); } }, kind || '구분'),
+                fld('고객명', 'name'), fld('번호', 'ph'), fld('생년월일', 'birth'),
+                H.bm ? h('span', { class: 'gll-bm' + (bm != null && bm < GLL_DANGA ? ' low' : ''), title: '운영비포함총매출 (자동 계산)' }, h('small', {}, '총매출'), bm == null ? '—' : gllWon(bm)) : null);
+            var mid = h('div', { class: 'gll-mid' }, GLL_TOP.map(function (n) { return fld(n); }));
+            var key = gllCallKey(S, r), calls = gllCalls(S, r);
+            var callBox = h('div', { class: 'gll-calls', 'aria-label': '콜 기록' }, calls.map(function (v, i) {
+                var inp = h('input', { type: 'text', class: 'gll-call' + (v ? ' on' : ''), value: v || '', placeholder: '콜' + (i + 1), 'aria-label': '콜' + (i + 1) + ' (누르면 오늘 날짜)', maxlength: 200, disabled: !can, 'data-fk': 'gll-call-' + r + '-' + i });
+                var pre = '';
+                inp.addEventListener('focus', function () { if (!inp.value) { var d = new Date(); pre = (d.getMonth() + 1) + '/' + d.getDate() + ' '; inp.value = pre; try { inp.setSelectionRange(pre.length, pre.length); } catch (e) { /* */ } } else pre = ''; });
+                inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); inp.blur(); } });
+                inp.addEventListener('blur', function () { var t = inp.value; if (pre && t.trim() === pre.trim()) { t = ''; inp.value = ''; } gllCallSet(E, key, i, t.trim()); inp.classList.toggle('on', !!t.trim()); });
+                return inp;
+            }));
+            var more = h('button', { type: 'button', class: 'gll-more-b', 'aria-expanded': open ? 'true' : 'false', onclick: function () { f.open[r] = !open; render(); } }, open ? '접기 ▴' : '자세히 ▾');
+            var card = h('div', { class: 'gll-card ' + kc + (gl.flash === r ? ' flash' : ''), 'data-r': r }, top, mid, h('div', { class: 'gll-foot' }, callBox, more));
+            if (open) {
+                var used = {}; ['모바일&유선', '고객명', '번호', '생년월일', '가입날짜'].concat(GLL_TOP).forEach(function (n) { var c = lab[gllKey(n)]; if (c) used[c] = 1; }); if (H.no) used[H.no] = 1;
+                var all = gllCols(S).filter(function (x) { return !used[x.c]; });
+                card.appendChild(h('div', { class: 'gll-detail' }, all.map(function (x) {
+                    var t = gllTxt(E, r, x.c), isF = gllIsF(gllRaw(S, r, x.c));
+                    return h('button', { type: 'button', class: 'gll-f' + (t ? '' : ' empty') + (isF ? ' gll-calc' : ''), title: x.lab + (isF ? ' (자동 계산)' : ''), onclick: function (e) { e.stopPropagation(); gllPick(E, r, x.c, this); } }, h('small', {}, x.lab), h('span', {}, t || '—'));
+                }), can ? h('button', { type: 'button', class: 'btn btn-sm btn-danger gll-clear', onclick: function () { gllClearRow(E, r); } }, '🗑 이 줄 비우기') : null));
+            }
+            return card;
+        }
+        function gllClearRow(E, r) {
+            var S = E.S, H = glHead(S), nm = gllTxt(E, r, H.name || gllLabOf(S)['고객명']);
+            if (!confirm((nm || r + '번 줄') + ' 줄의 적은 내용을 모두 비울까요?\n(자동 계산 칸의 수식은 그대로 · 되돌리기로 살릴 수 있어요)\n\n취소 건이면 비우지 말고 구분을 "…(취소)"로 바꿔 주세요.')) return;
+            var last = glLedgerLast(S, H), list = [];
+            Object.keys(S.cv[r] || {}).forEach(function (c) { c = +c; if (c > last) return; var v = S.cv[r][c]; if (!gllIsF(v)) list.push([r, c, null]); });
+            if (glSet(E, list)) { gl.lf.open[r] = false; toast('줄을 비웠어요. 잘못 눌렀으면 [↶ 되돌리기].'); render(); }
+        }
+
+        /* 실적장표·전단배포·전단부업 (새 스타일 표) */
+        function gllGrid(E, A) {   // 빈 줄·빈 칸은 빼고 병합 칸은 남은 줄/칸 수만큼 → { rows, cols, cells(r,c) }
+            var S = E.S, cv = S.cv, anchor = {}, cover = {}, K = function (r, c) { return r * 4096 + c; };
+            S.mg.forEach(function (g) { if (g[0] > A.r2 || g[2] < A.r1 || g[1] > A.c2 || g[3] < A.c1) return; anchor[K(g[0], g[1])] = g; for (var r = g[0]; r <= g[2]; r++) for (var c = g[1]; c <= g[3]; c++) if (r !== g[0] || c !== g[1]) cover[K(r, c)] = g; });
+            var has = function (r, c) { var v = cv[r] && cv[r][c]; return v != null && String(v).trim() !== ''; }, R = {}, C = {};
+            for (var r = A.r1; r <= A.r2; r++) { if (S.rh[r] === 0) continue; var w = cv[r]; if (!w) continue; Object.keys(w).forEach(function (c) { c = +c; if (c < A.c1 || c > A.c2 || S.hc[c] || cover[K(r, c)]) return; if (has(r, c)) { R[r] = 1; C[c] = 1; } }); }
+            var rows = Object.keys(R).map(Number).sort(function (a, b) { return a - b; }), cols = Object.keys(C).map(Number).sort(function (a, b) { return a - b; });
+            return { rows: rows, cols: cols, anchor: anchor, cover: cover, K: K, has: has };
+        }
+        function gllRegionTable(E, A) {
+            var S = E.S, G = gllGrid(E, A), can = glCan(), calc = glCalcOf(E);
+            var inR = function (lo, hi) { return G.rows.filter(function (x) { return x >= lo && x <= hi; }).length; }, inC = function (lo, hi) { return G.cols.filter(function (x) { return x >= lo && x <= hi; }).length; };
+            var tb = h('tbody');
+            G.rows.forEach(function (r) {
+                var tr = h('tr');
+                G.cols.forEach(function (c) {
+                    if (G.cover[G.K(r, c)]) return;
+                    var g = G.anchor[G.K(r, c)], raw = gllRaw(S, r, c), isF = gllIsF(raw), td = h('td');
+                    if (g) { var rs = inR(g[0], g[2]), cs = inC(g[1], g[3]); if (rs > 1) td.rowSpan = rs; if (cs > 1) td.colSpan = cs; }
+                    if (raw != null && String(raw).trim() !== '') {
+                        var v = calc.get(r, c), t = gllTxt(E, r, c), si = glStOf(S, r, c), st = si ? S.st[si - 1] : null, isN = typeof glNum(v) === 'number' && typeof v !== 'string';
+                        td.textContent = t;
+                        td.className = (isN ? 'nm' : 'tx') + (isN && glNum(v) < 0 ? ' neg' : '') + (st && st.b ? ' b' : '') + (isF ? ' f' : '') + (can && !isF ? ' ed' : '');
+                        if (st && st.bg && st.bg !== 'FFFFFF') td.style.setProperty('--tint', '#' + st.bg);
+                        if (st && st.fc && /^(FF0000|C00000|E00000|FF3333)$/.test(st.fc)) td.classList.add('red');
+                        if (can && !isF) { td.tabIndex = 0; td.addEventListener('click', function () { gllPick(E, r, c, td); }); td.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); gllPick(E, r, c, td); } }); }
+                        else if (isF) td.title = '자동 계산';
+                    }
+                    tr.appendChild(td);
+                });
+                tb.appendChild(tr);
+            });
+            return h('table', { class: 'gll-rt' }, tb);
+        }
+        var GLL_HDR_RE = /목표|잔여|실적|달성|매출|시상|마감|건수|날짜|인원|금액|정산|합계|번호|성공율|비고/;
+        function gllRegionText(E, A, title) {   // 카톡 공지용 글자: 머리글 줄(목표·잔여·실적… 글자만 있는 줄) 아래 숫자는 '머리글 값'으로
+            var S = E.S, G = gllGrid(E, A), calc = glCalcOf(E), lines = [title], hdr = null;
+            G.rows.forEach(function (r) {
+                var cells = [];
+                G.cols.forEach(function (c) {
+                    if (G.cover[G.K(r, c)] || !G.has(r, c)) return;
+                    var g = G.anchor[G.K(r, c)], v = calc.get(r, c), t = gllTxt(E, r, c); if (!t) return;
+                    cells.push({ c1: c, c2: g ? g[3] : c, t: t, num: typeof v === 'number' });
+                });
+                if (!cells.length) return;
+                var allTx = cells.every(function (x) { return !x.num; });
+                if (allTx && cells.length >= 2 && cells.filter(function (x) { return GLL_HDR_RE.test(x.t); }).length >= 2) { hdr = cells; lines.push(''); lines.push('[' + cells.map(function (x) { return x.t; }).join(' · ') + ']'); return; }
+                if (allTx) { lines.push(cells.map(function (x) { return x.t; }).join(' · ')); return; }
+                var k = 0; while (k < cells.length && !cells[k].num) k++;
+                var lead = cells.slice(0, k), rest = cells.slice(k);
+                var name = lead.length ? lead[lead.length - 1].t + (lead.length > 1 ? ' (' + lead.slice(0, -1).map(function (x) { return x.t; }).join(' · ') + ')' : '') : '';
+                var parts = rest.map(function (x) { var hh = hdr ? hdr.filter(function (y) { return y.c1 <= x.c1 && x.c1 <= y.c2; })[0] : null; return (hh && x.num ? hh.t + ' ' : '') + x.t; });
+                lines.push('• ' + (name ? name + ': ' : '') + parts.join(' · '));
+            });
+            return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+        }
+        function gllTableCanvas(tbl, title) {   // 화면에 그린 새 스타일 표 → 그림 (공지용)
+            var T = tbl.getBoundingClientRect(), SC = 2, pad = 24, th = title ? 44 : 0;
+            if (!T.width || !T.height || T.width * T.height > 30e6) return null;
+            var cv = document.createElement('canvas'); cv.width = Math.ceil((T.width + pad * 2) * SC); cv.height = Math.ceil((T.height + pad * 2 + th) * SC);
+            var g = cv.getContext('2d'); g.scale(SC, SC); g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, T.width + pad * 2, T.height + pad * 2 + th);
+            if (title) { g.fillStyle = '#2B2F22'; g.font = '700 18px Pretendard,"Malgun Gothic","Apple SD Gothic Neo",sans-serif'; g.textBaseline = 'middle'; g.fillText(title, pad, pad + 14); }
+            tbl.querySelectorAll('td').forEach(function (td) {
+                var b = td.getBoundingClientRect(), x = b.left - T.left + pad, y = b.top - T.top + pad + th, cs = getComputedStyle(td);
+                var bg = cs.backgroundColor; g.fillStyle = !bg || bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent' ? '#FFFFFF' : bg; g.fillRect(x, y, b.width, b.height);
+                g.strokeStyle = '#E3E6DA'; g.lineWidth = 1; g.strokeRect(x + 0.5, y + 0.5, b.width - 1, b.height - 1);
+                var t = td.textContent; if (!t) return;
+                g.fillStyle = cs.color; g.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily; g.textBaseline = 'middle';
+                var pl = parseFloat(cs.paddingLeft) || 8, pr = parseFloat(cs.paddingRight) || 8, maxW = b.width - pl - pr, words = t.split(/\s+/), ls = [], cur = '';
+                words.forEach(function (wd) { var tt = cur ? cur + ' ' + wd : wd; if (g.measureText(tt).width > maxW && cur) { ls.push(cur); cur = wd; } else cur = tt; }); if (cur) ls.push(cur);
+                var lh = (parseFloat(cs.fontSize) || 13) * 1.35, y0 = y + b.height / 2 - (ls.length - 1) * lh / 2, al = cs.textAlign;
+                ls.forEach(function (ln, i) { var w = g.measureText(ln).width, tx = al === 'right' || al === 'end' ? x + b.width - pr - w : al === 'center' ? x + (b.width - w) / 2 : x + pl; g.fillText(ln, tx, y0 + i * lh); });
+            });
+            return cv;
+        }
+        function gllRegionCanvas(E, A, title) {   // 화면 밖에서 새 스타일 표를 그려서 그림으로 (실적장표 보고)
+            var tbl = gllRegionTable(E, A), box = h('div', { class: 'gll-off' }, tbl);
+            document.body.appendChild(box);
+            try { return gllTableCanvas(tbl, title); } finally { box.remove(); }
+        }
+        function gllCopyImage(cv, title) {
+            if (!cv) { toast('그림을 만들지 못했어요.'); return; }
+            var file = title.replace(/[\\/:*?"<>|\s]+/g, '_') + '.png', png = glCanvasBlob(cv);
+            glClipWrite({ png: png }).then(function () { toast(title + '을(를) 그림으로 복사했어요. 카카오톡·텔레그램에서 Ctrl+V 하세요.'); }, function () { showReportPreview(cv, { title: title, file: file }); });
+        }
+        function gllRegionView(E, A, name) {
+            var S = E.S, title = (S.name || '') + ' ' + name, tbl = gllRegionTable(E, A);
+            var tools = h('div', { class: 'gll-rtools' }, h('b', { class: 'gll-rtitle' }, title),
+                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'gll-copytext', onclick: function () { var t = gllRegionText(E, A, title); copyText(t).then(function (ok) { if (ok) toast(name + ' 내용을 글자로 복사했어요. 카톡 공지에 붙여넣으세요.'); else prompt('아래 내용을 복사해 주세요.', t); }); } }, '📋 글자로 복사'),
+                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'gll-copyimg', onclick: function () { gllCopyImage(gllTableCanvas(tbl, title), title); } }, '🖼 그림으로 복사'));
+            return h('div', { class: 'gll-region' }, tools, h('div', { class: 'gll-rwrap' }, tbl), h('p', { class: 'ib-help' }, '흰 칸은 눌러서 고칠 수 있고(목표 등), 회색 글자 칸은 장부로 자동 계산돼요.'));
+        }
         function renderGl() {
             var boss = isBoss();
             var head = h('div', { class: 'page-head' }, h('h1', {}, '사거리가입고객리스트'), h('div', { class: 'actions' },
@@ -17241,34 +17727,17 @@
                 return h('button', { type: 'button', class: 'cl-tab', role: 'tab', 'data-sheet': s.name, 'aria-pressed': s.id === gl.cur ? 'true' : 'false', onclick: function () { if (s.id === gl.cur) return; gl.cur = s.id; gl.view = 'book'; render(); } }, s.name);
             }));
             if (!E.S) return h('div', {}, head, note, gl.inbox ? h('p', { class: 'gl-inbox' }, '가입 확인서에서 들어온 ' + gl.inbox + '줄을 장부에 넣는 중이에요...') : null, tabs, h('div', { class: 'panel' }, h('div', { class: 'empty' }, E.err ? '시트를 불러오지 못했어요. ' + E.err : '시트를 불러와서 푸는 중이에요...')));
-            var R = glRegions(E.S), views = [['all', '전체'], ['book', '장부'], ['dash', '실적장표'], ['flyer', '전단배포'], ['side', '전단부업']].filter(function (v) { return !!R[v[0]]; });
-            if (!R[gl.view] || gl.view === 'off') gl.view = R.book ? 'book' : 'all';
-            if (!gl.zoom) gl.zoom = window.innerWidth < 700 ? 60 : 80;
-            var vbar = h('div', { class: 'gl-vbar' },
-                h('div', { class: 'gl-seg', role: 'group', 'aria-label': '보기' }, views.map(function (v) { return h('button', { type: 'button', 'data-gv': v[0], 'aria-pressed': gl.view === v[0] ? 'true' : 'false', onclick: function () { gl.view = v[0]; render(); } }, v[1]); })),
-                h('label', { class: 'gl-zoom' }, '크기 ', (function () { var s = h('select', { 'aria-label': '확대 비율' }, [40, 50, 60, 70, 80, 90, 100, 120, 150].map(function (z) { return h('option', { value: String(z) }, z + '%'); })); s.value = String(gl.zoom); s.addEventListener('change', function () { gl.zoom = +this.value; render(); }); return s; })()),
-                (function () { var q = h('input', { type: 'search', class: 'gl-q', placeholder: '찾기 (이름·번호)', 'aria-label': '찾기', value: gl.q }); q.addEventListener('input', function () { gl.q = this.value; }); q.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); glFind(E, gl.q); } }); return q; })(),
-                h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { glFind(E, gl.q); } }, '다음 찾기'),
+            gllCallsPending(E);
+            var R = glRegions(E.S), H = glHead(E.S), views = H ? [['book', '고객 리스트'], ['dash', '실적장표'], ['flyer', '전단배포'], ['side', '전단부업']].filter(function (v) { return v[0] === 'book' || !!R[v[0]]; }) : [['all', '표']];   // 휴무표는 가입고객리스트에서 안 보여 줌 (휴무표 메뉴에서)
+            if (!views.some(function (v) { return v[0] === gl.view; })) gl.view = views[0][0];
+            var vbar = h('div', { class: 'gll-vbar' },
+                views.length > 1 ? h('div', { class: 'gl-seg', role: 'group', 'aria-label': '보기' }, views.map(function (v) { return h('button', { type: 'button', 'data-gv': v[0], 'aria-pressed': gl.view === v[0] ? 'true' : 'false', onclick: function () { gllPopClose(); gl.view = v[0]; render(); } }, v[1]); })) : null,
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cnt-open', title: '가입 고객 응대 통화(설치·요금·AS·해지 문의)를 AI가 요약한 기록', onclick: function () { cntOpen(E); } }, '📞 기고객 응대' + ((db.cnt || []).length ? ' ' + db.cnt.length : '')),
                 h('button', { type: 'button', class: 'btn btn-sm btn-primary gl-savenow', 'data-act': 'gl-savenow', title: '고친 칸은 1초 뒤 자동 저장돼요. 이 버튼은 지금 바로 저장하고 드라이브 엑셀(사거리가입고객리스트.xlsx)까지 바로 맞춰요 · 단축키 Ctrl+S', onclick: function () { glSaveNow(); } }, '💾 지금 저장'),
                 status);
-            var inp = h('input', { type: 'text', id: 'gl-in', class: 'gl-in', autocomplete: 'off', spellcheck: 'false', 'aria-label': '칸 내용 (= 로 시작하면 수식)', placeholder: '칸을 누르고 여기에 적은 뒤 Enter' });
-            inp.addEventListener('keydown', function (e) {
-                if (e.isComposing) return;
-                if (e.key === 'Enter') { e.preventDefault(); glCommit(E, [e.shiftKey ? -1 : 1, 0]); }
-                else if (e.key === 'Tab') { e.preventDefault(); glCommit(E, [0, e.shiftKey ? -1 : 1]); }
-                else if (e.key === 'Escape') { e.preventDefault(); glBarPaint(E); var D0 = E.dom[gl.view]; if (D0) D0.el.focus({ preventScroll: true }); }
-            });
-            var bar = h('div', { class: 'gl-bar' }, h('span', { class: 'gl-ref', id: 'gl-ref' }, E.sel ? glColName(E.sel.c) + E.sel.r : ''), inp,
-                h('button', { type: 'button', class: 'btn btn-sm btn-primary', 'data-act': 'gl-ok', onclick: function () { glCommit(E, [1, 0]); } }, '입력'),
-                h('button', { type: 'button', class: 'btn btn-sm gl-rmode', 'data-act': 'gl-rmode', 'aria-pressed': gl.rmode ? 'true' : 'false', title: '휴대폰: 켜고 첫 칸 → 끝 칸을 누르면 여러 칸이 골라져요', onclick: function () { gl.rmode = !gl.rmode; E.rmodeFresh = gl.rmode; this.setAttribute('aria-pressed', gl.rmode ? 'true' : 'false'); toast(gl.rmode ? '범위 선택: 첫 칸을 누른 뒤 끝 칸을 누르세요.' : '범위 선택을 껐어요.'); } }, '범위 선택'),
-                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'gl-copy', title: '고른 칸을 복사 (Ctrl+C) — 카톡·텔레그램에는 그림으로', onclick: function () { glCopyRange(E); } }, '복사'),
-                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'gl-undo', onclick: function () { glUndo(E); } }, '되돌리기'));
-            var z = gl.zoom / 100, D = E.dom[gl.view];
-            if (!D || D.z !== z) { if (D && D.el) E.scroll[gl.view] = null; D = E.dom[gl.view] = glBuild(E, gl.view, z); glWire(E, D); }
-            var wrap = h('div', { class: 'gl-wrap' }, D.el);
-            return h('div', { class: 'gl-page' }, head, note, gl.inbox ? h('p', { class: 'gl-inbox' }, '가입 확인서에서 들어온 ' + gl.inbox + '줄을 장부에 넣는 중이에요...') : null, tabs, vbar, bar, h('p', { class: 'gl-tip', id: 'gl-tip' }), wrap, glHbar(),
-                h('p', { class: 'ib-help' }, '엑셀처럼: 칸을 누르고 입력칸에 적은 뒤 Enter (= 로 시작하면 수식) · 끌거나 Shift+방향키로 여러 칸 고르기 · 열 이름/줄 번호를 누르면 전체 선택 · Ctrl+C 복사(카톡·텔레그램에는 그림으로) · Ctrl+V 붙여넣기 · Delete 지우기 · Ctrl+Z 되돌리기. 고친 내용은 바로 암호화해서 저장되고, 드라이브의 엑셀 파일도 곧 같이 바뀌어요.'));
+            var body = gl.view === 'book' ? gllBook(E) : gllRegionView(E, gl.view === 'all' ? R.all : R[gl.view], gl.view === 'all' ? '' : { dash: '실적장표', flyer: '전단배포', side: '전단부업' }[gl.view]);
+            if (gl.flash) setTimeout(function () { gl.flash = 0; }, 0);
+            return h('div', { class: 'gl-page gll' }, head, note, gl.inbox ? h('p', { class: 'gl-inbox' }, '가입 확인서에서 들어온 ' + gl.inbox + '줄을 장부에 넣는 중이에요...') : null, tabs, vbar, body);
         }
         function glAfterRender() {   // 화면을 다시 그린 뒤: 표 스크롤 위치·선택 칸 · 탭 위치 · 가로 이동바
             if (state.view !== 'gl') return;
