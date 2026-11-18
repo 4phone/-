@@ -407,6 +407,14 @@
         .footer-row-links { display: flex; gap: 20px; font-weight: 700; border-bottom: 1px solid #D3E2DF; padding-bottom: 12px; }
         .footer-row-links a { color: var(--sub-ink); text-decoration: none; cursor: pointer; }
         .footer-row-links a.policy-btn { color: var(--point-color); }
+        /* 검수 4번: 아이폰은 입력칸 글씨가 16px보다 작으면 누를 때 화면이 저절로 확대돼요 → 휴대폰에서만 16px */
+        @media (max-width: 900px) {
+            input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]), select, textarea { font-size: 16px !important; }
+        }
+        /* 검수 6번: 맨 아래 작은 링크도 손가락으로 누르기 쉽게 (보이는 줄 간격은 그대로, 누르는 범위만 위아래로 넓힘) */
+        @media (max-width: 900px) {
+            .footer-row-links a, .footer-mail-link { display: inline-block; padding: 10px 2px; margin: -10px -2px; }
+        }
         .footer-row-info { display: flex; flex-wrap: wrap; gap: 10px 24px; color: var(--muted-ink); }
         .footer-row-info span b { color: var(--sub-ink); font-weight: 500; }
         .footer-mail-link { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
@@ -445,6 +453,7 @@
             .nav-logo-text { font-size: 18px; }
             
             .mobile-menu-btn { order: 2; display: block; background: none; border: none; font-size: 28px; color: #111; cursor: pointer; padding: 0; line-height: 1; }
+            .mobile-menu-btn { display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -8px -8px -8px 0; }   /* 검수 3번: 손가락으로 누르기 쉽게 44px (보이는 ☰ 크기·자리는 그대로) */
             
             .nav-phone-call-zone { display: none; }
             .navbar.scrolled { flex-wrap: wrap !important; height: auto !important; padding: 12px 15px !important; }
@@ -1120,7 +1129,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
 .p-acts { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px; }
 .p-cart-btn { height: 48px; border-radius: 12px; border: 1px solid #E2C27A; background: #FBF3DC; color: #8A6418; font-size: 15px; font-weight: 800; letter-spacing: -0.2px; }
 .p-cart-btn:hover { background: #F3DFA8; color: #0E343B; }
-.p-acts .p-apply-btn { width: 100%; }
+.p-acts .p-apply-btn { width: 100%; margin-top: 0; }   /* 담기와 같은 줄 높이 (검수 1번: 즉시신청만 4px 내려가 있던 것) */
 @media (max-width: 900px) { .sgc-fab { bottom: calc(88px + env(safe-area-inset-bottom)); } }
     </style>
     <style>
@@ -1221,6 +1230,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         @media (max-width: 900px) {
             .sga-fab.mini { width: 52px; height: 52px; padding: 0; justify-content: center; gap: 0; font-size: 0; }
             .sga-fab.mini b { font-size: 21px; }
+            .sga-fab.hero-off { opacity: 0; pointer-events: none; transform: translateY(20px); }   /* 첫 화면 AI 입력칸이 보일 때는 숨김 */
         }
         @media (prefers-reduced-motion: reduce) { .sgk-go:not(.submit-btn)::after { animation: none; display: none; } .sgk-mini { transition: none; } }
     </style>
@@ -1307,6 +1317,62 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             .sga-ttl small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         }
     </style>
+<script>
+/* ---------- 안내 창 (2026-11-18 검수 8번) ----------
+   브라우저 기본 알림창(alert)은 오류 창처럼 보이고 카톡·네이버 앱에서는 사이트 주소까지 같이 떠서 낯설어요.
+   → 화면 안의 안내 카드로 보여 줌. 내용·순서는 그대로 · '접수 완료'는 ✓ 초록, 입력 안내는 ⓘ 노랑.
+   안내 뒤에 커서를 옮기는 칸(예: 성함 칸)은 [확인]을 누른 뒤 그 칸으로 이동. 손님 정보는 다루지 않음 */
+(function () {
+    var nativeAlert = window.alert, q = [], open = false, ov, box, okBtn, wantFocus = null;
+    function css() {
+        if (document.getElementById('sgal-css')) return;
+        var st = document.createElement('style'); st.id = 'sgal-css';
+        st.textContent = '.sgal-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(6,24,28,.55);display:flex;align-items:center;justify-content:center;padding:16px;animation:sgalIn .16s ease-out}'
+            + '@keyframes sgalIn{from{opacity:0}to{opacity:1}}'
+            + '.sgal-box{width:100%;max-width:380px;background:#FFFFFF;border-radius:20px;padding:24px 20px 18px;box-shadow:0 20px 50px rgba(0,0,0,.3);text-align:center;color:#13262A;font-family:Pretendard,system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}'
+            + '.sgal-ic{width:52px;height:52px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900}'
+            + '.sgal-ic.ok{background:#E3F5EC;color:#14804A}.sgal-ic.info{background:#FFF4D6;color:#B7791F}'
+            + '.sgal-t{font-size:18px;font-weight:800;margin:0 0 8px;line-height:1.35;word-break:keep-all}'
+            + '.sgal-m{font-size:15px;line-height:1.6;color:#2D3748;margin:0 0 18px;white-space:pre-line;word-break:keep-all;max-height:55vh;overflow:auto;text-align:center}'
+            + '.sgal-ok{display:block;width:100%;min-height:50px;border:0;border-radius:14px;background:#134047;color:#F3DFA8;font-size:16px;font-weight:800;cursor:pointer}'
+            + '.sgal-ok:focus-visible{outline:3px solid #E2BA62;outline-offset:2px}';
+        document.head.appendChild(st);
+    }
+    function onFocusIn(e) {   // 안내가 떠 있는 동안 다른 칸으로 커서가 가면(예: 성함 칸) 기억했다가 [확인] 뒤에 그 칸으로
+        if (!open || !ov || ov.contains(e.target)) return;
+        wantFocus = e.target;
+        try { okBtn.focus({ preventScroll: true }); } catch (er) { okBtn.focus(); }
+    }
+    function onKey(e) { if (open && (e.key === 'Escape' || e.key === 'Enter')) { e.preventDefault(); close(); } }
+    function close() {
+        if (!open) return;
+        open = false; ov.remove();
+        document.removeEventListener('focusin', onFocusIn, true); document.removeEventListener('keydown', onKey, true);
+        var f = wantFocus; wantFocus = null;
+        if (q.length) { show(q.shift()); return; }
+        if (f && document.contains(f)) { try { f.focus(); } catch (er) { /* 무시 */ } }
+    }
+    function show(msg) {
+        if (!document.body) { nativeAlert.call(window, msg); return; }
+        css(); open = true; wantFocus = null;
+        var text = String(msg == null ? '' : msg).replace(/\r/g, ''), title = '', m = text.match(/^\s*\[([^\]\n]{1,60})\]\s*\n?/);
+        if (m) { title = m[1].trim(); text = text.slice(m[0].length).replace(/^\n+/, ''); }
+        var good = /완료|접수됐|접수되었|감사합니다|자동으로 세팅/.test(title + ' ' + text.split('\n')[0]);
+        ov = document.createElement('div'); ov.className = 'sgal-ov'; ov.setAttribute('role', 'alertdialog'); ov.setAttribute('aria-modal', 'true');
+        box = document.createElement('div'); box.className = 'sgal-box';
+        var ic = document.createElement('div'); ic.className = 'sgal-ic ' + (good ? 'ok' : 'info'); ic.textContent = good ? '✓' : '!'; ic.setAttribute('aria-hidden', 'true'); box.appendChild(ic);
+        if (title) { var t = document.createElement('p'); t.className = 'sgal-t'; t.textContent = title; box.appendChild(t); }
+        var p = document.createElement('p'); p.className = 'sgal-m'; p.textContent = text; box.appendChild(p);
+        if (!title) p.style.fontWeight = '600';
+        okBtn = document.createElement('button'); okBtn.type = 'button'; okBtn.className = 'sgal-ok'; okBtn.textContent = '확인'; okBtn.onclick = close; box.appendChild(okBtn);
+        ov.appendChild(box); document.body.appendChild(ov);
+        ov.setAttribute('aria-label', title || text.split('\n')[0]);
+        document.addEventListener('focusin', onFocusIn, true); document.addEventListener('keydown', onKey, true);
+        setTimeout(function () { if (open) { try { okBtn.focus({ preventScroll: true }); } catch (er) { okBtn.focus(); } } }, 0);
+    }
+    window.alert = function (msg) { if (open) q.push(msg); else show(msg); };
+})();
+</script>
 </head>
 <body>
     
@@ -4509,6 +4575,14 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         var f = document.querySelector('.sga-fab'); if (!f) return;
         var t = 0, run = function () { t = 0; f.classList.toggle('mini', window.scrollY > 520); };
         window.addEventListener('scroll', function () { if (!t) t = requestAnimationFrame(run); }, { passive: true }); run();
+        /* 검수 2번: 휴대폰 첫 화면에는 AI 입력칸이 이미 있어서, 그 칸·바로가기 칸이 보이는 동안 떠 있는 AI 버튼을 숨김 (렌탈 칸을 가리던 것) */
+        if ('IntersectionObserver' in window) {
+            var seen = new Set(), io = new IntersectionObserver(function (list) {
+                list.forEach(function (en) { if (en.isIntersecting) seen.add(en.target); else seen.delete(en.target); });
+                f.classList.toggle('hero-off', seen.size > 0);
+            });
+            ['.sga-ask', '.sg-tiles', '.sg-ctas'].forEach(function (q) { var e = document.querySelector(q); if (e) io.observe(e); });
+        }
     })();
     </script>
     <script>

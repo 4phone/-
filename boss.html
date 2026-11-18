@@ -182,6 +182,14 @@
         .footer-row-links a { color: var(--text-main); text-decoration: none; cursor: pointer; transition: 0.2s; }
         .footer-row-links a:hover { color: #fff; }
         .footer-row-links a.policy-btn { color: var(--gold-color); font-weight: 700; }
+        /* 검수 4번: 아이폰은 입력칸 글씨가 16px보다 작으면 누를 때 화면이 저절로 확대돼요 → 휴대폰에서만 16px */
+        @media (max-width: 900px) {
+            input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden]), select, textarea { font-size: 16px !important; }
+        }
+        /* 검수 6번: 맨 아래 작은 링크도 손가락으로 누르기 쉽게 (보이는 줄 간격은 그대로, 누르는 범위만 위아래로 넓힘) */
+        @media (max-width: 900px) {
+            .footer-row-links a { display: inline-block; padding: 10px 2px; margin: -10px -2px; }
+        }
         .footer-row-info { display: flex; flex-wrap: wrap; gap: 10px 24px; color: #718096; }
         .footer-row-info span b { color: #A0AEC0; font-weight: 400; }
         .footer-copyright { color: #4A5568; font-size: 12px; margin-top: 10px; }
@@ -788,6 +796,62 @@
             :is(#lh-multi, #lh-stay) .lh-opts, :is(#lh-multi, #lh-stay) .lm-tv { grid-template-columns: minmax(0, 1fr); }
         }
     </style>
+<script>
+/* ---------- 안내 창 (2026-11-18 검수 8번) ----------
+   브라우저 기본 알림창(alert)은 오류 창처럼 보이고 카톡·네이버 앱에서는 사이트 주소까지 같이 떠서 낯설어요.
+   → 화면 안의 안내 카드로 보여 줌. 내용·순서는 그대로 · '접수 완료'는 ✓ 초록, 입력 안내는 ⓘ 노랑.
+   안내 뒤에 커서를 옮기는 칸(예: 성함 칸)은 [확인]을 누른 뒤 그 칸으로 이동. 손님 정보는 다루지 않음 */
+(function () {
+    var nativeAlert = window.alert, q = [], open = false, ov, box, okBtn, wantFocus = null;
+    function css() {
+        if (document.getElementById('sgal-css')) return;
+        var st = document.createElement('style'); st.id = 'sgal-css';
+        st.textContent = '.sgal-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(6,24,28,.55);display:flex;align-items:center;justify-content:center;padding:16px;animation:sgalIn .16s ease-out}'
+            + '@keyframes sgalIn{from{opacity:0}to{opacity:1}}'
+            + '.sgal-box{width:100%;max-width:380px;background:#FFFFFF;border-radius:20px;padding:24px 20px 18px;box-shadow:0 20px 50px rgba(0,0,0,.3);text-align:center;color:#13262A;font-family:Pretendard,system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif}'
+            + '.sgal-ic{width:52px;height:52px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:900}'
+            + '.sgal-ic.ok{background:#E3F5EC;color:#14804A}.sgal-ic.info{background:#FFF4D6;color:#B7791F}'
+            + '.sgal-t{font-size:18px;font-weight:800;margin:0 0 8px;line-height:1.35;word-break:keep-all}'
+            + '.sgal-m{font-size:15px;line-height:1.6;color:#2D3748;margin:0 0 18px;white-space:pre-line;word-break:keep-all;max-height:55vh;overflow:auto;text-align:center}'
+            + '.sgal-ok{display:block;width:100%;min-height:50px;border:0;border-radius:14px;background:#134047;color:#F3DFA8;font-size:16px;font-weight:800;cursor:pointer}'
+            + '.sgal-ok:focus-visible{outline:3px solid #E2BA62;outline-offset:2px}';
+        document.head.appendChild(st);
+    }
+    function onFocusIn(e) {   // 안내가 떠 있는 동안 다른 칸으로 커서가 가면(예: 성함 칸) 기억했다가 [확인] 뒤에 그 칸으로
+        if (!open || !ov || ov.contains(e.target)) return;
+        wantFocus = e.target;
+        try { okBtn.focus({ preventScroll: true }); } catch (er) { okBtn.focus(); }
+    }
+    function onKey(e) { if (open && (e.key === 'Escape' || e.key === 'Enter')) { e.preventDefault(); close(); } }
+    function close() {
+        if (!open) return;
+        open = false; ov.remove();
+        document.removeEventListener('focusin', onFocusIn, true); document.removeEventListener('keydown', onKey, true);
+        var f = wantFocus; wantFocus = null;
+        if (q.length) { show(q.shift()); return; }
+        if (f && document.contains(f)) { try { f.focus(); } catch (er) { /* 무시 */ } }
+    }
+    function show(msg) {
+        if (!document.body) { nativeAlert.call(window, msg); return; }
+        css(); open = true; wantFocus = null;
+        var text = String(msg == null ? '' : msg).replace(/\r/g, ''), title = '', m = text.match(/^\s*\[([^\]\n]{1,60})\]\s*\n?/);
+        if (m) { title = m[1].trim(); text = text.slice(m[0].length).replace(/^\n+/, ''); }
+        var good = /완료|접수됐|접수되었|감사합니다|자동으로 세팅/.test(title + ' ' + text.split('\n')[0]);
+        ov = document.createElement('div'); ov.className = 'sgal-ov'; ov.setAttribute('role', 'alertdialog'); ov.setAttribute('aria-modal', 'true');
+        box = document.createElement('div'); box.className = 'sgal-box';
+        var ic = document.createElement('div'); ic.className = 'sgal-ic ' + (good ? 'ok' : 'info'); ic.textContent = good ? '✓' : '!'; ic.setAttribute('aria-hidden', 'true'); box.appendChild(ic);
+        if (title) { var t = document.createElement('p'); t.className = 'sgal-t'; t.textContent = title; box.appendChild(t); }
+        var p = document.createElement('p'); p.className = 'sgal-m'; p.textContent = text; box.appendChild(p);
+        if (!title) p.style.fontWeight = '600';
+        okBtn = document.createElement('button'); okBtn.type = 'button'; okBtn.className = 'sgal-ok'; okBtn.textContent = '확인'; okBtn.onclick = close; box.appendChild(okBtn);
+        ov.appendChild(box); document.body.appendChild(ov);
+        ov.setAttribute('aria-label', title || text.split('\n')[0]);
+        document.addEventListener('focusin', onFocusIn, true); document.addEventListener('keydown', onKey, true);
+        setTimeout(function () { if (open) { try { okBtn.focus({ preventScroll: true }); } catch (er) { okBtn.focus(); } } }, 0);
+    }
+    window.alert = function (msg) { if (open) q.push(msg); else show(msg); };
+})();
+</script>
 </head>
 <body>
     <!-- 🔐 THE LOUNGE 입장 화면: 지금은 누구나 [바로 입장하기] · 국세청 사업자 확인 입장은 아래 스크립트의 VERIFY = true 로 다시 켜요 -->
