@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-iT59Ui5j+KWLCLDuYs8NSIxXo2sATbPG33l2h7FAiJU='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-S2wjaRilDjDePtMawr2eaZ8dIKL4ARosSGWl98/lQXA='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -248,6 +248,7 @@
         .link-btn { background: none; border: none; color: var(--olive-700); font-weight: 700; font-size: 13.5px; padding: 4px 2px; text-decoration: underline; text-underline-offset: 3px; }
 
         .who { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+        select.t-whosel { font-size: 13px; min-height: 32px; padding: 2px 22px 2px 8px; border-left: 4px solid var(--c, #ccc); max-width: 100%; }
         .who i { width: 10px; height: 10px; border-radius: 50%; background: var(--c, #9AA38A); flex: none; }
 
         /* ---------- 오늘 ---------- */
@@ -2283,7 +2284,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-18.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-18.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2410,6 +2411,7 @@
                 out.events.push({ id: str(e.id, 40) || uid(), title: str(e.title, 120).trim(), date: e.date, time: /^\d{2}:\d{2}$/.test(e.time || '') ? e.time : '', staffId: okStaff(e.staffId), memo: str(e.memo, 2000), u: num(e.u), b: num(e.b) });
                 if (str(e.taskId, 40)) out.events[out.events.length - 1].taskId = str(e.taskId, 40);   // 이 일정으로 만든 할 일
                 if (e.noTask === 1) out.events[out.events.length - 1].noTask = 1;
+                if (e.sidM === 1) out.events[out.events.length - 1].sidM = 1;   // 담당자를 직접 바꾼 일정 (자동 점검이 되돌리지 않음)
                 if (str(e.by, 40)) out.events[out.events.length - 1].by = str(e.by, 40);   // 등록한 사람 (2026-10-24부터)   // 업무에서 할 일을 직접 지움 (자동으로 다시 만들지 않음)
             });
             list(d.notices, 50000).forEach(function (n) {
@@ -2939,6 +2941,18 @@
             if (!closed(t)) { if (t.due && e.date && t.due !== e.date) tlogAdd('move', t, t.due, e.date); t.due = e.date; t.staffId = e.staffId || t.staffId || me; t.memo = evTaskMemo(e); }
             stamp(t);
         }
+        function taskEvStaff(t, sid) {   // 할 일 담당자를 바꾸면 연결된 일정도 같은 담당자 + 직접 바꿈 표시
+            var e = taskEv(t); if (!e || !sid || e.staffId === sid) return false;
+            e.staffId = sid; e.sidM = 1; stamp(e); return true;
+        }
+        function taskSetStaff(t, sid) {   // 업무 목록에서 바로 담당자 바꾸기 (대표)
+            t = curOf(db.tasks, t); if (!t) { toast('다른 기기에서 지운 업무예요.'); render(); return; }
+            if (!isBoss()) { toast('담당자는 대표님만 바로 바꿀 수 있어요.'); render(); return; }
+            if ((t.staffId || '') === (sid || '')) return;
+            t.staffId = sid; stamp(t);
+            var ev = taskEvStaff(t, sid);
+            commit('담당자를 ' + (sid ? staffName(sid) + ' 님' : '미지정') + '으로 바꿨어요.' + (ev ? ' (캘린더 일정도 같이)' : ''));
+        }
         function taskSyncEv(t) {   // 할 일을 고치면 연결된 일정도 (제목·날짜)
             var e = taskEv(t); if (!e) return;
             var ch = false;
@@ -2974,7 +2988,7 @@
                 onSave: function (v) {
                     if (!isNew) { ev = curOf(db.events, ev); if (!ev) { toast('다른 기기에서 지운 일정이에요.'); return; } }
                     if (isNew) { var ne = stamp({ id: uid(), title: v.title, date: v.date, time: v.time, staffId: v.staffId, memo: v.memo, u: 0, by: me }); db.events.push(ne); if (v.mkTask) { evMakeTask(ne); stamp(ne); } }
-                    else { ev.title = v.title; ev.date = v.date; ev.time = v.time; ev.staffId = v.staffId; ev.memo = v.memo; if (linked) evSyncTask(ev); else if (v.mkTask) evMakeTask(ev); stamp(ev); }
+                    else { if (ev.staffId !== v.staffId) ev.sidM = 1; ev.title = v.title; ev.date = v.date; ev.time = v.time; ev.staffId = v.staffId; ev.memo = v.memo; if (linked) evSyncTask(ev); else if (v.mkTask) evMakeTask(ev); stamp(ev); }
                     state.selDate = v.date; var d = parseYmd(v.date); state.calY = d.getFullYear(); state.calM = d.getMonth();
                     commit(isNew ? '일정을 저장했어요.' : '일정을 수정했어요.');
                 },
@@ -3038,7 +3052,7 @@
                     if (!isNew) { t = curOf(db.tasks, t); if (!t) { toast('다른 기기에서 지운 업무예요.'); return; } }
                     var pri = ['high', 'normal', 'low'].indexOf(v.priority) >= 0 ? v.priority : 'normal';
                     if (isNew) { var nt = { id: uid(), title: v.title, staffId: v.staffId, due: v.due, priority: pri, status: 'todo', memo: v.memo, u: 0 }; setTaskStatus(nt, v.status); setEst(nt, v.est); taskToTop(nt); db.tasks.push(stamp(nt)); }
-                    else { if (t.due && v.due && t.due !== v.due && !closed(t)) tlogAdd('move', t, t.due, v.due); t.title = v.title; t.staffId = v.staffId; t.due = v.due; t.priority = pri; setTaskStatus(t, v.status); t.memo = v.memo; setEst(t, v.est); stamp(t); taskSyncEv(t); }
+                    else { if (t.due && v.due && t.due !== v.due && !closed(t)) tlogAdd('move', t, t.due, v.due); var os0 = t.staffId; t.title = v.title; t.staffId = v.staffId; t.due = v.due; t.priority = pri; setTaskStatus(t, v.status); t.memo = v.memo; setEst(t, v.est); stamp(t); taskSyncEv(t); if (os0 !== v.staffId) taskEvStaff(t, v.staffId); }
                     commit(isNew ? '업무를 저장했어요.' : '업무를 수정했어요.' + (t && t.evId && taskEv(t) ? ' (캘린더에도 반영)' : ''));
                     if (pre.after) setTimeout(pre.after, 30);
                 },
@@ -4179,7 +4193,13 @@
                     h('div', { class: 't-main' }, h('div', { class: 't-title', 'data-n': num || null }, t.title),
                         t.from ? h('span', { class: 't-from' }, '↪ ' + (t.fromDate ? koDate(t.fromDate) + '에서' : '전날에서') + ' 연장된 업무') : null,
                         memoArea(t)),
-                    h('div', { class: 't-cell', 'data-label': '담당' }, whoTag(t.staffId)),
+                    h('div', { class: 't-cell', 'data-label': '담당' }, isBoss() && !closed(t) && !t.ext ? (function () {   // 대표: 담당자 바로 바꾸기
+                        var ws = h('select', { class: 't-whosel', 'data-fk': 'who-' + t.id, 'aria-label': t.title + ' 담당자 바꾸기', title: '담당자 바꾸기 (연결된 캘린더 일정도 같이 바뀌어요)', style: '--c:' + staffColor(t.staffId) },
+                            staffOptions(true).map(function (o) { return h('option', { value: o.v }, o.v ? staffName(o.v) : o.t); }));
+                        ws.value = t.staffId && staffById(t.staffId) ? t.staffId : '';
+                        ws.addEventListener('change', function () { taskSetStaff(t, this.value); });
+                        return ws;
+                    })() : whoTag(t.staffId)),
                     h('div', { class: 't-cell', 'data-label': '마감' }, dueTag(t)),
                     h('div', { class: 't-cell', 'data-label': '우선순위' }, h('span', { class: 'pri ' + t.priority }, PRIORITY.filter(function (p) { return p.v === t.priority; })[0].t)),
                     h('div', { class: 't-cell', 'data-label': '상태' }, t.ext ? h('span', { class: 't-ext', title: koDate(t.ext) + ' 업무로 옮겼어요' }, '→ 내일업무로 연장') : h('div', { class: 't-st' }, pauseBtn, sel),
@@ -7562,9 +7582,10 @@
             }
             if (ev) {
                 if (t && closed(t)) return { st: 'kept' };   // 이미 끝낸 업무는 그대로
-                if (ev.date === info.date && ev.title === info.title && ev.memo === info.memo && ev.staffId === info.sid && t) return { st: 'same' };
+                var sidK = ev.sidM && staffById(ev.staffId) ? ev.staffId : info.sid;   // 담당자를 직접 바꾼 일정은 그 담당자 그대로
+                if (ev.date === info.date && ev.title === info.title && ev.memo === info.memo && ev.staffId === sidK && t) return { st: 'same' };
                 var moved = ev.date !== info.date;
-                ev.title = info.title; ev.date = info.date; ev.memo = info.memo; ev.staffId = info.sid;
+                ev.title = info.title; ev.date = info.date; ev.memo = info.memo; ev.staffId = sidK;
                 if (t) evSyncTask(ev); else evMakeTask(ev);   // 할 일이 없어졌으면 다시 만듦
                 stamp(ev);
                 return { st: moved ? 'move' : 'edit' };
@@ -14138,7 +14159,7 @@
             if (ev) {   // 이미 있는 일정: 등록 날짜를 고쳤을 때만 날짜·담당자를 따라 옮김 (직접 옮긴 일정은 그대로)
                 var fixed = ev.date >= today && autoTaskFix(ev);   // 담당자 할 일이 빠져 있으면 다시
                 var t = evTask(ev);
-                if (r.rcd && r.rcd !== date && !(t && closed(t)) && due >= today) { ev.date = due; ev.staffId = sid; ev.title = info.title; ev.memo = info.memo; evSyncTask(ev); stamp(ev); r.rcd = date; save(); return ' 재케어 일정을 ' + koDate(due) + '로 옮겼어요.'; }
+                if (r.rcd && r.rcd !== date && !(t && closed(t)) && due >= today) { ev.date = due; if (!(ev.sidM && staffById(ev.staffId))) ev.staffId = sid; ev.title = info.title; ev.memo = info.memo; evSyncTask(ev); stamp(ev); r.rcd = date; save(); return ' 재케어 일정을 ' + koDate(due) + '로 옮겼어요.'; }
                 if (fixed) { save(); return ' 빠져 있던 재케어 할 일을 ' + staffName(ev.staffId) + ' 님 업무에 다시 넣었어요.'; }
                 return '';
             }
