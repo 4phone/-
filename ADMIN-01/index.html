@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-27U3guPWgtwmsSjoAbydzTkcWlSzn+3kgc5NmbaD/uk='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-GyXoYu19nPYTtIEHgdBwhyjeL4dMwr2B14rmSnaYTZQ='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -998,6 +998,9 @@
         .gl-tip:empty { display: none; }
         .gl-inbox { margin: 0 0 8px; font-size: 13px; color: #1F5FAF; font-weight: 700; }
         /* ---------- 가입고객리스트 새 화면 (카드 목록 · 고르기 창 · 새 스타일 실적장표) ---------- */
+        .idr-soho { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 2px; }
+        .idr-soho .btn { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 16px; min-width: 200px; text-align: left; }
+        .idr-soho .btn small { font-size: 11.5px; font-weight: 500; opacity: .85; }
         .gll-vbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 12px; }
         .gll-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
         .gll-q { flex: 1 1 220px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
@@ -2276,7 +2279,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-18.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-18.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -10718,6 +10721,7 @@
                 try { var el = U.parts ? U.parts[2] : U.memo; el.scrollIntoView({ block: 'center' }); (U.name.value ? el : U.name).focus({ preventScroll: true }); } catch (e) { /* 무시 */ }
             }, 30);
             toast(p.c.name + ' ' + p.r.n + ' 접수정보를 채웠어요. 고객 정보를 마저 적고 링크를 만들어 주세요.');
+            setTimeout(idrSohoAsk, 120);   // 소호 상품이면 개인사업자/법인 고르기
         }
         /* ---------- 계산기 (화면이 새로 그려져도 그대로, 숫자 칸은 직접 입력도 가능) ---------- */
         var calcEl = null;
@@ -12637,7 +12641,8 @@
             if (/본인/.test(own)) o.chk.push('paySame');
             else if (own) { S('payOwner', own.replace(/[\d\-\/(),.]+/g, ' ').replace(/\s+/g, ' ').trim()); var ob = dg(own); if (ob.length >= 6) S('payBirth', ob.slice(0, 6)); }
             var car = v('인터넷통신사'), cn = car.replace(/\s+/g, '').toUpperCase();
-            S('carrier', /헬로/.test(cn) ? 'LG헬로비전' : /스카이/.test(cn) ? '스카이라이프' : /U\+|LG|유플/.test(cn) ? 'U+' : /SK/.test(cn) ? 'SK' : /KT/.test(cn) ? 'KT' : car);
+            var soho = /소호|사업자/.test(cn);   // 소호 상품 → 'SK소호'·'U+소호' (가입 장부·단가표가 소호 단가로 계산)
+            S('carrier', /헬로/.test(cn) ? 'LG헬로비전' : /스카이/.test(cn) ? '스카이라이프' : /U\+|LG|유플/.test(cn) ? (soho ? 'U+소호' : 'U+') : /SK/.test(cn) ? (soho ? 'SK소호' : 'SK') : /KT/.test(cn) ? 'KT' : car);
             var net = v('인터넷상품'), wifi = v('WIFI 유,무');
             S('netPlan', net + (net && /유|O|있/i.test(wifi) && !/와이파이|WIFI/i.test(net) ? ' 와이파이' : ''));
             S('tvPlan', v('TV상품+셋탑1').replace(/\s*\(셋탑\s*\d+대\)\s*$/, ''));
@@ -12875,6 +12880,20 @@
             idr.ui = U;
             idrPaint();
             return U;
+        }
+        var idrSohoAt = 0;
+        function idrSohoAsk() {   // 접수 메모가 소호(사업자) 상품이면: 개인사업자 / 법인 고르기 팝업 → 고객 구분 자동 체크 (필요 서류가 바뀜)
+            var U = idr.ui; if (!U || state.view !== 'idreq' || Date.now() - idrSohoAt < 3000) return;
+            var t = intakeVal(U.memo.value, '인터넷통신사') + ' ' + intakeVal(U.memo.value, '인터넷상품');
+            if (!/소호|사업자/.test(t) || U.kind !== 'person') return;
+            idrSohoAt = Date.now();
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = '';
+            var pick = function (k) { closeDlg(); idrSetKind(k); toast('고객 구분을 ' + IDR_KINDS[k].label + '(으)로 골랐어요. 고객이 올릴 서류: ' + IDR_KINDS[k].docs.join(' · ')); };
+            dlg.appendChild(h('div', { class: 'dlg-head' }, '🏢 소호(사업자) 상품이에요'));
+            dlg.appendChild(h('div', { class: 'dlg-body' }, h('p', {}, h('b', {}, t.trim())), h('p', {}, '고객이 개인사업자인가요, 법인인가요? 고르면 고객 구분이 자동으로 체크되고, 고객이 올릴 서류가 바뀌어요.'),
+                h('div', { class: 'idr-soho' }, ['biz', 'corp'].map(function (k) { return h('button', { type: 'button', class: 'btn btn-primary', 'data-kind': k, onclick: function () { pick(k); } }, IDR_KINDS[k].label, h('small', {}, IDR_KINDS[k].docs.join(' · '))); }))));
+            dlg.appendChild(h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: function () { closeDlg(); } }, '개인으로 그대로 (신분증만)')));
+            showDlg(dlg);
         }
         function idrSetKind(k) {   // 개인 / 개인사업자 / 법인: 고객이 올릴 서류가 달라짐
             var U = idr.ui; if (!U) return;
@@ -14873,6 +14892,7 @@
                 try { var el = U.parts ? U.parts[0] : U.memo; el.scrollIntoView({ block: 'center' }); (U.name.value ? el : U.name).focus({ preventScroll: true }); } catch (e) { /* 무시 */ }
                 toast(fill ? '신분증 요청에 휴대폰 · 접수정보를 채웠어요.' + feeMsg + ' 비어 있는 빨간 칸만 마저 적어 주세요.' : '적던 내용은 그대로 두고 신분증 요청으로 왔어요.');
             }, 40);
+            setTimeout(idrSohoAsk, 120);
         }
         function clMemoSave() {   // 상담 완료: 상담 리스트에 한 줄로 저장하고 상담 리스트로 이동
             var M = cl.memo, s = clMemoSheet();
@@ -14919,6 +14939,7 @@
                 M.open = false; clMemoBlank(M); clMemoPaint();
                 if (fill && kdS === 'net' && (polPick || polLast)) polToIdr(); else { state.view = 'idreq'; render(); }
                 polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null; polTv = { key: '', n: {} };
+                setTimeout(idrSohoAsk, 150);
                 setTimeout(function () { toast('판매성공 — 상담 리스트 "' + s.name + '"에 저장하고 신분증 요청으로 왔어요. ' + (fill ? '고객 정보와 접수 메모를 채웠어요. 빨간 줄(빈 칸)만 마저 적고 링크를 보내 주세요.' : '고객 이름을 적고 링크를 보내 주세요.')); try { (U.name.value ? U.phone : U.name).focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }, 80);
                 return;
             }
