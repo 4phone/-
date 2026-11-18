@@ -1278,6 +1278,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         .sga-msg.me p { background: #134047; color: #FFFFFF; padding: 10px 14px; border-radius: 16px 4px 16px 16px; }
         .sga-cards { display: grid; gap: 8px; }
         .sga-card { background: #FFFFFF; border: 1.5px solid #DCE7E5; border-radius: 16px; padding: 12px 14px; display: grid; gap: 6px; }
+        .sga-spec { justify-self: start; font-size: 12.5px; font-weight: 700; color: #134047; background: #EAF4F1; border: 1px solid #CFE3DE; border-radius: 999px; padding: 3px 10px; }   /* 렌탈 카드: 크기·종류 */
         .sga-card.top { border-color: #E2C27A; box-shadow: 0 8px 20px rgba(138,100,24,0.12); }
         .sga-c-h { display: flex; align-items: center; gap: 8px; }
         .sga-c-h b { font-size: 15px; line-height: 1.35; word-break: keep-all; }
@@ -4904,6 +4905,28 @@ var SGAI = (function () {
         mm = /(\d{1,2})\s*(?:kg|키로|킬로)/.exec(c); if (mm) o.kg = parseInt(mm[1], 10);
         mm = /(\d{2,3})\s*인치/.exec(c); if (mm) o.inch = parseInt(mm[1], 10);
         if (rx(c, /라지킹/)) o.bed = 'LK'; else if (rx(c, /슈퍼싱글|ss사이즈/)) o.bed = 'SS'; else if (rx(c, /퀸/)) o.bed = 'Q'; else if (rx(c, /킹/)) o.bed = 'K'; else if (rx(c, /싱글/)) o.bed = 'S';
+        /* 렌탈 크기 · 종류 (11-18 대표님: '큰 침대' '양문형 냉장고' '큰 세탁기'를 못 알아듣던 것) */
+        if (rx(c, /큰(거|걸|게|것|사이즈|용량|냉장|세탁|침대|매트|tv|티비|에어컨|건조|김치|공기|식기|정수|$)|대형|대용량|크고|큼직|넉넉|커다란|빅사이즈|패밀리|가족용|대가족|식구많|4인가족|5인가족|넓은|와이드|최대용량|용량큰|용량많|제일큰|가장큰|젤큰|더큰|좀큰|큰게좋|사이즈큰|크기큰/)) o.size = 'big';
+        else if (rx(c, /작은|소형|미니|작고|1인|일인|혼자|자취|원룸|오피스텔|컴팩트|좁은|아담|소용량|더작|사이즈작|크기작|2인가구|신혼/)) o.size = 'small';
+        var sub = '';
+        if (rx(c, /양문형|양문|사이드바이사이드/)) sub = '양문형';
+        else if (rx(c, /4도어|포도어|네도어|4door/)) sub = '4도어';
+        else if (rx(c, /2도어|투도어|일반냉장고|상냉장|하냉동/)) sub = '2도어';
+        else if (rx(c, /1도어|원도어|냉장전용|컨버터블|키친핏|빌트인|붙박이/)) sub = '1도어';
+        else if (rx(c, /워시타워|원바디|워시콤보|세탁건조기|일체형|(세탁기|세탁)(랑|하고|와|과|\+|&|및)?(건조기)|(건조기)(랑|하고|와|과|\+|&|및)?(세탁기)|세트/) && rx(c, /세탁|건조|워시/)) sub = '세탁+건조';
+        else if (rx(c, /건조기/) && !rx(c, /세탁기|세탁/)) sub = '건조기';
+        else if (rx(c, /통돌이|통버블|일반세탁기|위로여는|위에서여는/)) sub = '통돌이';
+        else if (rx(c, /드럼|트롬|앞으로여는|앞에서여는/)) sub = '드럼';
+        else if (rx(c, /투인원|2in1|홈멀티|멀티에어컨/)) sub = '2in1';
+        else if (rx(c, /벽걸이/)) sub = '벽걸이';
+        else if (rx(c, /스탠드(형|에어컨)?/) && rx(c, /에어컨|에어콘|냉난방/)) sub = '스탠드';
+        else if (rx(c, /창문형/)) sub = '창문형';
+        else if (rx(c, /올레드|oled/)) sub = 'OLED';
+        else if (rx(c, /qled|큐엘이디|네오qled/)) sub = 'QLED';
+        if (sub) o.sub = sub;
+        if (!sub && rx(c, /세탁기/) && !rx(c, /건조/)) o.noDry = true;   // '큰 세탁기' 에 건조기 단품은 빼기
+        if (!o.kind && o.size && rx(c, /tv|티비|텔레비/) && !rx(c, /인터넷|iptv|채널|결합|셋톱/)) o.kind = 'TV';   // '큰 TV 추천'
+        if (rx(c, /프레임|침대틀|받침/)) o.part = '프레임'; else if (rx(c, /매트리스|매트릭스|메트리스|토퍼/)) o.part = '매트리스';
         // 인터넷
         o.net = !!any(c, NET) || rx(c, /\d+\s*(m|메가|기가|g)\b/);
         var phoneBundle = rx(c, /(휴대폰|핸드폰|폰|가족폰)(이랑|하고|과|와|도|까지|을|를|이랑도)?(같이|묶|합쳐|세트|한번에)|(묶|합쳐)(서|어서)?(휴대폰|핸드폰|폰)/);
@@ -4964,14 +4987,15 @@ var SGAI = (function () {
     /* 대화 상태에 합치기 */
     function merge(st, o) {
         if (o.kind || o.rentAny) {
-            if (st.topic !== 'rent' || (o.kind && o.kind !== st.r.kind) || (!o.kind && /다른/.test(o.raw))) st.r = {};
+            if (st.topic !== 'rent' || (o.kind && o.kind !== st.r.kind) || (!o.kind && /다른/.test(o.raw)) || (o.kind && /전체|모두|다\s*보여/.test(o.raw))) st.r = {};   // '냉장고 전체 보기' → 조건 지우고 처음부터
             st.topic = 'rent';
-            ['kind', 'feat', 'brands', 'pyeong', 'liter', 'kg', 'inch', 'bed', 'notBrands', 'notFeat'].forEach(function (k) { if (o[k] != null) st.r[k] = o[k]; });
+            ['kind', 'feat', 'brands', 'pyeong', 'liter', 'kg', 'inch', 'bed', 'notBrands', 'notFeat', 'size', 'sub', 'part', 'noDry'].forEach(function (k) { if (o[k] != null) st.r[k] = o[k]; });
             if (o.budget) st.r.budget = o.budget;
             if (o.prio) st.r.prio = o.prio;
         } else if (o.biz && !o.kind) {
             st.topic = 'biz';
-        } else if (st.topic === 'rent' && !o.netStrong && (o.prio || o.budget || o.feat || o.brands || o.notBrands || o.notFeat)) {
+        } else if (st.topic === 'rent' && !o.netStrong && (o.prio || o.budget || o.feat || o.brands || o.notBrands || o.notFeat || o.size || o.sub || o.part || o.bed || o.liter || o.kg || o.inch || o.pyeong)) {
+            ['size', 'sub', 'part', 'bed', 'liter', 'kg', 'inch', 'pyeong'].forEach(function (k) { if (o[k] != null) st.r[k] = o[k]; });   // '더 큰 거', '양문형으로' 같은 이어 말하기
             if (o.notBrands) { st.r.notBrands = o.notBrands; if (st.r.brands) st.r.brands = st.r.brands.filter(function (b) { return o.notBrands.indexOf(b) < 0; }); if (st.r.brands && !st.r.brands.length) delete st.r.brands; }
             if (o.notFeat) st.r.notFeat = o.notFeat;
             if (o.prio) st.r.prio = o.prio; if (o.budget) st.r.budget = o.budget; if (o.feat) st.r.feat = o.feat; if (o.brands) st.r.brands = o.brands;
@@ -4990,7 +5014,8 @@ var SGAI = (function () {
             if (o.budget) st.n.budget = o.budget;
             if (o.people) st.n.people = o.people;
             if (o.alddeul) st.n.alddeul = true;
-        } else if (st.topic === 'rent' && (o.prio || o.budget || o.feat || o.brands)) {
+        } else if (st.topic === 'rent' && (o.prio || o.budget || o.feat || o.brands || o.size || o.sub || o.part)) {
+            ['size', 'sub', 'part'].forEach(function (k) { if (o[k] != null) st.r[k] = o[k]; });
             if (o.prio) st.r.prio = o.prio; if (o.budget) st.r.budget = o.budget; if (o.feat) st.r.feat = o.feat; if (o.brands) st.r.brands = o.brands;
         }
         return st;
@@ -5040,11 +5065,68 @@ var SGAI = (function () {
         var out = []; if (ice) out.push('얼음'); if (hot) out.push('냉온'); if (/직수/.test(n)) out.push('직수'); if (only && !hot && !cold) out.push('정수전용'); if (cold && !hot) out.push('냉정'); return out;
     }
     function numIn(t, r) { var m = r.exec(t || ''); return m ? parseFloat(m[1].replace(/,/g, '')) : null; }
+    /* 렌탈 상품 하나의 크기·종류 (이름·요약·모델명에서 읽음 · 11-18) */
+    var BED_RANK = { S: 1, SS: 2, Q: 3, K: 4, LK: 5 }, BED_NAME = { S: '싱글', SS: '슈퍼싱글', Q: '퀸', K: '킹', LK: '라지킹' };
+    function attrsOf(p) {
+        if (p._a) return p._a;
+        var nm = String(p.name || ''), sm = String(p.sum || ''), t = nm + ' | ' + sm, md = String(p.model || ''), k = String(p.kind || ''), a = { cap: null, unit: '', sub: '', beds: [], part: '' };
+        if (/냉장|냉동|김치|와인/.test(k)) {
+            var li = numIn(nm, /([\d,]{2,5})\s*L(?![A-Za-z])/) || numIn(sm, /(?:전체용량|총용량|전체 용량 \(L\)|용량)\s*:\s*([\d,]{2,5})/) || numIn(sm, /([\d,]{2,5})\s*L(?![A-Za-z])/);
+            if (li && li < 3000) { a.cap = li; a.unit = 'L'; }
+            if (/김치/.test(nm)) a.sub = '김치';
+            else if (/냉동고|냉동전용/.test(nm)) a.sub = '냉동고';
+            else if (/양문형/.test(t)) a.sub = '양문형';
+            else if (/4\s*도어|포도어|도어(개수|수)\s*:\s*4/.test(t)) a.sub = '4도어';
+            else if (/1\s*도어|냉장전용|컨버터블|도어(개수|수)\s*:\s*1/.test(t)) a.sub = '1도어';
+            else if (/2\s*도어|상냉장|하냉동|도어(개수|수)\s*:\s*2|일반\s*냉장고|일반냉장고/.test(t)) a.sub = '2도어';
+        } else if (/세탁|건조/.test(k)) {
+            var kg = numIn(nm, /([\d.]{1,4})\s*kg/i) || numIn(sm, /(?:세탁용량|건조용량)\s*:\s*([\d.]+)/);
+            if (kg && kg < 60) { a.cap = kg; a.unit = 'kg'; }
+            if (/워시타워|원바디|워시콤보|세탁건조기|세트|\+\s*건조기|세탁기.*건조기/.test(nm)) a.sub = '세탁+건조';
+            else if (/건조기/.test(nm) && !/세탁기|세탁/.test(nm)) a.sub = '건조기';
+            else if (/통돌이|통버블/.test(nm) || /^(TR?\d|WA\d)/i.test(md) || /세탁기_?\d+kg\s*T\d/i.test(nm)) a.sub = '통돌이';
+            else a.sub = '드럼';
+        } else if (/매트리스|침대/.test(k)) {
+            a.part = /프레임|침대틀|파운데이션|헤드보드/.test(nm) ? '프레임' : '매트리스';
+            var bs = nm.replace(/\s+/g, '');
+            if (/라지킹|\bLK\b|\(LK\)/.test(nm) || /라지킹/.test(bs)) a.beds.push('LK');
+            if (/(^|[^지])킹|\bK\b|\(Q?\/?K\)|QK|Q\/K|\/K\)/.test(bs.replace(/라지킹/g, ''))) a.beds.push('K');
+            if (/퀸|\bQ\b|\(Q|Q\/|QK|\/Q/.test(nm)) a.beds.push('Q');
+            if (/슈퍼싱글|\bSS\b|\(SS|SS\//.test(nm)) a.beds.push('SS');
+            else if (/싱글|\bS\b/.test(nm)) a.beds.push('S');
+            if (a.beds.length) { a.cap = Math.max.apply(null, a.beds.map(function (b) { return BED_RANK[b]; })); a.capMin = Math.min.apply(null, a.beds.map(function (b) { return BED_RANK[b]; })); }
+        } else if (k === 'TV' || k === '모니터') {
+            var inch = numIn(nm, /(\d{2,3})\s*(?:인치|형|"|”)/) || (numIn(nm, /(\d{2,3})\s*cm/i) ? Math.round(numIn(nm, /(\d{2,3})\s*cm/i) / 2.54) : null);
+            if (inch) { a.cap = inch; a.unit = '인치'; }
+            if (/oled|올레드/i.test(nm)) a.sub = 'OLED'; else if (/qled/i.test(nm)) a.sub = 'QLED';
+        } else if (k === '에어컨' || k === '냉난방기') {
+            var py = numIn(t, /([\d.]{1,3})\s*평/); if (py) { a.cap = py; a.unit = '평'; }
+            if (/2\s*in\s*1|투인원|홈멀티|멀티/i.test(nm) || (/스탠드/.test(nm) && /벽걸이/.test(nm))) a.sub = '2in1';
+            else if (/창문/.test(nm)) a.sub = '창문형';
+            else if (/벽걸이/.test(nm)) a.sub = '벽걸이';
+            else if (/스탠드/.test(nm)) a.sub = '스탠드';
+            else if (/시스템|천장/.test(nm)) a.sub = '시스템';
+        } else {
+            var py2 = numIn(t, /([\d.]{1,3})\s*평/) || (numIn(t, /(?:사용면적|전용면적)\s*:\s*([\d.]+)\s*(?:㎡|m2|m²)/i) ? Math.round(numIn(t, /(?:사용면적|전용면적)\s*:\s*([\d.]+)\s*(?:㎡|m2|m²)/i) / 3.3) : null);
+            if (py2 && py2 < 200) { a.cap = py2; a.unit = '평'; }
+            else { var l2 = numIn(nm, /([\d,]{1,4})\s*L(?![A-Za-z])/); if (l2) { a.cap = l2; a.unit = 'L'; } }
+        }
+        try { Object.defineProperty(p, '_a', { value: a, enumerable: false }); } catch (e) { }
+        return a;
+    }
+    function specOf(p) {   // 카드에 보일 한 줄 (예: 양문형 · 832L)
+        var a = attrsOf(p), out = [];
+        if (a.part) out.push(a.part);
+        if (a.beds.length) out.push(a.beds.slice().sort(function (x, y) { return BED_RANK[x] - BED_RANK[y]; }).map(function (b) { return BED_NAME[b]; }).join('·'));
+        if (a.sub && a.sub !== '김치') out.push(a.sub);
+        if (a.cap && a.unit) out.push((a.unit === '평' ? '약 ' : '') + (a.cap >= 1000 ? a.cap.toLocaleString('en-US') : a.cap) + a.unit);
+        return out.join(' · ');
+    }
     function rentPick(items, r) {
         var list = (items || []).filter(function (p) {
             if (!p || !p.cos || !p.cos.length) return false;
             if (r.kind === '정수기') { if (p.cat !== '정수기') return false; }
-            else if (r.kind) { var k = String(p.kind || ''); if (!(k === r.kind || k.indexOf(r.kind) >= 0 || r.kind.indexOf(k) >= 0 && k) && !(r.kind === '에어컨' && /냉난방|에어컨/.test(k))) return false; }
+            else if (r.kind) { var k = String(p.kind || ''); var FR = /^(냉장고|김치냉장고|냉동고|업소용 냉장고)$/; if (!(k === r.kind || !FR.test(r.kind) && !FR.test(k) && (k.indexOf(r.kind) >= 0 || r.kind.indexOf(k) >= 0 && k)) && !(r.kind === '에어컨' && /냉난방|에어컨/.test(k)) && !((r.kind === '김치냉장고' || r.kind === '냉동고') && k === '냉장고' && (r.kind === '김치냉장고' ? /김치/ : /냉동고|냉동전용/).test(String(p.name || '')))) return false; }
             if (r.brands && r.brands.length && !r.brands.some(function (b) { return String(p.brand || '').indexOf(b) >= 0 || String(p.name || '').indexOf(b) >= 0 || (b === '세라젬' && /세라잼/.test(p.brand)); })) return false;
             if (r.notBrands && r.notBrands.some(function (b) { return String(p.brand || '').indexOf(b) >= 0; })) return false;
             if (r.notFeat && r.notFeat.length && !(r.feat && r.feat.length)) { var nf = featOf(p); if (r.notFeat.some(function (x) { return nf.indexOf(x) >= 0; })) return false; }
@@ -5054,6 +5136,14 @@ var SGAI = (function () {
             if (r.liter) { var li = numIn(p.sum, /전체용량\s*:\s*([\d.,]+)/) || numIn(p.name, /([\d.,]+)\s*L(?![A-Za-z])/); if (li != null && Math.abs(li - r.liter) > r.liter * 0.25) return false; }
             if (r.kg) { var kg = numIn(p.sum, /(?:세탁용량|건조용량)\s*:\s*([\d.]+)/) || numIn(p.name, /([\d.]+)\s*kg/i); if (kg != null && Math.abs(kg - r.kg) > 4) return false; }
             if (r.bed) { var nm = String(p.name); var hasB = { LK: /라지킹|\bLK\b/, SS: /슈퍼싱글|\bSS\b/, Q: /퀸|\bQK?\b/, K: /킹|\bK\b|\bQK\b/, S: /싱글/ }[r.bed]; if (hasB && !hasB.test(nm)) return false; }
+            var at = attrsOf(p);
+            if (r.sub) {   // 양문형 · 4도어 · 드럼 · 통돌이 · 건조기 · 세탁+건조 · 스탠드 · 벽걸이 · OLED …
+                if (r.sub === '세탁+건조') { if (at.sub !== '세탁+건조') return false; }
+                else if (r.sub === '드럼') { if (at.sub !== '드럼' && at.sub !== '세탁+건조') return false; }
+                else if (at.sub !== r.sub) return false;
+            } else if (r.kind === '냉장고' && (at.sub === '김치' || at.sub === '냉동고' || /업소용/.test(String(p.name || '')))) return false;   // 그냥 '냉장고'면 김치냉장고·냉동고·업소용은 빼고
+            else if (r.noDry && at.sub === '건조기') return false;   // '세탁기'만 말하면 건조기 단품은 빼고
+            if (r.part && at.part && at.part !== r.part) return false;
             return true;
         }).map(function (p) {
             var best = null, maxG = 0;
@@ -5063,10 +5153,19 @@ var SGAI = (function () {
         if (r.budget) { var ok = list.filter(function (x) { return x.low && x.low <= r.budget; }); if (ok.length) list = ok; }
         var prio = r.prio || 'gift';
         list.sort(function (a, b) { if (prio === 'cheap') return (a.low - b.low) || (b.maxG - a.maxG); return (b.maxG - a.maxG) || (a.low - b.low); });
+        if (r.size) {   // '큰' → 용량·크기 큰 순 · '작은' → 작은 순 (크기를 모르는 상품은 뒤로) · 같은 크기면 위 순서(요금) 그대로
+            var big = r.size === 'big', ord = list.map(function (x, i) { return [x, i]; });
+            ord.sort(function (A, B) {
+                var a1 = attrsOf(A[0].p), b1 = attrsOf(B[0].p), ac = big ? a1.cap : (a1.capMin || a1.cap), bc = big ? b1.cap : (b1.capMin || b1.cap);
+                if (ac == null && bc == null) return A[1] - B[1]; if (ac == null) return 1; if (bc == null) return -1;
+                return (big ? bc - ac : ac - bc) || (A[1] - B[1]);
+            });
+            list = ord.map(function (x) { return x[0]; });
+        }
         return list;
     }
 
-    return { parse: parse, merge: merge, netPick: netPick, rentPick: rentPick, featOf: featOf, FULL: FULL, giftMan: giftMan, KINDS: KINDS.map(function (k) { return k[0]; }) };
+    return { parse: parse, merge: merge, netPick: netPick, rentPick: rentPick, featOf: featOf, attrsOf: attrsOf, specOf: specOf, FULL: FULL, giftMan: giftMan, KINDS: KINDS.map(function (k) { return k[0]; }) };
 })();
 if (typeof module !== 'undefined') module.exports = SGAI;
 
@@ -5294,19 +5393,34 @@ if (typeof module !== 'undefined') module.exports = SGAI;
         loadRent().then(function (items) {
             st.busy = false; wait.remove();
             var list = A.rentPick(items, r);
-            if (!list.length && (r.feat || r.brands || r.pyeong || r.liter || r.kg || r.inch || r.bed)) {
+            if (!list.length && (r.feat || r.brands || r.pyeong || r.liter || r.kg || r.inch || r.bed || r.sub || r.part)) {
                 bot('그 조건에 딱 맞는 ' + r.kind + '는 지금 없어서, 조건을 조금 넓혀서 보여드릴게요.');
-                list = A.rentPick(items, { kind: r.kind, prio: r.prio, budget: r.budget });
+                list = A.rentPick(items, { kind: r.kind, prio: r.prio, budget: r.budget, size: r.size, sub: r.sub, part: r.part });
+                if (!list.length) list = A.rentPick(items, { kind: r.kind, prio: r.prio, budget: r.budget, size: r.size });
             }
             if (!list.length) { bot(r.kind + ' 상품은 지금 목록에 없어요. 번호 남겨 주시면 따로 찾아서 안내해 드릴게요.'); offerHuman(r.kind + ' 렌탈 상담'); return; }
-            var top = list.slice(0, 3);
+            var top = list.slice(0, 5);   // 11-18: 3개 → 5개 (크기·종류 한 줄씩)
             st.cards = top.map(function (x) { return { kind: 'rent', x: x }; });
-            var cond = []; if (r.brands) cond.push(r.brands.join('·')); if (r.feat) cond.push(r.feat.join('·')); if (r.pyeong) cond.push(r.pyeong + '평 이상'); if (r.inch) cond.push(r.inch + '인치'); if (r.liter) cond.push(r.liter + 'L'); if (r.kg) cond.push(r.kg + 'kg'); if (r.budget) cond.push('월 ' + won(r.budget) + ' 이하');
-            bot(r.kind + ' ' + list.length + '개 중에서 ' + (r.prio === 'cheap' || !RG() ? '월 요금 싼 순' : '사은품 많은 순') + '으로 골랐어요' + (cond.length ? ' (' + cond.join(' · ') + ')' : '') + '.',
+            var cond = []; if (r.sub) cond.push(r.sub); if (r.part) cond.push(r.part); if (r.bed) cond.push({ LK: '라지킹', K: '킹', Q: '퀸', SS: '슈퍼싱글', S: '싱글' }[r.bed]); if (r.brands) cond.push(r.brands.join('·')); if (r.feat) cond.push(r.feat.join('·')); if (r.pyeong) cond.push(r.pyeong + '평 이상'); if (r.inch) cond.push(r.inch + '인치'); if (r.liter) cond.push(r.liter + 'L'); if (r.kg) cond.push(r.kg + 'kg'); if (r.budget) cond.push('월 ' + won(r.budget) + ' 이하');
+            var unitW = r.kind === '매트리스·침대' ? ['큰 사이즈 순', '작은 사이즈 순'] : r.kind === 'TV' || r.kind === '모니터' ? ['큰 화면 순', '작은 화면 순'] : /에어컨|공기청정기|제습기|가습기/.test(r.kind) ? ['넓은 평수 순', '좁은 평수 순'] : ['큰 용량 순', '작은 용량 순'];
+            var how = r.size === 'big' ? unitW[0] : r.size === 'small' ? unitW[1] : (r.prio === 'cheap' || !RG() ? '월 요금 싼 순' : '사은품 많은 순');
+            bot(r.kind + (cond.length ? ' (' + cond.join(' · ') + ')' : '') + ' ' + list.length + '개 중에서 ' + how + '으로 ' + top.length + '개 골랐어요.',
                 h('div', { class: 'sga-cards' }, top.map(function (x, i) { return rentCard(x, i); })),
                 h('a', { class: 'sga-link', href: rentListUrl(r) }, '🔎 ' + r.kind + ' 전체 ' + list.length + '개 비교하기'));
             var ch = RG() ? [r.prio === 'cheap' ? '사은품 많은 순으로' : '월 요금 싼 순으로'] : [];
             if (r.kind === '정수기') ['얼음 정수기', '냉온 정수기', '직수 정수기'].forEach(function (x) { ch.push(x); });
+            var MORE = {   // 종류별로 이어서 고르기 (지금 고른 것은 빼고)
+                '냉장고': ['양문형 냉장고', '4도어 냉장고', '2도어 냉장고', '1도어 냉장고', '큰 냉장고', '작은 냉장고'],
+                '김치냉장고': ['큰 김치냉장고', '작은 김치냉장고'],
+                '세탁기·건조기': ['드럼 세탁기', '통돌이 세탁기', '건조기', '세탁기+건조기 세트', '큰 세탁기', '작은 세탁기'],
+                '매트리스·침대': ['킹 매트리스', '퀸 매트리스', '슈퍼싱글 매트리스', '침대 프레임', '큰 침대'],
+                '에어컨': ['스탠드 에어컨', '벽걸이 에어컨', '2in1 에어컨', '큰 평수 에어컨'],
+                'TV': ['큰 TV', 'OLED TV', '작은 TV'],
+                '공기청정기': ['큰 평수 공기청정기', '작은 공기청정기']
+            }[r.kind] || [];
+            var mine = (r.sub || '') + (r.part || '') + (r.size === 'big' ? '큰' : r.size === 'small' ? '작은' : '');
+            MORE.filter(function (x) { var q = A.parse(x); return !((q.sub && q.sub === r.sub) || (q.size && q.size === r.size && !q.sub && !q.part) || (q.part && q.part === r.part && !q.bed) || (q.bed && q.bed === r.bed)); }).slice(0, 4).forEach(function (x) { ch.push(x); });
+            if (r.sub || r.size || r.part) ch.push(r.kind + ' 전체 보기');
             var brands = []; list.slice(0, 40).forEach(function (x) { var b = x.p.brand; if (b && brands.indexOf(b) < 0) brands.push(b); });
             brands.filter(function (b) { var q = A.parse(b + ' ' + r.kind); return q.brands && q.brands.length && (!r.brands || r.brands.indexOf(q.brands[0]) < 0); }).slice(0, 4).forEach(function (b) { ch.push(b + ' ' + r.kind); });
             ch.push('다른 가전 렌탈');
@@ -5332,6 +5446,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
                 p.img ? h('img', { class: 'sga-img', src: p.img, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : null,
                 h('b', { text: p.name })),
             h('div', { class: 'sga-c-r' }, h('span', { class: 'sga-fee' }, '월 ' + won(x.low) + '~'), h('small', { text: p.brand || '' })),
+            A.specOf(p) ? h('div', { class: 'sga-spec', text: A.specOf(p) }) : null,   // 크기·종류 한 줄 (예: 양문형 · 832L)
             RG() ? h('div', { class: 'sga-gift' }, x.maxG ? '🎁 사은품 최대 ' + x.maxG + '만원' : '사은품은 상담 시 안내') : null,
             h('a', { class: 'sga-apply', href: 'rental.html?id=' + encodeURIComponent(p.id) }, '자세히 보고 바로 접수'));
     }
