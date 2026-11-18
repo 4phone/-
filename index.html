@@ -5147,7 +5147,8 @@ var SGAI = (function () {
             return true;
         }).map(function (p) {
             var best = null, maxG = 0;
-            p.cos.forEach(function (c) { c.plans.forEach(function (x) { var g = giftMan(x.g); if (g > maxG) maxG = g; if (!best || x.fee < best.fee) best = { co: c.name, m: x.m, fee: x.fee, g: x.g }; }); });
+            var anyN = p.cos.some(function (c) { return c.plans.some(function (x) { return !x.biz; }); });   // 사업자 전용이 아닌 조건이 있으면 그것 중 최저
+            p.cos.forEach(function (c) { c.plans.forEach(function (x) { var g = giftMan(x.g); if (g > maxG) maxG = g; if (anyN && x.biz) return; if (!best || x.fee < best.fee) best = { co: c.name, m: x.m, fee: x.fee, g: x.g, biz: !!x.biz }; }); });
             return { p: p, low: best ? best.fee : (p.low || 0), maxG: maxG, best: best };
         });
         if (r.budget) { var ok = list.filter(function (x) { return x.low && x.low <= r.budget; }); if (ok.length) list = ok; }
@@ -5174,7 +5175,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
     if (!window.SGAI) return;
     var A = window.SGAI;
     var st = { topic: '', n: {}, r: {}, cards: [], hist: [], rentItems: null, busy: false };
-    var FEED = 'https://modil.co.kr/api/feed/rental', CK = window.SG_RENT_GIFT_SHOW === true ? 'sg-ai-rent-v1' : 'sg-ai-rent-v1n', TTL = 30 * 60 * 1000;
+    var FEED = 'https://modil.co.kr/api/feed/rental', CK = window.SG_RENT_GIFT_SHOW === true ? 'sg-ai-rent-v2' : 'sg-ai-rent-v2n', TTL = 30 * 60 * 1000;
     var TEL = '1833-2440', KAKAO = 'https://pf.kakao.com/_PxjsKG/chat';
     var $ = function (id) { return document.getElementById(id); };
     function h(tag, attrs) {
@@ -5374,7 +5375,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
                         var g = S(x.gift, 120), k = cn + '|' + model + '|' + N(x.contractMonths) + '|' + fee, gw = Object.prototype.hasOwnProperty.call(G, k) ? G[k] : null;
                         if (!g && typeof gw === 'number' && gw > 0) g = giftTxt(gw);
                         if (!RG()) g = '';   // 렌탈 사은품 숨김 중
-                        plans.push({ m: N(x.contractMonths), fee: fee, g: g });
+                        plans.push({ m: N(x.contractMonths), fee: fee, g: g, biz: /사업자/.test(S(x.benefit, 80)), ct: S(x.careType, 60) });   // 11-18 모딜 새 칸: 사업자 전용 · 관리 방식
                     });
                     if (plans.length) cos.push({ name: cn, plans: plans });
                 });
@@ -5446,7 +5447,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
                 p.img ? h('img', { class: 'sga-img', src: p.img, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' }) : null,
                 h('b', { text: p.name })),
             h('div', { class: 'sga-c-r' }, h('span', { class: 'sga-fee' }, '월 ' + won(x.low) + '~'), h('small', { text: p.brand || '' })),
-            A.specOf(p) ? h('div', { class: 'sga-spec', text: A.specOf(p) }) : null,   // 크기·종류 한 줄 (예: 양문형 · 832L)
+            A.specOf(p) || (x.best && x.best.biz) ? h('div', { class: 'sga-spec', text: [A.specOf(p), x.best && x.best.biz ? '사업자 전용' : ''].filter(Boolean).join(' · ') }) : null,   // 크기·종류 한 줄 (예: 양문형 · 832L)
             RG() ? h('div', { class: 'sga-gift' }, x.maxG ? '🎁 사은품 최대 ' + x.maxG + '만원' : '사은품은 상담 시 안내') : null,
             h('a', { class: 'sga-apply', href: 'rental.html?id=' + encodeURIComponent(p.id) }, '자세히 보고 바로 접수'));
     }
