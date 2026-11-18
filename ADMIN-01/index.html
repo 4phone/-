@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-A/7a4v+DbeXQ+adsrSbiw3VqdR1UW+LX0w3o8KMr7O4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dqA1FmBi286W50gcdckCDwMo3wsZx5UnYlp6VKEGgoA='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2280,7 +2280,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-18.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-18.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -13919,10 +13919,16 @@
                 if (!cur) { toast('다른 직원이 이 줄을 지웠어요. 화면을 새로고침해 주세요.'); closeDlg(); render(); return; }
                 if (isNew) cur.v = v;
                 else Object.keys(v).concat(Object.keys(orig0)).forEach(function (k) { var nv = v[k] || '', ov = orig0[k] || ''; if (nv !== ov) { if (nv) cur.v[k] = nv; else delete cur.v[k]; } });
+                var famE = cur.ty === 'row' ? clFamFor(P.kind, s) : s, movedE = '';
+                if (P.kind === 'mob' && !famE) toast('📱 모바일 상담인데 \'모바일\' 시트가 없어서 이 시트에 그대로 저장해요.');
+                else if (famE && famE !== s) {   // 상담 종류에 맞는 시트로 옮김 (모바일 ↔ 달 시트) — 칸 이름이 같은 값끼리, 없는 칸은 상담 내용 아래로
+                    var fromS = s; cur.v = clMapVals(cur.v, fromS, famE); cur.sh = famE.id; s = famE; movedE = famE.name;
+                    if (!isNew) { var mo2 = 0; clRowsOf(famE.id).forEach(function (x) { if (x.id !== cur.id) mo2 = Math.max(mo2, x.o); }); cur.o = mo2 + 1; }
+                }
                 if (isNew || (P.st || 'n') !== origSt) cur.st = P.st || 'n'; if (P.keepC) cur.c = P.keepC; else delete cur.c;
                 if (isNew) { var mo = 0; clRowsOf(s.id).forEach(function (x) { mo = Math.max(mo, x.o); }); cur.o = mo + 1; cl.data.rows.push(cur); }
                 var rcMsg = clRecare(cur, s);
-                clStamp(cur); closeDlg(); clQueue(); render(); toast((isNew ? '상담을 추가했어요.' : '상담 내용을 고쳤어요.') + rcMsg);
+                clStamp(cur); closeDlg(); if (movedE) { cl.sheet = s.id; cl.hl = cur.id; } clQueue(); render(); toast((isNew ? '상담을 추가했어요.' : '상담 내용을 고쳤어요.') + (movedE ? ' 📱 상담 종류에 맞게 "' + movedE + '" 시트로 옮겼어요.' : '') + rcMsg);
                 if (isNew) clProspect(cur, s);   // 새 상담도 판매성공이 아니면 '가망' 연락처로
             } }, h('div', { class: 'dlg-head' }, (isNew ? '상담 추가' : '상담 고치기') + ' · ' + s.name),
                 h('div', { class: 'dlg-body' }, h('div', { class: 'cl-form' }, P.kindSeg, h('div', { class: 'cl-meta' }, '상태 (줄 색)'), pick, fields, meta)),
@@ -14019,6 +14025,30 @@
                 return v;
             };
             return P;
+        }
+        function clIsMobS(s) { return !!s && /모바일/.test(s.name || ''); }
+        function clFamFor(kind, s) {   // 상담 종류에 맞는 시트: 📱 모바일 상담 → '모바일' 시트 · 인터넷·TV / 렌탈 → 이번 달 시트
+            if (!s || !cl.data) return s;
+            var mob = kind === 'mob'; if (mob === clIsMobS(s)) return s;
+            if (mob) return aiMobSheet();
+            var d = cl.data.sheets.filter(function (x) { return x.id === clDefaultSheet(); })[0];
+            if (d && !clIsMobS(d)) return d;
+            return cl.data.sheets.filter(function (x) { return !clIsMobS(x); }).sort(function (a, b) { return b.o - a.o; })[0] || null;
+        }
+        function clMapVals(v, fromS, toS) {   // 다른 시트로 옮길 때: 같은 이름 칸끼리 · 없는 칸은 상담 내용(또는 비고) 아래 '■ 칸 : 값'으로 (내용이 사라지지 않게)
+            var nl = function (c) { return c.l.replace(/\s/g, '').replace(/^현재?통신사$/, '현통신사'); }, out = {}, used = {};
+            var memoOf = function (S) { return S.cols.filter(function (c) { return clColKind(c) === 'wide' && /상담/.test(c.l.replace(/\s/g, '')); })[0] || null; };
+            toS.cols.forEach(function (tc) {
+                var kd = clColKind(tc); if (kd === 'no') return;
+                var fc = fromS.cols.filter(function (c) { return !used[c.k] && nl(c) === nl(tc); })[0]
+                    || (['date', 'ph', 'staff', 'time'].indexOf(kd) >= 0 ? fromS.cols.filter(function (c) { return !used[c.k] && clColKind(c) === kd; })[0] : null)
+                    || (memoOf(toS) === tc ? memoOf(fromS) : null);
+                if (fc && String(v[fc.k] || '').trim()) { out[tc.k] = v[fc.k]; used[fc.k] = 1; }
+            });
+            var left = fromS.cols.filter(function (c) { return !used[c.k] && clColKind(c) !== 'no' && String(v[c.k] || '').trim(); }).map(function (c) { return '■ ' + c.l.replace(/\s+/g, ' ').trim() + ' : ' + String(v[c.k]).trim(); });
+            if (left.length) { var mc = memoOf(toS) || toS.cols.filter(function (c) { return /비고/.test(c.l.replace(/\s/g, '')); })[0] || toS.cols.filter(function (c) { return clColKind(c) === 'wide'; })[0]; if (mc) out[mc.k] = (String(out[mc.k] || '').trim() ? String(out[mc.k]).trim() + '\n' : '') + left.join('\n'); }
+            var noC = clColBy(toS, 'no'); if (noC) out[noC.k] = clNewRowVals(toS)[noC.k];
+            return out;
         }
         function clNewRowVals(s) {   // 새 줄 기본값: 번호 · 오늘 날짜 · 지금 시각 · 내 이름
             var v = {}, now = new Date();
@@ -14899,6 +14929,9 @@
             var M = cl.memo, s = clMemoSheet();
             if (!M || !M.P || !s) return;
             var v = M.P.values();
+            var famS = clFamFor(M.P.kind, s), moved = '';
+            if (M.P.kind === 'mob' && !famS) { toast('📱 모바일 상담인데 \'모바일\' 시트가 없어요. 상담 리스트에 모바일 시트를 먼저 만들어 주세요.'); return; }
+            if (famS && famS !== s) { v = clMapVals(v, s, famS); s = famS; M.sheet = s.id; moved = s.name; }   // 📱 모바일 상담은 모바일 시트로 · 인터넷·렌탈은 달 시트로
             if (!clHasText(s, v)) { toast('상담 내용을 하나 이상 적어 주세요.'); return; }
             var noC = clColBy(s, 'no'); if (noC && /^\d+$/.test(String(v[noC.k] || '').trim())) v[noC.k] = clNewRowVals(s)[noC.k];   // 순번은 저장하는 지금 기준
             var row = { id: uid(), sh: s.id, ty: 'row', o: 0, v: v, st: M.P.st || 'n' };
