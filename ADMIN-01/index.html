@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-xdmeDensWnw3HPEHi72yjOOCsAb/X6L27GVH3/6nuOc='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-27U3guPWgtwmsSjoAbydzTkcWlSzn+3kgc5NmbaD/uk='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1084,6 +1084,14 @@
         .gll-rside b { font-size: 26px; color: var(--ink); font-variant-numeric: tabular-nums; }
         .gll-rt td.empty:hover { background: #FFFBEA; }
         @media (max-width: 700px) { .gll-rbody { flex-direction: column-reverse; } .gll-rside { flex-direction: row; gap: 10px; align-items: baseline; min-width: 0; } }
+        .xc-body { max-height: 72vh; overflow: auto; }
+        .xc-t { width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 4px 0 10px; }
+        .xc-t th, .xc-t td { border-bottom: 1px solid #E8EBDF; padding: 5px 6px; text-align: left; vertical-align: top; }
+        .xc-t th { background: #F4F6EC; font-size: 12px; position: sticky; top: 0; }
+        .xc-t tr.bad td { background: #FFF4F2; } .xc-t tr.none td { background: #FFFBEA; } .xc-t tr.live td { color: var(--muted); }
+        .xc-t td.nm { white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+        .xc-t td small { display: block; font-weight: 400; color: var(--hint); font-size: 11px; }
+        .xc-t td.why { font-size: 11.5px; color: #4A5230; min-width: 180px; }
         .gl-wrap { border: 1px solid #C9CDB8; border-radius: 0 0 10px 10px; background: #fff; overflow: hidden; }
         .gl-g { overflow: auto; max-height: calc(100vh - 270px); min-height: 320px; outline: none; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
         .gl-g:focus-visible { box-shadow: inset 0 0 0 2px #1A73E8; }
@@ -2268,7 +2276,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-17.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-18.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -7922,6 +7930,7 @@
             if (M.fee && +M.fee) return { fee: +M.fee, src: '상담에서 고른 상품 수수료' };
             if (rec.fee) return null;
             var a; try { a = rec.type === '렌탈' ? regFeeRent(rec) : rec.kind === 'wired' ? regFeeWired(rec) : regFeeMobile(rec); } catch (e) { a = { why: '자동 계산 중 문제가 생겼어요' }; }
+            a = gllLearnApply(rec, a);   // 💡 엑셀에서 익힌 금액 (같은 단가표 동안)
             if (a && a.fee) { rec.fee = String(a.fee); if (a.adj) rec.adj = String(a.adj); if (a.gv && !(M.pg && +M.pg)) rec.gv = String(a.gv); rec.fa = ('단가표 자동: ' + a.src).slice(0, 200); }
             return a;
         }
@@ -15484,7 +15493,7 @@
             if (H && H.bm) for (var r = H.r + 1; r <= S.nr; r++) {
                 var row = S.cv[r]; if (!row) continue;
                 var kind = String(row[H.kind] == null ? '' : row[H.kind]).trim();
-                if (!kind || kind.charAt(0) === '=' || kind.indexOf('취소') >= 0) continue;
+                if (!kind || kind.charAt(0) === '=' || /취소|취고/.test(kind)) continue;   // 취소·취고(취소 고객) 줄은 실적에서 뺌
                 if (H.no && String(row[H.no] || '').trim().toLowerCase() === 'ex') continue;
                 var bm = glNum(calc.get(r, H.bm));
                 out.push({ r: r, kind: kind, day: glDayOf(H.date ? calc.get(r, H.date) : ''), staff: String(H.staff ? calc.get(r, H.staff) || '' : '').trim(), bm: bm instanceof GlErr ? 0 : bm });
@@ -15499,6 +15508,7 @@
             if (f === '자동_영업일수') return Math.max(0, Math.min(T.d - 1, T.dim));
             if (f === '자동_상담건수') return typeof glConsultCount === 'function' ? glConsultCount(calc.S.name) : '';   // 유선콜: 같은 달 상담 리스트 줄 수
             if (f === '자동_달성') { var x = glNum(a[0]); return x instanceof GlErr ? x : x >= 0 ? '달성' : '미달'; }
+            if (f.indexOf('자동_장부_') === 0) { var jv = glAutoJ(calc, f, a, T); return jv === undefined ? GL_NAME : jv; }
             if (f === '자동_콜인입') return glIbToday(calc.S);
             if (f === '자동_동판' || f === '자동_전략') return glDongJr(calc, f === '자동_동판', T);
             var rows = glRowsOf(calc), s1 = String(a[0] == null ? '' : a[0]), n1 = a[1] == null ? 0 : glNum(a[1]);
@@ -15521,7 +15531,7 @@
             rows.forEach(function (x) { if (pick[0](x) && (!pick[1] || pick[1](x))) sum += pick[2] === 'n' ? 1 : x.bm; });
             return sum;
         }
-        var GL_AUTO_DESC = { '자동_콜인입': '콜 인입 화면의 오늘 실 인입 수 (미인입·비상담·테스트·중복 뺌)', '자동_동판': '전일까지 같은 명의 같은 날 2건 이상 · 매출 합 60만원 이상 (명의당 1건)', '자동_전략': '전일까지 단일 판매(그날 그 명의 1건) · 매출 50만원 이상 건수', '자동_오늘': '오늘 날짜', '자동_시각': '지금 시각', '자동_영업일수': '전일까지 지난 날 수', '자동_당일건수': '오늘 가입 건수', '자동_당일매출': '오늘 운영비포함총매출 합계', '자동_전일까지매출': '전일까지 운영비포함총매출 합계', '자동_전일까지매출_그외': '전일까지 그 외 담당자 매출', '자동_전일까지매출_구분': '전일까지 구분별 매출', '자동_전일까지건수': '전일까지 가입 건수 (취소 제외)', '자동_전일까지건수_담당': '전일까지 담당자 건수', '자동_전일까지건수_그외': '전일까지 그 외 담당자 건수', '자동_시상건수': '전일까지 운영비포함총매출 기준 이상 건수 (단가제외·취소 제외)', '자동_포함건수': '전일까지 구분에 이 글자가 들어간 건수', '자동_달성': '잔여가 0 이상이면 달성', '자동_상담건수': '같은 달 상담 리스트에 적힌 상담 수' };
+        var GL_AUTO_DESC = { '자동_장부_영업일수': '오늘 날짜 − 1 (지난 달은 그 달 마지막 날)', '자동_장부_당일건수': '가입날짜가 오늘인 줄 수 (취소·취고 빼고)', '자동_장부_당일매출': '가입날짜가 오늘인 줄의 운영비포함총매출 합', '자동_장부_담당매출': '담당자별 운영비포함총매출 합 (찬팀=임찬양 · 그외=나머지)', '자동_장부_담당건수': '담당자별 건수 (취소·취고 빼고)', '자동_장부_종류건수': '모바일&유선 칸이 그 말로 시작하는 줄 수 (단가제외 포함 · 취소·취고 빼고)', '자동_장부_종류매출': '모바일·유선별 운영비포함총매출 합', '자동_장부_공통건수': '운영비포함총매출 20만원 초과 건수 (마진 20만 이하 제외)', '자동_장부_차수매출': '1차 = 1~15일 · 2차 = 16일부터 운영비포함총매출 합', '자동_장부_소호': '거래처 안모 · U+소호 상품 건수', '자동_콜인입': '콜 인입 화면의 오늘 실 인입 수 (미인입·비상담·테스트·중복 뺌)', '자동_동판': '전일까지 같은 명의 같은 날 2건 이상 · 매출 합 60만원 이상 (명의당 1건)', '자동_전략': '전일까지 단일 판매(그날 그 명의 1건) · 매출 50만원 이상 건수', '자동_오늘': '오늘 날짜', '자동_시각': '지금 시각', '자동_영업일수': '전일까지 지난 날 수', '자동_당일건수': '오늘 가입 건수', '자동_당일매출': '오늘 운영비포함총매출 합계', '자동_전일까지매출': '전일까지 운영비포함총매출 합계', '자동_전일까지매출_그외': '전일까지 그 외 담당자 매출', '자동_전일까지매출_구분': '전일까지 구분별 매출', '자동_전일까지건수': '전일까지 가입 건수 (취소 제외)', '자동_전일까지건수_담당': '전일까지 담당자 건수', '자동_전일까지건수_그외': '전일까지 그 외 담당자 건수', '자동_시상건수': '전일까지 운영비포함총매출 기준 이상 건수 (단가제외·취소 제외)', '자동_포함건수': '전일까지 구분에 이 글자가 들어간 건수', '자동_달성': '잔여가 0 이상이면 달성', '자동_상담건수': '같은 달 상담 리스트에 적힌 상담 수' };
 
         /* ---------- 표시 형식 (엑셀 표시 형식 그대로: ₩ 회계, %, 천 단위 쉼표, 날짜 …) ---------- */
         function glGeneral(v) {
@@ -15672,7 +15682,7 @@
             if (n) S.auto = 1;
             return n;
         }
-        function glAutoOld(S) { return Object.keys(S.cv).some(function (r) { return Object.keys(S.cv[r]).some(function (c) { var v = S.cv[r][c]; return typeof v === 'string' && /^=자동_(?!상담건수|콜인입|동판|전략)/.test(v); }); }); }   // 예전 방식(자동_ 함수) 칸이 남아 있는지
+        function glAutoOld(S) { return Object.keys(S.cv).some(function (r) { return Object.keys(S.cv[r]).some(function (c) { var v = S.cv[r][c]; return typeof v === 'string' && /^=자동_(?!상담건수|콜인입|동판|전략|장부_)/.test(v); }); }); }   // 예전 방식(자동_ 함수) 칸이 남아 있는지
         /* ---------- 가입고객리스트 → 엑셀(.xlsx) 파일 (글자 크기 · 칸 크기 · 색 · 테두리 · 병합 · 표시 형식 · 수식 그대로) ---------- */
         var GL_CRC = null;
         function glCrc32(u8) {
@@ -15813,7 +15823,9 @@
         function glNormSheet(x) {   // 받은 시트는 항상 걸러서 사용 (글자 수 · 개수 · 색 형식)
             if (!x || typeof x !== 'object') return null;
             var S = { name: String(x.name || '시트').slice(0, 60), nr: Math.min(5000, Math.max(0, +x.nr || 0)), nc: Math.min(400, Math.max(0, +x.nc || 0)), cw: {}, hc: {}, rh: {}, dh: Math.min(200, Math.max(8, +x.dh || 20)), dw: Math.min(600, Math.max(8, +x.dw || 64)), mg: [], st: [], rs: {}, cv: {}, zoom: Math.min(400, Math.max(10, +x.zoom || 100)), auto: x.auto ? 1 : 0 };
-            if (x.calls) { var cl0 = gllCallsClean(x.calls); if (Object.keys(cl0).length) S.calls = cl0; }   // 콜1~5 기록 (고객별)
+            if (x.calls) { var cl0 = gllCallsClean(x.calls); if (Object.keys(cl0).length) S.calls = cl0; }
+            if (x.chk) { var ck0 = gllChkClean(x.chk); if (ck0) S.chk = ck0; }   // 엑셀 대조 기록 (실적장표 칸)
+            if (x.autoOff) { var ao0 = gllAoClean(x.autoOff); if (ao0) S.autoOff = ao0; }   // 엑셀 값 그대로 쓰는 칸   // 콜1~5 기록 (고객별)
             if (x.rep && /^\d{4}-\d{2}-\d{2}$/.test(String(x.rep.d || ''))) S.rep = { d: String(x.rep.d), n: Math.min(999, Math.max(0, Math.round(+x.rep.n || 0))) };   // 실적장표 그날 보고 횟수
             var n = function (v, lo, hi) { v = +v; return isFinite(v) ? Math.min(hi, Math.max(lo, Math.round(v))) : lo; };
             Object.keys(x.cw || {}).forEach(function (c) { if (+c >= 1 && +c <= 400) S.cw[+c] = n(x.cw[c], 0, 2000); });
@@ -15964,7 +15976,7 @@
                     glDec(rp.blob, GL_AAD + E.id).then(function (x) {
                         if (mine !== gl) return;
                         var S2 = glNormSheet(x);
-                        E.edits.forEach(function (v, k) { if (k === 'rep') { S2.rep = v; return; } if (k.indexOf('call:') === 0) { var ck = k.slice(5); if (!S2.calls) S2.calls = {}; if (v) S2.calls[ck] = v; else delete S2.calls[ck]; return; } if (k.indexOf('cx:') === 0) return; var p = k.split(','), r = +p[0], c = +p[1]; if (v === null) { if (S2.cv[r]) delete S2.cv[r][c]; } else { if (!S2.cv[r]) S2.cv[r] = {}; S2.cv[r][c] = v; if (r > S2.nr) S2.nr = r; if (c > S2.nc) S2.nc = c; } });
+                        E.edits.forEach(function (v, k) { if (k === 'rep') { S2.rep = v; return; } if (k === 'chk') { if (v) S2.chk = v; else delete S2.chk; return; } if (k.indexOf('aoff:') === 0) { var ak = k.slice(5); if (!S2.autoOff) S2.autoOff = {}; if (v) S2.autoOff[ak] = 1; else delete S2.autoOff[ak]; return; } if (k.indexOf('call:') === 0) { var ck = k.slice(5); if (!S2.calls) S2.calls = {}; if (v) S2.calls[ck] = v; else delete S2.calls[ck]; return; } if (k.indexOf('cx:') === 0) return; var p = k.split(','), r = +p[0], c = +p[1]; if (v === null) { if (S2.cv[r]) delete S2.cv[r][c]; } else { if (!S2.cv[r]) S2.cv[r] = {}; S2.cv[r][c] = v; if (r > S2.nr) S2.nr = r; if (c > S2.nc) S2.nc = c; } });
                         S2._head = undefined; E.edits.forEach(function (v, k) { if (k.indexOf('cx:') === 0) glCancelPaint(S2, +k.slice(3), !!v); });   // 취소 줄 색도 다시 얹음
                         E.S = S2; E.rev = rp.rev; E.dom = {}; E.calc = null; E.saving = false;
                         glRenumberNow(E); clearTimeout(E.saveT);
@@ -16245,14 +16257,14 @@
                     var ex = haveS[raw.name]; if (!ex) return;
                     var E = gl.sh[ex.id]; if (!E || !E.S) throw new Error('load');
                     var X = glNormSheet(JSON.parse(JSON.stringify(glPack(glNormSheet(raw))))); if (E.S.rep) X.rep = E.S.rep; if (E.S.calls) X.calls = E.S.calls;   // 엑셀 그대로 (값·수식·서식)
-                    if (lat && raw.name === lat.n) { glAutoApply(X); if (glTodayOf(X).cur) glAutoLabelsFix(X); delete X._reg; delete X._head; }   // 엑셀에 숫자로 적힌 당일 실적·동판 등도 자동 칸으로
-                    if (JSON.stringify(glPack(X)) === JSON.stringify(glPack(glNormSheet(JSON.parse(JSON.stringify(glPack(E.S))))))) { same++; return; }
+                    if (lat && raw.name === lat.n) { var Xb = JSON.parse(JSON.stringify(glPack(X))); if (E.S.autoOff) X.autoOff = E.S.autoOff; glAutoApply(X); if (glTodayOf(X).cur) glAutoLabelsFix(X); delete X._reg; delete X._head; try { X.chk = gllChkMake(Xb, X, file && file.name); } catch (ce) { /* 대조 실패해도 불러오기는 그대로 */ } }   // 엑셀에 숫자로 적힌 당일 실적·동판 등도 자동 칸으로
+                    if (gllCmpKey(X) === gllCmpKey(glNormSheet(JSON.parse(JSON.stringify(glPack(E.S)))))) { same++; if (X.chk && lat && raw.name === lat.n) { E.S.chk = X.chk; E.edits.set('chk', X.chk); glQueue(E); } return; }
                     var A = glKeyRows(E.S), B = glKeyRows(X), xn = {}, gone = [];
                     if (A && B) { B.rows.forEach(function (q) { xn[q.name] = 1; }); A.rows.forEach(function (q) { if (q.name.charAt(0) !== '=' && !xn[q.name] && gone.indexOf(q.name) < 0) gone.push(q.name); }); }   // 앱에만 있는 고객 (엑셀 기준으로 바꾸면 빠짐)
                     merges.push({ id: ex.id, name: raw.name, E: E, m: { S: X, cells: glCount(X), rows: 0, names: [], chg: [], full: true, gone: gone } });
                 });
                 var sheets = all.filter(function (s) { return !haveS[s.name]; });
-                if (!sheets.length && !merges.length) { toast('엑셀과 지금 가입고객리스트가 똑같아요. 바꿀 내용이 없어요.'); return; }
+                if (!sheets.length && !merges.length) { toast('엑셀과 지금 가입고객리스트가 똑같아요. 바꿀 내용이 없어요.'); if (lat) { var hitS = glIdxList().filter(function (x) { return x.name === lat.n; })[0]; if (hitS && gl.sh[hitS.id] && gl.sh[hitS.id].S) { gl.cur = hitS.id; render(); setTimeout(function () { gllChkOpen(gl.sh[hitS.id]); }, 400); } } return; }
                 var who = function (a) { return a.slice(0, 10).join(', ') + (a.length > 10 ? ' 외 ' + (a.length - 10) + '명' : ''); };
                 var msg = '엑셀 파일 기준으로 가입고객리스트를 바꿀까요?\n'
                     + (merges.length ? '\n• 엑셀 내용 그대로 바꿀 시트 ' + merges.length + '개: ' + merges.slice(0, 8).map(function (x) { return x.name; }).join(', ') + (merges.length > 8 ? ' 외 ' + (merges.length - 8) + '개' : '') : '')
@@ -16274,7 +16286,7 @@
                 }
                 stepMerge().then(function () {
                     if (mineG !== gl) return;
-                    if (lat) { var hitL = glIdxList().filter(function (x) { return x.name === lat.n; })[0]; if (hitL) gl.cur = hitL.id; }   // 바꾼 최근 달 장부를 바로 보여 줌
+                    if (lat) { var hitL = glIdxList().filter(function (x) { return x.name === lat.n; })[0]; if (hitL) { gl.cur = hitL.id; setTimeout(function () { var EE = gl.sh[hitL.id]; if (EE && EE.S) gllChkOpen(EE); }, 600); } }   // 바꾼 최근 달 장부를 바로 보여 줌
                     if (!sheets.length) { gl.job = ''; gl.tabX = null; render(); glMirrorSoon(3000); toast('엑셀 파일 그대로 가입고객리스트를 바꿨어요 (시트 ' + merges.length + '개). 바꾸기 전 내용은 [보관본]에 있어요.'); return; }
                     glImportAdd(sheets, all, merges.length ? '엑셀 그대로 바꾼 시트 ' + merges.length + '개 · ' : '');
                 }).catch(function (e) {
@@ -16607,7 +16619,7 @@
             }
             if (R.dash && oldYm && ny) Object.keys(S.cv).forEach(function (r) { Object.keys(S.cv[r]).forEach(function (c) { var v = S.cv[r][c]; if (+c >= R.dash.c1 && typeof v === 'string' && v.charAt(0) !== '=') S.cv[r][c] = v.replace(new RegExp(String(oldYm.y % 100) + '\\s*년\\s*' + oldYm.m + '\\s*월', 'g'), (ny.y % 100) + '년 ' + ny.m + '월'); }); });
             glAutoApply(S);
-            delete S.rep; delete S.calls; var cq0 = glReportCell(S); if (cq0) { if (!S.cv[cq0.r]) S.cv[cq0.r] = {}; S.cv[cq0.r][cq0.c] = '목표'; }   // 새 달은 보고 시각을 '목표'부터
+            delete S.rep; delete S.calls; delete S.chk; delete S.autoOff; var cq0 = glReportCell(S); if (cq0) { if (!S.cv[cq0.r]) S.cv[cq0.r] = {}; S.cv[cq0.r][cq0.c] = '목표'; }   // 새 달은 보고 시각을 '목표'부터
             gl.job = auto ? name + '를 자동으로 만드는 중...' : '새 장부를 만드는 중...'; glStatusPaint();
                 return glEnc(glPack(S), GL_AAD + id).then(function (blob) { return glCall('glPut', { id: id, baseRev: 0, blob: blob }); }).then(function (res) {
                     var E = glEntry(id); E.S = S; E.rev = res.rev; E.base = glCount(S);
@@ -17483,29 +17495,62 @@
                 var anc = function (r, c) { var g = cover[K(r, c)]; return g ? { r: g[0], c: g[1] } : { r: r, c: c }; };
                 var right = function (L) { var g = mgAt[K(L.r, L.c)]; return anc(L.r, (g ? g[3] : L.c) + 1); };
                 var below = function (L) { var g = mgAt[K(L.r, L.c)]; return anc((g ? g[2] : L.r) + 1, L.c); };
-                var r0 = H.r + 2, rg = function (c) { var n = glColName(c); return '$' + n + '$' + r0 + ':$' + n + '$600'; };
-                var KC = rg(H.kind), GC = rg(H.date), BC = rg(H.bm), TD = 'DAY(TODAY())&"일"';
-                var cnt = function (pre) { return '=COUNTIFS(' + KC + ',"' + pre + '*",' + KC + ',"<>*취소*",' + GC + ',' + TD + ')'; };
                 var seen = {}, put = function (t, f) {
                     if (!t || t.c < A.c1 || seen[K(t.r, t.c)]) return; seen[K(t.r, t.c)] = 1;
+                    if (S.autoOff && S.autoOff[t.r + ',' + t.c]) return;   // 대표님이 '엑셀 값 그대로' 고른 칸은 자동으로 안 바꿈
                     var cur = S.cv[t.r] ? S.cv[t.r][t.c] : undefined;
                     if (typeof cur === 'string' && cur.trim() && cur.charAt(0) !== '=' && !/^[-₩\s\d,.원]+$/.test(cur.trim())) return;   // 글자(이름표)가 있는 칸은 안 건드림
-                    out.push([t.r, t.c, f]);
-                };
-                labs.forEach(function (L) { if (L.r <= A.r1 + 4 && /^\d{1,2}일$/.test(L.k)) { seen[K(L.r, L.c)] = 1; out.push([L.r, L.c, GLL_TODAY_F]); } });   // 맨 위 '16일' 같은 날짜 글자 → 오늘 날짜 수식
-                for (var rr = A.r1; rr <= A.r1 + 4; rr++) { var ww = S.cv[rr] || {}; Object.keys(ww).forEach(function (c) { c = +c; if (c >= A.c1 && ww[c] === GLL_TODAY_F && !seen[K(rr, c)]) { seen[K(rr, c)] = 1; out.push([rr, c, GLL_TODAY_F]); } }); }
-                var day = labs.filter(function (L) { return L.k === '당일실적'; })[0];
+                    out.push([t.r, t.c, f, lab]);
+                }, lab = '';
+                var P = function (t, f, l) { lab = l; put(t, f); };
+                var rowLab = function (r, key, c0) { return labs.filter(function (L) { return L.r === r && L.c > c0 && L.k === key; }).sort(function (a, b) { return a.c - b.c; })[0]; };
+                var hdrOf = function (L, key) { for (var r = L.r - 1; r >= Math.max(A.r1, L.r - 14); r--) { var w = S.cv[r] || {}, hit = Object.keys(w).map(Number).filter(function (c) { return c > L.c && gllKey(w[c]) === key; }).sort(function (a, b) { return a - b; })[0]; if (hit) return hit; } return 0; };
+                labs.forEach(function (L) { if (L.r <= A.r1 + 4 && /^\d{1,2}일$/.test(L.k) && !(S.autoOff && S.autoOff[L.r + ',' + L.c])) { seen[K(L.r, L.c)] = 1; out.push([L.r, L.c, GLL_TODAY_F, '맨 위 오늘 날짜']); } });   // 맨 위 '16일' 같은 날짜 글자 → 오늘 날짜 수식
+                for (var rr = A.r1; rr <= A.r1 + 4; rr++) { var ww = S.cv[rr] || {}; Object.keys(ww).forEach(function (c) { c = +c; if (c >= A.c1 && ww[c] === GLL_TODAY_F && !seen[K(rr, c)]) { seen[K(rr, c)] = 1; out.push([rr, c, GLL_TODAY_F, '맨 위 오늘 날짜']); } }); }
+                labs.forEach(function (L) { if (L.k === '영업일수' && L.r <= A.r1 + 4) P(below(L), '=자동_장부_영업일수()', '영업일수'); });
+                var day = labs.filter(function (L) { return L.k === '당일실적'; })[0], callV = null, dayV = null;
                 if (day) {
                     var g0 = mgAt[K(day.r, day.c)], c2 = g0 ? g0[3] : day.c;
                     labs.forEach(function (L) {
                         if (L.r <= day.r || L.r > day.r + 10) return;
-                        if (L.k === '콜인입' && L.c >= day.c) put(right(L), '=자동_콜인입()');
-                        else if (L.c >= day.c && L.c <= c2 && (L.k === '모바일' || L.k === '유선')) put(right(L), cnt(L.k));
+                        if (L.k === '콜인입' && L.c >= day.c) { callV = right(L); P(callV, '=자동_콜인입()', '당일 콜인입'); }
+                        else if (L.c >= day.c && L.c <= c2 && (L.k === '모바일' || L.k === '유선')) P(right(L), '=자동_장부_당일건수("' + L.k + '")', '당일 실적 ' + L.k);
                     });
                 }
-                labs.forEach(function (L) { if (L.k === '당일매출' && (!day || Math.abs(L.r - day.r) <= 3)) put(below(L), '=SUMIFS(' + BC + ',' + KC + ',"?*",' + KC + ',"<>*취소*",' + GC + ',' + TD + ')'); });
-                var hdrCol = function (L) { for (var r = L.r - 1; r >= Math.max(A.r1, L.r - 14); r--) { var w = S.cv[r] || {}, hit = Object.keys(w).map(Number).filter(function (c) { return c > L.c && gllKey(w[c]) === '실적'; }).sort(function (a, b) { return a - b; })[0]; if (hit) return hit; } return 0; };
-                labs.forEach(function (L) { var isD = L.k === '동판', isJ = /^전략/.test(L.k); if (!isD && !isJ) return; var hc = hdrCol(L); if (hc) put(anc(L.r, hc), isD ? '=자동_동판()' : '=자동_전략()'); });
+                labs.forEach(function (L) { if (L.k === '당일매출' && (!day || Math.abs(L.r - day.r) <= 3)) { dayV = below(L); P(dayV, '=자동_장부_당일매출()', '당일 매출'); } });
+                labs.forEach(function (L) {   // 찬팀 매출 = 임찬양 · 그외 매출 = 나머지(노수빈·전상민) — '매출' 이름표 오른쪽 칸
+                    var who = L.k === '찬팀매출' ? 1 : L.k === '그외매출' ? 2 : 0; if (!who) return;
+                    var m = rowLab(L.r, '매출', L.c); if (m) P(right(m), who === 1 ? '=자동_장부_담당매출("임찬양")' : '=자동_장부_담당매출("임찬양","제외")', who === 1 ? '찬팀 매출(임찬양)' : '그외 매출(노수빈·전상민)');
+                });
+                labs.forEach(function (L) {   // 개인 실적: 찬팀 = 임찬양 건수 · 수빈 = 나머지 건수
+                    if (L.k !== '개인실적') return;
+                    var a1 = rowLab(L.r, '찬팀', L.c), b1 = rowLab(L.r, '수빈', L.c);
+                    if (a1) P(right(a1), '=자동_장부_담당건수("임찬양")', '개인 실적 찬팀(임찬양)');
+                    if (b1) P(right(b1), '=자동_장부_담당건수("임찬양","제외")', '개인 실적 수빈(노수빈·전상민)');
+                });
+                labs.forEach(function (L) {   // 목표 및 매출: '실적 및 매출' 칸
+                    var k = /^모바일\+워치/.test(L.k) ? '모바일' : /^유선\+프리/i.test(L.k) ? '유선' : ''; if (!k) return;
+                    var hc = hdrOf(L, '실적및매출'); if (hc) P(anc(L.r, hc), '=자동_장부_종류건수("' + k + '")', k === '모바일' ? '모바일+워치 패드 건수' : '유선+프리+IOT 건수');
+                });
+                labs.forEach(function (L) {   // 시상 표: '실적' 칸
+                    var f = L.k === '모바일(공통)' ? ['=자동_장부_공통건수("모바일")', '모바일(공통) · 매출 20만 초과'] : L.k === '유선(공통)' ? ['=자동_장부_공통건수("유선")', '유선(공통) · 매출 20만 초과']
+                        : L.k === '동판' ? ['=자동_동판()', '동판'] : /^전략/.test(L.k) ? ['=자동_전략()', '전략'] : /^U\+소호$/i.test(L.k) ? ['=자동_장부_소호()', 'U+소호(안모)'] : null;
+                    if (!f) return; var hc = hdrOf(L, '실적'); if (hc) P(anc(L.r, hc), f[0], f[1]);
+                });
+                labs.forEach(function (L) {   // 1차(1~15일)·2차(16일~) 매출: '1차 목표' 줄의 '매출' 이름표 아래
+                    var n = L.k === '1차목표' ? 1 : L.k === '2차목표' ? 2 : 0; if (!n) return;
+                    var m = rowLab(L.r, '매출', L.c); if (m) P(below(m), '=자동_장부_차수매출(' + n + ')', n + '차 매출(' + (n === 1 ? '1~15일' : '16일~') + ')');
+                });
+                var ind = labs.filter(function (L) { return L.k === '지표별매출'; })[0];
+                if (ind) labs.forEach(function (L) {   // 지표 별 매출: 모바일 · 유선 매출 합
+                    if (L.r <= ind.r || L.r > ind.r + 6 || (L.k !== '모바일' && L.k !== '유선')) return;
+                    P(right(L), '=자동_장부_종류매출("' + L.k + '")', '지표 별 매출 ' + L.k);
+                });
+                if (callV && dayV) labs.forEach(function (L) {   // 1일 기네스 잔여가 콜인입 칸을 빼고 있으면 → 당일 매출 칸으로 (엑셀 수식이 칸을 잘못 가리킴)
+                    if (L.k !== '1일기네스') return;
+                    var w = S.cv[L.r] || {}, cref = glColName(callV.c) + callV.r, dref = glColName(dayV.c) + dayV.r;
+                    Object.keys(w).forEach(function (c) { var v = w[c]; if (typeof v === 'string' && new RegExp('^=\\$?' + glColName(callV.c) + '\\$?' + callV.r + '-').test(v)) { seen[K(L.r, +c)] = 0; P({ r: L.r, c: +c }, '=' + dref + v.slice(v.indexOf('-')), '1일 기네스 잔여 (' + cref + '→' + dref + ')'); } });
+                });
             } catch (e) { out = []; }
             finally { if (!hadR) delete S._reg; if (!hadH) delete S._head; }
             return out;
@@ -17527,12 +17572,30 @@
             return out;
         }
         function glAutoLabelsFix(S) { var L = glAutoLabelsNeed(S); L.forEach(function (x) { if (!S.cv[x[0]]) S.cv[x[0]] = {}; S.cv[x[0]][x[1]] = x[2]; }); if (L.length) { delete S._reg; S.auto = 1; } return L.length; }
-        function glDongJr(calc, dong, T) {   // 동판: 같은 명의 같은 날 2건 이상 · 매출 합 60만원 이상 (명의당 1) / 전략: 그날 그 명의 1건(단일 판매) · 매출 50만원 이상 — 전일까지
+        function glDongJr(calc, dong, T) {   // 동판: 같은 명의 같은 날 2건 이상 · 매출 합 60만원 이상 (명의당 1) / 전략: 그날 그 명의 1건(단일 판매) · 매출 50만원 이상 — 장부에 적힌 이번 달 전체 (엑셀 11월 장부와 같음)
             var S = calc.S, H = glHead(S); if (!H || !H.name) return 0;
             var g = {};
-            glRowsOf(calc).forEach(function (x) { if (!(x.day > 0 && x.day < T.d)) return; var nm = calc.get(x.r, H.name); nm = gllKey(nm == null || nm instanceof GlErr ? '' : nm); if (!nm) return; var k = nm + '|' + x.day; (g[k] = g[k] || []).push(typeof x.bm === 'number' && isFinite(x.bm) ? x.bm : 0); });
+            glRowsOf(calc).forEach(function (x) { if (!(x.day > 0)) return; var nm = calc.get(x.r, H.name); nm = gllKey(nm == null || nm instanceof GlErr ? '' : nm); if (!nm) return; var k = nm + '|' + x.day; (g[k] = g[k] || []).push(typeof x.bm === 'number' && isFinite(x.bm) ? x.bm : 0); });
             var n = 0; Object.keys(g).forEach(function (k) { var a = g[k], s = a.reduce(function (t, v) { return t + v; }, 0); if (dong ? a.length >= 2 && s >= 600000 : a.length === 1 && a[0] >= 500000) n++; });
             return n;
+        }
+        function glAutoJ(calc, f, a, T) {   // '자동_장부_' 칸 (엑셀 11월 장부 실적장표 기준 · 취소·취고·예시 줄 빼고)
+            var rows = glRowsOf(calc), s1 = String(a[0] == null ? '' : a[0]), not = String(a[1] == null ? '' : a[1]) === '제외', n = 0, sum = 0;
+            var add = function (x) { n++; sum += typeof x.bm === 'number' && isFinite(x.bm) ? x.bm : 0; };
+            if (f === '자동_장부_영업일수') return Math.max(0, Math.min(T.d - 1, T.dim));
+            if (f === '자동_장부_당일건수') { rows.forEach(function (x) { if (x.day === T.d && x.kind.indexOf(s1) === 0) add(x); }); return n; }
+            if (f === '자동_장부_당일매출') { rows.forEach(function (x) { if (x.day === T.d) add(x); }); return sum; }
+            if (f === '자동_장부_담당매출' || f === '자동_장부_담당건수') { rows.forEach(function (x) { if ((x.staff === s1) !== not) add(x); }); return f === '자동_장부_담당매출' ? sum : n; }
+            if (f === '자동_장부_종류건수' || f === '자동_장부_종류매출') { rows.forEach(function (x) { if (x.kind.indexOf(s1) === 0) add(x); }); return f === '자동_장부_종류매출' ? sum : n; }
+            if (f === '자동_장부_공통건수') { rows.forEach(function (x) { if (x.kind.indexOf(s1) === 0 && x.bm > GLL_DANGA) add(x); }); return n; }   // 마진(운영비포함총매출) 20만 이하 제외
+            if (f === '자동_장부_차수매출') { var k = +s1; rows.forEach(function (x) { if (x.day > 0 && (k === 1 ? x.day <= 15 : x.day >= 16)) add(x); }); return sum; }
+            if (f === '자동_장부_소호') {   // U+소호: 거래처 안모 + 소호 상품만
+                var L = gllLabOf(calc.S), cd = L['거래처'], cc = L['통신사'], cp = L['요금제'], ct = L['가입유형'];
+                rows.forEach(function (x) { var t = function (c) { var v = c ? calc.get(x.r, c) : ''; return v == null || v instanceof GlErr ? '' : String(v); };
+                    if (/안모/.test(t(cd)) && /소호/.test(t(cc) + ' ' + t(cp) + ' ' + t(ct) + ' ' + x.kind) && !/SK|KT|스카이/i.test(t(cc).replace(/소호/g, ''))) add(x); });
+                return n;
+            }
+            return undefined;
         }
         function glIbDay(d0) {   // 콜 인입 화면의 그날 실 인입 수 (아직 안 불러왔으면 null)
             if (typeof ib === 'undefined' || !ib.at || !Array.isArray(ib.items)) return null;
@@ -17999,6 +18062,180 @@
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'kc-open', onclick: kcOpen }, '자세히'),
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'kc-now', disabled: kc.busy, onclick: function () { kcRun(false); render(); } }, '지금 점검'));
         }
+        /* ---------- 🔍 엑셀 대조 + 💡 엑셀 금액 익히기 (11-18.1)
+           엑셀을 불러올 때마다: ① 실적장표 자동 칸 — 엑셀에 적힌 값 vs 사거리온 계산 ② 줄마다 단가 — 엑셀(액면단가+부가 추가&차감+판지&추가히든) vs 그날 단가표 계산
+           대표님이 [💡 엑셀 금액 익히기]를 누르면 같은 조건(거래처·통신사·유형·요금제·모델·결합)은 같은 단가표가 쓰이는 동안 가입 확인서 자동 수수료를 엑셀 금액으로 넣음 */
+        function gllCmpKey(S) { var o = glPack(S); delete o.chk; return JSON.stringify(o); }
+        function gllChkClean(x) {   // 시트에 보관하는 대조 결과 (실적장표 칸만 · 80개)
+            if (!x || typeof x !== 'object' || !Array.isArray(x.dash)) return null;
+            var s = function (v, n) { return String(v == null ? '' : v).slice(0, n); }, nv = function (v) { return typeof v === 'number' && isFinite(v) ? v : s(v, 40); };
+            return { at: +x.at || 0, by: s(x.by, 20), file: s(x.file, 80), dash: x.dash.slice(0, 80).filter(Array.isArray).map(function (d) { return [s(d[0], 8), s(d[1], 40), nv(d[2]), nv(d[3]), s(d[4], 2)]; }) };
+        }
+        function gllAoClean(x) { var o = {}; Object.keys(x || {}).slice(0, 200).forEach(function (k) { if (/^\d{1,4},\d{1,3}$/.test(k)) o[k] = 1; }); return Object.keys(o).length ? o : null; }
+        function gllChkMake(Xb, X, file) {   // Xb: 엑셀 그대로 · X: 바꾼 뒤(이번 달이 아니면 바꾸지 않았어도 '바꾸면'으로 계산)
+            var Xa = JSON.parse(JSON.stringify(glPack(X))); glAutoLabelsFix(Xa);
+            var L = glAutoLabels(Xa), cb = new GlCalc(Xb), ca = new GlCalc(Xa);
+            var v = function (c, r, cc) { var x = c.get(r, cc); return x instanceof GlErr ? '#오류' : x == null ? '' : x; };
+            var dash = L.map(function (x) { var live = /콜인입|TODAY\(|영업일수|당일/.test(x[2]) ? 'L' : ''; return [glColName(x[1]) + x[0], x[3] || '', v(cb, x[0], x[1]), v(ca, x[0], x[1]), live]; });
+            return { at: Date.now(), by: staffName(me), file: String(file || '').slice(0, 80), dash: dash.slice(0, 80) };
+        }
+        /* 💡 익힌 금액 (팀 키로 암호화 · glGet/glPut 'fee_learn') */
+        var fl = { rev: -1, list: [], busy: false, fail: 0 };
+        var FL_ID = 'fee_learn';
+        function flClean(a) {
+            var s = function (v, n) { return String(v == null ? '' : v).slice(0, n); }, n = function (v) { v = +v; return isFinite(v) ? Math.round(v) : 0; };
+            return (Array.isArray(a) ? a : []).slice(0, 500).filter(function (x) { return x && x.k; }).map(function (x) { return { k: s(x.k, 300), pv: s(x.pv, 40), total: n(x.total), fee: n(x.fee), adj: n(x.adj), d: s(x.d, 10), src: s(x.src, 80), at: n(x.at), by: s(x.by, 20), note: s(x.note, 200) }; });
+        }
+        function flLoad(force) {
+            if (!force && fl.rev >= 0) return Promise.resolve(fl);
+            if (fl.busy && !force) return Promise.resolve(fl);
+            fl.busy = true;
+            return glCall('glGet', { id: FL_ID, rev: -1 }).then(function (res) {
+                if (!res.blob) { fl.rev = res.rev || 0; fl.list = []; return fl; }
+                return glDec(res.blob, GL_AAD + FL_ID).then(function (x) { fl.rev = res.rev; fl.list = flClean(x && x.list); return fl; });
+            }).then(function (r) { fl.busy = false; return r; }, function (e) { fl.busy = false; fl.fail = Date.now(); throw e; });
+        }
+        function flSave(mut, tries) {
+            return flLoad(true).then(function () {
+                var next = flClean(mut(fl.list.slice()));
+                return glEnc({ v: 1, list: next }, GL_AAD + FL_ID).then(function (blob) { return glCall('glPut', { id: FL_ID, baseRev: fl.rev, blob: blob }); })
+                    .then(function (res) { fl.rev = res.rev; fl.list = next; return next; });
+            }).catch(function (e) { if (e && e.code === 'conflict' && (tries || 0) < 2) return flSave(mut, (tries || 0) + 1); throw e; });
+        }
+        function gllNk(v) { return String(v == null ? '' : v).replace(/\s|\(.*?\)/g, '').toUpperCase(); }
+        function gllFeeKey(rec) {   // 같은 조건이면 같은 금액 (모바일 새 폰은 모델까지 · 중고·비구매는 모델 빼고)
+            var ty = String(rec.type || ''), tyK = /번호이동|MNP/i.test(ty) ? 'MNP' : /신규|010/.test(ty) ? '010' : /재가입|기변/.test(ty) ? '기변' : /렌탈/.test(ty) ? '렌탈' : gllNk(ty);
+            var comb = /결합하기/.test(rec.comb || '') ? '결합' : '';
+            if (rec.kind === 'wired' || tyK === '렌탈') return ['W', gllNk(rec.dealer), gllNk(rec.carrier), tyK, gllNk(rec.plan).replace(/MB|메가/g, 'M').replace(/GB|기가/g, 'G'), comb, tyK === '렌탈' ? gllNk(rec.model) : ''].join('|');
+            var used = typeof feeUsedOf === 'function' && feeUsedOf(rec);
+            return ['M', gllNk(rec.dealer), gllNk(rec.carrier), tyK, used ? '중고' : (typeof feeMdlKey === 'function' ? feeMdlKey(String(rec.model || '')) : gllNk(rec.model)) + (used ? '' : String(feeCap(String(rec.model || '')) || '')), gllNk(rec.plan), rec.disc === '공시' ? '공시' : rec.disc === '선약' ? '선약' : '', comb].join('|');
+        }
+        function gllPvOf(rec, mpDay) {   // 그때 쓰인 단가표 (모바일: 거래처 표 날짜 · 유선: 유선 단가표 날짜)
+            if (rec.kind === 'wired' || rec.type === '렌탈') { var P = rec.date ? polAt(rec.date) : polCur(); return P ? 'W' + (P.data && P.data.date || P.at || '') : ''; }
+            var dl = mpDay || (mp.data && (mp.data.dealers || []).filter(function (d) { return d.name === rec.dealer; })[0]);
+            return dl ? 'M' + (dl.date || '') : '';
+        }
+        function gllLearnApply(rec, a, mpDay) {   // 가입 확인서 자동 수수료: 같은 단가표 동안은 엑셀에서 익힌 금액 우선 · 단가표가 바뀌었으면 참고만
+            try {
+                if (!fl.list.length || !rec) return a;
+                var k = gllFeeKey(rec), hit = fl.list.filter(function (x) { return x.k === k; }).sort(function (p, q) { return q.at - p.at; });
+                if (!hit.length) return a;
+                var pv = gllPvOf(rec, mpDay), same = hit.filter(function (x) { return x.pv === pv; })[0], calcTxt = a && a.fee != null ? won((+a.fee || 0) + (+a.adj || 0)) : (a && a.why) || '계산 못 함';
+                if (same) return { fee: same.fee, adj: same.adj, gv: a && a.gv, learn: same, src: '💡 엑셀에서 익힌 금액 ' + won(same.total) + ' (' + same.src + ') · 단가표 계산 ' + calcTxt };
+                var o = a ? JSON.parse(JSON.stringify(a)) : { why: '' }; var x = hit[0];
+                var tip = '💡 지난 엑셀 ' + won(x.total) + ' (' + x.src + ' · 단가표가 바뀌어 참고만)';
+                if (o.src) o.src += ' · ' + tip; else o.why = (o.why ? o.why + ' · ' : '') + tip;
+                return o;
+            } catch (e) { return a; }
+        }
+        /* 줄마다 단가 대조 */
+        function gllRowRec(S, calc, r, L) {   // 장부 줄 → 가입 확인서와 같은 모양
+            var g = function (name) { var c = 0; String(name).split('|').some(function (n) { c = L[n.replace(/\s/g, '')]; return !!c; }); if (!c) return ''; var v = calc.get(r, c); return v == null || v instanceof GlErr ? '' : v; };
+            var rec = {}; Object.keys(GL_REG_COL).forEach(function (f) { var v = g(GL_REG_COL[f]); if (v !== '') rec[f] = typeof v === 'number' ? String(v) : String(v); });
+            if (rec.pay) rec.pay = String(Math.abs(+String(rec.pay).replace(/[^\d.-]/g, '') || 0));   // 엑셀은 유통망지원금을 −로 적음 (확인서는 +)
+            var kindRaw = String(rec.kind || ''); rec.kindRaw = kindRaw; rec.kind = /^유선/.test(kindRaw) || /렌탈/.test(String(rec.type || '')) ? 'wired' : 'mobile';
+            var y = glYm(S.name), day = glDayOf(g('가입날짜')); rec.date = y && day ? y.y + '-' + pad2(y.m) + '-' + pad2(day) : '';
+            var num = function (n) { var v = glNum(g(n)); return v instanceof GlErr || typeof v !== 'number' || !isFinite(v) ? 0 : v; };
+            rec.xl = { fee: num('액면단가'), adj: num('부가 추가&차감'), hid: num('판지&추가히든') }; rec.xl.total = rec.xl.fee + rec.xl.adj + rec.xl.hid;
+            return rec;
+        }
+        function gllFeeOne(rec, mpDay) {
+            var a; try {
+                if (rec.type === '렌탈') a = regFeeRent(rec);
+                else if (rec.kind === 'wired') a = regFeeWired(JSON.parse(JSON.stringify(rec)), rec.date ? polAt(rec.date) : null);
+                else { var keep = mp.data; if (mpDay && keep) mp.data = { v: 1, dealers: [mpDay].concat((keep.dealers || []).filter(function (d) { return d.name !== mpDay.name; })), rent: keep.rent }; try { var rc = JSON.parse(JSON.stringify(rec)); delete rc.fee; delete rc.adj; a = regFeeMobile(rc); } finally { mp.data = keep; } }
+            } catch (e) { a = { why: '자동 계산 중 문제가 생겼어요' }; }
+            return gllLearnApply(rec, a || { why: '' }, mpDay);
+        }
+        function gllFeeCheck(E) {   // → Promise<{ rows, same, diff, none, groups }>
+            var S = E.S, calc = glCalcOf(E), H = glHead(S), L = gllLabOf(S), y = glYm(S.name);
+            if (!H || !L['액면단가']) return Promise.resolve({ rows: [], same: 0, diff: 0, none: 0, groups: [] });
+            var ym = y ? y.y + '-' + pad2(y.m) : '';
+            var hist = ym && typeof mphLoad === 'function' ? mphLoad(ym).catch(function () { return null; }) : Promise.resolve(null);
+            return Promise.all([hist, flLoad().catch(function () { return fl; })]).then(function (rs) {
+                var days = rs[0] && rs[0].days || {}, dkeys = Object.keys(days).sort();
+                var dayTbl = function (dealer, date) { var best = null; dkeys.forEach(function (k) { if (k <= date && days[k][dealer]) best = days[k][dealer]; }); return best; };
+                var out = [], same = 0, diff = 0, none = 0, grp = {};
+                glRowsOf(calc).forEach(function (x) {
+                    var rec = gllRowRec(S, calc, x.r, L); if (!rec.dealer && !rec.xl.total) return;
+                    var mpDay = rec.kind === 'mobile' && rec.date ? dayTbl(rec.dealer, rec.date) : null;
+                    var a = gllFeeOne(rec, mpDay), ct = a && a.fee != null && a.fee !== '' ? (+a.fee || 0) + (+a.adj || 0) : null;
+                    var st = ct == null ? 'none' : ct === rec.xl.total ? 'same' : 'diff';
+                    if (st === 'same') { same++; return; }
+                    if (st === 'diff') diff++; else none++;
+                    var used = rec.kind === 'mobile' && typeof feeUsedOf === 'function' && feeUsedOf(rec);
+                    var gk = (rec.dealer || '-') + ' · ' + (rec.kind === 'wired' ? (rec.type === '렌탈' ? '렌탈' : '유선 ' + (rec.carrier || '')) : used ? '모바일 중고·비구매' : '모바일 새 폰') + (st === 'none' ? ' · 계산 못 함' : '');
+                    (grp[gk] = grp[gk] || { k: gk, n: 0, d: [] }).n++; if (ct != null) grp[gk].d.push(rec.xl.total - ct);
+                    out.push({ r: x.r, st: st, rec: rec, calc: ct, a: a, pv: gllPvOf(rec, mpDay), tbl: rec.kind === 'mobile' ? (mpDay ? mpDay.date || '' : '지금 단가표') : (function () { var P = rec.date ? polAt(rec.date) : null; return P && P.data ? P.data.date || '' : ''; })() });
+                });
+                var groups = Object.keys(grp).map(function (k) { var g = grp[k], uniq = g.d.filter(function (v, i, arr) { return arr.indexOf(v) === i; }); return { k: k, n: g.n, d: uniq.length === 1 ? uniq[0] : null }; }).sort(function (a, b) { return b.n - a.n; });
+                return { rows: out, same: same, diff: diff, none: none, groups: groups };
+            });
+        }
+        function gllLearn(E, it, btn) {
+            if (!isBoss()) { toast('엑셀 금액 익히기는 대표님만 할 수 있어요.'); return; }
+            var rec = it.rec, k = gllFeeKey(rec), y = glYm(E.S.name);
+            var item = { k: k, pv: it.pv, total: rec.xl.total, fee: rec.xl.fee + rec.xl.hid, adj: rec.xl.adj, d: rec.date, src: (y ? y.y % 100 + '년 ' + y.m + '월' : E.S.name) + ' ' + (glNum(gllTxt(E, it.r, glHead(E.S).no || 2)) || it.r) + '번 줄', at: Date.now(), by: staffName(me), note: (rec.dealer || '') + ' ' + (rec.carrier || '') + ' ' + (rec.model || '') + ' ' + (rec.plan || '') };
+            if (btn) btn.disabled = true;
+            flSave(function (list) { return [item].concat(list.filter(function (x) { return !(x.k === k && x.pv === item.pv); })).slice(0, 500); })
+                .then(function () { toast('💡 익혔어요: ' + item.note + ' → ' + won(item.total) + ' (같은 단가표가 쓰이는 동안 가입 확인서 자동 수수료에 써요)'); if (btn) btn.textContent = '✓ 익힘'; })
+                .catch(function (e) { if (btn) btn.disabled = false; toast('저장하지 못했어요: ' + driveErrText(e)); });
+        }
+        function gllUseXl(E, d, btn) {   // 실적장표 칸: 엑셀 값 그대로 쓰기 (자동 계산 끄기)
+            var t = glRef(d[0]); if (!t) return;
+            var v = typeof d[2] === 'number' ? d[2] : String(d[2] || '');
+            glSet(E, [[t.r, t.c, v]]); if (!E.S.autoOff) E.S.autoOff = {}; E.S.autoOff[t.r + ',' + t.c] = 1; E.edits.set('aoff:' + t.r + ',' + t.c, 1); glQueue(E);
+            if (btn) { btn.disabled = true; btn.textContent = '✓ 엑셀 값'; }
+            toast(d[1] + ' 칸은 엑셀 값 그대로 두고 자동 계산을 껐어요.');
+        }
+        function gllAutoOn(E, ref) { var t = glRef(ref); if (!t || !E.S.autoOff) return; delete E.S.autoOff[t.r + ',' + t.c]; E.edits.set('aoff:' + t.r + ',' + t.c, 0); glAutoLabelsFix(E.S); E.calc = null; var x = (E.S.cv[t.r] || {})[t.c]; glSet(E, [[t.r, t.c, x]]); glQueue(E); render(); toast(ref + ' 칸 자동 계산을 다시 켰어요.'); }
+        function gllChkOpen(E) {
+            if (!E || !E.S) return;
+            var S = E.S, ck = S.chk, dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'wide';
+            var nf = function (v) { return typeof v === 'number' ? (Math.abs(v) >= 1000 ? won(v) : String(Math.round(v * 100) / 100)) : String(v === '' ? '(빈칸)' : v); };
+            dlg.appendChild(h('div', { class: 'dlg-head' }, '🔍 엑셀 대조 · ' + S.name));
+            var body = h('div', { class: 'dlg-body xc-body' });
+            body.appendChild(h('p', { class: 'ib-help' }, ck ? '엑셀 불러온 때: ' + new Date(ck.at).toLocaleString('ko-KR') + (ck.by ? ' · ' + ck.by : '') + (ck.file ? ' · ' + ck.file : '') : '이 장부는 아직 엑셀 불러오기 대조 기록이 없어요. 엑셀을 불러오면 자동으로 대조해요. (아래 줄별 단가 대조는 지금 바로 해요)'));
+            if (ck && ck.dash.length) {
+                var bad = ck.dash.filter(function (d) { return d[4] !== 'L' && String(d[2]) !== String(d[3]); });
+                body.appendChild(h('h3', { class: 'kc-h' }, '📊 실적장표 자동 칸 — ' + (bad.length ? '엑셀과 다른 칸 ' + bad.length + '개' : '엑셀과 모두 같아요 ✓')));
+                var tb = h('table', { class: 'xc-t' }, h('tr', {}, h('th', {}, '칸'), h('th', {}, '이름'), h('th', {}, '엑셀'), h('th', {}, '사거리온'), h('th', {}, '')));
+                ck.dash.forEach(function (d) {
+                    var t = glRef(d[0]), off = S.autoOff && t && S.autoOff[t.r + ',' + t.c], eq = String(d[2]) === String(d[3]);
+                    tb.appendChild(h('tr', { class: d[4] === 'L' ? 'live' : eq ? 'ok' : 'bad' }, h('td', {}, d[0]), h('td', {}, d[1]), h('td', {}, nf(d[2])), h('td', {}, nf(d[3])),
+                        h('td', {}, off ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { gllAutoOn(E, d[0]); closeDlg(); } }, '자동 다시 켜기')
+                            : d[4] === 'L' ? h('small', {}, '오늘 기준(실시간)') : eq ? '✓ 같음' : isBoss() ? h('button', { type: 'button', class: 'btn btn-sm', title: '이 칸은 자동 계산하지 않고 엑셀 값을 그대로 둬요', onclick: function (ev) { gllUseXl(E, d, ev.currentTarget); } }, '엑셀 값 그대로 쓰기') : '다름')));
+                });
+                body.appendChild(tb);
+                body.appendChild(h('p', { class: 'ib-help' }, '자동 칸 기준: 찬팀=임찬양 · 그외/수빈=노수빈·전상민 · 1차=1~15일 · 2차=16일~ · 공통=운영비포함총매출 20만 초과 · 동판=같은 명의 같은 날 2건↑ 합 60만↑ · 전략=단일 판매 50만↑ · U+소호=거래처 안모 소호 · 취소·취고 줄은 모두 뺌'));
+            }
+            var feeBox = h('div', {}, h('h3', { class: 'kc-h' }, '💰 줄마다 단가 (엑셀 액면단가+부가 추가&차감+판지&추가히든 vs 그날 단가표) — 계산 중...'));
+            body.appendChild(feeBox);
+            dlg.appendChild(body);
+            dlg.appendChild(h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기')));
+            showDlg(dlg);
+            gllFeeCheck(E).then(function (R) {
+                feeBox.textContent = '';
+                feeBox.appendChild(h('h3', { class: 'kc-h' }, '💰 줄마다 단가 — 같음 ' + R.same + ' · 다름 ' + R.diff + ' · 단가표로 계산 못 함 ' + R.none));
+                if (R.groups.length) feeBox.appendChild(h('ul', { class: 'kc-ul' }, R.groups.slice(0, 12).map(function (g) { return h('li', {}, g.k + ' ' + g.n + '건' + (g.d != null ? ' · 엑셀이 늘 ' + (g.d > 0 ? '+' : '') + won(g.d) + ' 차이 (규칙 차이일 수 있어요)' : '')); })));
+                if (!R.rows.length) { feeBox.appendChild(h('p', {}, '엑셀 금액과 단가표 계산이 모두 같아요 ✓')); return; }
+                var tb2 = h('table', { class: 'xc-t xc-fee' }, h('tr', {}, h('th', {}, '줄'), h('th', {}, '날짜·거래처'), h('th', {}, '상품'), h('th', {}, '엑셀'), h('th', {}, '단가표 계산'), h('th', {}, '이유'), h('th', {}, '')));
+                R.rows.slice(0, 200).forEach(function (it) {
+                    var rc = it.rec, xl = rc.xl, why = it.a && (it.a.src || it.a.why) || '';
+                    tb2.appendChild(h('tr', { class: it.st === 'diff' ? 'bad' : 'none' },
+                        h('td', {}, String(glNum(gllTxt(E, it.r, (glHead(S).no || 2))) || it.r)),
+                        h('td', {}, (rc.date ? rc.date.slice(5).replace('-', '/') : '') + ' ' + (rc.dealer || '') + ' ' + (rc.carrier || '')),
+                        h('td', {}, [rc.kindRaw, rc.model, rc.type, rc.plan].filter(Boolean).join(' · ').slice(0, 70)),
+                        h('td', { class: 'nm' }, won(xl.total), h('small', {}, '액면 ' + won(xl.fee) + (xl.adj ? ' · 부가 ' + won(xl.adj) : '') + (xl.hid ? ' · 히든 ' + won(xl.hid) : ''))),
+                        h('td', { class: 'nm' }, it.calc == null ? '-' : won(it.calc), it.calc != null ? h('small', {}, '차이 ' + (xl.total - it.calc > 0 ? '+' : '') + won(xl.total - it.calc)) : null),
+                        h('td', { class: 'why' }, (it.tbl && rc.date && String(it.tbl).slice(0, 10) > rc.date ? '⚠ 판매일(' + rc.date.slice(5).replace('-', '/') + ') 단가표 기록이 없어 나중 단가표로 계산 · ' : '') + why.slice(0, 220), it.tbl ? h('small', {}, '단가표 ' + it.tbl) : null),
+                        h('td', {}, isBoss() && xl.total ? h('button', { type: 'button', class: 'btn btn-sm', title: '같은 조건은 같은 단가표 동안 이 금액으로 계산해요', onclick: function (ev) { gllLearn(E, it, ev.currentTarget); } }, '💡 엑셀 금액 익히기') : null)));
+                });
+                feeBox.appendChild(tb2);
+                feeBox.appendChild(h('p', { class: 'ib-help' }, '엑셀이 정답이에요. 다른 줄은 그날 단가표 기록이 없거나(판매일보다 나중 단가표로 계산), 장부 칸(통신사 SK/SKB·모델·요금제 이름)이 단가표와 다르거나, 정책 규칙이 다를 때 생겨요. [💡 엑셀 금액 익히기]를 누르면 같은 조건의 다음 가입 확인서부터 그 금액으로 자동 계산해요 (단가표가 새로 바뀌면 참고로만 보여 줘요). 익힌 금액 ' + fl.list.length + '개'));
+            }).catch(function (e) { feeBox.textContent = ''; feeBox.appendChild(h('p', {}, '단가 대조를 하지 못했어요: ' + driveErrText(e))); });
+        }
+        setInterval(function () { try { if (typeof authed !== 'undefined' && authed && db && fl.rev < 0 && !fl.busy && driveOn() && (!fl.fail || Date.now() - fl.fail > 600000) && glCan()) flLoad().catch(function () { /* 다음에 */ }); } catch (e) { /* 다음에 */ } }, 20000);
         function renderGl() {
             var boss = isBoss();
             var head = h('div', { class: 'page-head' }, h('h1', {}, '사거리가입고객리스트'), h('div', { class: 'actions' },
@@ -18031,6 +18268,7 @@
             var vbar = h('div', { class: 'gll-vbar' },
                 views.length > 1 ? h('div', { class: 'gl-seg', role: 'group', 'aria-label': '보기' }, views.map(function (v) { return h('button', { type: 'button', 'data-gv': v[0], 'aria-pressed': gl.view === v[0] ? 'true' : 'false', onclick: function () { gllPopClose(); gl.view = v[0]; render(); } }, v[1]); })) : null,
                 h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'cnt-open', title: '가입 고객 응대 통화(설치·요금·AS·해지 문의)를 AI가 요약한 기록', onclick: function () { cntOpen(E); } }, '📞 기고객 응대' + ((db.cnt || []).length ? ' ' + db.cnt.length : '')),
+                H ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'gll-xchk', title: '엑셀을 불러올 때마다 자동으로 해요: 실적장표 자동 칸과 줄마다 단가를 엑셀과 비교 · 다른 단가는 [💡 엑셀 금액 익히기]', onclick: function () { gllChkOpen(E); } }, '🔍 엑셀 대조' + (E.S.chk && E.S.chk.dash.some(function (d) { return d[4] !== 'L' && String(d[2]) !== String(d[3]); }) ? ' ⚠' : '')) : null,
                 h('button', { type: 'button', class: 'btn btn-sm btn-primary gl-savenow', 'data-act': 'gl-savenow', title: '고친 칸은 1초 뒤 자동 저장돼요. 이 버튼은 지금 바로 저장하고 드라이브 엑셀(사거리가입고객리스트.xlsx)까지 바로 맞춰요 · 단축키 Ctrl+S', onclick: function () { glSaveNow(); } }, '💾 지금 저장'),
                 status);
             var body = gl.view === 'book' ? gllBook(E) : gllRegionView(E, gl.view === 'all' ? R.all : R[gl.view], gl.view === 'all' ? '' : { dash: '실적장표', flyer: '전단배포', side: '전단부업' }[gl.view]);
