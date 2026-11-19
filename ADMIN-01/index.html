@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Kjz7ybudcBbhtKqbLZY1zzxyjHrAMAnV0QrnEbOv0n4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-AMxzq+2qN7qOFN40G3k5OaHEtIYMqewtp/3aFt2krf4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2104,7 +2104,16 @@
         .rt-facets { background: #fff; border: 1px solid #DDE3D3; border-radius: 14px; padding: 10px 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; }
         .rt-frow { display: flex; gap: 10px; align-items: flex-start; }
         .rt-flab { flex: none; width: 64px; padding-top: 7px; font-size: 13px; font-weight: 900; color: #3E441E; }
-        .rt-fchips { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+        .rt-fchips { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 6px; min-width: 0; flex: 1 1 auto; }   /* 11-19.7: 오와 열 맞춤 */
+        .rt-fchips .rt-fchip { width: 100%; min-width: 0; justify-content: space-between; }
+        .rt-fchips .rt-fchip.all { justify-content: center; }
+        .rt-fchips .rt-fchip.wide { grid-column: span 2; }
+        .rt-fchips .rt-fchip.more { justify-content: center; }
+        .rt-kind-t { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 6px; background: #E3F1EE; color: #0F5E52; font-weight: 900; }
+        .rt-n-main { color: #13443D; }
+        .rt-n-sub { color: #7A8070; font-weight: 700; }
+        .rt-n-sep { color: #B8BDAE; font-weight: 400; }
+        .rt-n-model { color: #C2571A; }
         .rt-fchip { font: inherit; font-size: 13.5px; font-weight: 700; min-height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid #CFD6C4; background: #fff; color: #1F2416; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
         .rt-fchip small { font-size: 11.5px; color: #8A907D; font-weight: 700; }
         .rt-fchip:hover:not(:disabled) { border-color: #3E441E; }
@@ -2119,7 +2128,8 @@
         @media (max-width: 760px) {
             .rt-frow { flex-direction: column; gap: 4px; }
             .rt-flab { width: auto; padding-top: 0; }
-            .rt-fchips { flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 4px; scrollbar-width: thin; }
+            .rt-fchips { display: flex; flex-wrap: nowrap; overflow-x: auto; width: 100%; padding-bottom: 4px; scrollbar-width: thin; }
+            .rt-fchips .rt-fchip { width: auto; }
             .rt-fchip { flex: none; }
             .rt-sort { flex: 1 1 100%; width: 100%; }
         }
@@ -2130,7 +2140,7 @@
         .rt-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 14px 16px 10px; border-bottom: 1px solid #EEF1E8; }
         .rt-meta { font-size: 12.5px; color: #6A715D; font-weight: 700; margin-bottom: 2px; }
         .rt-name { display: block; font-size: 16.5px; color: #1F2416; line-height: 1.35; word-break: keep-all; }
-        .rt-model { display: inline-block; margin-top: 4px; font-size: 12px; color: #5D6450; background: #F2F4EC; border-radius: 6px; padding: 2px 7px; font-weight: 700; }
+        .rt-model { display: inline-block; margin-top: 4px; font-size: 12px; color: #C2571A; background: #FDF0E6; border: 1px solid #F1CDB3; border-radius: 6px; padding: 2px 7px; font-weight: 800; }
         .rt-low-b { white-space: nowrap; font-size: 13px; color: #5D6450; }
         .rt-low-b b { font-size: 19px; color: #B4441C; }
         .rt-tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -2297,7 +2307,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-19.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-19.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -12305,6 +12315,17 @@
             return rtMatch(p, words);
         }
         function rtPick2(name, v) { if (!v) rt[name] = []; else { var a = rt[name].slice(), i = a.indexOf(v); if (i >= 0) a.splice(i, 1); else a.push(v); rt[name] = a; } rt.more = 0; render(); }
+        function rtNameEl(p) {   // 상품 이름: 이름(진한 초록) / 관리 방식 등(회색) / 모델명(주황) — '/'로 나눠 색 구분
+            var nm = String(p.name || ''), md = String(p.model || '').replace(/\s/g, '').toLowerCase(), parts = nm.split(/\s*\/\s*/).filter(function (x) { return x !== ''; });
+            if (parts.length < 2 && !md) return h('b', { class: 'rt-name' }, h('span', { class: 'rt-n-main' }, nm));
+            var out = [];
+            parts.forEach(function (t, i) {
+                var isM = md && t.replace(/\s/g, '').toLowerCase() === md;
+                if (i) out.push(h('span', { class: 'rt-n-sep' }, ' / '));
+                out.push(h('span', { class: isM ? 'rt-n-model' : i === 0 ? 'rt-n-main' : 'rt-n-sub' }, t));
+            });
+            return h('b', { class: 'rt-name' }, out);
+        }
         function rtRow(label, name, items, cur, extra) {   // [○○ 전체] [항목 n] … (개수 0이면 흐리게)
             return h('div', { class: 'rt-frow', role: 'group', 'aria-label': label, 'data-rtrow': name },
                 h('span', { class: 'rt-flab' }, label),
@@ -12312,7 +12333,7 @@
                     h('button', { type: 'button', class: 'rt-fchip all', 'aria-pressed': cur.length ? 'false' : 'true', onclick: function () { rtPick2(name, ''); } }, '전체'),
                     items.map(function (it) {
                         var on = cur.indexOf(it[0]) >= 0;
-                        return h('button', { type: 'button', class: 'rt-fchip', 'aria-pressed': on ? 'true' : 'false', disabled: !on && !it[2] ? true : null, 'data-v': it[0], onclick: function () { rtPick2(name, it[0]); } }, it[1], h('small', {}, String(it[2])));
+                        return h('button', { type: 'button', class: 'rt-fchip' + (String(it[1]).length > 8 ? ' wide' : ''), 'aria-pressed': on ? 'true' : 'false', disabled: !on && !it[2] ? true : null, 'data-v': it[0], onclick: function () { rtPick2(name, it[0]); } }, it[1], h('small', {}, String(it[2])));
                     }), extra || null));
         }
         function rtWords(q) { return String(q || '').toLowerCase().split(/\s+/).filter(Boolean).slice(0, 6); }
@@ -12422,7 +12443,7 @@
                 });
                 return h('section', { class: 'rt-card', 'data-rtid': p.id },
                     h('div', { class: 'rt-head' },
-                        h('div', {}, h('div', { class: 'rt-meta' }, [p.brand, p.cat + (p.kind ? ' · ' + p.kind : '')].filter(Boolean).join(' · ')), h('b', { class: 'rt-name' }, p.name), p.model ? h('span', { class: 'rt-model' }, p.model) : null),
+                        h('div', {}, h('div', { class: 'rt-meta' }, [p.brand, p.cat].filter(Boolean).join(' · '), p.kind ? h('span', { class: 'rt-kind-t' }, p.kind) : null), rtNameEl(p), p.model ? h('span', { class: 'rt-model' }, p.model) : null),   // 11-19.7: 가전 종류 · 이름 · 모델명 색 구분
                         h('div', { class: 'rt-low-b' }, p.low != null ? ['월 ', h('b', {}, won(p.low)), '~'] : '월 렌탈료 상담 안내',
                             hasFee && S.fk === 2 ? h('span', { class: 'rt-tag fee' }, '💰 수수료 최대 ' + won(S.best)) : null,
                             S.g ? h('span', { class: 'rt-tag gift' }, '🎁 사은품') : null,
