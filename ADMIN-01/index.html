@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-V+fsmBMH2mQDk9rtj96xl8GuT6OfBkGP07aww0RrYXY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3EaujXpIhhpqMUjseh3dxuLlSibc8G2FIHXm6BMZ8qs='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1030,14 +1030,17 @@
         .gll-bm.low { color: var(--danger); }
         .gll-mid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
         .gll-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #E3E6DA; }
-        .gll-calls { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; flex: 1 1 520px; min-width: 0; }
-        .gll-call { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid #E0E4D3; border-radius: 8px; background: #FBFBF7; font-size: 12.5px; }
+        .gll-calls { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex: 1 1 100%; min-width: 0; }
+        .gll-call { display: block; width: 100%; min-width: 0; min-height: 34px; padding: 6px 8px; border: 1px solid #E0E4D3; border-radius: 8px; background: #FBFBF7; font: inherit; font-size: 12.5px; font-weight: 700; line-height: 1.5; white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere; resize: vertical; overflow: hidden; }
         .gll-call.on { background: #FFF8D6; border-color: #EAD27A; }
+        .gll-call.ed { border-color: #E8902A; box-shadow: 0 0 0 2px rgba(232,144,42,.18); }
+        .gll-call::placeholder { font-weight: 500; }
+        .gll-callsave { align-self: flex-end; }
+        .gll-callsave.dirty { background: #E8902A; border-color: #E8902A; color: #fff; }
         .gll-more-b { margin-left: auto; padding: 6px 12px; border: 0; background: none; color: var(--olive-700); font-weight: 700; font-size: 13px; }
         .gll-detail { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding: 10px; background: #F8F9F3; border-radius: 10px; }
         .gll-clear { margin-left: auto; }
         @media (max-width: 700px) {
-            .gll-calls { grid-template-columns: repeat(3, minmax(0, 1fr)); flex-basis: 100%; }
             .gll-bm { margin-left: 0; flex-direction: row; gap: 6px; align-items: baseline; }
             .gll-f { min-width: 0; }
         }
@@ -2284,7 +2287,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-18.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-18.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -17529,18 +17532,28 @@
             var lab = gllLabOf(S), H = glHead(S), nm = String(gllRaw(S, r, H && H.name || lab['고객명']) || '').trim(), ph = digitsOnly(String(gllRaw(S, r, lab['번호']) || ''));
             return (nm || ph) ? (nm + '|' + ph).slice(0, 60) : 'r' + r;
         }
+        var GLL_CALL_MAX = 20000;   // 사실상 제한 없음 (엑셀 칸 한도 안 · 시트 칸과 같은 값)
+        function gllCallDraft(key) { gl.cdr = gl.cdr || {}; return gl.cdr[key] || null; }   // 저장 전 적고 있는 콜 (화면을 다시 그려도 그대로)
+        function gllCallSaveAll(E, key) {   // [💾 콜 저장]: 적은 콜을 한 번에 저장
+            var d = gllCallDraft(key); if (!d) return false;
+            Object.keys(d).forEach(function (i) { gllCallSet(E, key, +i, String(d[i] || '').trim()); });
+            delete gl.cdr[key];
+            toast('콜 기록을 저장했어요.');
+            return true;
+        }
+        function gllCallGrow(ta) { ta.style.height = 'auto'; ta.style.height = Math.max(34, ta.scrollHeight + 2) + 'px'; }
         function gllCalls(S, r) { var a = S.calls && S.calls[gllCallKey(S, r)]; return Array.isArray(a) ? a : ['', '', '', '', '']; }
         function gllCallSet(E, key, i, val) {
             var S = E.S; if (!S.calls) S.calls = {};
             var a = (S.calls[key] || ['', '', '', '', '']).slice(0, 5); while (a.length < 5) a.push('');
-            val = String(val || '').slice(0, 200); if (a[i] === val) return;
+            val = String(val || '').slice(0, GLL_CALL_MAX); if (a[i] === val) return;
             a[i] = val;
             if (a.every(function (x) { return !x; })) delete S.calls[key]; else S.calls[key] = a;
             E.edits.set('call:' + key, S.calls[key] ? a.slice() : null); glQueue(E);
         }
         function gllCallsClean(x) {   // 받은 calls 걸러서
             var o = {}, n = 0;
-            if (x && typeof x === 'object') Object.keys(x).forEach(function (k) { if (n >= 5000 || typeof k !== 'string' || k.length > 60 || !Array.isArray(x[k])) return; var a = x[k].slice(0, 5).map(function (v) { return typeof v === 'string' ? v.slice(0, 200) : ''; }); while (a.length < 5) a.push(''); if (a.some(Boolean)) { o[k] = a; n++; } });
+            if (x && typeof x === 'object') Object.keys(x).forEach(function (k) { if (n >= 5000 || typeof k !== 'string' || k.length > 60 || !Array.isArray(x[k])) return; var a = x[k].slice(0, 5).map(function (v) { return typeof v === 'string' ? v.slice(0, GLL_CALL_MAX) : ''; }); while (a.length < 5) a.push(''); if (a.some(Boolean)) { o[k] = a; n++; } });
             return o;
         }
         function gllCallsModel(sheets) {   // 엑셀 받기: '콜기록' 시트 하나 더 (시트·고객명·번호·콜1~5)
@@ -17557,7 +17570,7 @@
             (all || []).forEach(function (s) {
                 if (gllKey(s.name) !== '콜기록') { out.push(s); return; }
                 var pend = gl.callsIn = gl.callsIn || {};
-                for (var r = 2; r <= s.nr; r++) { var w = s.cv[r] || {}, sh = String(w[1] || '').trim(); if (!sh) continue; var key = (String(w[2] || '').trim() + '|' + digitsOnly(String(w[3] || ''))).slice(0, 60); var a = [4, 5, 6, 7, 8].map(function (c) { return w[c] == null ? '' : String(w[c]).slice(0, 200); }); (pend[sh] = pend[sh] || {})[key] = a; }
+                for (var r = 2; r <= s.nr; r++) { var w = s.cv[r] || {}, sh = String(w[1] || '').trim(); if (!sh) continue; var key = (String(w[2] || '').trim() + '|' + digitsOnly(String(w[3] || ''))).slice(0, 60); var a = [4, 5, 6, 7, 8].map(function (c) { return w[c] == null ? '' : String(w[c]).slice(0, GLL_CALL_MAX); }); (pend[sh] = pend[sh] || {})[key] = a; }
             });
             return out;
         }
@@ -17982,14 +17995,29 @@
                 H.bm ? h('span', { class: 'gll-bm' + (bm != null && bm < GLL_DANGA ? ' low' : ''), title: '운영비포함총매출 (자동 계산)' }, h('small', {}, '총매출'), bm == null ? '—' : gllWon(bm)) : null);
             var mid = h('div', { class: 'gll-mid' }, GLL_TOP.map(function (n) { return fld(n); }));
             var key = gllCallKey(S, r), calls = gllCalls(S, r);
-            var callBox = h('div', { class: 'gll-calls', 'aria-label': '콜 기록' }, calls.map(function (v, i) {
-                var inp = h('input', { type: 'text', class: 'gll-call' + (v ? ' on' : ''), value: v || '', placeholder: '콜' + (i + 1), 'aria-label': '콜' + (i + 1) + ' (누르면 오늘 날짜)', maxlength: 200, disabled: !can, 'data-fk': 'gll-call-' + r + '-' + i });
+            var drf = gllCallDraft(key), dirty = !!(drf && Object.keys(drf).some(function (i) { return String(drf[i] || '').trim() !== String(calls[i] || ''); }));
+            if (drf && !dirty) { delete gl.cdr[key]; drf = null; }
+            var lastUsed = -1; for (var ci = 0; ci < 5; ci++) if ((drf && drf[ci] != null ? drf[ci] : calls[ci])) lastUsed = ci;
+            var showN = Math.min(5, lastUsed + 2);   // 적은 콜 + 다음 빈 칸 하나 (아래로 열림)
+            var saveB = can ? h('button', { type: 'button', class: 'btn btn-sm gll-callsave' + (dirty ? ' dirty' : ''), disabled: !dirty, title: '적은 콜 기록 저장 (Ctrl+Enter)', onclick: function (e) { e.stopPropagation(); if (gllCallSaveAll(E, key)) render(); } }, dirty ? '💾 콜 저장 (저장 안 됨)' : '✓ 콜 저장됨') : null;
+            var callBox = h('div', { class: 'gll-calls', 'aria-label': '콜 기록' }, calls.slice(0, showN).map(function (v0, i) {
+                var v = drf && drf[i] != null ? drf[i] : v0, edited = drf && drf[i] != null && String(drf[i]).trim() !== String(v0 || '');
+                var ta = h('textarea', { class: 'gll-call' + (v ? ' on' : '') + (edited ? ' ed' : ''), rows: 1, placeholder: '콜' + (i + 1) + ' — 누르면 오늘 날짜 · 줄 바꿈은 Enter · 저장은 [💾 콜 저장] 또는 Ctrl+Enter', 'aria-label': '콜' + (i + 1), disabled: !can, 'data-fk': 'gll-call-' + r + '-' + i });
+                ta.value = v || '';
                 var pre = '';
-                inp.addEventListener('focus', function () { if (!inp.value) { var d = new Date(); pre = (d.getMonth() + 1) + '/' + d.getDate() + ' '; inp.value = pre; try { inp.setSelectionRange(pre.length, pre.length); } catch (e) { /* */ } } else pre = ''; });
-                inp.addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); inp.blur(); } });
-                inp.addEventListener('blur', function () { var t = inp.value; if (pre && t.trim() === pre.trim()) { t = ''; inp.value = ''; } gllCallSet(E, key, i, t.trim()); inp.classList.toggle('on', !!t.trim()); });
-                return inp;
-            }));
+                function mark() {
+                    gl.cdr = gl.cdr || {}; var d = gl.cdr[key] = gl.cdr[key] || {}; d[i] = ta.value;
+                    var now = Object.keys(d).some(function (k) { return String(d[k] || '').trim() !== String(calls[k] || ''); });
+                    ta.classList.toggle('ed', String(ta.value).trim() !== String(v0 || ''));
+                    if (saveB) { saveB.disabled = !now; saveB.classList.toggle('dirty', now); saveB.textContent = now ? '💾 콜 저장 (저장 안 됨)' : '✓ 콜 저장됨'; }
+                }
+                ta.addEventListener('focus', function () { if (!ta.value) { var d = new Date(); pre = (d.getMonth() + 1) + '/' + d.getDate() + ' '; ta.value = pre; try { ta.setSelectionRange(pre.length, pre.length); } catch (e) { /* */ } } else pre = ''; gllCallGrow(ta); });
+                ta.addEventListener('input', function () { gllCallGrow(ta); mark(); });
+                ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.isComposing) { e.preventDefault(); mark(); if (gllCallSaveAll(E, key)) render(); } });
+                ta.addEventListener('blur', function () { if (pre && ta.value.trim() === pre.trim()) { ta.value = ''; var d = gl.cdr && gl.cdr[key]; if (d) { delete d[i]; if (!Object.keys(d).length) delete gl.cdr[key]; } if (saveB && !(gl.cdr && gl.cdr[key])) { saveB.disabled = true; saveB.classList.remove('dirty'); saveB.textContent = '✓ 콜 저장됨'; } } pre = ''; });
+                setTimeout(function () { gllCallGrow(ta); }, 0);
+                return ta;
+            }), saveB);
             var more = h('button', { type: 'button', class: 'gll-more-b', 'aria-expanded': open ? 'true' : 'false', onclick: function () { f.open[r] = !open; render(); } }, open ? '접기 ▴' : '자세히 ▾');
             var card = h('div', { class: 'gll-card ' + kc + (gl.flash === r ? ' flash' : ''), 'data-r': r }, top, mid, h('div', { class: 'gll-foot' }, callBox, more));
             if (open) {

@@ -5215,14 +5215,20 @@ if (typeof module !== 'undefined') module.exports = SGAI;
     }
     function reset() {
         st.topic = ''; st.n = {}; st.r = {}; st.cards = []; st.hist = []; st.busy = false; st.noArea = false;
-        log.textContent = ''; input.value = '';
+        log.textContent = ''; input.value = ''; ask = null;
         bot('대화를 지웠어요. 처음부터 다시 골라 볼게요 🙂'); greet();
         try { input.focus({ preventScroll: true }); } catch (e) { }
     }
     function close() { if (!ov) return; ov.hidden = true; document.documentElement.classList.remove('sga-lock'); }
-    function scroll() { setTimeout(function () { log.scrollTop = log.scrollHeight; }, 30); }
+    var ask = null;   // 11-18: 마지막 질문 — 답이 길어도 질문이 대화창 맨 위에 오게 (맨 아래로 내려가지 않음)
+    function scroll(end) {
+        setTimeout(function () {
+            if (end || !ask || !ask.parentNode) { log.scrollTop = log.scrollHeight; return; }
+            log.scrollTop = Math.max(0, ask.getBoundingClientRect().top - log.getBoundingClientRect().top + log.scrollTop - 8);
+        }, 30);
+    }
     function bot() { var b = h('div', { class: 'sga-msg bot' }); for (var i = 0; i < arguments.length; i++) { var c = arguments[i]; if (c == null) continue; b.appendChild(typeof c === 'string' ? h('p', { text: c }) : c); } log.appendChild(b); scroll(); return b; }
-    function me(t) { log.appendChild(h('div', { class: 'sga-msg me' }, h('p', { text: t }))); scroll(); }
+    function me(t) { ask = log.appendChild(h('div', { class: 'sga-msg me' }, h('p', { text: t }))); scroll(); }
     function setChips(list) {
         chips.textContent = '';
         (list || []).forEach(function (c) { var t = typeof c === 'string' ? c : c[0], act = typeof c === 'string' ? null : c[1]; chips.appendChild(h('button', { type: 'button', class: 'sga-chip', onclick: function () { if (act) act(); else send(t); } }, t)); });
@@ -5487,7 +5493,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
                 setChips(['사은품 언제 줘요?', '설치는 언제 돼요?', '정수기도 볼래요']);
             }, '[AI 상담 · 가입 신청 접수 완료]\n\n연락처: ' + p + '\n희망: ' + want + '\n\n가장 빠른 시간 내에 연락드리겠습니다!');
         });
-        setTimeout(function () { try { phone.focus({ preventScroll: true }); } catch (e) { } scroll(); }, 80);
+        setTimeout(function () { try { phone.focus({ preventScroll: true }); } catch (e) { } scroll(true); }, 80);   // 신청서는 번호 칸이 보이게 맨 아래로
         return box;
     }
 
