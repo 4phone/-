@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-cuPxzD5IEngJHZKLWnDhe09xt3Lb/n8ZYNMVx5IwDB4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Aq7L7AlcaqzV5AUGazpag0CbxPX7Wrb1BkVzYslPN+I='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -972,6 +972,8 @@
         /* 상담 순서 버튼 ①~⑦: 모두 같은 주황 버튼 + 번호 (상담 메모 → 상담 완료 → 신분증요청 바로진행 → 전용 링크 → 문자 → 가입확인서로 이동 → 드라이브 저장) */
         .btn.btn-step { background: #FF5B14; border: 2px solid #D94600; color: #fff; font-weight: 800; box-shadow: 0 3px 0 #B33A00, 0 6px 14px rgba(255, 91, 20, .28); text-shadow: 0 1px 0 rgba(0, 0, 0, .15); }
         .idr-make-btns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .idr-make-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .idr-make-row .ib-help { margin: 0; }
         .btn.btn-step.idr-upd::before { width: auto; min-width: 21px; padding: 0 5px; border-radius: 11px; }
         .idr-row.idr-upd-flash { background: #FFF3D6; transition: background .4s; }
         .btn.btn-step::before { content: attr(data-step); flex: 0 0 auto; display: inline-grid; place-items: center; width: 21px; height: 21px; border-radius: 50%; background: #fff; color: #D94600; font-size: 12.5px; font-weight: 900; line-height: 1; text-shadow: none; }
@@ -2294,7 +2296,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-19.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-19.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -12932,8 +12934,9 @@
                 h('div', { class: 'idr-grid' },
                     h('label', { class: 'idr-field' }, h('span', {}, '고객 성함'), U.name),
                     h('label', { class: 'idr-field' }, h('span', {}, '고객 휴대폰'), U.phone),
+                    h('div', { class: 'idr-field idr-wide idr-make-row' }, U.make, h('span', { class: 'ib-help' }, '성함·휴대폰만 적고 먼저 링크를 보내도 돼요. 접수 메모는 아래에 적고 [4-1 내용 작성 완료]로 저장해요.')),
                     h('div', { class: 'idr-field idr-wide' }, h('div', { class: 'idr-intake-top' }, h('span', {}, '고객 접수 메모 ', h('small', {}, '(고객에게는 안 보여요 · 아래 최근 요청 목록에서 복사)')), U.tpl), U.memo, U.partsBox)),
-                h('div', { class: 'idr-form-foot' }, h('p', {}, '고객 전용 주소는 72시간 동안 한 번만 쓸 수 있어요. 사진·서류는 서버에 남기지 않고 관리자 메일로만 보내져요. 접수 메모는 팀 암호로 잠가서 보관하고 ' + INTAKE_KEEP_DAYS + '일 뒤 자동으로 지워요.'), h('div', { class: 'idr-make-btns' }, U.make, U.upd)));
+                h('div', { class: 'idr-form-foot' }, h('p', {}, '고객 전용 주소는 72시간 동안 한 번만 쓸 수 있어요. 사진·서류는 서버에 남기지 않고 관리자 메일로만 보내져요. 접수 메모는 팀 암호로 잠가서 보관하고 ' + INTAKE_KEEP_DAYS + '일 뒤 자동으로 지워요.'), h('div', { class: 'idr-make-btns' }, U.upd)));
             U.title = h('div', { class: 'vs-h' }, '고객에게 보낼 문자');
             U.area = h('textarea', { class: 'idr-msg', readonly: true, rows: '9', 'aria-label': '고객에게 보낼 문자 내용' });
             U.sms = h('button', { type: 'button', class: 'btn btn-step', 'data-step': '5', 'data-fk': 'idr-sms', onclick: function () { idrSend(); } }, '문자로 보내기');
