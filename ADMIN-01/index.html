@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-3EaujXpIhhpqMUjseh3dxuLlSibc8G2FIHXm6BMZ8qs='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ptAANTVeZtkjDk6pplTIwG7k6k58xCLZ3C9B1JT0jgE='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1102,6 +1102,9 @@
         .gll-allg { margin-bottom: 14px; }
         .gll-allh { display: flex; align-items: center; gap: 10px; margin: 6px 2px 8px; font-size: 14px; }
         .gll-allh span { color: var(--muted); font-size: 12.5px; } .gll-allh .btn { margin-left: auto; }
+
+        .kl-ul { margin: 6px 0 8px; padding-left: 18px; line-height: 1.6; }
+        .kl-learn { display: flex; gap: 8px; align-items: flex-start; font-weight: 700; margin-top: 8px; }
         .gl-wrap { border: 1px solid #C9CDB8; border-radius: 0 0 10px 10px; background: #fff; overflow: hidden; }
         .gl-g { overflow: auto; max-height: calc(100vh - 270px); min-height: 320px; outline: none; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
         .gl-g:focus-visible { box-shadow: inset 0 0 0 2px #1A73E8; }
@@ -2287,7 +2290,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-18.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-19.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2448,6 +2451,7 @@
                 if (isYmd(r.instDate)) o.instDate = r.instDate;
                 if (str(r.xev, 40)) o.xev = str(r.xev, 40);   // 부가서비스 해지 가능일 캘린더 일정
                 if (str(r.pev, 40)) o.pev = str(r.pev, 40);   // 요금제 변경일 캘린더 일정
+                if (+r.pkOv >= 1 && +r.pkOv <= 36) o.pkOv = Math.round(+r.pkOv);   // 요금제 유지기간: 정책서와 달라도 직접 확인한 개월 수
                 if (r.fs === 1) o.fs = 1;   // 가입 확인서 원본이 공유 저장소에 있음 (어느 기기에서나 다시 열기)
                 out.regs.push(o);
             });
@@ -7483,10 +7487,14 @@
                 if (/청소년|키즈|주니어|시니어/.test(it)) return;   // 나이 대상 추가 정책 줄 (일반 고객 요금제 기간이 아님)
                 if (/\//.test(p)) { var pp = p.split('/').filter(function (q) { return /요금제/.test(q); })[0]; if (pp) p = pp.replace(/^.*?([DM]\s*\+\s*\d+).*$/i, '$1'); }   // '요금제 D+93 / 회선 D+183' → D+93
                 var used = /중고|자급제/.test(it);
-                if (!/요금제/.test(it) && !(used && (/요금제/.test(nt) || same))) return;
+                if (!/요금제/.test(it) && !(used && (/요금제/.test(nt) || /요금제/.test(String(k.period || '')) || same))) return;   // 기간 칸에만 '요금제'가 있는 중고 줄 ('회선·요금제 D+183 / 결합 D+183')
+                if (/요금제/.test(p) && /[\/]/.test(p)) {   // '회선·요금제 D+183 / 결합 D+183' · '회선·단말 M+6 / 요금제 M+3' → 요금제 부분만
+                    var seg = p.split('/').filter(function (q) { return /요금제/.test(q); })[0] || '', pm = /([DM]\s*\+\s*\d+|당월말|익월말)/i.exec(seg);
+                    if (pm) p = pm[1];
+                }
                 if (used && !f.used) return;                                     // 중고·자급제 줄 = 비구매 개통만
                 if (/중고\s*신규/.test(it) && f.type !== 'new') return;
-                if (/중고\s*MNP/i.test(it) && f.type !== 'port') return;
+                if (/중고\s*MNP/i.test(it) && (/010|신규/.test(it) ? f.type === 're' : f.type !== 'port')) return;   // '중고 MNP·중고 010 활성화' = 번호이동·010신규
                 if (/유통망\s*지원금/.test(it) && !f.pay) return;                // '유통망 지원금 요금제' = 유통망지원금을 적은 개통만
                 var tys = mfPTypes(nt); if (tys && tys.indexOf(f.type) < 0) return;
                 var nm = it + (tys ? ' (' + tys.map(function (t) { return MF_PTYPE[t]; }).join('·') + ')' : '');
@@ -7497,7 +7505,7 @@
                 }
                 hits.push({ name: nm, raw: p });
             });
-            return mfPolOk(b.tag, hits);
+            return klApply(mfPolOk(b.tag, hits), f);   // 대표님이 확인해 익힌 기준이 있으면 그 개월 수
         }
         function mfV(sheet) { return function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return el ? String(el.value || '').trim() : ''; }; }
         function mfC(sheet) { return function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return !!(el && el.checked); }; }
@@ -7523,7 +7531,9 @@
         function mfPCalc(sheet) {   // 가입 요금제 → 변경 가능일
             var v = mfV(sheet), c = mfC(sheet), o = mfOpen(v), plan = v('plan1'), ns = digitsOnly(v('keep1'));
             var f = { type: c('tNew') ? 'new' : c('tPort') ? 'port' : c('tRe') ? 're' : '', used: c('noBuy'), disc: c('dSel') ? 'sel' : c('dSub') ? 'sub' : '', pay: +digitsOnly(v('payAmt')) > 0, payAmt: digitsOnly(v('payAmt')) };
-            return mfKDates({ k: 'p', svc: plan, plan2: mfPlanKeep(v('plan2')) ? '' : v('plan2'), keepPlan: mfPlanKeep(v('plan2')), keep2: digitsOnly(v('keep2')), bill2: v('bill2'), f: f, ns: ns, n: ns ? +ns : -1, open: o.ymd, date: '', typed: '', base: '', same: null, pol: plan ? mfPPolicy(v('netUse'), v('carrier'), f) : { st: 'nosvc' } }, o);
+            var x = mfKDates({ k: 'p', svc: plan, plan2: mfPlanKeep(v('plan2')) ? '' : v('plan2'), keepPlan: mfPlanKeep(v('plan2')), keep2: digitsOnly(v('keep2')), bill2: v('bill2'), f: f, ns: ns, n: ns ? +ns : -1, open: o.ymd, date: '', typed: '', base: '', same: null, pol: plan ? mfPPolicy(v('netUse'), v('carrier'), f) : { st: 'nosvc' } }, o);
+            if (x.base === 'pol' && x.ns && !x.same && x.typed && sheet.__kOv && +sheet.__kOv === x.n) { x.polDate = x.date; x.date = x.typed; x.base = 'typed'; x.ovr = 1; }   // 직접 확인한 개월 수 (확인 팝업 · 장부 pkOv)
+            return x;
         }
         var MF_XWHY = { nonet: '접수처를 안 골랐어요', load: '모바일 정책서를 아직 못 불러왔어요', off: '모바일 정책서를 불러올 수 없어요 (드라이브 연결 필요)', err: '모바일 정책서를 불러오지 못했어요', nocar: '가입 통신사를 안 골랐어요', nopc: '정책서에 이 거래처 통신사가 없어요', bad: '정책서 유지기간을 읽지 못했어요', notype: '가입 유형(신규·번호이동·재가입)을 안 골랐어요' };
         function mfXPolText(p) { return p.hits.map(function (hh) { return hh.name.slice(0, 30) + ' ' + hh.per.t; }).join(', '); }
@@ -7536,6 +7546,7 @@
             if (!x.svc) return x.ns ? [x.k === 'p' ? '가입 요금제 이름도 적어 주세요.' : '추가 서비스(부가서비스) 이름도 적어 주세요.', 'warn'] : ['', ''];
             if (!x.open) return ['⚠ 맨 아래 개통 날짜(년·월·일)를 확인해 주세요.', 'bad'];
             var cal = x.k === 'p' && x.date && !x.plan2 ? (x.keepPlan ? ' · 요금제 유지 고객이라 캘린더에는 안 넣어요' : ' · 변경 요금제가 없어 캘린더에는 안 넣어요') : '';
+            if (x.ovr) return ['✓ 확인함: 적은 ' + nTxt + ' 기준 ' + verb + ' ' + mfXDot(x.date) + ' (정책서 [' + p.tag + '] ' + mfXPolText(p) + ' → ' + mfXDot(x.polDate) + '와 다름 · 직접 확인)' + cal, 'ok'];
             if (p.st === 'ok') {
                 var head = '정책서 [' + p.tag + '] ' + mfXPolText(p) + ' → ' + verb + ' ' + mfXDot(x.date);
                 if (!x.ns) return ['✓ ' + head + ' · 유지기간(개월)도 적어 주세요' + cal, 'warn'];
@@ -7560,6 +7571,8 @@
                 return x;
             };
             sh.addEventListener('input', M.xUpd); sh.addEventListener('change', M.xUpd);
+            var k1 = sh.querySelector('[data-mf="keep1"]');
+            if (k1) k1.addEventListener('change', function () { if (sh.__kOv && +sh.__kOv !== +digitsOnly(k1.value)) { delete sh.__kOv; delete M.kOv; } setTimeout(function () { M.xUpd(); klAsk(M); }, 0); });   // 유지기간을 직접 고치면: 정책서와 다를 때 확인 팝업
             if (driveOn() && !mp.busy && (!mp.data || Date.now() - mp.at > 600000)) mpLoad();   // 확인서를 열 때 최신 정책서
             M.xUpd();
         }
@@ -7614,7 +7627,7 @@
                 P ? '변경 요금제: ' + x.plan2 + (x.keep2 ? ' (유지 ' + x.keep2 + '개월)' : '') + (x.bill2 ? ' · 청구금액 ' + x.bill2 + '원' : '') : '',
                 '개통일: ' + mfXDay(x.open),
                 (P ? '요금제 변경 가능일: ' : '해지 가능일: ') + mfXDay(x.date) + (P ? ' (이날부터 변경 가능)' : ' (이날부터 해지 가능)'),
-                '기준: ' + (x.base === 'pol' ? '모바일 정책서 [' + p.tag + '] ' + mfXPolText(p) : '적은 유지기간 ' + x.n + '개월 (' + mfXWhy(x) + ')'),
+                '기준: ' + (x.ovr ? '적은 유지기간 ' + x.n + '개월 (직접 확인 · 정책서 [' + p.tag + '] ' + mfXPolText(p) + '와 다름)' : x.base === 'pol' ? '모바일 정책서 [' + p.tag + '] ' + mfXPolText(p) + (p.learn ? ' (대표님 확인 기준 · ' + p.learn.d + ')' : '') : '적은 유지기간 ' + x.n + '개월 (' + mfXWhy(x) + ')'),
                 '적은 유지기간: ' + (x.ns ? x.n + '개월' + (x.base === 'pol' ? (x.same ? ' (정책서와 일치)' : ' ⚠ 정책서와 달라요 → 정책서 날짜로 등록') : '') : '없음'),
                 r.model ? '모델: ' + r.model : '', !P && r.plan ? '요금제: ' + r.plan : '',
                 '판매자: ' + (r.seller || staffName(sid)),
@@ -7625,11 +7638,13 @@
         }
         function regKCal(M, r, k) {   // 드라이브 저장 때마다: 일정 만들기 / 바뀌면 고치기 / 없어지면 지우기 → 결과 (팝업·알림용)
             var P = k === 'p', key = P ? 'pev' : 'xev', label = P ? '요금제 변경일' : '부가서비스 해지 가능일';
+            if (P) { var ov0 = M.kOv || (r && r.pkOv); if (ov0) M.sheet.__kOv = ov0; }
             var x = P ? mfPCalc(M.sheet) : mfXCalc(M.sheet);
+            if (P && r) { if (x.ovr) { if (r.pkOv !== x.n) { r.pkOv = x.n; stamp(r); } } else if (r.pkOv && (!x.ns || x.n !== r.pkOv)) { delete r.pkOv; stamp(r); } }   // 직접 확인한 개월 수는 장부 줄에도 (다시 저장·저녁 점검 때 그대로)
             var want = !!(x.svc && x.date && (!P || x.plan2));
             var info = want ? regKInfo(r, x) : null, res = regEvSync(r, key, info);
             res.k = k; res.label = label; res.x = x; res.info = info;
-            res.warn = !info ? '' : x.base === 'pol' ? (x.ns && !x.same ? '적은 유지기간(' + x.n + '개월)이 정책서와 달라 정책서 날짜로 넣었어요' : '') : mfXWhy(x).replace(/^⚠ /, '') + ' → 적은 ' + x.n + '개월로 계산했어요';
+            res.warn = !info || x.ovr ? '' : x.base === 'pol' ? (x.ns && !x.same ? '적은 유지기간(' + x.n + '개월)이 정책서와 달라 정책서 날짜로 넣었어요' : '') : mfXWhy(x).replace(/^⚠ /, '') + ' → 적은 ' + x.n + '개월로 계산했어요';
             res.ok = info && /^(new|move|edit|same)$/.test(res.st) ? regEvCheck(r, key, info) : null;
             return res;
         }
@@ -18175,10 +18190,12 @@
         function kcSheet(vals, checks) {   // 가입 확인서처럼 읽히는 가짜 확인서 (확인서 저장 때와 똑같은 계산을 쓰려고)
             return { querySelector: function (sel) { var m = /data-mf="([^"]+)"/.exec(sel), n = m && m[1]; if (!n) return null; if (Object.prototype.hasOwnProperty.call(checks, n)) return { checked: !!checks[n], value: '' }; if (Object.prototype.hasOwnProperty.call(vals, n)) return { value: vals[n] == null ? '' : String(vals[n]) }; return null; } };
         }
-        function kcFromRec(r) {   // 장부 한 줄 → 가짜 확인서
+        function kcFromRec(r) {   // 장부 한 줄 → 가짜 확인서 (직접 확인한 유지기간 pkOv 도)
             var t = String(r.type || ''), d = parseYmd(r.date || ''), keep = String(r.keep || '');
-            return kcSheet({ netUse: r.dealer, carrier: r.carrier, extra: r.extra, xKeep: '', plan1: r.plan, keep1: /^\d+$/.test(keep) ? keep : '', plan2: r.plan2, keep2: '', bill2: r.bill2, payAmt: r.pay, y: d ? d.getFullYear() : '', m: d ? d.getMonth() + 1 : '', d: d ? d.getDate() : '' },
+            var sh = kcSheet({ netUse: r.dealer, carrier: r.carrier, extra: r.extra, xKeep: '', plan1: r.plan, keep1: /^\d+$/.test(keep) ? keep : '', plan2: r.plan2, keep2: '', bill2: r.bill2, payAmt: r.pay, y: d ? d.getFullYear() : '', m: d ? d.getMonth() + 1 : '', d: d ? d.getDate() : '' },
                 { tNew: /신규/.test(t), tPort: /번호\s*이동|MNP/i.test(t), tRe: /재가입|기기\s*변경|기변/.test(t), noBuy: /비구매|중고|자급|유심/.test(t + ' ' + (r.kindT || '')), dSel: /선약|선택/.test(r.disc || ''), dSub: /공시/.test(r.disc || '') });
+            if (r.pkOv) sh.__kOv = r.pkOv;
+            return sh;
         }
         function kcGlRows(E) {   // 가입고객리스트 한 시트의 모바일 고객 → 장부 줄 모양
             var S = E.S, H = glHead(S), ym = glYm(S.name), out = []; if (!H || !ym) return out;
@@ -18453,6 +18470,72 @@
             }).catch(function (e) { feeBox.textContent = ''; feeBox.appendChild(h('p', {}, '단가 대조를 하지 못했어요: ' + driveErrText(e))); });
         }
         setInterval(function () { try { if (typeof authed !== 'undefined' && authed && db && fl.rev < 0 && !fl.busy && driveOn() && (!fl.fail || Date.now() - fl.fail > 600000) && glCan()) flLoad().catch(function () { /* 다음에 */ }); } catch (e) { /* 다음에 */ } }, 20000);
+        /* ---- 가입 요금제 유지기간: 직접 적은 개월 수가 정책서와 다를 때 확인 팝업 → 적은 개월로 캘린더 · 대표님이 확인하면 같은 조건은 익힘 (keep_learn · 팀 키 암호화)
+           익히는 조건: 정책서 거래처·통신사 · 가입 유형 · 중고(비구매) · 할인 방법 · 유통망지원금 · 그때 정책서 기간 글 (정책서 기간이 바뀌면 다시 물어봄) */
+        var kl = { rev: -1, list: [], busy: false, fail: 0 };
+        var KL_ID = 'keep_learn';
+        function klClean(a) {
+            var s = function (v, n) { return String(v == null ? '' : v).slice(0, n); };
+            return (Array.isArray(a) ? a : []).slice(0, 300).filter(function (x) { return x && x.k && +x.n >= 1 && +x.n <= 36; }).map(function (x) { return { k: s(x.k, 300), n: Math.round(+x.n), d: s(x.d, 120), at: Math.round(+x.at || 0), by: s(x.by, 20) }; });
+        }
+        function klLoad(force) {
+            if (!force && kl.rev >= 0) return Promise.resolve(kl);
+            if (kl.busy && !force) return Promise.resolve(kl);
+            kl.busy = true;
+            return glCall('glGet', { id: KL_ID, rev: -1 }).then(function (res) {
+                if (!res.blob) { kl.rev = res.rev || 0; kl.list = []; return kl; }
+                return glDec(res.blob, GL_AAD + KL_ID).then(function (x) { kl.rev = res.rev; kl.list = klClean(x && x.list); return kl; });
+            }).then(function (r) { kl.busy = false; mfXRefresh(); return r; }, function (e) { kl.busy = false; kl.fail = Date.now(); throw e; });
+        }
+        function klSave(mut, tries) {
+            return klLoad(true).then(function () {
+                var next = klClean(mut(kl.list.slice()));
+                return glEnc({ v: 1, list: next }, GL_AAD + KL_ID).then(function (blob) { return glCall('glPut', { id: KL_ID, baseRev: kl.rev, blob: blob }); })
+                    .then(function (res) { kl.rev = res.rev; kl.list = next; mfXRefresh(); return next; });
+            }).catch(function (e) { if (e && e.code === 'conflict' && (tries || 0) < 2) return klSave(mut, (tries || 0) + 1); throw e; });
+        }
+        function klKey(pol, f) { return [pol.tag, f.type || '-', f.used ? '중고' : '새폰', f.disc || '-', f.pay ? '유통망' : '-', pol.hits.map(function (hh) { return hh.raw; }).join(',')].join('|'); }
+        function klDesc(pol, f) { return pol.tag + ' · ' + (MF_PTYPE[f.type] || '-') + (f.used ? ' · 중고(비구매)' : '') + (f.disc === 'sel' ? ' · 선택약정' : f.disc === 'sub' ? ' · 공시지원금' : '') + (f.pay ? ' · 유통망지원금' : ''); }
+        function klApply(res, f) {   // mfPPolicy 결과에 익힌 기준을 씌움
+            if (!res || res.st !== 'ok' || !kl.list.length) return res;
+            var k = klKey(res, f), rule = kl.list.filter(function (x) { return x.k === k; })[0];
+            if (!rule) return res;
+            var per = mfXPer('M+' + rule.n); if (!per) return res;
+            per.t = rule.n + '개월';
+            return { st: 'ok', tag: res.tag, hits: [{ name: '대표님 확인 기준', raw: 'M+' + rule.n, per: per }], learn: rule, orig: res };
+        }
+        function klAsk(M) {   // 유지기간 칸을 고쳤을 때: 정책서와 다르면 확인 팝업
+            var sh = M && M.sheet; if (!sh) return;
+            var keepOv = sh.__kOv; delete sh.__kOv;
+            var x; try { x = mfPCalc(sh); } finally { if (keepOv) sh.__kOv = keepOv; }
+            if (!(x.pol.st === 'ok' && x.ns && x.n >= 1 && x.n <= 36 && !x.same && x.typed && x.date)) return;
+            if (sh.__kOv === x.n) return;
+            var sig = x.n + '|' + x.date; if (M.kAsked === sig) return; M.kAsked = sig;
+            var pText = '정책서 [' + x.pol.tag + '] ' + mfXPolText(x.pol) + ' → ' + mfXDot(x.date), tText = '적은 유지기간 ' + x.n + '개월 → ' + mfXDot(x.typed);
+            var boss = isBoss(), cond = klDesc(x.pol, x.f);
+            var ok = function (learn) {
+                sh.__kOv = x.n; M.kOv = x.n;
+                if (M.xUpd) M.xUpd();
+                if (learn && boss && driveOn()) klSave(function (L) { var k = klKey(x.pol, x.f); L = L.filter(function (r) { return r.k !== k; }); L.unshift({ k: k, n: x.n, d: cond, at: Date.now(), by: me }); return L; })
+                    .then(function () { toast('💡 익혔어요: ' + cond + ' → 요금제 유지 ' + x.n + '개월 (다음 개통부터 자동)'); }, function (e) { toast('익히기는 저장하지 못했어요. 이번 확인서는 적은 ' + x.n + '개월로 저장돼요. ' + driveErrText(e)); });
+                else toast('✓ 이 확인서는 적은 ' + x.n + '개월 기준(' + mfXDot(x.typed) + ')으로 캘린더에 저장돼요.');
+            };
+            var dlg = document.getElementById('dlg');
+            if (!dlg || dlg.open) { if (confirm('유지기간이 정책서와 달라요.\n\n' + pText + '\n' + tText + '\n\n적은 ' + x.n + '개월이 맞으면 [확인] → 그 날짜로 캘린더에 저장' + (boss ? '하고 같은 조건은 익혀요.' : '해요.'))) ok(true); return; }
+            dlg.textContent = ''; dlg.className = '';
+            var lc = boss ? h('input', { type: 'checkbox', checked: true, id: 'klLearn' }) : null;
+            dlg.appendChild(h('div', { class: 'dlg-head' }, '⚠ 요금제 유지기간 확인'));
+            dlg.appendChild(h('div', { class: 'dlg-body' },
+                h('p', {}, '직접 적은 유지기간이 정책서와 달라요. 이 개통 기준이 맞는지 확인해 주세요.'),
+                h('ul', { class: 'kl-ul' }, h('li', {}, pText), h('li', {}, h('b', {}, tText))),
+                h('p', { class: 'ib-help' }, '조건: ' + cond),
+                boss ? h('label', { class: 'kl-learn' }, lc, ' 다음부터 같은 조건은 ' + x.n + '개월로 익히기 (정책서 기간이 바뀌면 다시 물어봐요)') : h('p', { class: 'ib-help' }, '직원 확인은 이 확인서에만 적용돼요. 같은 조건을 익히려면 대표님이 확인해 주세요.')));
+            dlg.appendChild(h('div', { class: 'dlg-foot' },
+                h('button', { type: 'button', class: 'btn', onclick: function () { closeDlg(); toast('정책서 날짜(' + mfXDot(x.date) + ')로 캘린더에 저장돼요.'); } }, '정책서 날짜로'),
+                h('button', { type: 'button', class: 'btn btn-primary', onclick: function () { var learn = !!(lc && lc.checked); closeDlg(); ok(learn); } }, '✓ 맞아요 — 적은 ' + x.n + '개월로 저장')));
+            showDlg(dlg);
+        }
+        setInterval(function () { try { if (typeof authed !== 'undefined' && authed && db && kl.rev < 0 && !kl.busy && driveOn() && (!kl.fail || Date.now() - kl.fail > 600000)) klLoad().catch(function () { /* 다음에 */ }); } catch (e) { /* 다음에 */ } }, 20000);
         function renderGl() {
             var boss = isBoss();
             var head = h('div', { class: 'page-head' }, h('h1', {}, '사거리가입고객리스트'), h('div', { class: 'actions' },
