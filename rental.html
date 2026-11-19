@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-VC1cPMt4UJdtya6NgSlg7boKSdAn9dsA1n5vKY4z8Vk='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-1t2mCWMHn9j7tXjhgzPyIs8fKa1MAh+tUiAT621sVgc='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -918,7 +918,7 @@ var RENT_GIFT_SHOW = false;
         t = t.replace(/(와|과)\s*사은품(은|이)/g, function (m0, a, b) { return b === '은' ? (a === '와' ? '는' : '은') : (a === '와' ? '가' : '이'); });
         return t.replace(/([.!?。])\s+/g, '$1\n').split('\n').filter(function (x) { return !/사은품|지원금/.test(x); }).join(' ').trim();
     }
-    var CK = RENT_GIFT_SHOW ? 'sg-rental-feed-v3' : 'sg-rental-feed-v3n', TTL = 30 * 60 * 1000, PAGE = 24;   // v2: 상세 칸 · v3(11-18): 관리 방식·혜택·사업자 전용·소유권 이전
+    var CK = RENT_GIFT_SHOW ? 'sg-rental-feed-v4' : 'sg-rental-feed-v4n', TTL = 30 * 60 * 1000, PAGE = 24;   // v2: 상세 칸 · v3(11-18): 관리 방식·혜택·사업자 전용·소유권 이전
     var URL_OK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/;
     var MAIL_URL = 'https://script.google.com/macros/s/AKfycby_1x_FqN2kW6FJyoHDXw7IF_-Rgl4lD1n_msdM48sgXG7Ch1lMCnTKz5ytcylQAy-P/exec';   // 홈페이지 · 사장님전용 상담 접수와 같은 접수 메일
     var CAT_ORDER = ['정수기', '가전렌탈'];
@@ -1008,6 +1008,25 @@ var RENT_GIFT_SHOW = false;
     /* ---------- 데이터 받기 (한 번만) ---------- */
     var DATA = null, loading = null, LS_TTL = 24 * 3600 * 1000;
     function liteOf(d) { return { at: d.at, full: false, nt: d.nt, items: d.items.map(function (p) { var q = {}; Object.keys(p).forEach(function (k) { if (k !== 'spec' && k !== 'bul' && k !== 'desc' && k !== 'dimg') q[k] = p[k]; }); return q; }) }; }
+    function applyFix(j, fx) {   // 11-19: 착한렌탈 금액 맞춤 (rental-fix.json) — 같은 상품·렌탈사면 그 렌탈사 약정을 맞춤 목록으로 바꾸고, 없던 렌탈사는 더함
+        try {
+            if (!j || !Array.isArray(j.products) || !fx || typeof fx !== 'object' || !fx.p || typeof fx.p !== 'object') return j;
+            j.products.forEach(function (p) {
+                var f = p && p.id && fx.p[p.id]; if (!f || typeof f !== 'object') return;
+                if (!Array.isArray(p.companies)) p.companies = [];
+                Object.keys(f).forEach(function (co) {
+                    var rows = f[co]; if (!Array.isArray(rows) || !rows.length) return;
+                    var plans = rows.filter(function (r) { return Array.isArray(r) && typeof r[0] === 'number' && typeof r[1] === 'number' && r[1] > 0; }).map(function (r) {   // [약정, 월 렌탈료, 소유권 이전, 관리 방식, 혜택, 무상 A/S]
+                        return { contractMonths: r[0], mandatoryMonths: r[0], monthlyFee: r[1], ownerMonths: r[2], careType: r[3] || null, benefit: r[4] || null, warrantyMonths: r[5], gift: null };
+                    });
+                    if (!plans.length) return;
+                    var c = null; p.companies.forEach(function (x) { if (!c && x && (co === '' ? !x.name : x.name === co)) c = x; });   // '' = 렌탈사 이름이 빈 곳(제조사 직접)
+                    if (c) c.plans = plans; else if (co) p.companies.push({ name: co, plans: plans });
+                });
+            });
+        } catch (e) { /* 맞춤표를 못 쓰면 받은 그대로 */ }
+        return j;
+    }
     function getFeed(force) {
         if (DATA && !force) return Promise.resolve(DATA);
         if (!force) {
@@ -1027,8 +1046,10 @@ var RENT_GIFT_SHOW = false;
         if (loading) return loading;
         var ctl = window.AbortController ? new AbortController() : null;
         var tm = setTimeout(function () { if (ctl) ctl.abort(); }, 20000);
+        var fixP = fetch('rental-fix.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });   // 착한렌탈 금액 맞춤표 (없으면 그냥 진행)
         loading = fetch(FEED, { credentials: 'omit', cache: 'no-cache', signal: ctl ? ctl.signal : undefined })
             .then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); })
+            .then(function (j) { return fixP.then(function (fx) { return applyFix(j, fx); }); })
             .then(function (j) {
                 var d = norm(j); if (!d || !d.items.length) throw new Error('empty');
                 DATA = d;

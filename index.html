@@ -5175,7 +5175,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
     if (!window.SGAI) return;
     var A = window.SGAI;
     var st = { topic: '', n: {}, r: {}, cards: [], hist: [], rentItems: null, busy: false };
-    var FEED = 'https://modil.co.kr/api/feed/rental', CK = window.SG_RENT_GIFT_SHOW === true ? 'sg-ai-rent-v2' : 'sg-ai-rent-v2n', TTL = 30 * 60 * 1000;
+    var FEED = 'https://modil.co.kr/api/feed/rental', CK = window.SG_RENT_GIFT_SHOW === true ? 'sg-ai-rent-v3' : 'sg-ai-rent-v3n', TTL = 30 * 60 * 1000;
     var TEL = '1833-2440', KAKAO = 'https://pf.kakao.com/_PxjsKG/chat';
     var $ = function (id) { return document.getElementById(id); };
     function h(tag, attrs) {
@@ -5363,11 +5363,31 @@ if (typeof module !== 'undefined') module.exports = SGAI;
     function S(v, n) { return typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f\u2028\u2029]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n || 200) : ''; }
     function N(v) { return typeof v === 'number' && isFinite(v) && v >= 0 ? v : null; }
     function U(v) { return typeof v === 'string' && v.length < 800 && /^https:\/\/[A-Za-z0-9.-]+(?::\d+)?\/[^\s"'<>\\`]*$/.test(v) ? v : ''; }
+    function applyFix(j, fx) {   // 11-19: 착한렌탈 금액 맞춤 (rental-fix.json) — 같은 상품·렌탈사면 그 렌탈사 약정을 맞춤 목록으로 바꾸고, 없던 렌탈사는 더함
+        try {
+            if (!j || !Array.isArray(j.products) || !fx || typeof fx !== 'object' || !fx.p || typeof fx.p !== 'object') return j;
+            j.products.forEach(function (p) {
+                var f = p && p.id && fx.p[p.id]; if (!f || typeof f !== 'object') return;
+                if (!Array.isArray(p.companies)) p.companies = [];
+                Object.keys(f).forEach(function (co) {
+                    var rows = f[co]; if (!Array.isArray(rows) || !rows.length) return;
+                    var plans = rows.filter(function (r) { return Array.isArray(r) && typeof r[0] === 'number' && typeof r[1] === 'number' && r[1] > 0; }).map(function (r) {   // [약정, 월 렌탈료, 소유권 이전, 관리 방식, 혜택, 무상 A/S]
+                        return { contractMonths: r[0], mandatoryMonths: r[0], monthlyFee: r[1], ownerMonths: r[2], careType: r[3] || null, benefit: r[4] || null, warrantyMonths: r[5], gift: null };
+                    });
+                    if (!plans.length) return;
+                    var c = null; p.companies.forEach(function (x) { if (!c && x && (co === '' ? !x.name : x.name === co)) c = x; });   // '' = 렌탈사 이름이 빈 곳(제조사 직접)
+                    if (c) c.plans = plans; else if (co) p.companies.push({ name: co, plans: plans });
+                });
+            });
+        } catch (e) { /* 맞춤표를 못 쓰면 받은 그대로 */ }
+        return j;
+    }
     function loadRent() {
         if (st.rentItems) return Promise.resolve(st.rentItems);
         try { var c = JSON.parse(sessionStorage.getItem(CK) || 'null'); if (c && Date.now() - c.t < TTL && Date.now() >= c.t && Array.isArray(c.d) && c.d.length) { st.rentItems = c.d; return Promise.resolve(c.d); } } catch (e) { }
         var gp = fetch('rental-gift.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; });
-        var fp = fetch(FEED, { credentials: 'omit', cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); });
+        var xp = fetch('rental-fix.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });   // 착한렌탈 금액 맞춤표
+        var fp = fetch(FEED, { credentials: 'omit', cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('http'); return r.json(); }).then(function (j) { return xp.then(function (fx) { return applyFix(j, fx); }); });
         return Promise.all([fp, gp]).then(function (a) {
             var j = a[0], G = (a[1] && typeof a[1] === 'object') ? a[1] : {}, out = [], seen = {};
             (j && Array.isArray(j.products) ? j.products : []).forEach(function (p) {
