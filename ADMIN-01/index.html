@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-AMxzq+2qN7qOFN40G3k5OaHEtIYMqewtp/3aFt2krf4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-U6SfdECow9oNsCsaTmCFebpJ+0UTiwQgF5ZTl/qco3Y='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2268,7 +2268,7 @@
         var REG_NEGF = function (k) { return function (r) { var d = String(r[k] || '').replace(/\D/g, ''); return +d ? '-' + (+d) : ''; }; };   // 가입고객리스트처럼 -(마이너스)
         var REG_DAY = function (r) { return parseInt(r.date.slice(8), 10) + '일'; };
         var REG_COLS = [   // 장부 엑셀 C열(모바일&유선) ~ BG열(액면단가) 순서 그대로 · ''는 직접 적는 칸 (비워서 붙여넣음)
-            ['모바일&유선', function (r) { return regKindText(r); }], ['담당자', 'seller'], ['거래처', 'dealer'], ['통신사', 'carrier'], ['가입날짜', REG_DAY], ['모델', 'model'], ['일련번호', 'serial'], ['번호', 'phone'], ['고객명', 'name'], ['생년월일', 'birth'], ['복지여부', 'welf'],
+            ['모바일&유선', function (r) { return regKindTag(r); }], ['담당자', 'seller'], ['거래처', 'dealer'], ['통신사', 'carrier'], ['가입날짜', REG_DAY], ['모델', 'model'], ['일련번호', 'serial'], ['번호', 'phone'], ['고객명', 'name'], ['생년월일', 'birth'], ['복지여부', 'welf'],
             ['공시&선약(프약)', 'disc'], ['공시금액', 'subsidy'], ['할부원금', 'price'], ['할부개월', 'months'], ['요금제', 'plan'], ['부가서비스', 'extra'], ['보험가입여부(종류)', 'ins'],
             ['결합종류', 'combKind'], ['결합여부', 'comb'], ['요금제유지개월', 'keep'], ['변경요금제', 'plan2'], ['가입후요금', 'bill1'], ['3개월후 요금', 'bill2'], ['이전사업자', 'prev'], ['가입유형', 'type'],
             ['출고가', ''], ['제휴카드사', ''], ['금액', ''], ['검수유무', ''], ['제휴수수료', ''], ['중고폰반납여부', ''], ['중고폰모델', ''], ['중고폰 상태', ''], ['중고폰 금액', ''], ['중고 순마진', ''], ['상품권반납', ''],
@@ -2277,6 +2277,16 @@
             ['지원금', REG_NEGF('ga')], ['입금', function (r) { return +String(r.ga || '').replace(/\D/g, '') ? '입금하기' : ''; }], ['수납건', ''], ['선납내용', ''], ['입금계좌', 'bank'],
             ['유통망지원금', REG_NEGF('pay')], ['프리', REG_NEGF('fre')], ['부가 추가&차감', 'adj'], ['판지&추가히든', ''], ['유선직정산', REG_NEGF('gh')], ['유선상품권', REG_NEGF('gv')], ['유선10%추가', ''], ['액면단가', 'fee']];
         function regKindText(r) { return r.kind === 'mobile' ? '모바일' : r.type === '렌탈' ? '유선(렌탈)' : '유선'; }   // 장부 C열 (렌탈은 유선(렌탈))
+        function regBm(r) {   // 11-19.8: 운영비포함총매출 — 받아 둔 가입고객리스트에 같은 고객 줄이 있으면 그 계산값, 없으면 장부 수식대로 (액면단가 없으면 null)
+            if (!r || !(+String(r.fee || '').replace(/[^\d-]/g, ''))) return null;
+            var g = null; try { g = regGlBm(r); } catch (e) { g = null; }
+            if (typeof g === 'number' && isFinite(g)) return g;
+            var n = function (k) { return +String(r[k] || '').replace(/[^\d-]/g, '') || 0; }, a = function (k) { return Math.abs(+String(r[k] || '').replace(/\D/g, '') || 0); };
+            var bh = n('fee') + n('adj') - a('pay') - a('gh') - a('gv');   // 프리제외정산금액 = 액면단가 + 부가 추가&차감 + 유통망지원금 + 유선직정산 + 유선상품권
+            var tax = /스카이/.test(String(r.dealer || '')) ? 0 : bh * 0.85 - bh;   // 세금 (스카이 접수 유선은 없음)
+            return Math.round(bh + tax - a('fre') - a('ga') - a('sn') - 25000);   // − 프리 − 지원금 − 수납건 + 운영비(−2.5만)
+        }
+        function regKindTag(r) { var k = regKindText(r), t = gllNeedTag(k, regBm(r)); return t ? gllTag(k, t) : k; }   // 장부 C열: 모바일(단가제외) · 모바일(전략) …
         var REG_WELFARE_FROM = '2026-10';   // 이 달 장부부터 M열 '복지여부' 칸이 있음 (그 전 달 장부에는 없음)
         function regDerive(r0) {   // 장부 규칙: 유선 = 할부 36 · 부가서비스/보험 '유선없음' · 모델 '인(+티)(+전)' / 변경요금제가 없으면 유지개월·변경요금제 '유지' / 미결합이면 결합종류도 '미결합'
             var r = {}; Object.keys(r0 || {}).forEach(function (k) { r[k] = r0[k]; });
@@ -2307,7 +2317,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-19.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-19.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8054,7 +8064,8 @@
         }
         function regFeeChip(r) {   // 장부 줄 아래: 액면단가 · 부가 추가&차감 (눌러서 고치기) — 비어 있으면 빨간 표시
             var adj = +String(r.adj || '').replace(/[^\d-]/g, '') || 0, man = function (v) { return (Math.round(v / 1000) / 10).toLocaleString('ko-KR') + '만'; };
-            var t = r.fee ? '💰 액면단가 ' + man(+r.fee) + (adj ? ' · 부가 ' + (adj > 0 ? '+' : '') + man(adj) : '') + (r.fa ? ' · 자동' : '') : '⚠ 액면단가 비어 있음';
+            var bm = r.fee ? regBm(r) : null, tg = bm == null ? '' : gllNeedTag(regKindText(r), bm);
+            var t = r.fee ? '💰 액면단가 ' + man(+r.fee) + (adj ? ' · 부가 ' + (adj > 0 ? '+' : '') + man(adj) : '') + (r.fa ? ' · 자동' : '') + (bm != null ? ' · 총매출 ' + man(bm) + (tg ? ' (' + tg + ')' : '') : '') : '⚠ 액면단가 비어 있음';
             return h('button', { type: 'button', class: 'reg-fee' + (r.fee ? '' : ' none'), 'data-act': 'reg-fee', title: r.fa ? String(r.fa) : r.fee ? '직접 적은 값 (눌러서 고치기)' : '눌러서 액면단가 적기', onclick: function () { editReg(r); } }, t);
         }
         function regFeeFill(list) {   // 액면단가가 빈 줄 → 지금 단가표로 계산해서 채움 (장부에 직접 적은 값은 그대로)
@@ -17588,10 +17599,38 @@
             return gllWon(v) + '원';
         }
         function gllHiCls(E, r, c, lab) { if (gllKey(lab) !== '운영비포함총매출') return ''; var n = gllNum(E, r, c); return ' gll-hi' + (n != null && n < GLL_DANGA ? ' low' : ''); }
-        function gllDanga(k) { k = String(k || '').trim(); return /\)$/.test(k) ? k.replace(/\)$/, '단가제외)') : k + '(단가제외)'; }
+        var GLL_JEON = 500000;   // 11-19.8: 운영비포함총매출이 이 이상이면 구분에 (전략) 자동 추가 (동판·취소 줄은 빼고)
+        function gllTag(k, t) {   // 구분 끝 괄호에 단가제외/전략 붙이기 — 반대쪽 자동 표시는 지움 (모바일 → 모바일(전략) · 유선(동판) → 유선(동판단가제외) · 모바일(단가제외) → 모바일(전략))
+            k = String(k || '').trim(); var other = t === '전략' ? '단가제외' : '전략';
+            k = k.replace(new RegExp('\\(([^()]*)' + other + '\\)$'), function (m, a) { return a ? '(' + a + ')' : ''; });
+            if (k.indexOf(t) >= 0) return k;
+            return /\)$/.test(k) ? k.replace(/\)$/, t + ')') : k + '(' + t + ')';
+        }
+        function gllDanga(k) { return gllTag(k, '단가제외'); }
+        function gllNeedTag(kind, bm) {   // 총매출에 맞는 자동 표시 (붙일 게 없으면 '') · 20만 미만 = 단가제외 · 50만 이상 = 전략 · 그 사이는 그대로
+            kind = String(kind || ''); if (typeof bm !== 'number' || !isFinite(bm) || glIsCancel(kind)) return '';
+            if (bm < GLL_DANGA) return kind.indexOf('단가제외') < 0 ? '단가제외' : '';
+            if (bm >= GLL_JEON && kind.indexOf('전략') < 0 && kind.indexOf('동판') < 0) return '전략';
+            return '';
+        }
+        function regGlBm(r) {   // 11-19.8: 가입 장부 줄 → 받아 둔 그 달 가입고객리스트의 같은 고객 줄 운영비포함총매출 (못 찾으면 null)
+            if (!r || !r.date || !r.name || !gl || !gl.sh) return null;
+            var d = parseYmd(r.date), y = d.getFullYear(), m = d.getMonth() + 1;
+            var sh = glIdxList().filter(function (s) { var q = /장부/.test(s.name) && glYm(s.name); return q && q.y === y && q.m === m; })[0], E = sh && gl.sh[sh.id];
+            if (!E || !E.S) return null;
+            var S = E.S, H = glHead(S); if (!H || !H.bm || !H.kind) return null;
+            var lab = gllLabOf(S), nc = lab['고객명'], pc = lab['번호'], plc = lab['요금제'], mc = lab['모델'], fc = lab['액면단가']; if (!nc || !fc) return null;
+            var kre = r.kind === 'wired' ? /^(유선|렌탈)/ : /^모바일/, hit = [];
+            for (var x = H.r + 1; x <= S.nr; x++) { var w = S.cv[x] || {}, kd = String(w[H.kind] == null ? '' : w[H.kind]); if (String(w[nc] == null ? '' : w[nc]) === String(r.name) && (!pc || String(w[pc] == null ? '' : w[pc]) === String(r.phone || '')) && kre.test(kd) && !glIsCancel(kd)) hit.push(x); }
+            if (!hit.length) return null;
+            var one = hit.filter(function (x) { var w = S.cv[x] || {}; return (!plc || !r.plan || String(w[plc] || '') === String(r.plan)) && (!mc || !r.model || r.kind === 'wired' || String(w[mc] || '') === String(r.model)); })[0] || (hit.length === 1 ? hit[0] : 0);
+            if (!one) return null;
+            var fv = (S.cv[one] || {})[fc]; if (fv == null || fv === '') return null;   // 그 줄에 액면단가가 아직 없으면 계산값이 맞지 않음
+            var v = glNum(glCalcOf(E).get(one, H.bm)); return typeof v === 'number' && isFinite(v) ? v : null;
+        }
 
         /* 장부 줄 규칙 (칸을 고치거나 가입 확인서가 들어올 때): ① 스카이 건은 세금 칸 비움 (스카이에서 바꾸면 세금 수식 되살림)
-           ② 액면단가가 적혀 있고 운영비포함총매출이 20만원 미만이면 구분에 (단가제외) 자동 추가 (취소 줄·이미 단가제외는 그대로) */
+           ② 액면단가가 적혀 있고 운영비포함총매출이 20만원 미만이면 구분에 (단가제외), 50만원 이상이면 (전략) 자동 추가 (취소 줄 · 동판 줄은 전략 안 붙임 · 20만~50만 사이로 내려가면 (전략)만 뺌) */
         function glRowRules(E, rows, cols) {
             var S = E.S, H = glHead(S), out = []; if (!H) return out;
             var lab = gllLabOf(S), cFee = lab['액면단가'], cDeal = lab['거래처'], cTax = H.tax || lab['세금'], calc = glCalcOf(E), seen = {};
@@ -17604,9 +17643,13 @@
                     if (sky && tx != null && tx !== '') out.push([r, cTax, null]);
                     else if (!sky && (tx == null || tx === '') && cols && cols.indexOf(cDeal) >= 0) { var tf = glTaxAbove(S, H, r); if (tf) out.push([r, cTax, tf]); }
                 }
-                if (!glIsCancel(kind) && kind.indexOf('단가제외') < 0 && cFee && H.bm) {
+                if (!glIsCancel(kind) && cFee && H.bm) {
                     var fee = row[cFee], feeN = typeof fee === 'number' ? fee : gllIsF(fee) ? gllNum(E, r, cFee) : null;
-                    if (feeN) { var bm = glNum(calc.get(r, H.bm)); if (typeof bm === 'number' && isFinite(bm) && bm < GLL_DANGA) out.push([r, H.kind, gllDanga(kind)]); }
+                    if (feeN) {
+                        var bm = glNum(calc.get(r, H.bm)), tg = gllNeedTag(kind, bm);
+                        if (tg) out.push([r, H.kind, gllTag(kind, tg)]);
+                        else if (typeof bm === 'number' && isFinite(bm) && bm >= GLL_DANGA && bm < GLL_JEON && /전략\)$/.test(kind)) out.push([r, H.kind, kind.replace(/\(([^()]*)전략\)$/, function (m, a) { return a ? '(' + a + ')' : ''; })]);   // 금액을 고쳐 50만 아래로 내려가면 (전략)은 뺌
+                    }
                 }
             });
             return out;
@@ -17619,7 +17662,7 @@
             if (ch.length && glSet(E, ch)) {
                 var a = E.undo.pop(), b = E.undo.pop(); E.undo.push((a || []).concat(b || []));
                 var H = glHead(E.S), dk = ch.filter(function (x) { return x[1] === H.kind; })[0];
-                if (dk) toast('운영비포함총매출이 20만원 미만이라 구분을 "' + dk[2] + '"로 바꿨어요.');
+                if (dk) toast('운영비포함총매출이 ' + (/전략\)$/.test(dk[2]) ? '50만원 이상' : /단가제외\)$/.test(dk[2]) ? '20만원 미만' : '50만원 아래') + '이라 구분을 "' + dk[2] + '"로 바꿨어요.');
             }
             return n;
         }
