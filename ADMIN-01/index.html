@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Aq7L7AlcaqzV5AUGazpag0CbxPX7Wrb1BkVzYslPN+I='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Kjz7ybudcBbhtKqbLZY1zzxyjHrAMAnV0QrnEbOv0n4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -888,6 +888,7 @@
         @media (max-width: 1180px) { .cl-cu-g { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cl-form .cl-cu-f, .cl-form .cl-cu-f.s3 { grid-column: span 1; } .cl-form .cl-cu-f.s6, .cl-form .cl-cu-f.s4 { grid-column: 1 / -1; } }
         .cl-memo .cl-chip { min-height: 30px; padding: 0 9px; font-size: 12.5px; }
         .cl-memo-f { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); background: #FAFBF6; }
+        .pol-steprow { display: flex; justify-content: flex-start; }
         .cl-memo-f small { color: var(--muted); font-size: 11.5px; }
         body.cl-memo-min .cl-memo { top: auto; height: auto; width: 300px; border-radius: 12px 0 0 0; border-top: 1px solid var(--line); }
         body.cl-memo-min .shell { padding-right: 0; }
@@ -2296,7 +2297,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-19.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-19.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -12330,8 +12331,9 @@
         }
         function renderRentPol() {
             var head = h('div', { class: 'page-head' }, h('h1', {}, '상담하기'),
-                h('div', { class: 'actions' }, polModeSeg(),
+                h('div', { class: 'actions' },
                     driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else clMemoOpen(); } }, '📝 상담 메모') : null,
+                    polModeSeg(),
                     h('button', { type: 'button', class: 'btn', 'data-act': 'rt-refresh', onclick: function () { rt.busy = false; rtLoad(true); mp.busy = false; mpLoad(true); toast('렌탈 상품을 새로 받고 있어요.'); render(); } }, '새로고침'),
                     h('button', { type: 'button', class: 'btn', 'data-act': 'rfh-open', title: '유선 · 모바일 · 렌탈 단가표를 날짜별로 (달력)', onclick: phOpen }, '📅 날짜별 단가표'),
                     chgBtn('rent'), isBoss() && !mp.rentHist ? h('label', { class: 'btn btn-primary', 'data-act': 'rf-import' }, '렌탈 수수료표 불러오기', h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: function () { rfImport(this.files && this.files[0]); this.value = ''; } })) : null));
@@ -12538,8 +12540,9 @@
             var boss = isBoss();
             var file = h('input', { type: 'file', accept: '.json,application/json', hidden: true, onchange: function () { mpImport(this.files && this.files[0]); this.value = ''; } });
             var head = h('div', { class: 'page-head' }, h('h1', {}, '상담하기'),
-                h('div', { class: 'actions' }, polModeSeg(),
+                h('div', { class: 'actions' },
                     driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else { clMemoOpen(); if (cl.memo && cl.memo.P && cl.memo.P.kind !== 'mob' && !clHasText(clMemoSheet() || { cols: [] }, cl.memo.P.values())) cl.memo.P.setKind('mob'); } } }, '📝 상담 메모') : null,
+                    polModeSeg(),
                     h('button', { type: 'button', class: 'btn', 'data-act': 'mp-refresh', onclick: function () { mp.busy = false; mpLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침'),
                     h('button', { type: 'button', class: 'btn', 'data-act': 'mph-open', title: '유선 · 모바일 · 렌탈 단가표를 날짜별로 (달력)', onclick: phOpen }, '📅 날짜별 단가표'),
                     chgBtn('mob'), boss && !mp.hist ? h('label', { class: 'btn btn-primary', 'data-act': 'mp-import' }, '모바일 단가표 불러오기', file) : null));
@@ -12619,7 +12622,7 @@
             if (state.pol.mob) return renderMobPol();
             var P = polShown(), CUR = polCur(), S = state.pol, boss = isBoss(), viewing = !!(P && CUR && P !== CUR);
             var head = h('div', { class: 'page-head' }, h('h1', {}, '상담하기'),
-                h('div', { class: 'actions' }, polModeSeg(), driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else clMemoOpen(); } }, '📝 상담 메모') : null, refreshBtn(),
+                h('div', { class: 'actions' }, driveOn() ? h('button', { type: 'button', class: 'btn btn-step', 'data-step': '1', 'data-act': 'pol-memo', 'aria-pressed': cl.memo && cl.memo.open ? 'true' : 'false', onclick: function () { if (cl.memo && cl.memo.open && !cl.memo.min) { cl.memo.min = true; cl.memo.built = ''; clMemoPaint(); } else clMemoOpen(); } }, '📝 상담 메모') : null, polModeSeg(), refreshBtn(),
                     (db.policies || []).length ? h('button', { type: 'button', class: 'btn', 'data-act': 'pol-history', title: '유선 · 모바일 · 렌탈 단가표를 날짜별로 (달력)', onclick: polHistory }, '📅 날짜별 단가표') : null,
                     chgBtn('net'), boss ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'pol-import', onclick: polImport }, '단가표 불러오기') : null));
             if (!P) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, boss ? '아직 단가표가 없어요. 오른쪽 위 [단가표 불러오기]로 Claude가 보낸 단가표 파일을 넣어 주세요.' : '아직 단가표가 없어요. 대표님이 단가표를 넣으면 여기에 보여요.')));
@@ -12643,15 +12646,15 @@
             var picked = polPick || polLast;
             var acts = h('div', { class: 'pol-acts' },
                 topBtn,
-                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'calc', 'aria-pressed': calcOpen() ? 'true' : 'false', onclick: function () { calcToggle(); this.setAttribute('aria-pressed', calcOpen() ? 'true' : 'false'); } }, '계산기'),
-                h('button', { type: 'button', class: 'btn btn-sm btn-step', 'data-step': '3', 'data-act': 'pol-to-idr', title: picked ? picked.c.name + ' ' + picked.r.n + ' 로 신분증 요청 진행' : '상담할 상품 줄을 먼저 눌러 주세요', onclick: polToIdr }, '신분증요청 바로진행'));
+                h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'calc', 'aria-pressed': calcOpen() ? 'true' : 'false', onclick: function () { calcToggle(); this.setAttribute('aria-pressed', calcOpen() ? 'true' : 'false'); } }, '계산기'));
+            var idrStep = h('div', { class: 'pol-steprow' }, h('button', { type: 'button', class: 'btn btn-step', 'data-step': '3', 'data-act': 'pol-to-idr', title: picked ? picked.c.name + ' ' + picked.r.n + ' 로 신분증 요청 진행' : '상담할 상품 줄을 먼저 눌러 주세요', onclick: polToIdr }, '신분증요청 바로진행'));   // 상담 순서 버튼은 왼쪽 처음 (11-19.6)
             var viewBar = viewing ? h('div', { class: 'ph-viewbar', role: 'status' },
                 h('span', {}, '📅 이전 단가표를 보는 중: ', h('b', {}, polLabel(P)), ' — 지금 단가표는 ', h('b', {}, polLabel(CUR)), '이에요. (이 기기에서만 보여요)'),
                 h('div', { class: 'ph-btns' },
                     h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ph-back', onclick: function () { state.pol.view = ''; polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); render(); } }, '지금 단가표로 돌아가기'),
                     boss ? h('button', { type: 'button', class: 'btn btn-sm btn-primary', onclick: function () { polSetCur(P); } }, '이 단가표로 바꾸기') : null)) : null;
             return h('div', {}, head, viewBar, meta, viewing ? null : hpBar(D),
-                h('div', { class: 'pol-tools' }, h('div', { class: 'pol-row1' }, cars, acts), h('div', { class: 'pol-search' }, q, h('div', { class: 'pol-sps' }, sps)),
+                h('div', { class: 'pol-tools' }, idrStep, h('div', { class: 'pol-row1' }, cars, acts), h('div', { class: 'pol-search' }, q, h('div', { class: 'pol-sps' }, sps)),
                     polAddSig() ? h('div', { class: 'pol-picknote pa-note' }, '추가 상품: ', h('b', {}, ['cctv', 'ins'].filter(function (k) { return polAdd[k]; }).map(function (k) { return polAdd[k].r.n; }).join(' · ')), h('button', { type: 'button', class: 'link-btn', 'data-act': 'pol-addon-clear', onclick: function () { polAdd = Object.create(null); render(); clMemoAddon(); } }, '추가 상품 빼기')) : null,
                     picked ? h('div', { class: 'pol-picknote' }, '선택: ', h('b', {}, picked.c.name + ' · ' + picked.r.n), polPick ? ' · ' + polStageText(polPick) : '', h('button', { type: 'button', class: 'link-btn', onclick: function () { polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); polTv = { key: '', n: {} }; render(); } }, '선택 지우기')) : null,
                     picked ? polTvBar(picked) : null),
@@ -14563,13 +14566,23 @@
             else if (!M.P && M.raw && clKindOf(M.raw) !== 'net') { M.raw = clTplSwitch(M.raw, false); M.kind = 'net'; }
             if (M.P && M.P.memoEl) { var el = M.P.memoEl, v = clPkFill(el.value, pk); if (v !== el.value) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } el.classList.remove('cl-flash'); void el.offsetWidth; el.classList.add('cl-flash'); }
             else if (M.min || !M.P) M.raw = clPkFill(M.raw, pk);
+            clCuGiftPick(M, pk);   // 짚어 둔 1·2·3차·가이드 금액 → 고객 사은품
+        }
+        function clCuGiftPick(M, pk) {   // 11-19.6: 유선 단가표에서 짚어 둔 금액(1·2·3차·가이드) → 고객 사은품 현금(원) · 상품권을 직접 적었으면 현금 = 짚은 금액 − 상품권
+            if (!M || !pk || !polPick || polPick.key !== pk.key || !(polPick.v > 0)) return;
+            var cu = M.cu || (M.cu = {}), num = function (s) { return +String(s || '').replace(/[^\d]/g, '') || 0; }, fmt = function (n) { return n ? (+n).toLocaleString('ko-KR') : '0'; };
+            var gv = num(cu.gv), gc = Math.max(0, Math.round(polPick.v) - gv);
+            cu.gc = fmt(gc); if (!cu.gv) cu.gv = '0';
+            var box = M.el && M.el.querySelector('.cl-cu');
+            ['gc', 'gv'].forEach(function (k) { var e = box && box.querySelector('[data-cu="' + k + '"]'); if (e && e.value !== cu[k]) { e.value = cu[k]; e.dispatchEvent(new Event('input', { bubbles: true })); e.classList.remove('cl-flash'); void e.offsetWidth; e.classList.add('cl-flash'); } });
+            /* 칸 고침은 input 신호로 보관 */
         }
         function clMemoPick() {   // [짚어 둔 상품 다시 넣기] (직접 고친 줄을 표 내용으로 되돌릴 때)
             var M = cl.memo, el = M && M.P && M.P.memoEl, pk = clPk();
             if (!el) { toast('이 시트에는 상담 내용 칸이 없어요.'); return; }
             if (M.P.kind === 'rent') { if (!rt.pk) { toast('상담하기 → 🧴 렌탈 단가표에서 상품 줄을 먼저 눌러 주세요.'); return; } clRtApply(rt.pk); return; }
             if (!pk) { toast('인터넷상담 표에서 상담할 상품 줄이나 1·2·3차·가이드 금액을 먼저 눌러 주세요.'); return; }
-            el.value = clPkFill(el.value, pk); el.dispatchEvent(new Event('input', { bubbles: true })); M.sig = clPkSig();
+            el.value = clPkFill(el.value, pk); el.dispatchEvent(new Event('input', { bubbles: true })); M.sig = clPkSig(); clCuGiftPick(M, pk);
             toast(pk.c.name + ' · ' + pk.r.n + ' 을(를) 상담 메모에 넣었어요.');
         }
         function clMemoStash() { var M = cl.memo; if (M && M.P) { M.vals = M.P.values(); M.st = M.P.st; if (M.P.memoEl) M.raw = M.P.memoEl.value; } }
@@ -15188,8 +15201,8 @@
             if (P.memoEl) P.memoEl.value = clTplFull(keepRaw != null ? keepRaw : P.memoEl.value, clTplOf(P.kind));   // 처음 열면 메모 양식부터 · 접었다 펴도 적던 그대로
             (function () {   // 현 통신사(버튼) 아래에 고객 정보 · 연락처는 고객 정보 안으로
                 var cuBox = clCuBox(M, P), pi = P.fields.indexOf(P.phLab); if (pi >= 0) P.fields.splice(pi, 1);
-                var ti = -1; P.fields.forEach(function (f, i) { if (f.classList && f.classList.contains('cl-telco-cell')) ti = i; });
-                P.fields.splice(ti >= 0 ? ti + 1 : P.fields.length, 0, cuBox);
+                var ti = -1, mi = -1; P.fields.forEach(function (f, i) { if (f.classList && f.classList.contains('cl-telco-cell')) ti = i; if (P.memoEl && f.contains && f.contains(P.memoEl)) mi = i; });
+                P.fields.splice(mi >= 0 ? mi + 1 : ti >= 0 ? ti + 1 : P.fields.length, 0, cuBox);   // 11-19.6: 상담 내용 아래에 고객 정보·납부·고객 사은품
             })();
             M.P = P;
             M.el.appendChild(h('div', { class: 'cl-memo-h' }, h('b', {}, '📝 상담 메모'), sel, h('span', { class: 'cl-memo-sp' }), newBtn, minBtn, closeBtn));
@@ -15207,7 +15220,7 @@
                 h('p', { class: 'cl-memo-auto' }, '💾 적는 내용은 자동으로 보관돼요 (팀 키로 암호화) · 창이 꺼져도 2일 동안 [📂 불러오기]에서 다시 불러올 수 있고, 3일째 자동으로 지워져요.'),
                 h('p', { class: 'cl-memo-live' }, '⚡ 상담하기 유선 단가표에서 상품 줄·1·2·3차를 누르면 인터넷 상담으로, 🧴 렌탈 단가표에서 줄을 누르면 렌탈 상담으로 바로 들어가요.'),
                 h('div', { class: 'cl-form' }, P.kindSeg, h('div', { class: 'cl-meta' }, '상태 (줄 색)'), P.pick, P.fields)));
-            M.el.appendChild(h('div', { class: 'cl-memo-f' }, h('small', {}, '🔒 저장하면 팀 키로 암호화돼요'), h('button', { type: 'button', class: 'btn btn-step', 'data-step': '2', 'data-act': 'cl-memo-save', onclick: clMemoSave }, '상담 완료 · 리스트에 저장')));
+            M.el.appendChild(h('div', { class: 'cl-memo-f' }, h('button', { type: 'button', class: 'btn btn-step', 'data-step': '2', 'data-act': 'cl-memo-save', onclick: clMemoSave }, '상담 완료 · 리스트에 저장'), h('small', {}, '🔒 저장하면 팀 키로 암호화돼요')));   // 상담 완료는 왼쪽 끝 (11-19.6)
             var svb = M.el.querySelector('[data-act="cl-memo-save"]'), svUpd = function () { if (svb && M.P) svb.textContent = M.P.st === 'sale' ? '상담 완료 · 신분증 요청으로' : '상담 완료 · 리스트·번호 저장'; };
             P.pick.addEventListener('click', function () { setTimeout(svUpd, 0); }); svUpd();
         }
