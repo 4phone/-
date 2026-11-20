@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-JmmC6Zn6zRnugBeX4pCoZN7sPcJ3UgWSNcgw7DOpnCs='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-NZFIREoJiTWk5GogoFIfYajZLFxBpuv65wuJ2oiAai0='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2332,7 +2332,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-20.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-20.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2526,7 +2526,7 @@
             });
             list(d.msus, 3000).forEach(function (x) {   // 🚫 미쇼 의심 번호 (번호마다 하나 · id = ms_번호)
                 if (!x || typeof x.id !== 'string' || !/^ms_0\d{8,10}$/.test(x.id) || ids[x.id]) return; ids[x.id] = 1;
-                out.msus.push({ id: x.id, ph: x.id.slice(3), rid: str(x.rid, 40), nm: str(x.nm, 20), by: str(x.by, 20), at: num(x.at), pv: str(x.pv, 11).replace(/\D/g, ''), u: num(x.u) });
+                out.msus.push({ id: x.id, ph: x.id.slice(3), rid: str(x.rid, 40), nm: str(x.nm, 20), by: str(x.by, 20), at: num(x.at), pv: str(x.pv, 11).replace(/\D/g, ''), ct: /^(ok|fail|cust|wait)$/.test(x.ct) ? x.ct : '', cl: str(x.cl, 40), cm: str(x.cm, 120), u: num(x.u) });
             });
             list(d.ibm, 3000).forEach(function (x) {   // 콜 인입 표시: 미인입 · 테스트 (실 인입 순번에서 뺌)
                 if (!x || !str(x.id, 60) || !str(x.iid, 40)) return;
@@ -14102,9 +14102,48 @@
             var who = staffName(me); if (who === '미지정') who = isBoss() ? '대표' : '';
             if (cur) { db.msus = db.msus.filter(function (x) { return x.id !== cur.id; }); tomb(cur.id); }   // 같은 상담의 예전 번호 → 고쳐 저장 (예전 기록은 지움)
             if (db.del && db.del[id]) delete db.del[id];   // 예전에 지웠던 번호를 다시 저장
-            db.msus.push(stamp({ id: id, ph: d, rid: String(rid || '').slice(0, 40), nm: String(nm || (cur && cur.nm) || '').slice(0, 20), by: (who || '').slice(0, 20), at: Date.now(), pv: cur ? cur.ph : '' }));
-            saveDb(); requestSync(DRIVE_PUSH_DELAY_MS);
-            return { ok: true, id: id, ph: d, msg: cur ? '미쇼 의심 번호를 ' + mfPhone(cur.ph) + ' → ' + mfPhone(d) + ' 로 고쳐 저장했어요.' : '미쇼 의심 번호로 저장했어요.' };
+            var rec = stamp({ id: id, ph: d, rid: String(rid || '').slice(0, 40), nm: String(nm || (cur && cur.nm) || '').slice(0, 20), by: (who || '').slice(0, 20), at: Date.now(), pv: cur ? cur.ph : '', ct: 'wait' });
+            db.msus.push(rec);
+            saveDb(); requestSync(200);   // 바로 팀 데이터로 (다른 직원 화면에도 곧 보임)
+            msContact(rec, cur ? cur.ph : '');
+            return { ok: true, id: id, ph: d, msg: (cur ? '미쇼 의심 번호를 ' + mfPhone(cur.ph) + ' → ' + mfPhone(d) + ' 로 고쳐 저장했어요.' : '미쇼 의심 번호로 저장했어요.') + ' 📇 구글 연락처에도 저장하는 중…' };
+        }
+        var msBusy = Object.create(null);   // 번호마다 연락처 저장을 한 번에 하나만
+        function msContact(rec, old) {   // 구글 연락처 'YY년 M월 D일 H시MM분 미쇼의심' (Apps Script 1120-1 ctMisho) → 결과를 기록에 남김 (모든 직원 화면에 📇 표시)
+            if (!rec || msBusy[rec.id]) return;
+            if (!driveOn()) { msMark(rec.id, 'fail', '', '드라이브(공유 저장소)가 연결되지 않았어요.'); return; }
+            msBusy[rec.id] = 1; msMark(rec.id, 'wait', '', '');
+            var note = '사거리인터넷 미쇼 의심 번호 · 저장 ' + (rec.by || '직원') + ' · ' + ymd(new Date(rec.at || Date.now()));
+            ibCall('ctMisho', { contact: { phone: rec.ph, old: old || '', note: note } }, 60000).then(function (res) {
+                delete msBusy[rec.id];
+                var x = res && res.contact || {};
+                if (x.ok && x.skipped === 'customer') { msMark(rec.id, 'cust', '', x.msg || ''); toast('📇 이미 가입 고객으로 저장된 번호라 연락처 이름은 그대로 뒀어요. (미쇼 의심 목록에는 저장됨)'); }
+                else if (x.ok) { msMark(rec.id, 'ok', x.label || '', ''); toast('📇 구글 연락처에 "' + (x.label || '미쇼의심') + '"(으)로 저장했어요.' + (x.removedOld ? ' (예전 번호 연락처는 지움)' : '')); }
+                else { msMark(rec.id, 'fail', '', x.msg || '알 수 없는 오류'); toast('⚠ 구글 연락처 저장 실패: ' + (x.msg || '알 수 없는 오류')); }
+            }, function (e) {
+                delete msBusy[rec.id];
+                var m = e && e.code === 'bad_action' ? 'Apps Script를 새 버전(1120-1)으로 배포해야 연락처에 저장돼요.' : driveErrText(e);
+                msMark(rec.id, 'fail', '', m); toast('⚠ 구글 연락처 저장 실패: ' + m);
+            });
+        }
+        function msMark(id, ct, label, msg) {   // 연락처 저장 결과 → 기록 (다른 기기에서 지웠으면 그대로 둠)
+            var r = msGet(id); if (!r) return;
+            if (r.ct === ct && (!label || r.cl === label) && (r.cm || '') === String(msg || '').slice(0, 120)) { msPaintAll(); return; }
+            r.ct = ct; if (label) r.cl = label.slice(0, 40); r.cm = String(msg || '').slice(0, 120); stamp(r);
+            saveDb(); if (ct !== 'wait') requestSync(200);
+            msPaintAll();
+        }
+        function msPaintAll() {   // 열려 있는 상담 창·목록 표시 바로 고침
+            document.querySelectorAll('.ms-box').forEach(function (b) { if (b._paint) b._paint(); });
+            var d = document.getElementById('dlg'); if (d && d.open && d.querySelector('[data-dlg="ms"]') && d._msPaint) d._msPaint();
+        }
+        function msNeedCt(r) { return !!r && (r.ct === 'fail' || !r.ct || (r.ct === 'wait' && !msBusy[r.id] && Date.now() - (r.u || 0) > 90000)); }   // 연락처를 (다시) 저장해야 하는지 · 저장 중에 창이 꺼진 경우 포함
+        function msCtText(r) {   // 연락처 저장 상태 글
+            if (!r) return '';
+            if (r.ct === 'ok') return '📇 연락처 "' + (r.cl || '미쇼의심') + '" 저장됨';
+            if (r.ct === 'cust') return '📇 가입 고객 연락처라 이름은 그대로';
+            if (r.ct === 'wait' && !msNeedCt(r)) return '📇 구글 연락처에 저장하는 중…';
+            return '⚠ 연락처 저장 안 됨' + (r.ct === 'fail' && r.cm ? ' (' + r.cm + ')' : '');
         }
         function clMsBox(s, row, P) {   // 상담 창: 상태 바로 아래 '고객 번호' + [🚫 미쇼의심번호저장]
             var rec0 = msOfRow(row.id), phC = s.cols.filter(function (c) { return clColKind(c) === 'ph'; })[0];
@@ -14118,7 +14157,12 @@
                 var d = msDigits(inp.value), mine = P.msId ? msGet(P.msId) : null, other = msOk(d) ? msGet('ms_' + d) : null;
                 if (P.msId && !mine) { mine = msOfRow(row.id); P.msId = mine ? mine.id : ''; }   // 다른 기기에서 고친 경우
                 st.className = 'ms-st'; st.textContent = '';
-                if (mine && mine.ph === d) { btn.disabled = true; btn.textContent = '✓ 미쇼 의심 번호 저장됨'; st.className += ' ok'; st.textContent = '✓ 저장됨' + (mine.by ? ' · ' + mine.by : '') + (mine.at ? ' · ' + ibTime(mine.at) : ''); return; }
+                if (mine && mine.ph === d) {
+                    var redo = msNeedCt(mine);   // 연락처 저장이 안 됐으면 다시 저장할 수 있게
+                    btn.disabled = !redo || !!msBusy[mine.id]; btn.textContent = redo ? '📇 연락처 다시 저장' : '✓ 미쇼 의심 번호 저장됨';
+                    st.className += redo ? ' warn' : ' ok'; st.textContent = '✓ 저장됨' + (mine.by ? ' · ' + mine.by : '') + (mine.at ? ' · ' + ibTime(mine.at) : '') + (msCtText(mine) ? ' · ' + msCtText(mine) : '');
+                    return;
+                }
                 btn.disabled = false; btn.textContent = mine ? '✏️ 미쇼의심번호 수정 저장' : '🚫 미쇼의심번호저장';
                 if (other) { st.className += ' warn'; st.textContent = '⚠ 이미 미쇼 의심 번호로 저장된 번호예요' + (other.nm ? ' (' + other.nm + (other.by ? ' · ' + other.by : '') + ')' : '') + ' — 다시 저장되지 않아요'; }
                 else if (mine) st.textContent = '저장된 번호 ' + mfPhone(mine.ph) + ' → 지금 번호로 고쳐 저장돼요';
@@ -14131,6 +14175,8 @@
                 if (btn._busy) return; btn._busy = true;   // 두 번 눌러도 한 번만
                 try {
                     var nm = nmC && P.inputs[nmC.k] ? P.inputs[nmC.k].value.trim() : '';
+                    var mine0 = P.msId ? msGet(P.msId) : null;
+                    if (mine0 && mine0.ph === msDigits(inp.value) && msNeedCt(mine0)) { msContact(mine0, mine0.pv || ''); paint(); return; }   // 연락처만 다시
                     var r = msSave(inp.value, P.msId, row.id, nm);
                     if (r.ok) { P.msId = r.id; inp.value = mfPhone(r.ph); }
                     toast(r.msg); paint(); if (!r.ok && !r.dup) inp.focus();
@@ -14138,7 +14184,8 @@
                 } finally { btn._busy = false; }
             });
             paint();
-            return h('div', { class: 'cl-fld full ms-box' }, h('div', { class: 'cl-lab' }, h('span', {}, '고객 번호 (미쇼 의심 번호 저장)')), h('span', { class: 'cl-inline ms-row' }, inp, btn), st);
+            var box = h('div', { class: 'cl-fld full ms-box' }, h('div', { class: 'cl-lab' }, h('span', {}, '고객 번호 (미쇼 의심 번호 저장)')), h('span', { class: 'cl-inline ms-row' }, inp, btn), st);
+            box._paint = paint; return box;
         }
         function msList() {   // 상담 리스트 [🚫 미쇼 의심 번호]: 저장된 번호 목록 · 찾기 · 복사 · (대표) 삭제
             var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'ms-dlg';
@@ -14153,15 +14200,18 @@
                 l.slice(0, 300).forEach(function (x) {
                     ul.appendChild(h('li', { class: 'ms-item' },
                         h('div', { class: 'ms-main' }, h('b', {}, mfPhone(x.ph)), x.nm ? h('span', {}, x.nm) : null,
-                            h('small', {}, (x.by || '?') + (x.at ? ' · ' + ibTime(x.at) : '') + (x.pv ? ' · 고침: ' + mfPhone(x.pv) + ' →' : ''))),
+                            h('small', {}, (x.by || '?') + (x.at ? ' · ' + ibTime(x.at) : '') + (x.pv ? ' · 고침: ' + mfPhone(x.pv) + ' →' : '') + (msCtText(x) ? ' · ' + msCtText(x) : ''))),
+                        msNeedCt(x) ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { msContact(x, x.pv || ''); } }, '📇 다시 저장') : null,
                         h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { copyText(mfPhone(x.ph)).then(function (ok) { toast(ok ? '번호를 복사했어요.' : '복사하지 못했어요.'); }); } }, '복사'),
                         isBoss() ? h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'data-act': 'ms-del', onclick: function () {
                             if (!confirm(mfPhone(x.ph) + ' 번호를 미쇼 의심 번호에서 뺄까요?')) return;
-                            db.msus = (db.msus || []).filter(function (y) { return y.id !== x.id; }); tomb(x.id); saveDb(); requestSync(DRIVE_PUSH_DELAY_MS); paint(); toast('미쇼 의심 번호에서 뺐어요.');
+                            db.msus = (db.msus || []).filter(function (y) { return y.id !== x.id; }); tomb(x.id); saveDb(); requestSync(200); paint();
+                            if (x.ct === 'ok' && driveOn()) ibCall('ctMisho', { contact: { phone: x.ph, del: 1 } }, 60000).then(function (res) { var c = res && res.contact || {}; toast(c.ok ? '미쇼 의심 번호에서 빼고, 구글 연락처의 미쇼의심 연락처도 지웠어요.' : '목록에서는 뺐어요. (연락처는 직접 지워 주세요: ' + (c.msg || '') + ')'); }, function (e) { toast('목록에서는 뺐어요. (연락처는 직접 지워 주세요: ' + driveErrText(e) + ')'); });
+                            else toast('미쇼 의심 번호에서 뺐어요.');
                         } }, '빼기') : null));
                 });
             };
-            q.addEventListener('input', paint);
+            q.addEventListener('input', paint); dlg._msPaint = paint;
             dlg.appendChild(h('div', { 'data-dlg': 'ms' }, h('div', { class: 'dlg-head' }, '🚫 미쇼 의심 번호'),
                 h('div', { class: 'dlg-body' }, h('p', { class: 'ms-help' }, '상담 창에서 저장한 번호예요. 번호마다 한 번만 저장되고(중복 없음), 팀 키로 암호화돼 우리 팀만 봐요.'), h('div', { class: 'ms-top' }, q, cnt), ul),
                 h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'))));
@@ -15128,7 +15178,7 @@
             }
             return ibCall('ctProspect', { contact: c.birth ? { label: c.label, phone: dig, note: c.note, birth: c.birth } : { label: c.label, phone: dig, note: c.note } }, 60000).then(function (res) {
                 var x = res.contact || {};
-                if (x.ok && x.skipped) { mark('cust'); toast('이미 가입 고객으로 저장된 번호라 연락처는 그대로 뒀어요.'); }
+                if (x.ok && x.skipped) { mark('cust'); toast(x.skipped === 'misho' ? '🚫 미쇼 의심 번호로 저장된 번호라 연락처는 그대로 뒀어요.' : '이미 가입 고객으로 저장된 번호라 연락처는 그대로 뒀어요.'); }
                 else if (x.ok) { mark('ok'); toast('📇 구글 연락처에 "' + x.label + '"(으)로 ' + (x.updated ? '바꿔 ' : '') + '저장했어요.'); }
                 else fail(x.msg || '알 수 없는 오류', x.code !== 'setup' && x.code !== 'auth' && x.code !== 'nophone');
             }, function (e) { fail(driveErrText(e), !(e && e.code === 'bad_action')); });
