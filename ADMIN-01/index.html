@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ZCGSARL1nas7fNYIBxcNEqoovnjUGHUnOEaNdlc2GGs='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-55bVJ/Rflfv3aVC/m2yCM3S6ccpPdOLuE0nMM+xKdok='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2336,7 +2336,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-20.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-20.9';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8874,9 +8874,10 @@
         }
         function aiPend() { return ai.items.filter(function (x) { return x.st === 'ok' && !x.done && x.res; }); }
         function aiAutoReg() {   // 아직 상담 리스트에 안 들어간 요약 → 이 화면이 맡을 것만 (올린 직원 · 그 휴대폰 담당 · 대표 · 2분 지나면 아무나)
-            return;   // 11-20.7: 상담 리스트 자동 등록 안 함 (AI 요약은 콜 인입 🤖 줄에만)
+            if (!authed || !db || !driveOn() || !ai.auto) return;
             var l = aiPend(); if (!l.length) return;
             if (!cl.data) { if (!cl.busy) clLoad(true); return; }
+            if (cl.dirty || cl.saving || cl.busy || Date.now() - (cl.at || 0) > 15000) { if (!cl.busy && !cl.dirty && !cl.saving) clLoad(false); return; }   // 11-20.9: 이어 적기 전에 최신 상담 리스트로 (직원이 방금 고친 내용 위에 적게)
             var my = staffName(me);
             l.forEach(function (x) {
                 if (ai.doing[x.id]) return;
@@ -8909,8 +8910,8 @@
         function aiNoPhoneOpen() {   // 📵 번호를 몰라 상담 리스트에 안 넣은 요약 (3일 보관)
             var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'tlog-dlg';
             var l = aiNoPhone().slice().sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
-            dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '📵 번호 모르는 통화 요약 ' + l.length + '건'),
-                h('div', { class: 'dlg-body' }, h('p', { class: 'ph-tip' }, '녹음 파일에 번호가 없고 콜 인입 착신·발신 줄과도 맞지 않아 상담 리스트에 넣지 않은 요약이에요 (3일 보관). 필요한 건 직접 상담 리스트 고객 줄에 옮겨 적어 주세요.'),
+            dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '📋 따로 보관한 통화 요약 ' + l.length + '건'),
+                h('div', { class: 'dlg-body' }, h('p', { class: 'ph-tip' }, '콜 인입 착신·발신 줄과 맞지 않아(번호를 모르거나 MacroDroid 기록이 없는 통화) 따로 보관한 요약이에요 (3일 보관). 필요한 건 직접 상담 리스트 고객 줄에 옮겨 적어 주세요.'),
                     l.length ? h('ul', { class: 'ms-list' }, l.map(function (x) {
                         var r = x.res || {};
                         return h('li', { class: 'ms-item' }, h('div', { class: 'ms-main' }, h('b', {}, aiWhen(x) + ' · ' + (aiDirTxt(x.dir || r.dir) || '방향 모름')), h('span', {}, [x.ph, x.staff, x.who ? '📇 ' + x.who : '', r.name ? '고객: ' + r.name : ''].filter(Boolean).join(' · ')),
@@ -8995,133 +8996,56 @@
                 showDlg(dlg);
             }, function (e) { toast(driveErrText(e)); });
         }
-        /* 11-20.7: 상담 리스트에는 직원이 직접 적은 것만 — AI 줄·AI 요약 전부 정리 (AI 요약은 콜 인입에만) */
-        function aiStripAll(text) {   // 메모에서 '■ 🤖 AI 통화 요약 (…' 묶음 전부 빼기 → 바뀐 글 (없으면 null)
-            var L = String(text || '').split('\n'), out = [], i = 0, hit = false;
+        /* 11-20.9: 상담 리스트 이어 적기 도우미 — 직원이 적은 글은 절대 줄이거나 바꾸지 않음 */
+        function aiFieldsLine(r) {   // 확인한 내용 한 줄 (상담 통신사 · 상품 · 요금 …)
+            var l = (r.fields || []).filter(function (f) { return f && f.value && String(f.value).trim(); }).slice(0, 8).map(function (f) { return String(f.key).replace(/\s*\(.*$/, '').trim() + ' ' + String(f.value).trim() + (f.sure ? '' : ' ❓'); });
+            return l.length ? '\n- 확인한 내용: ' + l.join(' · ') : '';
+        }
+        function aiBlocksOf(text) {   // 메모 안 'AI 통화 요약' 묶음들 (머리 줄 + 뒤따르는 '- ' 줄)
+            var L = String(text || '').split('\n'), out = [], i = 0;
             while (i < L.length) {
-                if (L[i].indexOf('■ 🤖 AI 통화 요약 (') === 0) {
-                    hit = true; i++; while (i < L.length && /^- /.test(L[i])) i++;
-                    while (out.length && out[out.length - 1].trim() === '') out.pop();
-                    continue;
-                }
-                out.push(L[i]); i++;
+                if (L[i].indexOf('■ 🤖 AI 통화 요약 (') === 0) { var b = [L[i]]; i++; while (i < L.length && /^- /.test(L[i])) { b.push(L[i]); i++; } out.push(b.join('\n')); continue; }
+                i++;
             }
-            return hit ? out.join('\n').replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '') : null;
+            return out;
         }
-        function aiCleanOpen() {   // 🧹 상담 리스트 AI 정리 (대표)
-            if (!isBoss() || !cl.data) { toast(cl.data ? '대표 계정에서만 할 수 있어요.' : '상담 리스트를 불러오는 중이에요. 잠시 뒤 다시 눌러 주세요.'); if (!cl.data && !cl.busy) clLoad(true); return; }
-            var newRows = [], strips = [], ids = Object.create(null);
-            var t0 = new Date(); t0.setHours(0, 0, 0, 0); t0 = t0.getTime(); var today = ymd(new Date());
-            var made = function (r) { var m = /^i([0-9a-z]{8})/.exec(String(r.id || '')), t = m ? parseInt(m[1], 36) : 0; return t > 1.7e12 && t < 2.2e12 ? t : 0; };   // 줄 id = 만든 시각
-            cl.data.sheets.forEach(function (s) {
-                var mc = aiMemoCol(s), sc = clColBy(s, 'staff'), dc = clColBy(s, 'date');
-                clRowsOf(s.id).forEach(function (r) {
-                    if (r.ty !== 'row') return;
-                    String(r.ai || '').split(',').forEach(function (id) { if (id) ids[id] = 1; });
-                    var hasAi = !!r.ai || !!(mc && String(r.v[mc.k] || '').indexOf('■ 🤖 AI 통화 요약 (') >= 0);
-                    var aiToday = made(r) >= t0 && hasAi && dc && String(r.v[dc.k] || '').slice(0, 10) !== today;   // 오늘 만들어졌고 AI 표시가 있는데 날짜가 오늘이 아닌 줄 (직원이 오늘 적은 줄은 날짜가 오늘)
-                    if (r.aiA === 1 || aiToday) { newRows.push({ s: s, r: r, touched: !!(sc && String(r.v[sc.k] || '').trim()) }); return; }
-                    if (r.ai || (mc && String(r.v[mc.k] || '').indexOf('■ 🤖 AI 통화 요약 (') >= 0)) strips.push({ s: s, r: r, mc: mc });
-                });
+        function aiAppendKeep(cur, block) {   // 칸 끝에 요약 붙이기 · 3000자를 넘으면 예전 AI 요약부터 빼고, 그래도 안 되면 새 요약을 줄임 · 자리가 없으면 null (직원 글은 그대로)
+            var MAX = 2990, c = String(cur || '').replace(/\s+$/, '');
+            var join = function (a) { return a ? a + '\n\n' + block : block; };
+            if (join(c).length <= MAX) return join(c);
+            for (var g = 0; g < 50; g++) { var n = aiStripBlock(c, ''); if (n == null) break; c = n.replace(/\s+$/, ''); if (join(c).length <= MAX) return join(c); }
+            var room = MAX - (c ? c.length + 2 : 0);
+            if (room < 160) return null;
+            return (c ? c + '\n\n' : '') + block.slice(0, room - 1) + '…';
+        }
+        var AI_KEEP_FROM = Date.parse('2026-11-20T15:00:00+09:00');   // 이 시각 전 요약(오늘 오후 정리한 것)은 되살리지 않음
+        function aiMergeKeep(m, vers, s) {   // 두 화면 내용 합칠 때: 이긴 쪽에 없는 AI 요약(새로 이어 적은 것)을 다시 붙임
+            if (!s || !m || m.ty !== 'row' || !vers.length) return m;
+            var mc = aiMemoCol(s); if (!mc) return m;
+            var have = Object.create(null); String(m.ai || '').split(',').forEach(function (id) { if (id) have[id] = 1; });
+            var ids = [], add = [], mt = String((m.v && m.v[mc.k]) || '');
+            vers.forEach(function (x) {
+                if (!x || !x.ai) return;
+                var miss = String(x.ai).split(',').filter(function (id) { return id && !have[id] && aiIdTime(id) >= AI_KEEP_FROM; });
+                if (!miss.length) return;
+                var bl = aiBlocksOf(x.v && x.v[mc.k]).filter(function (b) { return mt.indexOf(b) < 0 && add.indexOf(b) < 0; });
+                bl.slice(-miss.length).forEach(function (b) { add.push(b); });   // 이어 적은 요약은 항상 맨 끝 → 빠진 개수만큼 끝에서
+                miss.forEach(function (id) { have[id] = 1; ids.push(id); });
             });
-            var evs = (db.events || []).filter(function (e) { return /\[AI a[0-9a-z]+#\d+\]/.test(String(e.memo || '')); });
-            var chk = Object.create(null); newRows.forEach(function (o) { chk[o.r.id] = true; });   // aiA=1 = AI가 만든 줄 (직원이 '+ 상담 추가'로 만든 줄은 aiA가 없어 목록에 아예 안 나옴)
-            var evOn = true;
-            var rowTxt = function (o) { var s = o.s, r = o.r, dc = clColBy(s, 'date'), pc = clColBy(s, 'ph'), no = clColBy(s, 'no'), sc = clColBy(s, 'staff');
-                return s.name + ' · ' + (no ? (r.v[no.k] || '') + '번 · ' : '') + (dc ? r.v[dc.k] || '' : '') + (pc && r.v[pc.k] ? ' · ' + r.v[pc.k] : ' · 번호 없음') + (o.touched ? ' · 담당 ' + r.v[sc.k] : '') + ' · 🤖 AI가 만든 줄'; };
-            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'tlog-dlg';
-            dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '🧹 상담 리스트 AI 정리'),
-                h('div', { class: 'dlg-body' },
-                    h('p', { class: 'ph-tip' }, '상담 리스트에는 직원이 직접 적은 것만 남겨요. 지우는 건 AI가 만든 줄(🤖 표시)뿐이고, 직원이 [+ 상담 추가]로 적은 줄은 이 목록에 나오지도 않아요(절대 안 지움). 정리 뒤 AI 요약은 콜 인입 🤖 줄에서만 보여요.'),
-                    h('h4', {}, '① AI가 만든 줄 ' + newRows.length + '개 → 지움 (체크한 것만)'),
-                    newRows.length ? h('ul', { class: 'ms-list' }, newRows.map(function (o) {
-                        var cb = h('input', { type: 'checkbox', checked: chk[o.r.id], onchange: function () { chk[o.r.id] = this.checked; } });
-                        return h('li', { class: 'ms-item' }, h('label', { class: 'ms-main' }, cb, h('span', {}, rowTxt(o))));
-                    })) : h('p', { class: 'ms-empty' }, '없어요.'),
-                    h('h4', {}, '② 직원 줄에 붙은 AI 요약 ' + strips.length + '줄 → 요약만 뺌 (직원이 적은 내용은 그대로)'),
-                    h('h4', {}, '③ AI 요약에서 만든 약속 일정 ' + evs.length + '개 → 지움'),
-                    evs.length ? h('label', { class: 'ib-todo' }, h('input', { type: 'checkbox', checked: true, onchange: function () { evOn = this.checked; } }), ' 약속 일정도 지우기') : null,
-                    h('p', { class: 'ph-tip' }, '정리한 뒤 순번은 1번부터 빈 번호 없이 다시 매겨요.')),
-                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'),
-                    h('button', { type: 'button', class: 'btn btn-danger', 'data-act': 'ai-clean-go', disabled: newRows.length + strips.length + evs.length ? null : true, onclick: function () {
-                        if (!confirm('정리할까요? 체크한 AI 줄은 상담 리스트에서 사라져요.')) return;
-                        var now = Date.now(), touched = Object.create(null), nDel = 0, nStrip = 0, nEv = 0;
-                        newRows.forEach(function (o) { if (!chk[o.r.id]) return; if (o.r.rc) { try { clRecareDrop(o.r); } catch (e) { /* 무시 */ } } cl.data.del[o.r.id] = now; touched[o.s.id] = 1; nDel++; });
-                        cl.data.rows = cl.data.rows.filter(function (r) { return cl.data.del[r.id] !== now; });
-                        newRows.forEach(function (o) { if (chk[o.r.id]) return; strips.push({ s: o.s, r: o.r, mc: aiMemoCol(o.s) }); delete o.r.aiA; });   // 남긴 줄(직원이 손댄 줄): AI 요약만 빼고 직원 줄로
-                        strips.forEach(function (o) {
-                            var t = o.mc ? aiStripAll(o.r.v[o.mc.k]) : null;
-                            if (t != null) o.r.v[o.mc.k] = t;
-                            if (t != null || o.r.ai) { delete o.r.ai; clStamp(o.r); touched[o.s.id] = 1; nStrip++; }
-                        });
-                        if (evOn) evs.forEach(function (e) {
-                            db.events = db.events.filter(function (y) { return y.id !== e.id; }); tomb(e.id);
-                            if (e.taskId) { var tk = (db.tasks || []).filter(function (t) { return t.id === e.taskId; })[0]; if (tk && tk.status !== 'done') { db.tasks = db.tasks.filter(function (t) { return t.id !== tk.id; }); tomb(tk.id); } }
-                            nEv++;
-                        });
-                        Object.keys(touched).forEach(function (sh) { try { clRenumber(sh); } catch (e) { /* 무시 */ } });
-                        clQueue(); if (nEv) { saveDb(); requestSync(DRIVE_PUSH_DELAY_MS); }
-                        closeDlg(); render();
-                        toast('정리했어요: AI 줄 ' + nDel + '개 지움 · 붙은 요약 ' + nStrip + '줄 뺌 · 일정 ' + nEv + '개 지움');
-                    } }, '정리하기'))));
-            showDlg(dlg);
+            if (!ids.length) return m;
+            m = JSON.parse(JSON.stringify(m)); m.v = m.v || {};
+            var t = m.v[mc.k] || '';
+            add.forEach(function (b) { var n = aiAppendKeep(t, b); if (n != null) t = n; });
+            if (t) m.v[mc.k] = t;
+            m.ai = String(m.ai || '').split(',').filter(Boolean).concat(ids).slice(-20).join(',');
+            return m;
         }
-        /* 11-20.7b: 대표 화면이 켜져 있으면 자동으로 — ① 서버 '상담 리스트 자동 등록' 끔(예전 화면도 멈춤) ② 오늘 AI가 넣은 줄 지우고 순번 다시 (11/27까지만) */
-        var AI_FIX_FROM = Date.parse('2026-11-20T00:00:00+09:00'), AI_FIX_TO = Date.parse('2026-11-28T00:00:00+09:00'), aiFixBusy = false;
-        function aiAutoOff() {
-            if (ai.auto !== true || ai.offSent || !isBoss()) return;
-            ai.offSent = 1;
-            var cfg = { flow: aiFlow().slice(0, 30), terms: aiTerms(), tpl: { net: CL_TPL.map(function (x, i) { return clTplHead(i, CL_TPL).slice(2); }), mob: CL_TPL_M.map(function (x, i) { return clTplHead(i, CL_TPL_M).slice(2); }), rent: CL_TPL_R.map(function (x, i) { return clTplHead(i, CL_TPL_R).slice(2); }) }, tel: { net: CL_TELCO, mob: CL_MTEL, rent: CL_MAKER }, src: ['전단', '홈페이지', '우편', '당근', '채널', '소개', '기존고객', '플레이스', '네이버 광고', '블로그', '인스타'], auto: false };
-            ibCall('gmKey', { cfg: cfg }).then(function () { ai.auto = false; }, function () { ai.offSent = 0; });
-        }
-        function aiFixFind() {   // 지울 줄: AI가 만든 줄(aiA) + 11/20 이후 만들어졌는데 날짜 칸이 만든 날과 다르고 AI 요약 표시가 있는 줄
-            var out = [], strips = [];
-            cl.data.sheets.forEach(function (s) {
-                var mc = aiMemoCol(s), sc = clColBy(s, 'staff'), dc = clColBy(s, 'date');
-                clRowsOf(s.id).forEach(function (r) {
-                    if (r.ty !== 'row') return;
-                    var m = /^i([0-9a-z]{8})/.exec(String(r.id || '')), t = m ? parseInt(m[1], 36) : 0;
-                    var hasAi = !!r.ai || !!(mc && String(r.v[mc.k] || '').indexOf('■ 🤖 AI 통화 요약 (') >= 0);
-                    var dv = dc ? String(r.v[dc.k] || '').slice(0, 10) : '', noStaff = !(sc && String(r.v[sc.k] || '').trim());
-                    var bad = r.aiA === 1 || (t >= AI_FIX_FROM && t < AI_FIX_TO && dv && dv !== ymd(new Date(t)) && hasAi);
-                    if (bad) out.push({ s: s, r: r }); else if (hasAi) strips.push({ s: s, r: r, mc: mc });
-                });
-            });
-            return { rows: out, strips: strips };
-        }
-        function aiFixAuto() {
-            if (aiFixBusy || !authed || !db || !cl.data || cl.busy || cl.saving || !isBoss() || Date.now() >= AI_FIX_TO) return;
-            aiAutoOff();
-            var f = aiFixFind(); if (!f.rows.length && !f.strips.length) return;
-            aiFixBusy = true;
-            try {
-                var now = Date.now(), touched = Object.create(null), nDel = 0, nStrip = 0;
-                f.rows.forEach(function (o) { if (o.r.rc) { try { clRecareDrop(o.r); } catch (e) { /* 무시 */ } } cl.data.del[o.r.id] = now; touched[o.s.id] = 1; nDel++; });
-                if (nDel) cl.data.rows = cl.data.rows.filter(function (r) { return cl.data.del[r.id] !== now; });
-                f.strips.forEach(function (o) {
-                    var t = o.mc ? aiStripAll(o.r.v[o.mc.k]) : null;
-                    if (t != null) o.r.v[o.mc.k] = t;
-                    delete o.r.ai; clStamp(o.r); touched[o.s.id] = 1; nStrip++;
-                });
-                var nEv = 0; (db.events || []).slice().forEach(function (e) {
-                    if (!/\[AI a[0-9a-z]+#\d+\]/.test(String(e.memo || ''))) return;
-                    db.events = db.events.filter(function (y) { return y.id !== e.id; }); tomb(e.id);
-                    if (e.taskId) { var tk = (db.tasks || []).filter(function (t) { return t.id === e.taskId; })[0]; if (tk && tk.status !== 'done') { db.tasks = db.tasks.filter(function (t) { return t.id !== tk.id; }); tomb(tk.id); } }
-                    nEv++;
-                });
-                Object.keys(touched).forEach(function (sh) { try { clRenumber(sh); } catch (e) { /* 무시 */ } });
-                clQueue(); if (nEv) { saveDb(); requestSync(DRIVE_PUSH_DELAY_MS); }
-                if (state.view === 'consult') render();
-                toast('🧹 오늘 AI가 넣은 상담 줄 ' + nDel + '개를 지우고 순번을 다시 맞췄어요' + (nStrip ? ' · 직원 줄에 붙은 AI 요약 ' + nStrip + '개 뺌' : '') + '. 직원이 적은 줄은 그대로예요.');
-            } finally { aiFixBusy = false; }
-        }
-        setInterval(function () { try { aiFixAuto(); } catch (e) { /* 무시 */ } }, 4000);
         function aiMemoCol(s) { return clColBy(s, '', /상담내용/) || clColBy(s, 'wide') || null; }
         function aiBlock(x, tag) {   // 상담 내용 아래에 붙는 'AI 통화 요약' 묶음 (tag: '재케어')
             var r = x.res, d = new Date(x.t || x.at || Date.now()), unsure = r.fields.filter(function (f) { return !f.sure; }).length + (r.name && !r.name_sure ? 1 : 0), dt = aiDirTxt(x.dir || r.dir);
             return '■ 🤖 AI 통화 요약 (' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + (dt ? ' · ' + dt : '') + (tag ? ' · ' + tag : '') + (x.staff ? ' · ' + x.staff : '') + ') :\n' +
                 (r.name ? '- 고객 이름: ' + r.name + (r.name_sure ? '' : ' ❓') + '\n' : '') + r.summary.map(function (s) { return '- ' + s; }).join('\n') + (r.next ? '\n- 다음 연락: ' + r.next : '') +
-                (r.promise && r.promise.length ? '\n- 🤝 약속: ' + r.promise.map(aiPrText).join(' · ') : '') + '\n- 성공 가능성(AI): ' + (AI_ST_TXT[r.st] || '보통') + (r.st_why ? ' — ' + r.st_why : '') + (unsure ? '\n- ❓ 표시 ' + unsure + '칸은 잘 안 들린 내용이에요. 확인하고 고쳐 주세요.' : '');
+                (r.promise && r.promise.length ? '\n- 🤝 약속: ' + r.promise.map(aiPrText).join(' · ') : '') + aiFieldsLine(r) + '\n- 성공 가능성(AI): ' + (AI_ST_TXT[r.st] || '보통') + (r.st_why ? ' — ' + r.st_why : '') + (unsure ? '\n- ❓ 표시 ' + unsure + '칸은 잘 안 들린 내용이에요. 확인하고 고쳐 주세요.' : '');
         }
         function aiBlockOf(t) { var i = String(t || '').indexOf('■ 🤖 AI 통화 요약'); return i >= 0 ? String(t).slice(i).trim() : ''; }
         function aiSameRow(s, phone, day, wantAuto) {   // 같은 시트 · 같은 번호 · 같은 날 줄
@@ -9236,48 +9160,25 @@
             /* 11-20.6: 상담 리스트는 한 고객 한 줄 — 번호를 모르면 넣지 않음(콜 인입·번호 모르는 요약) · 같은 번호 줄이 어느 시트에든 있으면 새 줄 대신 그 줄에 이어 붙임 */
             var phone = digitsOnly(x.phone || ''), d = new Date(x.t || x.at || Date.now()), day = ymd(d), block = aiBlock(x);
             if (phone.length < 9) { done('nophone', ''); return { how: 'nophone' }; }
+            /* 11-20.9: 상담 리스트에는 새 줄을 만들지 않음 — 직원이 적은 같은 번호 줄(판매완료 제외)에만 이어 적기 · 없으면 콜 인입에만 */
+            var keep = x.cid ? '' : 'nophone';   // 콜 인입 줄이 없는 통화는 서버에 3일 보관 (📋 따로 보관한 요약)
             var hit = aiAnyRow(phone);
-            if (hit) {
-                var hs = hit.s, hr = hit.row, hmc = aiMemoCol(hs), hdc = clColBy(hs, 'date'), sameDay = !!hdc && String(hr.v[hdc.k] || '').slice(0, 10) === day;
-                if (hmc) hr.v[hmc.k] = aiAppend(hr.v[hmc.k], sameDay ? block : aiBlock(x, '재케어'));
-                hr.ai = (hr.ai ? hr.ai + ',' : '') + x.id;
-                if (!sameDay) { if (hr.st !== 'sale' && r.st && AI_ST_TXT[r.st]) hr.st = r.st; clRecare(hr, hs); }
-                clStamp(hr); clQueue();
-                aiPromise(x, clRef(hs, hr));
-                done(sameDay ? 'merge' : 'recare', hr.id);
-                aiToast(x, sameDay ? '이미 있는 상담 줄에 AI 요약을 붙였어요' : '예전 상담 줄에 재케어 요약을 붙였어요', hs, hr, fromUp);
-                if (state.view === 'consult' && !clEditing()) render();
-                return { how: sameDay ? 'merge' : 'recare', row: hr };
-            }
-            var mobS = r.kind === 'mob' ? aiMobSheet() : null, shId = mobS ? mobS.id : clDefaultSheet(), s = cl.data.sheets.filter(function (y) { return y.id === shId; })[0];
-            if (!s) { delete ai.doing[x.id]; return { how: 'nosheet' }; }
-            var mc = aiMemoCol(s);
-            var v = clNewRowVals(s), row = { id: uid(), sh: s.id, ty: 'row', o: 0, v: v, st: r.st && r.st !== 'sale' ? r.st : 'n', ai: x.id, aiA: 1 };
-            s.cols.forEach(function (c) {
-                var kd = clColKind(c);
-                if (kd === 'date') v[c.k] = day;
-                if (kd === 'time') v[c.k] = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
-                if (kd === 'staff') v[c.k] = x.staff || (fromUp ? my : '');
-                if (kd === 'ph' && phone) v[c.k] = telFmt(phone);
-                if (!kd && /고객명|성함|이름/.test(c.l.replace(/\s/g, '')) && r.name) v[c.k] = r.name + (r.name_sure ? '' : ' ❓');
-                var lb = c.l.replace(/\s/g, '');
-                if (!kd && /유입경로/.test(lb)) { var sv = aiRoute(x); if (sv) v[c.k] = sv; }
-                if (!kd && /^위치$/.test(lb) && r.loc) v[c.k] = r.loc;
-                if (!kd && /^현통신사$/.test(lb) && r.cur && clTelList(r.kind).indexOf(r.cur) >= 0) v[c.k] = r.cur;
-            });
-            if (!v[(clColBy(s, 'staff') || {}).k]) delete v[(clColBy(s, 'staff') || {}).k];
-            if (mc) {
-                var A = clTplOf(r.kind), t = A.join('\n');
-                r.fields.forEach(function (f) { t = clTplPut(t, f.key, (f.sure ? '' : '❓ ') + f.value); });
-                v[mc.k] = aiAppend(t, block, 2900);
-            }
-            var mo = 0; clRowsOf(s.id).forEach(function (y) { mo = Math.max(mo, y.o); }); row.o = mo + 1;
-            clRecare(row, s); clStamp(row); cl.data.rows.push(row); clQueue();
-            aiPromise(x, clRef(s, row));
-            done('new', row.id);
-            aiToast(x, '상담 리스트에 자동 등록했어요', s, row, fromUp);
+            if (!hit) { aiPromise(x, '콜 인입 (상담 리스트에 같은 번호 줄 없음)'); done(keep || 'callonly', ''); return { how: 'callonly' }; }
+            var hs = hit.s, hr = hit.row;
+            if (hr.st === 'sale') { aiPromise(x, '콜 인입 (판매완료 고객)'); done(keep || 'sale', ''); return { how: 'sale' }; }
+            var hmc = aiMemoCol(hs), hdc = clColBy(hs, 'date'), sameDay = !!hdc && String(hr.v[hdc.k] || '').slice(0, 10) === day;
+            var nt = hmc ? aiAppendKeep(hr.v[hmc.k], sameDay ? block : aiBlock(x, '재케어')) : null;
+            if (nt == null) { aiPromise(x, clRef(hs, hr)); done(keep || 'callonly', ''); return { how: 'full' }; }   // 칸이 꽉 참 (직원 글은 줄이지 않음) → 콜 인입에만
+            hr.v[hmc.k] = nt;
+            hr.ai = String(hr.ai || '').split(',').filter(Boolean).concat([x.id]).slice(-20).join(',');
+            if (!hr.ct) hr.ct = hr.u || 0;
+            hr.u = Math.max(Date.now(), (hr.u || 0) + 1);   // 내용 시각(ct)은 직원이 마지막으로 고친 시각 그대로 → 같은 때 직원이 고친 내용이 이기고, 요약은 합칠 때 다시 붙음
+            clQueue();
+            aiPromise(x, clRef(hs, hr));
+            done(sameDay ? 'merge' : 'recare', hr.id);
+            aiToast(x, '상담 리스트 같은 고객 줄에 통화 요약을 이어 적었어요', hs, hr, fromUp);
             if (state.view === 'consult' && !clEditing()) render();
-            return { how: 'new', row: row };
+            return { how: sameDay ? 'merge' : 'recare', row: hr };
         }
         /* ---------- 🤝 고객 약속 알림: 내 약속 시간 10분 전 ~ 2시간 안 (시간 없는 약속은 그 날 9시부터 한 번) ---------- */
         var prSnz = Object.create(null);
@@ -9502,7 +9403,9 @@
                     aiFix(r.item); ai.items.unshift(r.item); ai.doing[r.item.id] = 1; ai.upIds[r.item.id] = 1;
                     var go = function () {
                         if (!r.item.res) { delete ai.doing[r.item.id]; toast('🤖 요약하지 못했어요: ' + (r.item.err || '다시 올려 주세요.')); return; }
-                        delete ai.doing[r.item.id]; if (state.view === 'calls') ibPaint(); toast('🤖 요약했어요 — 콜 인입 🤖 줄에서 보세요. (상담 리스트에는 넣지 않아요)'); var o = {};
+                        var o = aiReg(r.item, true);
+                        if (o.how === 'other') toast('🤖 상담 통화가 아니라서(' + (r.item.res.other || '비상담') + ') 상담 리스트에는 넣지 않았어요.');
+                        if (o.how === 'callonly' || o.how === 'sale' || o.how === 'full') toast('🤖 요약했어요 — ' + (o.how === 'sale' ? '판매완료 고객이라' : o.how === 'full' ? '상담 내용 칸이 꽉 차서' : '상담 리스트에 같은 번호 줄이 없어서') + ' 콜 인입에만 적었어요.');
                         if (o.row) { state.view = 'consult'; cl.sheet = o.row.sh; cl.st = 'all'; cl.q = ''; cl.hl = o.row.id; render(); setTimeout(function () { var tr = document.querySelector('tr[data-row="' + o.row.id + '"]'); if (tr) tr.scrollIntoView({ block: 'center' }); }, 60); }
                     };
                     if (cl.data) go(); else { clLoad(true); var n = 0; (function w() { if (cl.data) go(); else if (++n < 40) setTimeout(w, 500); else { delete ai.doing[r.item.id]; toast('상담 리스트를 불러오지 못했어요. 잠시 뒤 자동으로 다시 넣어요.'); } })(); }
@@ -9521,7 +9424,7 @@
                 h('ol', {}, fl.map(function (q, i) {
                     var m = /^([^:：]{1,20})[:：]\s*(.*)$/.exec(q), on = !!M.flowDone[i];
                     return h('li', { class: on ? 'on' : '' }, h('button', { type: 'button', 'data-act': 'cl-flow-q', 'aria-pressed': on ? 'true' : 'false', onclick: function () { if (M.flowDone[i]) delete M.flowDone[i]; else M.flowDone[i] = 1; this.parentNode.classList.toggle('on'); this.setAttribute('aria-pressed', M.flowDone[i] ? 'true' : 'false'); } }, m ? h('b', {}, m[1]) : null, m ? ' ' + m[2] : q));
-                })), h('p', { class: 'cl-flow-tip' }, '🎙 업무폰 통화 녹음이 켜져 있으면, 통화가 끝나고 AI가 요약해 상담 리스트에 자동으로 넣어요. 메모를 다 못 적어도 괜찮아요.'));
+                })), h('p', { class: 'cl-flow-tip' }, '🎙 업무폰 통화 녹음이 켜져 있으면, 통화가 끝나고 AI가 요약해 콜 인입에 적고 상담 리스트의 같은 고객 줄에 이어 적어요. 메모를 다 못 적어도 괜찮아요.'));
             if (M.flowOpen !== false && window.innerWidth > 700) d.open = true;
             d.addEventListener('toggle', function () { M.flowOpen = d.open; });
             return d;
@@ -9533,9 +9436,8 @@
             return h('div', { class: 'ai-strip', 'data-fk': 'ai-strip' },
                 h('b', {}, '🤖 AI 통화 요약'), h('span', {}, ' 오늘 ' + ok + '건 요약' + (pend ? ' · 등록 대기 ' + pend + '건' : '') + (bad.length ? ' · ' : '')), bad.length ? h('span', { class: 'bad' }, '⚠️ 실패 ' + bad.length + '건') : null,
                 aiUpBtn(), aiRecChip(),
-                aiNoPhone().length ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ai-nophone', onclick: aiNoPhoneOpen }, '📵 번호 모르는 요약 ' + aiNoPhone().length + '건') : null,
-                isBoss() ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ai-clean', onclick: aiCleanOpen }, '🧹 상담 리스트 AI 정리') : null,
-                bad.length ? h('details', { class: 'ai-fails' }, h('summary', {}, '실패 이유 보기'), h('ul', {}, bad.slice(0, 10).map(function (x) {
+                aiNoPhone().length ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ai-nophone', onclick: aiNoPhoneOpen }, '📋 따로 보관한 요약 ' + aiNoPhone().length + '건') : null,
+                                bad.length ? h('details', { class: 'ai-fails' }, h('summary', {}, '실패 이유 보기'), h('ul', {}, bad.slice(0, 10).map(function (x) {
                     return h('li', {}, actHm(x.at || 0) + ' · ' + (x.file || '녹음') + ' — ' + (x.err || '실패'), isBoss() ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { ibCall('aiDel', { id: x.id }).then(function () { ai.items = ai.items.filter(function (y) { return y.id !== x.id; }); ibPaint(); }); } }, '지우기') : null);
                 }))) : null);
         }
@@ -9551,7 +9453,7 @@
             var st = h('p', { class: 'ph-tip', 'aria-live': 'polite' }, '확인하는 중이에요...');
             var inp = h('input', { type: 'password', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Gemini API 키', placeholder: 'AIza로 시작하는 키 붙여넣기 (바꿀 때만)' });
             var fl = h('textarea', { rows: '10', 'aria-label': '상담 흐름', 'data-fk': 'ai-flow' }); fl.value = aiFlow().join('\n');
-            var au = h('input', { type: 'checkbox', checked: false, disabled: true });
+            var au = h('input', { type: 'checkbox', checked: ai.auto });
             var url = db && db.drive && db.drive.url ? db.drive.url : '';
             function cfg() { return { flow: fl.value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean).slice(0, 30), terms: aiTerms(), tpl: { net: CL_TPL.map(function (x, i) { return clTplHead(i, CL_TPL).slice(2); }), mob: CL_TPL_M.map(function (x, i) { return clTplHead(i, CL_TPL_M).slice(2); }), rent: CL_TPL_R.map(function (x, i) { return clTplHead(i, CL_TPL_R).slice(2); }) }, tel: { net: CL_TELCO, mob: CL_MTEL, rent: CL_MAKER }, src: ['전단', '홈페이지', '우편', '당근', '채널', '소개', '기존고객', '플레이스', '네이버 광고', '블로그', '인스타'], auto: au.checked }; }
             function show(r) { st.textContent = r.set ? '✅ AI 통화 요약 사용 중 (키 끝자리 …' + r.tail + ') · 상담 흐름 ' + r.flowN + '단계 · 용어 ' + r.termN + '개' : '아직 Gemini 키가 없어요. 아래에 키를 넣고 [저장]을 눌러 주세요.'; }
@@ -9559,10 +9461,10 @@
             dlg.appendChild(h('form', { novalidate: true, onsubmit: function (e) { e.preventDefault(); var v = inp.value.trim(), p = { cfg: cfg() }; if (v) { p.op = 'set'; p.key = v; } call(p, '🤖 AI 통화 요약 설정을 저장했어요.'); } },
                 h('div', { class: 'dlg-head' }, '🤖 AI 통화 요약 (테스트)'),
                 h('div', { class: 'dlg-body' }, st,
-                    h('p', {}, '업무폰 통화 녹음을 구글 AI(Gemini)가 듣고 요약해서 상담 리스트에 자동으로 넣어요. 키는 구글 Apps Script 서버에만 보관되고, 녹음 원본은 어디에도 저장하지 않아요. 상담 리스트에 들어가면 서버에 남은 요약도 바로 지워요.'),
+                    h('p', {}, '업무폰 통화 녹음을 구글 AI(Gemini)가 듣고 요약해서 콜 인입에 건마다 적고, 상담 리스트에 같은 고객 줄이 있으면(판매완료 제외) 그 줄 아래에 이어 적어요(새 줄은 안 만듦). 키는 구글 Apps Script 서버에만 보관되고, 녹음 원본은 어디에도 저장하지 않아요. 상담 리스트에 들어가면 서버에 남은 요약도 바로 지워요.'),
                     h('label', { class: 'field' }, 'Gemini API 키', inp),
                     h('label', { class: 'field' }, '상담 흐름 (한 줄에 질문 하나 · "이름: 질문" 형식) — 상담 메모에 카드로 보이고, AI가 이 순서대로 답을 칸에 넣어요', fl),
-                    h('label', { class: 'ib-todo' }, au, ' 상담 리스트 자동 등록은 꺼 두었어요 — AI 요약은 콜 인입 🤖 줄에만 보여요'),
+                    h('label', { class: 'ib-todo' }, au, ' 통화가 끝나면 상담 리스트의 같은 고객 줄(직원이 적은 줄)에 요약 이어 적기 — 새 줄은 안 만듦 · 판매완료 줄 제외 · 끄면 콜 인입에만'),
                     aiSetupBox(),
                     h('details', {}, h('summary', {}, '📱 (다른 방법) MacroDroid로 녹음 파일 직접 올리기'),
                         h('p', { class: 'ph-tip' }, '착신 연결 때 쓴 휴대폰 연결 키를 그대로 써요. MacroDroid [HTTP 요청] → 방법 POST → 아래 주소 → 본문: 녹음 파일.'),
@@ -14115,15 +14017,17 @@
                 });
                 return Object.keys(map).map(function (k) { return map[k]; }).filter(function (x) { var t = del[x.id]; return !(t !== undefined && t >= x.u); });
             }
-            var sheets = pick(a.sheets, b.sheets), ok = Object.create(null), noK = Object.create(null);
+            var sheets = pick(a.sheets, b.sheets), ok = Object.create(null), noK = Object.create(null), shOf = Object.create(null);
+            sheets.forEach(function (s) { shOf[s.id] = s; });
             sheets.forEach(function (s) { ok[s.id] = 1; var nc = s.cols.filter(function (c) { return clColKind(c) === 'no'; })[0]; if (nc) noK[s.id] = nc.k; });
             var rowsM = pick(a.rows, b.rows), other = Object.create(null);
             a.rows.concat(b.rows).forEach(function (x) { (other[x.id] = other[x.id] || []).push(x); });
             rowsM = rowsM.map(function (w) {   // 나중 쪽이 순번만 바꿨고, 다른 쪽이 내용을 더 나중에 고쳤으면 → 내용은 그쪽 + 순번은 나중 쪽
                 var ctOf = function (x) { return x.ct || x.u || 0; };   // 내용 시각이 없으면(예전 화면) 고친 시각을 내용 시각으로 봄
                 var l = (other[w.id] || []).filter(function (x) { return x !== w && ctOf(x) > ctOf(w); })[0];
-                if (!l) return w;
-                var m = JSON.parse(JSON.stringify(l)), k = noK[w.sh]; if (k && w.v && w.v[k]) m.v[k] = w.v[k]; m.u = Math.max(w.u, l.u); return m;
+                var m = w;
+                if (l) { m = JSON.parse(JSON.stringify(l)); var k = noK[w.sh]; if (k && w.v && w.v[k]) m.v[k] = w.v[k]; m.u = Math.max(w.u, l.u); }
+                var src = l || w; return aiMergeKeep(m, (other[w.id] || []).filter(function (x) { return x !== src; }), shOf[w.sh]);   // 11-20.9: 다른 쪽에만 있는 AI 요약은 붙여서 살림 (직원 내용은 그대로)
             });
             return { sheets: sheets, rows: rowsM.filter(function (r) { return ok[r.sh]; }), xr: pick(a.xr || [], b.xr || []), drafts: pick(a.drafts || [], b.drafts || []), cuv: pick(a.cuv || [], b.cuv || []), del: del };
         }
@@ -14146,7 +14050,7 @@
                     cl.busy = false; cl.err = ''; cl.at = Date.now(); cl.rev = typeof res.rev === 'number' ? res.rev : 0;
                     cl.data = cl.data && (cl.dirty || cl.saving) ? clMerge(cl.data, remote) : remote;
                     cl.base = clDataRows();
-                    if (clAutoRenum()) cl.dirty = true;   // 지운 번호가 남아 있으면 순번 다시 맞춰서 저장
+                    if (clAutoRenum() + clDupFix()) cl.dirty = true;   // 지운 번호가 남아 있으면 순번 다시 맞춰서 저장
                     if (!cl.sheet || !cl.data.sheets.some(function (s) { return s.id === cl.sheet; })) cl.sheet = clDefaultSheet();
                     if (state.view === 'consult' && !clEditing()) render();
                     else if (state.view === 'gl' && gl.waitCl) render();
@@ -14188,7 +14092,7 @@
                     var rp = e.reply;
                     clDecode(rp.blob).then(function (remote) {
                         if (mine !== cl) return;
-                        cl.data = clMerge(cl.data, remote); cl.rev = typeof rp.rev === 'number' ? rp.rev : cl.rev; cl.base = Math.max(cl.base, clDataRows());
+                        cl.data = clMerge(cl.data, remote); cl.rev = typeof rp.rev === 'number' ? rp.rev : cl.rev; cl.base = Math.max(cl.base, clDataRows()); clDupFix();
                         if (state.view === 'consult' && !clEditing()) render();
                         if (tries < 4) clSave(tries + 1); else { cl.err = '저장이 계속 겹쳐요. 잠시 뒤 [저장 다시 시도]를 눌러 주세요.'; render(); }
                     }, function () { cl.err = '다른 직원이 저장한 내용을 풀지 못해 저장을 멈췄어요. 새로고침해 주세요.'; render(); });
@@ -14775,7 +14679,7 @@
             var s = cl.data.sheets.filter(function (x) { return x.id === shId; })[0]; if (!s) return 0;
             var nc = s.cols.filter(function (c) { return clColKind(c) === 'no'; })[0]; if (!nc) return 0;
             var list = clRowsOf(shId).filter(function (r) { return r.ty === 'row' && /^\d+$/.test(String(r.v[nc.k] || '').trim()); });
-            list.sort(function (a, b) { return (parseInt(a.v[nc.k], 10) - parseInt(b.v[nc.k], 10)) || (a.o - b.o); });
+            list.sort(function (a, b) { return (parseInt(a.v[nc.k], 10) - parseInt(b.v[nc.k], 10)) || (a.o - b.o) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0); });   // 같은 번호·같은 위치면 먼저 만든 줄이 앞 (모든 화면이 같은 결과)
             var n = 0, evCh = false;
             list.forEach(function (r, i) {
                 var want = String(i + 1); if (String(r.v[nc.k]).trim() === want) return;
@@ -14795,6 +14699,21 @@
                 seen[t] = 1; mx = Math.max(mx, +t);
             }
             return mx !== rows.length;
+        }
+        function clDupFix() {   // 11-20.9: 두 화면이 같은 때 새 줄을 만들어 순번이 겹치면(예: 60번 두 개) → 그 시트 순번을 1..n으로 다시 (먼저 만든 줄이 앞 · 모든 화면이 같은 결과)
+            if (!cl.data) return 0;
+            var n = 0, recent = Date.now() - 3 * 86400000;
+            cl.data.sheets.forEach(function (s) {
+                var nc = s.cols.filter(function (c) { return clColKind(c) === 'no'; })[0]; if (!nc) return;
+                var rows = clRowsOf(s.id).filter(function (r) { return r.ty === 'row'; }), by = Object.create(null), bad = false;
+                for (var i = 0; i < rows.length; i++) { var t = String(rows[i].v[nc.k] || '').trim(); if (!/^\d+$/.test(t)) return; (by[t] = by[t] || []).push(rows[i]); }
+                Object.keys(by).forEach(function (k) {   // 겹친 번호 중 최근 3일 안에 만든 줄이 있을 때만 (예전 엑셀 시트의 겹친 번호는 그대로)
+                    if (by[k].length < 2) return;
+                    if (by[k].some(function (r) { var m = /^i([0-9a-z]{8})/.exec(String(r.id || '')), tm = m ? parseInt(m[1], 36) : 0; return tm > recent; })) bad = true;
+                });
+                if (bad) n += clRenumber(s.id);
+            });
+            return n;
         }
         function clAutoRenum() {   // 불러올 때: 지운 번호가 남은 시트는 순번을 1..전체 건수로 (옛날 시트처럼 번호가 겹치거나 빈 칸이 있으면 그대로 둠)
             if (!cl.data) return 0;
