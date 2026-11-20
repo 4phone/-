@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Tryug20f+DunliLcu8j4NlhC9B0Lm1redNUxUQgy3c='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sJVx2xhcT8hPjY/z1wV02SSWgglWxXXgf6PCKWC/h4w='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -358,6 +358,7 @@
         .sh-tk .main { max-width: 1580px; }
         .tlog-note { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 0 10px; padding: 10px 14px; border-radius: 10px; background: #FFF4E5; border: 1.5px solid #F0B45A; color: #7A4300; font-size: 14px; font-weight: 700; }
         .tlog-dlg { width: min(680px, calc(100vw - 24px)); }
+        .ib-miss { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: #FDECEC; color: #A61F1F; font-size: 12.5px; font-weight: 800; }   /* 11-20.5 */
         .ai-rec { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; font-weight: 700; color: #8A6418; } .ai-rec.on { color: #1F6B2A; }   /* 11-20.4 */
         .ai-setup { margin: 10px 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #FAFBF6; } .ai-setup h4 { margin: 4px 0 6px; font-size: 14.5px; } .ai-steps { margin: 6px 0 10px; padding-left: 20px; display: grid; gap: 5px; font-size: 13.5px; line-height: 1.5; } .ai-setup .ai-url { display: block; white-space: pre-wrap; word-break: break-all; }
         .vs-kw { color: #1F4FA0; font-weight: 800; }   /* 11-20.3 검색어 */
@@ -2335,7 +2336,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-20.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-20.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8631,7 +8632,7 @@
             return x && typeof x.id === 'string' && x.id.length <= 40 && typeof x.t === 'number' && (IB_KIND.hasOwnProperty(x.kind) || x.kind === 'snd') && typeof x.label === 'string';   // snd: 업무폰에서 건 전화 (발신 탭에만)
         }
         function ibNorm(x) {
-            return { id: x.id, t: x.t, kind: x.kind, label: String(x.label).slice(0, 60), dev: x.dev === 'm' ? 'm' : 'pc', ph: typeof x.ph === 'string' ? x.ph.slice(0, 12) : '', n4: typeof x.n4 === 'string' ? x.n4.replace(/\D/g, '').slice(-4) : '', ctk: x.ctk === 1 ? 1 : x.ctk === 0 ? 0 : -1, ctn: typeof x.ctn === 'string' ? x.ctn.slice(0, 20) : '', ai: aiIbNorm(x.ai), name: typeof x.name === 'string' ? x.name.slice(0, 20) : '', phone: typeof x.phone === 'string' ? x.phone.replace(/\D/g, '').slice(0, 11) : '',
+            return { id: x.id, t: x.t, kind: x.kind, label: String(x.label).slice(0, 60), dev: x.dev === 'm' ? 'm' : 'pc', ph: typeof x.ph === 'string' ? x.ph.slice(0, 12) : '', n4: typeof x.n4 === 'string' ? x.n4.replace(/\D/g, '').slice(-4) : '', ctk: x.ctk === 1 ? 1 : x.ctk === 0 ? 0 : -1, ctn: typeof x.ctn === 'string' ? x.ctn.slice(0, 20) : '', miss: x.miss === 1 ? 1 : 0, ai: aiIbNorm(x.ai), name: typeof x.name === 'string' ? x.name.slice(0, 20) : '', phone: typeof x.phone === 'string' ? x.phone.replace(/\D/g, '').slice(0, 11) : '',
                 chk: x.chk && typeof x.chk.by === 'string' ? { by: x.chk.by.slice(0, 20), at: Number(x.chk.at) || 0 } : null,
                 asg: x.asg && typeof x.asg.to === 'string' && x.asg.to ? { to: x.asg.to.slice(0, 20), by: String(x.asg.by || '').slice(0, 20), at: Number(x.asg.at) || 0 } : null,
                 cm: Array.isArray(x.cm) ? x.cm.filter(function (c) { return c && typeof c.id === 'string' && typeof c.text === 'string'; }).map(function (c) { return { id: c.id, by: String(c.by || '').slice(0, 20), em: String(c.em || ''), text: c.text.slice(0, 500), at: Number(c.at) || 0 }; }) : [] };
@@ -9200,6 +9201,9 @@
                 h('h4', {}, '📤 발신 기록 (MacroDroid · 대표님만 봄)'),
                 h('p', { class: 'ph-tip' }, '착신 매크로를 [복제] → 트리거를 ', h('b', {}, '발신 전화(Call Outgoing)'), ' 로 바꾸고 → HTTP 요청 본문을 아래처럼 (연결 키는 착신과 같은 키) → 저장. 녹음이 없어도 누가 언제 어디로 걸었는지 남아요.'),
                 h('code', { class: 'ai-url' }, outBody),
+                h('h4', {}, '📵 부재중 전화 (통화 중에 온 전화도 콜 인입에)'),
+                h('p', { class: 'ph-tip' }, '착신 매크로를 한 번 더 [복제] → 트리거를 ', h('b', {}, '부재중 전화(Call Missed)'), ' 로 → 본문을 아래처럼 → 저장. 못 받은 전화는 콜 인입에 📵 부재중으로 떠요 (착신 줄이 이미 있으면 그 줄에 표시만).'),
+                h('code', { class: 'ai-url' }, JSON.stringify({ action: 'callIn', key: '【휴대폰 연결 키】', num: '{call_number}', miss: 1 })),
                 h('p', { class: 'ph-tip' }, '연결 키를 모르면: 콜 인입 → 착신 휴대폰 연결 → [키 다시 만들기] → 나온 ②·③ 내용을 착신·발신 매크로에 다시 넣기.'));
         }
         function renderOutCalls() {   // 11-20.4: 📤 발신 내역 (대표만 · 블로그 글쓰기 아래 메뉴)
@@ -9621,6 +9625,7 @@
                     h('div', { class: 'ci-kv' }, h('span', {}, '① 주소 (URL)'), h('code', {}, db.drive.url), copy(db.drive.url, '주소를 복사했어요.')),
                     h('div', { class: 'ci-kv' }, h('span', {}, '② 보낼 내용 (Body)'), h('code', { 'data-fk': 'ci-body' }, body), copy(body, '보낼 내용을 복사했어요.')),
                     h('div', { class: 'ci-kv' }, h('span', {}, '③ 발신 기록 매크로 본문 (트리거: 발신 전화)'), h('code', { 'data-fk': 'ci-body-out' }, JSON.stringify({ action: 'callIn', key: K.key, num: '{call_number}', dir: 'out' })), copy(JSON.stringify({ action: 'callIn', key: K.key, num: '{call_number}', dir: 'out' }), '발신 매크로 내용을 복사했어요.')),
+                    h('div', { class: 'ci-kv' }, h('span', {}, '④ 부재중 매크로 본문 (트리거: 부재중 전화 · 통화 중에 온 전화도)'), h('code', { 'data-fk': 'ci-body-miss' }, JSON.stringify({ action: 'callIn', key: K.key, num: '{call_number}', miss: 1 })), copy(JSON.stringify({ action: 'callIn', key: K.key, num: '{call_number}', miss: 1 }), '부재중 매크로 내용을 복사했어요.')),
                     h('small', {}, '※ 키는 이 휴대폰 전용이에요. 다른 사람에게 보내지 마세요. 잃어버리면 [키 다시 만들기]를 누르면 돼요.'),
                     h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { ib.ciKey = null; render(); } }, '다 넣었어요 (닫기)')) : null);
         }
@@ -9798,7 +9803,7 @@
                 return h('div', { class: 'ib-row' + (x.chk ? ' done' : '') + (ib.sel[x.id] ? ' sel' : '') + (mk ? ' mk' : ''), 'data-ib': x.id },
                     h('div', { class: 'ib-time' }, h('span', { class: 'ib-no' + (mk ? ' off' : '') + (mk === 'dup' || mk === 'pc' || mk === 'nocall' || mk === 'nomatch' || mk === 'nca' || mk === 'old' ? ' auto' : ''), title: mk === 'old' ? '중복 인입: 이 번호로 앞서 들어온 인입이 있어요 (기존 고객) → 실 인입 순번에서 빠짐. 새 상담이면 [실 인입]' : mk === 'nca' ? '자동 비상담: ' + ibMemoWhy(x) + ' 전화라 상담이 아닌 것으로 봤어요. 이 날 이후 상담 리스트에 이 번호로 상담을 적으면 자동으로 실 인입으로 바뀌어요 (또는 [실 인입])' : mk === 'nomatch' ? '자동 미인입: 전화 온 뒤 30분이 지나도 상담 리스트에 이 번호가 없어요. 늦게라도 상담 리스트에 연락처를 적으면 (몇 시간·며칠 뒤라도) 자동으로 실 인입으로 바뀌어요 (또는 [실 인입])' : mk === 'nocall' ? '자동 제외: 버튼을 누른 뒤 3분 안에 착신 휴대폰에 온 전화가 없어요 (전화를 걸지 않음). 실제로 통화했으면 [실 인입]' : mk === 'dup' ? '자동 제외: 바로 전(3분 안)에 모바일에서 누른 전화가 또 있어요 — 같은 손님이 여러 번 누른 것으로 봤어요. 실제로 따로 온 전화면 [실 인입]' : mk === 'pc' ? '자동 제외: PC에서 누른 전화 버튼이에요 (PC는 바로 전화가 걸리지 않아요). 실제로 통화했으면 [실 인입]' : mk ? '실 인입 아님 (순번 없음)' : ymd(new Date(x.t)) + ' 실 인입 ' + no + '번째' }, mk ? IB_MK_TXT[mk] : no + '번'), pickBox ? h('label', { class: 'ib-pick' }, pickBox, ibTime(x.t)) : ibTime(x.t)),
                     h('div', { class: 'ib-kind k-' + x.kind }, k[0] + ' ' + k[1]),
-                    h('div', { class: 'ib-main' }, h('div', { class: 'ib-label' }, x.label),
+                    h('div', { class: 'ib-main' }, h('div', { class: 'ib-label' }, x.label, x.miss ? h('b', { class: 'ib-miss', title: '못 받은 전화 (통화 중에 온 전화 포함) — 다시 걸어 주세요' }, '📵 부재중 · 다시 걸기') : null),
                         h('div', { class: 'ib-sub' }, x.kind === 'rcv' ? h('span', { class: 'ib-dev' }, '직접 전화', (function () { var w = ibMemoWhy(x); return w && w !== '번호 안 옴' ? h('b', { class: 'ib-ctk' + (w === '유선·대표번호' ? ' tel' : ''), title: '이 전화는 상담 메모를 자동으로 열지 않았어요 (010 휴대폰 · 연락처·가입 장부에 없는 번호만 열어요)' }, w === '유선·대표번호' ? ' ☎ 유선·대표번호' + (x.ctn ? ' · 📇 ' + x.ctn : '') : w === '저장된 연락처' ? ' 📇 저장된 연락처' + (x.ctn ? ' · ' + x.ctn : '') : ' 📇 가입 고객')   /* 연락처 이름은 줄바꿈해서 다 보임 */ : x.ctk === 0 ? h('b', { class: 'ib-ctk new' }, ' 🆕 미등록 번호') : null; })(), aiBadge(x)) : h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC'),
                             x.name ? h('b', {}, x.name) : null,
                             x.phone ? h('a', { href: 'tel:' + x.phone, class: 'ib-phone' }, mfPhone(x.phone)) : null,
