@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-fkkqPd29EbA9yatvIgmUf5Vi/nfK4xVseS47aaYCsYs='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-b1VPGC2ch5Pzys20XF+pMDtTvbQBDhKep3bDLunZP9U='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -106,7 +106,7 @@
             .ib-split-l .ib-row .ib-time { grid-column: 1; grid-row: 1; } .ib-split-l .ib-row .ib-kind { grid-column: 1; grid-row: 2; }
             .ib-split-l .ib-row .ib-main { grid-column: 2; grid-row: 1 / span 2; } .ib-split-l .ib-row .ib-asg { grid-column: 2 / -1; grid-row: 3; }
             .ib-split-l .ib-row .ib-chkw { grid-column: 3; grid-row: 1 / span 2; } .ib-split-l .ib-row .ib-act { grid-column: 4; grid-row: 1 / span 2; }
-            .ib-split-l .ib-row .ib-notes { grid-row: 4; }
+            .ib-split-l .ib-row .ib-aiw { grid-row: 4; } .ib-split-l .ib-row .ib-notes { grid-row: 5; }
         }
         @container ibl (max-width: 640px) {
             .ib-split-l .ib-row { grid-template-columns: minmax(0, 1fr) auto; padding: 12px; }
@@ -130,7 +130,7 @@
         body.cl-memo-min .cl-memo { width: 360px; max-width: calc(100vw - 24px); } body.cl-memo-min .cl-memo-h { flex-wrap: wrap; row-gap: 4px; } body.cl-memo-min .cl-memo-n { white-space: nowrap; }
         .cl-dock-r.on { background: #FFF6CC; }
         .ib-ai { font-size: 11.5px; margin-left: 4px; color: #1F5FAD; white-space: nowrap; } .ib-ai.bad { color: #B3261E; }
-        .ib-aisum { margin-top: 5px; padding: 6px 9px; border-left: 3px solid #6E8FC4; background: #F4F7FC; border-radius: 0 8px 8px 0; font-size: 12.5px; line-height: 1.5; color: #24324A; } .ib-aisum ul { margin: 2px 0 0 16px; padding: 0; } .ib-aisum li { margin: 1px 0; }
+        .ib-aiw { grid-column: 1 / -1; min-width: 0; } .ib-aisum { margin-top: 2px; padding: 10px 14px; border-left: 4px solid #6E8FC4; background: #F4F7FC; border-radius: 0 10px 10px 0; font-size: 15px; line-height: 1.7; color: #1B2333; word-break: keep-all; overflow-wrap: anywhere; } .ib-aisum-h { font-size: 15.5px; } .ib-aisum ul { margin: 4px 0 0 20px; padding: 0; } .ib-aisum li { margin: 3px 0; } .ib-aisum .ib-aipr { font-size: 15px; margin-top: 6px; }
         .ib-aisum.c-recare { border-left-color: #C08A00; background: #FFF9E8; } .ib-aisum.c-cust { border-left-color: #2E7D5B; background: #F0F8F3; } .ib-aisum.c-other { border-left-color: #9A9A9A; background: #F5F5F3; color: #555; } .ib-aisum.bad { border-left-color: #B3261E; background: #FDF1F0; color: #8A1C15; }
         .ib-aicat { color: #1F3E73; } .ib-aisum.c-recare .ib-aicat { color: #7A5500; } .ib-aisum.c-cust .ib-aicat { color: #1E5C41; } .ib-aist { color: #6B5A00; } .ib-aipr { margin-top: 3px; font-weight: 700; color: #6A3D00; }
         .ib-tabs { display: flex; gap: 6px; margin: 4px 0 10px; flex-wrap: wrap; } .ib-tab { min-height: 38px; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font: inherit; font-weight: 700; cursor: pointer; color: #3E441E; } .ib-tab.on { background: #4E5B2A; border-color: #4E5B2A; color: #FFF6C9; } .ib-tab:focus-visible { outline: 2px solid #C9A227; outline-offset: 2px; }
@@ -2336,7 +2336,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-20.10';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-20.11';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -9224,6 +9224,10 @@
         }
         function aiWhen(x) { var d = new Date(x.t || x.at || Date.now()); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
         function aiDirTxt(dir) { return dir === 'out' ? '발신' : dir === 'in' ? '수신' : ''; }
+        function ibAiW(x) {   // 11-20.11: 요약은 줄 아래 전체 폭으로 크게
+            var b = aiSumBox(x) || (x.kind === 'snd' ? h('div', { class: 'ib-aisum' }, Date.now() - x.t < 900000 ? '🤖 녹음 요약을 기다리는 중이에요' : '🎙 녹음 요약 없음 (녹음이 안 올라왔어요)') : null);
+            return b ? h('div', { class: 'ib-aiw' }, b) : null;
+        }
         function aiSumBox(x) {   // 콜 인입 줄 아래: 분류 · 요약 · 약속 (서버가 바로 적어 둔 것)
             var a = x.ai; if (!a) return null;
             if (a.k === 'fail') return h('div', { class: 'ib-aisum bad', 'data-fk': 'ib-aisum' }, '🤖 요약 실패' + (a.e ? ' — ' + a.e : ''));
@@ -9502,11 +9506,11 @@
                     h('div', { class: 'ib-main' }, h('div', { class: 'ib-label' }, x.label),
                         h('div', { class: 'ib-sub' }, x.ctn ? h('b', {}, '📇 ' + x.ctn) : null, x.phone ? h('a', { href: 'tel:' + x.phone, class: 'ib-phone' }, mfPhone(x.phone)) : h('span', { class: 'ib-rcv-n' }, x.n4 ? '번호 끝 ' + x.n4 : '번호 안 옴'),
                             m ? h('button', { type: 'button', class: 'ib-cl', title: '상담 리스트에서 이 고객 보기', onclick: function () { cl.sheet = m.sh; cl.q = digitsOnly(x.phone || '') || x.n4 || ''; state.view = 'consult'; render(); window.scrollTo(0, 0); } }, '📝 상담 리스트 · ' + [m.shn, m.day, m.name].filter(Boolean).join(' · ')) : null),
-                        aiSumBox(x) || h('div', { class: 'ib-aisum' }, Date.now() - x.t < 900000 ? '🤖 녹음 요약을 기다리는 중이에요' : '🎙 녹음 요약 없음 (녹음이 안 올라왔어요)')),
+                        null),
                     h('div', { class: 'ib-asg' }, h('small', { class: 'ib-asg-by' }, x.asg ? '담당 ' + x.asg.to : '담당 없음')),
                     h('div', { class: 'ib-act' }, h('button', { type: 'button', class: 'btn btn-sm' + (open ? ' on' : ''), 'data-fk': 'ib-open-' + x.id, onclick: function () { if (ib.open[x.id]) delete ib.open[x.id]; else ib.open[x.id] = 1; render(); } }, '댓글' + (x.cm.length ? ' ' + x.cm.length : '')),
                         isBoss() ? h('button', { type: 'button', class: 'btn btn-sm btn-danger', disabled: ib.deleting ? true : null, onclick: function () { ibDelete([x.id]); } }, '삭제') : null),
-                    notes);
+                    ibAiW(x), notes);
             });
             return h('div', {}, head,
                 h('p', { class: 'forms-sub' }, '업무폰에서 건 전화의 통화 녹음을 AI가 요약해서 여기에 올려요. 받은 전화(인입) 순번·실 인입 건수에는 들어가지 않아요. 상담이면 상담 리스트(유선·렌탈 → 이번 달 시트, 모바일 → 모바일 시트)에, 예전에 상담한 고객이면 그 줄에 재케어로 이어 붙여요.'),
@@ -10087,13 +10091,13 @@
                                     '📝 상담 리스트 · ' + [m.day, m.name, m.who].filter(Boolean).join(' · ') + (m.memo ? ' — ' + m.memo.replace(/■[^:\n]*:\s*(\n|$)/g, '').replace(/\s+/g, ' ').trim().slice(0, 90) : '')); })() : null,
                             boss ? h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-dm-' + x.id, title: '이 콜을 직원에게 전달 (직원 화면에 팝업)', onclick: function () { dmSend({ to: x.asg ? (db.staff.filter(function (st) { return st.name === x.asg.to; })[0] || {}).id : '', ref: IB_KIND[x.kind][1] + ' · ' + x.label + (x.phone ? ' · ' + mfPhone(x.phone) : x.n4 ? ' · 끝 ' + x.n4 : '') + ' · ' + ibHms(x.t), t: (x.phone ? mfPhone(x.phone) + ' ' : '') + '고객님 연락 부탁드려요.' }); } }, '📨 전달') : null,
                             x.kind === 'rcv' && x.phone ? h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-memo-' + x.id, title: '이 번호로 상담 메모 열기', onclick: function () { ibRcvMemo(x); } }, '📝 상담 메모') : null,
-                            SEQ.mt[x.id] ? h('span', { class: 'ib-rcv-ok', title: '착신 휴대폰에 실제로 전화가 왔어요' }, '📱 통화 확인 ' + ibHms(SEQ.mt[x.id].t) + ' · ' + SEQ.mt[x.id].ph + (SEQ.mt[x.id].n4 ? ' · 끝 ' + SEQ.mt[x.id].n4 : '')) : null), aiSumBox(x)),
+                            SEQ.mt[x.id] ? h('span', { class: 'ib-rcv-ok', title: '착신 휴대폰에 실제로 전화가 왔어요' }, '📱 통화 확인 ' + ibHms(SEQ.mt[x.id].t) + ' · ' + SEQ.mt[x.id].ph + (SEQ.mt[x.id].n4 ? ' · 끝 ' + SEQ.mt[x.id].n4 : '')) : null)),
                     asg,
                     h('div', { class: 'ib-chkw' }, h('label', { class: 'ib-chk' + (boss ? '' : ' ro') }, chk, h('span', {}, '확인'), x.chk ? h('small', {}, x.chk.by + (x.chk.at ? ' · ' + ibTime(x.chk.at) : '')) : (boss ? null : h('small', {}, '대표 확인 전'))), markBtns),
                     h('div', { class: 'ib-act' }, h('button', { type: 'button', class: 'btn btn-sm' + (open ? ' on' : ''), 'data-fk': 'ib-open-' + x.id, 'aria-expanded': open ? 'true' : 'false',
                         onclick: function () { if (ib.open[x.id]) delete ib.open[x.id]; else ib.open[x.id] = 1; render(); } }, '댓글' + (x.cm.length ? ' ' + x.cm.length : '')),
                         bossDel ? h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'data-fk': 'ib-del-' + x.id, disabled: ib.deleting ? true : null, onclick: function () { ibDelete([x.id]); } }, '삭제') : null),
-                    notes);
+                    ibAiW(x), notes);
             });
             return h('div', {}, head,
                 h('p', { class: 'forms-sub' }, '고객이 홈페이지에서 전화·카톡·문자 버튼을 누르거나 접수를 마치면 여기에 바로 올라와요. 이름 버튼을 눌러 담당자를 정하고(모든 직원 가능), 처리 내용은 댓글로 남겨 주세요. [확인] 체크와 기록 삭제는 대표님만 할 수 있어요.'),
