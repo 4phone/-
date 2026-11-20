@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-NZFIREoJiTWk5GogoFIfYajZLFxBpuv65wuJ2oiAai0='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Pt/xgSWQkklKUSsMxTJPFFEWpkNPMKKE7SuZBlLJf4U='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -358,6 +358,7 @@
         .sh-tk .main { max-width: 1580px; }
         .tlog-note { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 0 10px; padding: 10px 14px; border-radius: 10px; background: #FFF4E5; border: 1.5px solid #F0B45A; color: #7A4300; font-size: 14px; font-weight: 700; }
         .tlog-dlg { width: min(680px, calc(100vw - 24px)); }
+        .vs-kw { color: #1F4FA0; font-weight: 800; }   /* 11-20.3 검색어 */
         /* 11-20.1 미쇼 의심 번호 */
         .ms-box { padding: 10px 12px; border: 1.5px dashed #D9B8B8; border-radius: 10px; background: #FFF8F8; }
         .cl-form .ms-row { flex-wrap: wrap; }
@@ -2332,7 +2333,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-20.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-20.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -9958,7 +9959,8 @@
         function vsFresh() { return { pv: 'day', items: null, at: 0, err: '', busy: false, grp: 'all' }; }
         var vs = vsFresh();
         function vsOk(x) { return x && typeof x.t === 'number' && typeof x.src === 'string'; }
-        function vsNorm(x) { var src0 = String(x.src).slice(0, 30); if (!/구글/.test(src0) && /[?,](gclid|gbraid|wbraid|gad_source|gad_campaignid|gclsrc|dclid)(,|$|\s)/.test(String(x.page || ''))) src0 = '구글 광고'; return { t: x.t, src: src0, ref: String(x.ref || '').slice(0, 80), us: String(x.us || '').slice(0, 40), um: String(x.um || '').slice(0, 40), uc: String(x.uc || '').slice(0, 40), dev: x.dev === 'm' ? 'm' : 'pc', page: String(x.page || '').slice(0, 80), ad: x.ad === 1 ? 1 : 0, adn: typeof x.adn === 'number' ? x.adn : 0, ip: typeof x.ip === 'string' ? x.ip.slice(0, 45) : '', did: typeof x.did === 'string' ? x.did.slice(0, 16) : '' }; }
+        function vsNorm(x) { var src0 = String(x.src).slice(0, 30); if (!/구글/.test(src0) && /[?,](gclid|gbraid|wbraid|gad_source|gad_campaignid|gclsrc|dclid)(,|$|\s)/.test(String(x.page || ''))) src0 = '구글 광고';
+            else if (!/광고/.test(src0) && /[?,](n_media|n_query|n_keyword|n_ad_group|n_ad|n_rank|n_campaign_type)(,|$|\s)/.test(String(x.page || ''))) src0 = '네이버 광고'; /* 11-20.3: 네이버 검색광고(파워링크) 표시가 있으면 지난 기록도 '네이버 광고' */ return { t: x.t, src: src0, ref: String(x.ref || '').slice(0, 80), us: String(x.us || '').slice(0, 40), um: String(x.um || '').slice(0, 40), uc: String(x.uc || '').slice(0, 40), dev: x.dev === 'm' ? 'm' : 'pc', page: String(x.page || '').slice(0, 80), ad: x.ad === 1 ? 1 : 0, adn: typeof x.adn === 'number' ? x.adn : 0, ip: typeof x.ip === 'string' ? x.ip.slice(0, 45) : '', did: typeof x.did === 'string' ? x.did.slice(0, 16) : '', kw: typeof x.kw === 'string' ? x.kw.slice(0, 40) : '', ak: typeof x.ak === 'string' ? x.ak.slice(0, 40) : '', kr: typeof x.kr === 'number' && x.kr > 0 && x.kr < 1000 ? x.kr : 0 }; }
         function vsFetch(pv) { var r = periodRange(pv); return ibCall('vsList', { from: r.from, to: r.to }).then(function (res) { return { r: r, items: (Array.isArray(res.items) ? res.items : []).filter(vsOk).map(vsNorm) }; }); }
         function vsLoad() {
             if (!authed || !db || !driveOn() || vs.busy) return;
@@ -9993,6 +9995,13 @@
             if (s === '직접 방문') return '직접 방문';
             return '기타';
         }
+        function vsKw(x) {   // 11-20.3: 🔎 검색어 · 광고 키워드 · 순위 (홈페이지가 보낸 값 — 예전 기록·검색 사이트가 안 알려 준 경우는 없음)
+            var a = [];
+            if (x.kw) a.push('🔎 검색어 "' + x.kw + '"');
+            if (x.ak && x.ak !== x.kw) a.push('광고 키워드 "' + x.ak + '"');
+            if (x.kr) a.push('광고 ' + x.kr + '위');
+            return a.join(' · ');
+        }
         function vsDetail(x) { var q = /\?(.+)$/.exec(String(x.page || '').replace(/\s*\[frame\]$/, '')); return [x.ip ? 'IP ' + x.ip : '', x.adn >= 3 ? '⚠ 7일 광고 클릭 ' + x.adn + '번째' : x.adn ? '7일 광고 클릭 ' + x.adn + '번째' : '', x.ref, x.us ? 'utm: ' + x.us + (x.um ? '/' + x.um : '') + (x.uc ? '/' + x.uc : '') : '', q ? '주소 표시: ' + q[1] : '', /\[frame\]$/.test(x.page || '') ? '다른 주소 안(프레임)에서 열림' : ''].filter(Boolean).join(' · '); }
         function vsExcel(pv, btn) {
             if (!driveOn()) { toast('공유 저장소를 연결한 기기에서 내려받을 수 있어요.'); return; }
@@ -10014,12 +10023,12 @@
                 sum.push(['모바일', mob], ['PC', items.length - mob], []);
                 head.push(sum.length); sum.push(['날짜', '방문', '모바일', 'PC']);
                 days.forEach(function (d) { sum.push([d, byDay[d].all, byDay[d].m, byDay[d].pc]); });
-                var det = [['일시', '경로 묶음', '유입 경로', '참조 사이트', 'utm_source', 'utm_medium', 'utm_campaign', '기기', '첫 화면', '광고 IP', '7일 광고 클릭', '기기 표시']];
-                items.forEach(function (x) { det.push([fmtDT(x.t), vsGroup(x.src), x.src, x.ref, x.us, x.um, x.uc, x.dev === 'm' ? '모바일' : 'PC', x.page, x.ip, x.adn || '', x.did]); });
+                var det = [['일시', '경로 묶음', '유입 경로', '검색어', '광고 키워드', '광고 순위', '참조 사이트', 'utm_source', 'utm_medium', 'utm_campaign', '기기', '첫 화면', '광고 IP', '7일 광고 클릭', '기기 표시']];
+                items.forEach(function (x) { det.push([fmtDT(x.t), vsGroup(x.src), x.src, x.kw, x.ak, x.kr || '', x.ref, x.us, x.um, x.uc, x.dev === 'm' ? '모바일' : 'PC', x.page, x.ip, x.adn || '', x.did]); });
                 var sus = vsAdSus(items); if (sus.length) { sum.push([]); head.push(sum.length); sum.push(['광고 부정클릭 의심 IP (' + VS_AD_MIN + '번 이상)', '이 기간 클릭', '7일 최대']); sus.forEach(function (o) { sum.push([o.ip || '(기기 ' + o.did + ')', o.n, o.max7 || '']); }); }
                 saveBlob('홈페이지인입_' + r.label + '.xlsx', xlsxBlob([
                     { name: '요약', widths: [34, 10, 10, 10], rows: sum, head: head },
-                    { name: '상세', widths: [20, 12, 22, 26, 16, 14, 18, 8, 24, 16, 12, 14], rows: det, head: [0], freeze: 1 }]));
+                    { name: '상세', widths: [20, 12, 22, 24, 22, 10, 26, 16, 14, 18, 8, 24, 16, 12, 14], rows: det, head: [0], freeze: 1 }]));
                 toast('홈페이지 인입 ' + r.label + ' 엑셀을 내려받았어요. (' + items.length + '건)');
             }, function (e) { btn.disabled = false; btn.textContent = label; toast('엑셀을 만들지 못했어요. ' + driveErrText(e)); });
         }
@@ -10073,7 +10082,7 @@
             var status = vs.err ? '연결 오류: ' + vs.err : vs.items === null ? '불러오는 중...' : (vs.at ? pad2(new Date(vs.at).getHours()) + ':' + pad2(new Date(vs.at).getMinutes()) + '에 확인' : '');
             var rows = items.slice(0, 300).map(function (x) {
                 return h('div', { class: 'vs-row' }, h('div', { class: 'ib-time' }, ibTime(x.t)), h('div', { class: 'vs-src' }, x.src),
-                    h('div', { class: 'vs-det' }, vsDetail(x) || '-'), h('div', {}, h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC')));
+                    h('div', { class: 'vs-det' }, vsKw(x) ? h('b', { class: 'vs-kw' }, vsKw(x)) : null, vsKw(x) ? h('br') : null, vsDetail(x) || (vsKw(x) ? '' : '-')), h('div', {}, h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC')));
             });
             return h('div', {}, head,
                 h('p', { class: 'forms-sub' }, '고객이 어떤 경로(네이버 검색, 구글 검색, 인스타그램, 카카오톡, 직접 방문 등)로 홈페이지에 들어왔는지 보여줘요. 한 사람이 새로고침해도 한 번만 세요. 아래 [구글]을 누르면 구글로 들어온 방문만 따로 볼 수 있어요. 오른쪽 위 [엑셀]로 기간별 자료를 내려받을 수 있어요.'),

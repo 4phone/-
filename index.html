@@ -4086,6 +4086,16 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             try { btn.focus({ preventScroll: true }); } catch (e) { /* 무시 */ }
         }
         // [추가] 홈페이지 인입: 이 창에서 처음 들어왔을 때 한 번만, 어떤 경로로 왔는지 기록 (광고 방문만 부정클릭 확인용 IP를 같이)
+        function sgKw() {   // 11-20: 어떤 검색어로 들어왔는지 — 네이버 광고(n_query 검색어 · n_keyword 광고 키워드 · n_rank 순위) · 카카오 광고(DMSKW·DMKW) · utm_term · 검색 사이트가 알려 준 경우만
+            var q = {}, clean = function (v) {   // 글자만 (번호처럼 보이는 긴 숫자는 지움 · 40자)
+                return String(v == null ? '' : v).replace(/\+/g, ' ').replace(/[\u0000-\u001f<>"'`]/g, ' ').replace(/\d[\d\s-]{6,}\d/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40);
+            };
+            try { new URLSearchParams(location.search).forEach(function (v, k) { k = k.toLowerCase(); if (!(k in q)) q[k] = v; }); } catch (e) { /* 무시 */ }
+            var kw = clean(q.n_query || q.dmskw || q.query || ''), ak = clean(q.n_keyword || q.dmkw || q.utm_term || q.keyword || ''), kr = /^\d{1,3}$/.test(q.n_rank || '') ? parseInt(q.n_rank, 10) : 0;
+            if (!kw) { try { var rf = document.referrer ? new URL(document.referrer) : null; if (rf && rf.hostname !== location.hostname) { var sp = rf.searchParams; kw = clean(sp.get('query') || sp.get('q') || sp.get('wd') || ''); } } catch (e) { /* 무시 */ } }
+            var o = {}; if (kw) o.kw = kw; if (ak && ak !== kw) o.ak = ak; if (kr > 0) o.kr = kr;
+            return o;
+        }
         function sourceOf() {
             var q = {}, ua = navigator.userAgent || '', host = '', out;
             try { new URLSearchParams(location.search).forEach(function (v, k) { q[k.toLowerCase()] = String(v).slice(0, 40); }); } catch (e) { /* 무시 */ }
@@ -4098,6 +4108,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             if (gad) out = '구글 광고';   // 구글 광고 표시가 있으면 utm보다 먼저 (광고업체가 utm을 다르게 붙여도 구글 광고로)
             else if (/^(google|googleads|google_ads|adwords|gads|구글)$/.test(us) && /cpc|ppc|paid|ad|광고/.test(um)) out = '구글 광고';
             else if (us) out = '광고·링크: ' + (UTM[us] || q.utm_source);
+            else if (q.n_media || q.n_query || q.n_keyword || q.n_ad || q.n_ad_group || q.n_rank) out = '네이버 광고';   // 11-20: 네이버 검색광고(파워링크)를 누르면 붙는 표시
             else if (q.srsltid) out = '구글 검색';   // 구글 검색 결과(쇼핑·업체 정보)에서 누르면 붙는 표시
             else if (host) {
                 if (/(^|\.)search\.naver\.com$/.test(host)) out = '네이버 검색';
@@ -4141,6 +4152,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                 var keys = []; try { new URLSearchParams(location.search).forEach(function (v, k) { if (keys.indexOf(k) < 0 && /^[A-Za-z0-9_]{1,20}$/.test(k)) keys.push(k); }); } catch (e) { /* 무시 */ }
                 var inFrame = false; try { inFrame = window.top !== window.self; } catch (e) { inFrame = true; }
                 var vev = { action: 'visit', src: so.src, ref: so.ref, us: so.us, um: so.um, uc: so.uc, dev: isMobile() ? 'm' : 'pc', page: (String(location.pathname || '/') + (keys.length ? '?' + keys.join(',') : '') + (inFrame ? ' [frame]' : '')).slice(0, 80) };   // 들어온 주소의 표시 이름만 (값은 안 남김) → 광고 표시가 붙어 왔는지 확인용
+                try { var kwo = sgKw(); if (kwo.kw) vev.kw = kwo.kw; if (kwo.ak) vev.ak = kwo.ak; if (kwo.kr) vev.kr = kwo.kr; } catch (e) { /* 무시 */ }
                 var go = function () { if (IB_URL) send(vev); else if (waiting.length < 20) waiting.push(vev); };
                 if (adv && adv.fresh) {   // 광고 방문: 부정클릭 확인용으로 IP · 기기 표시 · 최근 7일 광고 클릭 수를 같이 (2.5초 안에 IP를 못 받으면 없이)
                     vev.ad = 1; vev.adn = adv.n; if (adv.did) vev.did = adv.did;
