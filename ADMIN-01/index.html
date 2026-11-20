@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sVyE4FtiWwem9TB7WdgVJ39uuOLaGbeZhG5ZmI8Mw/E='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-STJYqNXiUuMS4GVbH529iRaqgK7bUEeLCWyybYeh7A4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -9011,12 +9011,16 @@
         function aiCleanOpen() {   // 🧹 상담 리스트 AI 정리 (대표)
             if (!isBoss() || !cl.data) { toast(cl.data ? '대표 계정에서만 할 수 있어요.' : '상담 리스트를 불러오는 중이에요. 잠시 뒤 다시 눌러 주세요.'); if (!cl.data && !cl.busy) clLoad(true); return; }
             var newRows = [], strips = [], ids = Object.create(null);
+            var t0 = new Date(); t0.setHours(0, 0, 0, 0); t0 = t0.getTime(); var today = ymd(new Date());
+            var made = function (r) { var m = /^i([0-9a-z]{8})/.exec(String(r.id || '')), t = m ? parseInt(m[1], 36) : 0; return t > 1.7e12 && t < 2.2e12 ? t : 0; };   // 줄 id = 만든 시각
             cl.data.sheets.forEach(function (s) {
-                var mc = aiMemoCol(s), sc = clColBy(s, 'staff');
+                var mc = aiMemoCol(s), sc = clColBy(s, 'staff'), dc = clColBy(s, 'date');
                 clRowsOf(s.id).forEach(function (r) {
                     if (r.ty !== 'row') return;
                     String(r.ai || '').split(',').forEach(function (id) { if (id) ids[id] = 1; });
-                    if (r.aiA === 1) { newRows.push({ s: s, r: r, touched: !!(sc && String(r.v[sc.k] || '').trim()) }); return; }
+                    var hasAi = !!r.ai || !!(mc && String(r.v[mc.k] || '').indexOf('■ 🤖 AI 통화 요약 (') >= 0);
+                    var aiToday = made(r) >= t0 && hasAi && dc && String(r.v[dc.k] || '').slice(0, 10) !== today;   // 오늘 만들어졌고 AI 표시가 있는데 날짜가 오늘이 아닌 줄 (직원이 오늘 적은 줄은 날짜가 오늘)
+                    if (r.aiA === 1 || aiToday) { newRows.push({ s: s, r: r, touched: !!(sc && String(r.v[sc.k] || '').trim()) }); return; }
                     if (r.ai || (mc && String(r.v[mc.k] || '').indexOf('■ 🤖 AI 통화 요약 (') >= 0)) strips.push({ s: s, r: r, mc: mc });
                 });
             });
