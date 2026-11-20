@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-STJYqNXiUuMS4GVbH529iRaqgK7bUEeLCWyybYeh7A4='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ZCGSARL1nas7fNYIBxcNEqoovnjUGHUnOEaNdlc2GGs='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2336,7 +2336,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-20.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-20.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -9066,6 +9066,56 @@
                     } }, '정리하기'))));
             showDlg(dlg);
         }
+        /* 11-20.7b: 대표 화면이 켜져 있으면 자동으로 — ① 서버 '상담 리스트 자동 등록' 끔(예전 화면도 멈춤) ② 오늘 AI가 넣은 줄 지우고 순번 다시 (11/27까지만) */
+        var AI_FIX_FROM = Date.parse('2026-11-20T00:00:00+09:00'), AI_FIX_TO = Date.parse('2026-11-28T00:00:00+09:00'), aiFixBusy = false;
+        function aiAutoOff() {
+            if (ai.auto !== true || ai.offSent || !isBoss()) return;
+            ai.offSent = 1;
+            var cfg = { flow: aiFlow().slice(0, 30), terms: aiTerms(), tpl: { net: CL_TPL.map(function (x, i) { return clTplHead(i, CL_TPL).slice(2); }), mob: CL_TPL_M.map(function (x, i) { return clTplHead(i, CL_TPL_M).slice(2); }), rent: CL_TPL_R.map(function (x, i) { return clTplHead(i, CL_TPL_R).slice(2); }) }, tel: { net: CL_TELCO, mob: CL_MTEL, rent: CL_MAKER }, src: ['전단', '홈페이지', '우편', '당근', '채널', '소개', '기존고객', '플레이스', '네이버 광고', '블로그', '인스타'], auto: false };
+            ibCall('gmKey', { cfg: cfg }).then(function () { ai.auto = false; }, function () { ai.offSent = 0; });
+        }
+        function aiFixFind() {   // 지울 줄: AI가 만든 줄(aiA) + 11/20 이후 만들어졌는데 날짜 칸이 만든 날과 다르고 AI 요약 표시가 있는 줄
+            var out = [], strips = [];
+            cl.data.sheets.forEach(function (s) {
+                var mc = aiMemoCol(s), sc = clColBy(s, 'staff'), dc = clColBy(s, 'date');
+                clRowsOf(s.id).forEach(function (r) {
+                    if (r.ty !== 'row') return;
+                    var m = /^i([0-9a-z]{8})/.exec(String(r.id || '')), t = m ? parseInt(m[1], 36) : 0;
+                    var hasAi = !!r.ai || !!(mc && String(r.v[mc.k] || '').indexOf('■ 🤖 AI 통화 요약 (') >= 0);
+                    var dv = dc ? String(r.v[dc.k] || '').slice(0, 10) : '', noStaff = !(sc && String(r.v[sc.k] || '').trim());
+                    var bad = r.aiA === 1 || (t >= AI_FIX_FROM && t < AI_FIX_TO && dv && dv !== ymd(new Date(t)) && hasAi);
+                    if (bad) out.push({ s: s, r: r }); else if (hasAi) strips.push({ s: s, r: r, mc: mc });
+                });
+            });
+            return { rows: out, strips: strips };
+        }
+        function aiFixAuto() {
+            if (aiFixBusy || !authed || !db || !cl.data || cl.busy || cl.saving || !isBoss() || Date.now() >= AI_FIX_TO) return;
+            aiAutoOff();
+            var f = aiFixFind(); if (!f.rows.length && !f.strips.length) return;
+            aiFixBusy = true;
+            try {
+                var now = Date.now(), touched = Object.create(null), nDel = 0, nStrip = 0;
+                f.rows.forEach(function (o) { if (o.r.rc) { try { clRecareDrop(o.r); } catch (e) { /* 무시 */ } } cl.data.del[o.r.id] = now; touched[o.s.id] = 1; nDel++; });
+                if (nDel) cl.data.rows = cl.data.rows.filter(function (r) { return cl.data.del[r.id] !== now; });
+                f.strips.forEach(function (o) {
+                    var t = o.mc ? aiStripAll(o.r.v[o.mc.k]) : null;
+                    if (t != null) o.r.v[o.mc.k] = t;
+                    delete o.r.ai; clStamp(o.r); touched[o.s.id] = 1; nStrip++;
+                });
+                var nEv = 0; (db.events || []).slice().forEach(function (e) {
+                    if (!/\[AI a[0-9a-z]+#\d+\]/.test(String(e.memo || ''))) return;
+                    db.events = db.events.filter(function (y) { return y.id !== e.id; }); tomb(e.id);
+                    if (e.taskId) { var tk = (db.tasks || []).filter(function (t) { return t.id === e.taskId; })[0]; if (tk && tk.status !== 'done') { db.tasks = db.tasks.filter(function (t) { return t.id !== tk.id; }); tomb(tk.id); } }
+                    nEv++;
+                });
+                Object.keys(touched).forEach(function (sh) { try { clRenumber(sh); } catch (e) { /* 무시 */ } });
+                clQueue(); if (nEv) { saveDb(); requestSync(DRIVE_PUSH_DELAY_MS); }
+                if (state.view === 'consult') render();
+                toast('🧹 오늘 AI가 넣은 상담 줄 ' + nDel + '개를 지우고 순번을 다시 맞췄어요' + (nStrip ? ' · 직원 줄에 붙은 AI 요약 ' + nStrip + '개 뺌' : '') + '. 직원이 적은 줄은 그대로예요.');
+            } finally { aiFixBusy = false; }
+        }
+        setInterval(function () { try { aiFixAuto(); } catch (e) { /* 무시 */ } }, 4000);
         function aiMemoCol(s) { return clColBy(s, '', /상담내용/) || clColBy(s, 'wide') || null; }
         function aiBlock(x, tag) {   // 상담 내용 아래에 붙는 'AI 통화 요약' 묶음 (tag: '재케어')
             var r = x.res, d = new Date(x.t || x.at || Date.now()), unsure = r.fields.filter(function (f) { return !f.sure; }).length + (r.name && !r.name_sure ? 1 : 0), dt = aiDirTxt(x.dir || r.dir);
