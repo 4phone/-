@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Pt/xgSWQkklKUSsMxTJPFFEWpkNPMKKE7SuZBlLJf4U='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2Tryug20f+DunliLcu8j4NlhC9B0Lm1redNUxUQgy3c='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -358,6 +358,8 @@
         .sh-tk .main { max-width: 1580px; }
         .tlog-note { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 0 10px; padding: 10px 14px; border-radius: 10px; background: #FFF4E5; border: 1.5px solid #F0B45A; color: #7A4300; font-size: 14px; font-weight: 700; }
         .tlog-dlg { width: min(680px, calc(100vw - 24px)); }
+        .ai-rec { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; font-weight: 700; color: #8A6418; } .ai-rec.on { color: #1F6B2A; }   /* 11-20.4 */
+        .ai-setup { margin: 10px 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #FAFBF6; } .ai-setup h4 { margin: 4px 0 6px; font-size: 14.5px; } .ai-steps { margin: 6px 0 10px; padding-left: 20px; display: grid; gap: 5px; font-size: 13.5px; line-height: 1.5; } .ai-setup .ai-url { display: block; white-space: pre-wrap; word-break: break-all; }
         .vs-kw { color: #1F4FA0; font-weight: 800; }   /* 11-20.3 검색어 */
         /* 11-20.1 미쇼 의심 번호 */
         .ms-box { padding: 10px 12px; border: 1.5px dashed #D9B8B8; border-radius: 10px; background: #FFF8F8; }
@@ -2322,7 +2324,7 @@
             n = Math.min(n, 4);
             return '인' + new Array(n + 1).join('+티');
         }
-        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'daily', t: '데일리워크' }, { v: 'policy', t: '상담하기' }, { v: 'idreq', t: '신분증 요청' }, { v: 'forms', t: '가입 확인서' }, { v: 'consult', t: '상담 리스트' }, { v: 'calls', t: '콜 인입' }, { v: 'gl', t: '가입고객리스트' }, { v: 'off', t: '휴무표' }, { v: 'blog', t: '블로그 글쓰기' }, { v: 'settings', t: '설정' }];
+        var VIEWS = [{ v: 'today', t: '오늘' }, { v: 'daily', t: '데일리워크' }, { v: 'policy', t: '상담하기' }, { v: 'idreq', t: '신분증 요청' }, { v: 'forms', t: '가입 확인서' }, { v: 'consult', t: '상담 리스트' }, { v: 'calls', t: '콜 인입' }, { v: 'gl', t: '가입고객리스트' }, { v: 'off', t: '휴무표' }, { v: 'blog', t: '블로그 글쓰기' }, { v: 'outcalls', t: '발신 내역' }, { v: 'settings', t: '설정' }];
 
         // 공유 저장소 주소는 반드시 구글 Apps Script 웹 앱 주소여야 합니다 (그 밖의 주소로는 어떤 요청도 보내지 않음)
         var DRIVE_URL_RE = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,200}\/exec$/;
@@ -2333,7 +2335,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-20.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-20.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -9129,13 +9131,13 @@
             if (ib.per && ib.per.key === P.from + '|' + P.to) (ib.per.snd || []).forEach(function (x) { if (!have[x.id]) out.push(x); });
             return out.sort(function (a, b) { return b.t - a.t; });
         }
-        function ibSndCat(x) { var a = x.ai; if (!a) return '요약 대기'; if (a.k === 'fail') return '요약 실패'; return aiCatLabel(a.k, a.c, 'out'); }
+        function ibSndCat(x) { var a = x.ai; if (!a) return Date.now() - x.t < 900000 ? '요약 대기' : '녹음 없음'; if (a.k === 'fail') return '요약 실패'; return aiCatLabel(a.k, a.c, 'out'); }
         function ibSndGroup(x) {   // 집계: 유선(렌탈 포함) 발신 · 모바일 발신 · 유선 재케어 · 모바일 재케어 · 기고객 응대 · 비상담 · 대기·실패
-            var a = x.ai; if (!a) return '요약 대기'; if (a.k === 'fail') return '요약 실패';
+            var a = x.ai; if (!a) return Date.now() - x.t < 900000 ? '요약 대기' : '녹음 없음'; if (a.k === 'fail') return '요약 실패';
             if (a.c === 'other' || (a.k === 'other' && a.c !== 'cust')) return '비상담'; if (a.c === 'cust') return '기고객 응대';
             return (a.k === 'mob' ? '모바일' : '유선') + (a.c === 'recare' ? ' 재케어' : ' 발신');
         }
-        var IB_SND_G = ['유선 발신', '유선 재케어', '모바일 발신', '모바일 재케어', '기고객 응대', '비상담', '요약 대기', '요약 실패'];
+        var IB_SND_G = ['유선 발신', '유선 재케어', '모바일 발신', '모바일 재케어', '기고객 응대', '비상담', '요약 대기', '녹음 없음', '요약 실패'];
         function ibSndExcel(P, list) {
             var items = list.slice().sort(function (a, b) { return a.t - b.t; }), cnt = {}, by = {};
             IB_SND_G.forEach(function (g) { cnt[g] = 0; });
@@ -9152,6 +9154,61 @@
                 { name: '요약', widths: [26, 10], rows: sum, head: [0, 4, sum.length - Object.keys(by).length - 1] },
                 { name: '상세', widths: [20, 16, 10, 10, 15, 12, 60, 30, 26, 40], rows: det, head: [0], freeze: 1 }]));
             toast('발신 통화 ' + P.label + ' 엑셀을 내려받았어요. (' + items.length + '건)');
+        }
+        /* 11-20.4: 📁 통화 녹음 자동 올리기 상태 (Apps Script 1120-3 recStatus · 대표만) */
+        function aiRecLoad(force) {
+            if (!isBoss() || !driveOn() || ai.recBusy) return;
+            if (!force && ai.recAt && Date.now() - ai.recAt < 60000) return;
+            ai.recBusy = true;
+            ibCall('recStatus', {}).then(function (r) { ai.recBusy = false; ai.recAt = Date.now(); ai.rec = r.rec || null; ai.recOld = false; if (state.view === 'calls' || state.view === 'outcalls') ibPaint(); },
+                function (e) { ai.recBusy = false; ai.recAt = Date.now(); ai.recOld = !!(e && e.code === 'bad_action'); ai.rec = null; if (state.view === 'calls' || state.view === 'outcalls') ibPaint(); });
+        }
+        function aiRecNow(btn) {
+            if (!driveOn() || ai.recRun) return;
+            ai.recRun = true; if (btn) { btn.disabled = true; btn.textContent = '확인하는 중… (최대 5분)'; }
+            ibCall('recNow', {}, 330000).then(function (r) {
+                ai.recRun = false; ai.rec = r.rec || ai.rec; ai.recAt = Date.now();
+                var L = ai.rec && ai.rec.last; toast(L && L.done ? '📁 새 녹음 ' + L.done + '건을 요약했어요.' : L && L.msg ? '📁 ' + L.msg : '📁 새 녹음이 없어요.');
+                ai.rev = -1; try { aiLoad(); } catch (e) { /* 무시 */ } ib.busy = false; ibLoad(false); ibPaint();
+            }, function (e) { ai.recRun = false; toast(e && e.code === 'bad_action' ? 'Apps Script를 새 버전(1120-3)으로 배포해야 해요.' : driveErrText(e)); ibPaint(); });
+        }
+        function aiRecChip() {   // AI 요약 줄: 자동 올리기 켜짐/꺼짐 (대표)
+            if (!isBoss()) return null;
+            aiRecLoad(false);
+            var R = ai.rec, L = R && R.last, txt;
+            if (ai.recOld) txt = '📁 자동 올리기: Apps Script 1120-3 배포 필요';
+            else if (!R) txt = '📁 자동 올리기 확인 중…';
+            else if (!R.folder) txt = '📁 자동 올리기 꺼짐 (Apps Script에서 recSetup 실행 필요)';
+            else txt = (R.on ? '📁 자동 올리기 켜짐 · 5분마다' : '📁 자동 올리기 꺼짐') + (L && L.t ? ' · 마지막 확인 ' + actHm(L.t) : '') + (R.waiting ? ' · 폴더 대기 ' + R.waiting + '건' : '') + (!R.key ? ' · ⚠ Gemini 키 없음' : '');
+            return h('span', { class: 'ai-rec' + (R && R.on && R.key ? ' on' : ''), 'data-fk': 'ai-rec' }, txt,
+                R && R.folder ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ai-rec-now', disabled: ai.recRun ? true : null, onclick: function () { aiRecNow(this); } }, ai.recRun ? '확인하는 중…' : '지금 확인') : null,
+                h('button', { type: 'button', class: 'btn btn-sm', onclick: aiKeyOpen2 }, '⚙ 설정·방법'));
+        }
+        function aiSetupBox() {   // AI 통화 요약 설정 창 안: 자동화 순서 (대표용)
+            var R = ai.rec, url = R && R.url ? R.url : '';
+            var outBody = JSON.stringify({ action: 'callIn', key: '【휴대폰 연결 키】', num: '{call_number}', dir: 'out' });
+            return h('div', { class: 'ai-setup' },
+                h('h4', {}, '📁 통화 녹음 자동 올리기 (파일 안 넣어도 됨)'),
+                h('p', { class: 'ph-tip' }, R ? (R.folder ? (R.on ? '✅ 켜짐 · 5분마다 폴더를 확인해 새 녹음을 요약해요.' : '⏸ 폴더는 있는데 꺼져 있어요. Apps Script에서 recSetup 을 다시 실행해 주세요.') : '아직 폴더가 없어요. 아래 ① 부터 해 주세요.') : ai.recOld ? 'Apps Script를 새 버전(1120-3)으로 배포해야 써요.' : '상태를 확인하는 중이에요…'),
+                url ? h('p', {}, '폴더: ', h('a', { href: url, target: '_blank', rel: 'noopener' }, R.folder + ' 열기')) : null,
+                h('ol', { class: 'ai-steps' },
+                    h('li', {}, 'Apps Script 편집기 → 위 함수 고르기에서 ', h('b', {}, 'recSetup'), ' → [실행] → 권한 허용 (폴더 만들기 + 5분마다 확인 켜기)'),
+                    h('li', {}, '업무폰 Play 스토어 → ', h('b', {}, 'Autosync for Google Drive'), ' 설치 → 대표님 구글 계정으로 로그인'),
+                    h('li', {}, '폴더 연결: 휴대폰 폴더 ', h('b', {}, 'Recordings/Call'), ' (삼성 통화 녹음) ↔ 드라이브 ', h('b', {}, '사거리인터넷_ADMIN (삭제 금지) › 통화녹음_자동올리기 › 업무폰 이름 폴더(예: 업무폰1)'), ' · 방식 ', h('b', {}, '업로드만(Upload only)')),
+                    h('li', {}, '휴대폰 전화 앱 → 설정 → 통화 녹음 → ', h('b', {}, '모든 통화 자동 녹음'), ' 켜기'),
+                    h('li', {}, '시험 전화 1통 → 5분 안에 콜 인입에 🤖 요약이 붙으면 끝 (급하면 [지금 확인])')),
+                h('h4', {}, '📤 발신 기록 (MacroDroid · 대표님만 봄)'),
+                h('p', { class: 'ph-tip' }, '착신 매크로를 [복제] → 트리거를 ', h('b', {}, '발신 전화(Call Outgoing)'), ' 로 바꾸고 → HTTP 요청 본문을 아래처럼 (연결 키는 착신과 같은 키) → 저장. 녹음이 없어도 누가 언제 어디로 걸었는지 남아요.'),
+                h('code', { class: 'ai-url' }, outBody),
+                h('p', { class: 'ph-tip' }, '연결 키를 모르면: 콜 인입 → 착신 휴대폰 연결 → [키 다시 만들기] → 나온 ②·③ 내용을 착신·발신 매크로에 다시 넣기.'));
+        }
+        function renderOutCalls() {   // 11-20.4: 📤 발신 내역 (대표만 · 블로그 글쓰기 아래 메뉴)
+            var head = h('div', { class: 'page-head' }, h('h1', {}, '📤 발신 내역'),
+                h('div', { class: 'actions' }, h('button', { type: 'button', class: 'btn', 'data-fk': 'oc-refresh', onclick: function () { ib.busy = false; ibLoad(true); aiRecLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침')));
+            if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '발신 내역은 구글 드라이브 공유 저장소를 연결한 기기에서 볼 수 있어요.')));
+            if (ib.rev < 0 && !ib.busy && !ib.err) loadOnce('ib', function () { ibLoad(true); });
+            if (!cl.data && !cl.busy && !cl.err) loadOnce('cl', function () { clLoad(true); });   // 번호 ↔ 상담 리스트 맞추기용
+            return renderCallsOut(head);
         }
         function renderCallsOut(head) {
             var P = ibPeriod(), list = ibPerSnd(P), loading = ib.per && ib.per.key === P.from + '|' + P.to && ib.per.busy, cnt = {}, by = {};
@@ -9170,19 +9227,19 @@
                     h('div', { class: 'ib-main' }, h('div', { class: 'ib-label' }, x.label),
                         h('div', { class: 'ib-sub' }, x.ctn ? h('b', {}, '📇 ' + x.ctn) : null, x.phone ? h('a', { href: 'tel:' + x.phone, class: 'ib-phone' }, mfPhone(x.phone)) : h('span', { class: 'ib-rcv-n' }, x.n4 ? '번호 끝 ' + x.n4 : '번호 안 옴'),
                             m ? h('button', { type: 'button', class: 'ib-cl', title: '상담 리스트에서 이 고객 보기', onclick: function () { cl.sheet = m.sh; cl.q = digitsOnly(x.phone || '') || x.n4 || ''; state.view = 'consult'; render(); window.scrollTo(0, 0); } }, '📝 상담 리스트 · ' + [m.shn, m.day, m.name].filter(Boolean).join(' · ')) : null),
-                        aiSumBox(x) || h('div', { class: 'ib-aisum' }, '🤖 요약을 기다리는 중이에요')),
+                        aiSumBox(x) || h('div', { class: 'ib-aisum' }, Date.now() - x.t < 900000 ? '🤖 녹음 요약을 기다리는 중이에요' : '🎙 녹음 요약 없음 (녹음이 안 올라왔어요)')),
                     h('div', { class: 'ib-asg' }, h('small', { class: 'ib-asg-by' }, x.asg ? '담당 ' + x.asg.to : '담당 없음')),
                     h('div', { class: 'ib-act' }, h('button', { type: 'button', class: 'btn btn-sm' + (open ? ' on' : ''), 'data-fk': 'ib-open-' + x.id, onclick: function () { if (ib.open[x.id]) delete ib.open[x.id]; else ib.open[x.id] = 1; render(); } }, '댓글' + (x.cm.length ? ' ' + x.cm.length : '')),
                         isBoss() ? h('button', { type: 'button', class: 'btn btn-sm btn-danger', disabled: ib.deleting ? true : null, onclick: function () { ibDelete([x.id]); } }, '삭제') : null),
                     notes);
             });
-            return h('div', {}, head, ibTabBar(),
+            return h('div', {}, head,
                 h('p', { class: 'forms-sub' }, '업무폰에서 건 전화의 통화 녹음을 AI가 요약해서 여기에 올려요. 받은 전화(인입) 순번·실 인입 건수에는 들어가지 않아요. 상담이면 상담 리스트(유선·렌탈 → 이번 달 시트, 모바일 → 모바일 시트)에, 예전에 상담한 고객이면 그 줄에 재케어로 이어 붙여요.'),
                 ibPerBar(P, function () { if (loading) { toast('아직 불러오는 중이에요. 잠시 뒤 눌러 주세요.'); return; } ibSndExcel(P, list); }),
                 h('div', { class: 'box-bar' }, h('span', { class: 'box-count', 'data-fk': 'ib-out-sum' }, h('b', {}, '발신 ' + list.length + '건'), IB_SND_G.filter(function (g) { return cnt[g]; }).map(function (g) { return ' · ' + g + ' ' + cnt[g]; }).join(''),
                     Object.keys(by).length ? ' · 담당별: ' + Object.keys(by).sort().map(function (w) { return w + ' ' + by[w]; }).join(' · ') : '')),
                 P.now ? aiStrip() : null,
-                h('div', { class: 'panel' }, rows.length ? rows : h('div', { class: 'empty' }, loading ? P.label + ' 기록을 불러오는 중이에요...' : '이 기간에는 발신 통화 요약이 없어요. 업무폰 MacroDroid에 [건 전화 끝남 → 녹음 올리기] 매크로가 있어야 올라와요.')));
+                h('div', { class: 'panel' }, rows.length ? rows : h('div', { class: 'empty' }, loading ? P.label + ' 기록을 불러오는 중이에요...' : '이 기간에는 발신 기록이 없어요. 업무폰 MacroDroid [발신 전화] 매크로나 통화 녹음 자동 올리기가 켜져 있어야 올라와요. (⚙ 설정·방법)')));
         }
         function aiRoute(x) {   // 유입 경로: 고객이 말한 것 > 콜 인입 그 전화의 경로 (모름·저장 연락처는 비움)
             var r = x.res; if (r.src) return r.src;
@@ -9252,7 +9309,7 @@
             var ok = l.filter(function (x) { return x.st === 'ok'; }).length, bad = l.filter(function (x) { return x.st === 'fail'; }), pend = aiPend().length;
             return h('div', { class: 'ai-strip', 'data-fk': 'ai-strip' },
                 h('b', {}, '🤖 AI 통화 요약'), h('span', {}, ' 오늘 ' + ok + '건 요약' + (pend ? ' · 등록 대기 ' + pend + '건' : '') + (bad.length ? ' · ' : '')), bad.length ? h('span', { class: 'bad' }, '⚠️ 실패 ' + bad.length + '건') : null,
-                aiUpBtn(),
+                aiUpBtn(), aiRecChip(),
                 bad.length ? h('details', { class: 'ai-fails' }, h('summary', {}, '실패 이유 보기'), h('ul', {}, bad.slice(0, 10).map(function (x) {
                     return h('li', {}, actHm(x.at || 0) + ' · ' + (x.file || '녹음') + ' — ' + (x.err || '실패'), isBoss() ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { ibCall('aiDel', { id: x.id }).then(function () { ai.items = ai.items.filter(function (y) { return y.id !== x.id; }); ibPaint(); }); } }, '지우기') : null);
                 }))) : null);
@@ -9281,12 +9338,13 @@
                     h('label', { class: 'field' }, 'Gemini API 키', inp),
                     h('label', { class: 'field' }, '상담 흐름 (한 줄에 질문 하나 · "이름: 질문" 형식) — 상담 메모에 카드로 보이고, AI가 이 순서대로 답을 칸에 넣어요', fl),
                     h('label', { class: 'ib-todo' }, au, ' 통화가 끝나면 상담 리스트에 자동 등록 (끄면 콜 인입에만 요약 표시)'),
-                    h('details', {}, h('summary', {}, '📱 업무폰 자동 올리기 주소 (MacroDroid)'),
+                    aiSetupBox(),
+                    h('details', {}, h('summary', {}, '📱 (다른 방법) MacroDroid로 녹음 파일 직접 올리기'),
                         h('p', { class: 'ph-tip' }, '착신 연결 때 쓴 휴대폰 연결 키를 그대로 써요. MacroDroid [HTTP 요청] → 방법 POST → 아래 주소 → 본문: 녹음 파일.'),
                         h('code', { class: 'ai-url' }, url ? url + '?action=callRec&key=【휴대폰 연결 키】&name=【파일 이름】' : '공유 저장소 주소가 없어요'))),
                 h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn btn-danger left', onclick: function () { if (confirm('Gemini 키를 지울까요? AI 통화 요약이 멈춰요.')) call({ op: 'clear' }, '키를 지웠어요.'); } }, '키 지우기'),
                     h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'), h('button', { type: 'submit', class: 'btn btn-primary', 'data-act': 'ai-key2-save' }, '저장'))));
-            showDlg(dlg); call({});
+            showDlg(dlg); call({}); aiRecLoad(true);
         }
         setInterval(function () { try { if (aiPend().length) aiAutoReg(); } catch (e) { /* 무시 */ } }, 5000);
         function ibPaint() {   // 화면·메뉴 숫자 갱신 (댓글을 쓰는 중이면 다 쓴 뒤에)
@@ -9562,6 +9620,7 @@
                     h('b', {}, '🔑 "' + K.ph + '" 휴대폰 앱(MacroDroid)에 넣을 내용 — 이 화면을 닫으면 다시 볼 수 없어요'),
                     h('div', { class: 'ci-kv' }, h('span', {}, '① 주소 (URL)'), h('code', {}, db.drive.url), copy(db.drive.url, '주소를 복사했어요.')),
                     h('div', { class: 'ci-kv' }, h('span', {}, '② 보낼 내용 (Body)'), h('code', { 'data-fk': 'ci-body' }, body), copy(body, '보낼 내용을 복사했어요.')),
+                    h('div', { class: 'ci-kv' }, h('span', {}, '③ 발신 기록 매크로 본문 (트리거: 발신 전화)'), h('code', { 'data-fk': 'ci-body-out' }, JSON.stringify({ action: 'callIn', key: K.key, num: '{call_number}', dir: 'out' })), copy(JSON.stringify({ action: 'callIn', key: K.key, num: '{call_number}', dir: 'out' }), '발신 매크로 내용을 복사했어요.')),
                     h('small', {}, '※ 키는 이 휴대폰 전용이에요. 다른 사람에게 보내지 마세요. 잃어버리면 [키 다시 만들기]를 누르면 돼요.'),
                     h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { ib.ciKey = null; render(); } }, '다 넣었어요 (닫기)')) : null);
         }
@@ -9684,7 +9743,7 @@
             if (ib.rev < 0 && !ib.busy && !ib.err) loadOnce('ib', function () { ibLoad(true); });
             setTimeout(ibVsLoad, 0);
             if (!cl.data && !cl.busy && !cl.err) loadOnce('cl', function () { clLoad(true); });   // 착신 번호 ↔ 상담 리스트 맞추기용
-            if (ib.tab === 'out') return renderCallsOut(head);   // 📤 발신 탭
+            ib.tab = 'in';   // 11-20.4: 발신은 대표 메뉴 '발신 내역'으로 옮김
             if (!ib.clT) ib.clT = setInterval(function () { if (state.view === 'calls' && !document.hidden && cl.data && !cl.busy && !cl.dirty && !cl.saving) clLoad(false); }, 60000);   // 다른 기기에서 늦게 적은 상담도 1분 안에 실 인입으로
             var kindSel = h('select', { id: 'ib-kind', 'data-fk': 'ib-kind', 'aria-label': '종류 필터' }, h('option', { value: 'all' }, '전체'),
                 Object.keys(IB_KIND).map(function (k) { return h('option', { value: k }, IB_KIND[k][0] + ' ' + IB_KIND[k][1]); }));
@@ -9758,7 +9817,7 @@
                         bossDel ? h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'data-fk': 'ib-del-' + x.id, disabled: ib.deleting ? true : null, onclick: function () { ibDelete([x.id]); } }, '삭제') : null),
                     notes);
             });
-            return h('div', {}, head, ibTabBar(),
+            return h('div', {}, head,
                 h('p', { class: 'forms-sub' }, '고객이 홈페이지에서 전화·카톡·문자 버튼을 누르거나 접수를 마치면 여기에 바로 올라와요. 이름 버튼을 눌러 담당자를 정하고(모든 직원 가능), 처리 내용은 댓글로 남겨 주세요. [확인] 체크와 기록 삭제는 대표님만 할 수 있어요.'),
                 ibPerBar(P, function () { if (PD.loading) { toast('아직 불러오는 중이에요. 잠시 뒤 눌러 주세요.'); return; } ibPerExcel(P, list, AU, TB); }),
                 h('div', { class: 'filters' }, h('label', {}, '종류', kindSel), h('label', { class: 'ib-todo' }, todo, '확인 안 한 것만'),
@@ -18914,6 +18973,7 @@
             else if (view === 'policy') { content = renderPolicy(); }
             else if (view === 'off') content = renderOff();
             else if (view === 'blog') content = renderBlog();
+            else if (view === 'outcalls') { if (isBoss()) { content = renderOutCalls(); if (!ib.timer && driveOn()) setTimeout(ibStart, 0); } else { state.view = 'today'; content = renderToday(); } }   // 11-20.4: 📤 발신 내역 (대표만)
             else if (view === 'settings') content = renderSettings();
             else content = renderToday();
             hdTick();   // 휴무표: 처음 한 번 + 5분마다 바뀐 게 있는지 (다음 근무일 계산에 씀)
@@ -18925,7 +18985,7 @@
 
             var NAV_STEP = { policy: 1, idreq: 2, forms: 3, consult: 4 };   // 상담 순서 (메뉴 오른쪽에 작게)
             var navStep = function (v) { return NAV_STEP[v.v] ? h('span', { class: 'nav-step', 'aria-label': '상담 ' + NAV_STEP[v.v] + '단계' }, '상담' + NAV_STEP[v.v]) : null; };
-            var nav = h('nav', { class: 'nav', 'aria-label': '메뉴' }, VIEWS.filter(function (v) { return v.v !== 'gl' || glCan(); }).map(function (v) {
+            var nav = h('nav', { class: 'nav', 'aria-label': '메뉴' }, VIEWS.filter(function (v) { return (v.v !== 'gl' || glCan()) && (v.v !== 'outcalls' || isBoss()); }).map(function (v) {
                 var xw = v.v === 'consult' && isBoss() && cl.data ? clXrWait().length : 0;
                 if (xw) return h('button', { type: 'button', 'data-fk': 'nav-' + v.v, 'aria-current': state.view === v.v ? 'page' : false, onclick: function () { state.view = v.v; render(); window.scrollTo(0, 0); cl.busy = false; clLoad(false); } }, v.t, navStep(v), h('span', { class: 'nav-badge', 'aria-label': '엑셀 내려받기 요청 ' + xw + '건' }, String(xw)));
                 var unN = v.v === 'calls' ? ibUnchecked() : 0;   // 한 번만 셈 (화면 그릴 때마다 세 번 하던 것)
