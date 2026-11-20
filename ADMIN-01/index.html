@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-U6SfdECow9oNsCsaTmCFebpJ+0UTiwQgF5ZTl/qco3Y='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-JmmC6Zn6zRnugBeX4pCoZN7sPcJ3UgWSNcgw7DOpnCs='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -358,6 +358,21 @@
         .sh-tk .main { max-width: 1580px; }
         .tlog-note { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 0 10px; padding: 10px 14px; border-radius: 10px; background: #FFF4E5; border: 1.5px solid #F0B45A; color: #7A4300; font-size: 14px; font-weight: 700; }
         .tlog-dlg { width: min(680px, calc(100vw - 24px)); }
+        /* 11-20.1 미쇼 의심 번호 */
+        .ms-box { padding: 10px 12px; border: 1.5px dashed #D9B8B8; border-radius: 10px; background: #FFF8F8; }
+        .cl-form .ms-row { flex-wrap: wrap; }
+        .cl-form .ms-row input { flex: 1 1 150px; width: auto; min-width: 0; font-variant-numeric: tabular-nums; }
+        .ms-btn { flex: none; white-space: nowrap; background: #A61F1F; border-color: #A61F1F; color: #FFFFFF; font-weight: 800; }
+        .ms-btn:disabled { background: #E6F4E8; border-color: #9CCBA4; color: #1F6B2A; opacity: 1; cursor: default; }
+        .ms-st { font-size: 12.5px; font-weight: 700; color: var(--muted); min-height: 1em; }
+        .ms-st.ok { color: #1F6B2A; } .ms-st.warn { color: #A61F1F; }
+        .ms-dlg { width: min(560px, calc(100vw - 24px)); }
+        .ms-help { margin: 0 0 10px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+        .ms-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; } .ms-top input { flex: 1; min-width: 0; } .ms-cnt { flex: none; font-size: 12.5px; color: var(--muted); }
+        .ms-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 60vh; overflow-y: auto; }
+        .ms-item { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+        .ms-main { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; } .ms-main b { font-size: 15px; font-variant-numeric: tabular-nums; } .ms-main small { flex-basis: 100%; font-size: 12px; color: var(--muted); }
+        .ms-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 13.5px; }
         .tlog-help { margin: 0 0 10px; font-size: 13px; color: var(--muted); line-height: 1.5; }
         .tlog-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; max-height: 60vh; overflow-y: auto; }
         .tlog-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
@@ -2317,7 +2332,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-19.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-20.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2405,7 +2420,7 @@
                     { id: 's2', name: '직원 1', role: '', u: 0, o: 2, adm: false },
                     { id: 's3', name: '직원 2', role: '', u: 0, o: 3, adm: false }
                 ],
-                events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], dms: [], wck: [], chg: [], tlog: [], cnt: [],
+                events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], dms: [], wck: [], chg: [], tlog: [], cnt: [], msus: [],
                 del: Object.create(null),                  // 지워진 항목 기록(다른 직원 화면에서도 지워지도록)
                 drive: { url: '', k: '', rev: 0, pk: '', acc: false },  // 공유 저장소 연결 정보 (암호화된 데이터 안에만 보관)
                 account: null    // 이 기기에서 로그인한 계정 (이 기기 안에만 보관하고 드라이브로는 보내지 않음)
@@ -2429,7 +2444,7 @@
         // 저장소·백업·드라이브에서 읽은 내용은 항상 이 함수로 걸러서(글자 수·개수 제한, 형식 검사) 사용합니다
         function normalizeDb(d) {
             if (!d || typeof d !== 'object') return null;
-            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], dms: [], wck: [], chg: [], tlog: [], cnt: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
+            var out = { staff: [], events: [], notices: [], tasks: [], regs: [], intakes: [], policies: [], acts: [], qms: [], mgs: [], ibm: [], dms: [], wck: [], chg: [], tlog: [], cnt: [], msus: [], del: Object.create(null), drive: { url: '', k: '', rev: 0, pk: '', acc: false }, account: null }, ids = Object.create(null);
             function list(v, max) { return Array.isArray(v) ? v.slice(0, max) : []; }
             list(d.staff, 200).forEach(function (s, i) {
                 if (!s || !str(s.name, 30).trim()) return;
@@ -2508,6 +2523,10 @@
             list(d.cnt, 1500).forEach(function (x) {   // 🤖 기고객 응대 통화 요약 (가입고객 메모 · 번호별 · 팀 키 암호화된 곳에만)
                 if (!x || !str(x.id, 40) || !(num(x.t) > 0)) return;
                 out.cnt.push({ id: str(x.id, 40), t: num(x.t), ph: str(x.ph, 11).replace(/\D/g, ''), n4: str(x.n4, 4).replace(/\D/g, ''), nm: str(x.nm, 21), by: str(x.by, 20), k: /^(net|mob|rent|other)$/.test(x.k) ? x.k : 'other', dir: x.dir === 'out' ? 'out' : x.dir === 'in' ? 'in' : '', s: str(x.s, 700), nx: str(x.nx, 40), pr: str(x.pr, 200), u: num(x.u), b: num(x.b) });
+            });
+            list(d.msus, 3000).forEach(function (x) {   // 🚫 미쇼 의심 번호 (번호마다 하나 · id = ms_번호)
+                if (!x || typeof x.id !== 'string' || !/^ms_0\d{8,10}$/.test(x.id) || ids[x.id]) return; ids[x.id] = 1;
+                out.msus.push({ id: x.id, ph: x.id.slice(3), rid: str(x.rid, 40), nm: str(x.nm, 20), by: str(x.by, 20), at: num(x.at), pv: str(x.pv, 11).replace(/\D/g, ''), u: num(x.u) });
             });
             list(d.ibm, 3000).forEach(function (x) {   // 콜 인입 표시: 미인입 · 테스트 (실 인입 순번에서 뺌)
                 if (!x || !str(x.id, 60) || !str(x.iid, 40)) return;
@@ -4818,8 +4837,8 @@
         }
 
         /* --- 내용 합치기: 항목마다 수정 시각(u)이 더 늦은 쪽을 남기고, 지운 항목은 삭제 기록으로 처리 --- */
-        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], dms: db.dms || [], wck: db.wck || [], chg: db.chg || [], tlog: db.tlog || [], cnt: db.cnt || [], del: db.del }; }
-        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], dms: db.dms || [], wck: db.wck || [], chg: db.chg || [], tlog: db.tlog || [], cnt: db.cnt || [], del: db.del })); }
+        function localData() { return { staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], dms: db.dms || [], wck: db.wck || [], chg: db.chg || [], tlog: db.tlog || [], cnt: db.cnt || [], msus: db.msus || [], del: db.del }; }
+        function dataSnapshot() { return JSON.parse(JSON.stringify({ v: 1, staff: db.staff, events: db.events, notices: db.notices, tasks: db.tasks, regs: db.regs, intakes: db.intakes, policies: db.policies, acts: db.acts || [], qms: db.qms || [], mgs: db.mgs || [], ibm: db.ibm || [], dms: db.dms || [], wck: db.wck || [], chg: db.chg || [], tlog: db.tlog || [], cnt: db.cnt || [], msus: db.msus || [], del: db.del })); }
         function canon(d) {   // 같은 내용이면 항상 같은 글자가 되도록 정렬한 비교용 문자열
             function byId(a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; }
             return JSON.stringify([
@@ -4839,6 +4858,7 @@
                 (d.chg || []).slice().sort(byId).map(function (x) { return [x.id, x.k, x.u]; }),
                 (d.tlog || []).slice().sort(byId).map(function (x) { return [x.id, x.u]; }),
                 (d.cnt || []).slice().sort(byId).map(function (x) { return [x.id, x.u]; }),
+                (d.msus || []).slice().sort(byId).map(function (x) { return [x.id, x.u]; }),
                 (d.policies || []).slice().sort(byId).map(function (x) { return [x.id, x.at, x.by, x.u, x.act || 0, x.actBy || '']; })
             ]);
         }
@@ -4916,12 +4936,13 @@
                 chg: mergeList(a.chg || [], b.chg || [], false).filter(alive).sort(byId),
                 tlog: mergeList(a.tlog || [], b.tlog || [], false).filter(alive).sort(byId),
                 cnt: mergeList(a.cnt || [], b.cnt || [], false).filter(alive).sort(byId),
+                msus: mergeList(a.msus || [], b.msus || [], false).filter(alive).sort(byId),
                 policies: mergeList(a.policies || [], b.policies || [], false).filter(alive).sort(byId),   // 가입 장부: 나중에 고친 쪽으로 (충돌본 만들지 않음)
                 del: del, conflicts: conflicts
             };
         }
                 function applyMerged(m) {
-            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.acts = m.acts || []; db.qms = m.qms || []; db.mgs = m.mgs || []; db.ibm = m.ibm || []; db.dms = m.dms || []; db.wck = m.wck || []; db.chg = m.chg || []; db.tlog = m.tlog || []; db.cnt = m.cnt || []; db.policies = m.policies || []; db.del = m.del;
+            db.staff = m.staff; db.events = m.events; db.notices = m.notices; db.tasks = m.tasks; db.regs = m.regs || []; db.intakes = m.intakes || []; db.acts = m.acts || []; db.qms = m.qms || []; db.mgs = m.mgs || []; db.ibm = m.ibm || []; db.dms = m.dms || []; db.wck = m.wck || []; db.chg = m.chg || []; db.tlog = m.tlog || []; db.cnt = m.cnt || []; db.msus = m.msus || []; db.policies = m.policies || []; db.del = m.del;
             var ok = Object.create(null); db.staff.forEach(function (x) { ok[x.id] = 1; });
             [db.events, db.notices, db.tasks].forEach(function (list) { list.forEach(function (it) { if (it.staffId && !ok[it.staffId]) it.staffId = ''; }); });
             if (!staffById(me)) { me = db.staff[0].id; lsSet(ME_KEY, me); }
@@ -4929,10 +4950,10 @@
         }
 
         /* --- 동기화: 드라이브의 최신 내용을 받아 합치고, 내 변경분이 있으면 올림 --- */
-        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.wck || [], db.chg || [], db.tlog || [], db.cnt || []].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
+        function uMap() { var m = Object.create(null); [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.wck || [], db.chg || [], db.tlog || [], db.cnt || [], db.msus || []].forEach(function (l) { l.forEach(function (it) { m[it.id] = it.u; }); }); return m; }
         function markSynced(snap) {   // 드라이브에 올라간(또는 드라이브와 같아진) 버전을 '기준 시각(b)'으로 기록
             var changed = false;
-            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.wck || [], db.chg || [], db.tlog || [], db.cnt || []].forEach(function (l) { l.forEach(function (it) {
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.wck || [], db.chg || [], db.tlog || [], db.cnt || [], db.msus || []].forEach(function (l) { l.forEach(function (it) {
                 var nb = !snap ? it.u : snap[it.id];            // snap: 드라이브에 올라간 시점의 수정 시각
                 if (nb === undefined) return;                     // 올릴 때 없던 항목(그 뒤에 새로 만든 것)은 다음 저장 때
                 if (nb > it.u) nb = it.u;
@@ -4943,7 +4964,7 @@
         function markSeen(remote) {   // 받아 온 드라이브 버전과 같은 항목은 '본 적 있음'으로 기록 (다른 기기 기준 시각이 섞이지 않게)
             var ru = Object.create(null);
             [remote.events, remote.notices, remote.tasks, remote.regs || [], remote.intakes || [], remote.policies || [], remote.acts || [], remote.qms || [], remote.mgs || [], remote.ibm || [], remote.dms || [], remote.wck || [], remote.chg || [], remote.tlog || [], remote.cnt || []].forEach(function (l) { l.forEach(function (it) { ru[it.id] = it.u; }); });
-            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.wck || [], db.chg || [], db.tlog || [], db.cnt || []].forEach(function (l) { l.forEach(function (it) {
+            [db.events, db.notices, db.tasks, db.regs, db.intakes, db.policies || [], db.acts || [], db.qms || [], db.mgs || [], db.ibm || [], db.dms || [], db.wck || [], db.chg || [], db.tlog || [], db.cnt || [], db.msus || []].forEach(function (l) { l.forEach(function (it) {
                 var r = ru[it.id];
                 if (r !== undefined && r === it.u && it.b !== it.u) it.b = it.u;   // 드라이브 버전과 같음
             }); });
@@ -14064,6 +14085,88 @@
             setTimeout(function () { try { (first ? inputs[first.k] : dlg.querySelector('input,textarea')).focus(); } catch (e) { /* 무시 */ } }, 30);
         }
         function clHasText(s, v) { return Object.keys(v).some(function (k) { var c = s.cols.filter(function (x) { return x.k === k; })[0]; var kd = c ? clColKind(c) : 'no'; return kd !== 'no' && kd !== 'date' && kd !== 'time' && kd !== 'staff'; }); }
+        /* 11-20.1: 🚫 미쇼 의심 번호 — 상담 창 '상태' 아래에 고객 번호를 적고 [미쇼의심번호저장]을 누르면 바로 팀 데이터(db.msus · 팀 키 암호화)에 저장
+           · 번호마다 기록 하나 (id = 'ms_' + 숫자) → 여러 직원·기기가 같은 번호를 저장해도 합칠 때 하나로만 남음 (절대 중복 안 됨)
+           · 같은 상담 창에서 다른 번호로 다시 저장하면 원래 번호를 고쳐 저장(수정) · 다른 상담에 이미 있는 번호면 새로 저장하지 않고 알려 줌 */
+        function msDigits(v) { var d = String(v || '').replace(/\D/g, ''); if (/^821\d{8,9}$/.test(d)) d = '0' + d.slice(2); return d; }
+        function msOk(d) { return /^0\d{8,10}$/.test(d); }
+        function msGet(id) { var l = db.msus || []; for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; return null; }
+        function msOfRow(rid) { if (!rid) return null; var l = db.msus || []; for (var i = 0; i < l.length; i++) if (l[i].rid === rid) return l[i]; return null; }
+        function msSave(v, curId, rid, nm) {
+            var d = msDigits(v);
+            if (!msOk(d)) return { ok: false, msg: '번호를 바르게 적어 주세요. (예: 010-1234-5678)' };
+            if (!db.msus) db.msus = [];
+            var id = 'ms_' + d, ex = msGet(id), cur = (curId && msGet(curId)) || msOfRow(rid);
+            if (cur && cur.id === id) return { ok: true, same: true, id: id, ph: d, msg: '이미 저장된 번호예요.' };
+            if (ex) return { ok: false, dup: true, id: cur ? cur.id : '', msg: '이미 미쇼 의심 번호로 저장된 번호라 다시 저장하지 않았어요.' + (ex.nm ? ' (' + ex.nm + ')' : '') };
+            var who = staffName(me); if (who === '미지정') who = isBoss() ? '대표' : '';
+            if (cur) { db.msus = db.msus.filter(function (x) { return x.id !== cur.id; }); tomb(cur.id); }   // 같은 상담의 예전 번호 → 고쳐 저장 (예전 기록은 지움)
+            if (db.del && db.del[id]) delete db.del[id];   // 예전에 지웠던 번호를 다시 저장
+            db.msus.push(stamp({ id: id, ph: d, rid: String(rid || '').slice(0, 40), nm: String(nm || (cur && cur.nm) || '').slice(0, 20), by: (who || '').slice(0, 20), at: Date.now(), pv: cur ? cur.ph : '' }));
+            saveDb(); requestSync(DRIVE_PUSH_DELAY_MS);
+            return { ok: true, id: id, ph: d, msg: cur ? '미쇼 의심 번호를 ' + mfPhone(cur.ph) + ' → ' + mfPhone(d) + ' 로 고쳐 저장했어요.' : '미쇼 의심 번호로 저장했어요.' };
+        }
+        function clMsBox(s, row, P) {   // 상담 창: 상태 바로 아래 '고객 번호' + [🚫 미쇼의심번호저장]
+            var rec0 = msOfRow(row.id), phC = s.cols.filter(function (c) { return clColKind(c) === 'ph'; })[0];
+            var nmC = s.cols.filter(function (c) { return /고객명|성함|이름/.test(String(c.l || '').replace(/\s/g, '')); })[0];
+            var inp = h('input', { type: 'text', inputmode: 'tel', maxlength: 20, autocomplete: 'off', placeholder: '010-0000-0000', 'aria-label': '고객 번호 (미쇼 의심 번호 저장용)', 'data-act': 'ms-in' });
+            inp.value = rec0 ? mfPhone(rec0.ph) : phC && row.v && row.v[phC.k] && msOk(msDigits(row.v[phC.k])) ? mfPhone(msDigits(row.v[phC.k])) : '';
+            var st = h('span', { class: 'ms-st', role: 'status', 'aria-live': 'polite' });
+            var btn = h('button', { type: 'button', class: 'btn btn-sm ms-btn', 'data-act': 'ms-save' }, '🚫 미쇼의심번호저장');
+            P.msId = rec0 ? rec0.id : '';
+            var paint = function () {
+                var d = msDigits(inp.value), mine = P.msId ? msGet(P.msId) : null, other = msOk(d) ? msGet('ms_' + d) : null;
+                if (P.msId && !mine) { mine = msOfRow(row.id); P.msId = mine ? mine.id : ''; }   // 다른 기기에서 고친 경우
+                st.className = 'ms-st'; st.textContent = '';
+                if (mine && mine.ph === d) { btn.disabled = true; btn.textContent = '✓ 미쇼 의심 번호 저장됨'; st.className += ' ok'; st.textContent = '✓ 저장됨' + (mine.by ? ' · ' + mine.by : '') + (mine.at ? ' · ' + ibTime(mine.at) : ''); return; }
+                btn.disabled = false; btn.textContent = mine ? '✏️ 미쇼의심번호 수정 저장' : '🚫 미쇼의심번호저장';
+                if (other) { st.className += ' warn'; st.textContent = '⚠ 이미 미쇼 의심 번호로 저장된 번호예요' + (other.nm ? ' (' + other.nm + (other.by ? ' · ' + other.by : '') + ')' : '') + ' — 다시 저장되지 않아요'; }
+                else if (mine) st.textContent = '저장된 번호 ' + mfPhone(mine.ph) + ' → 지금 번호로 고쳐 저장돼요';
+            };
+            P.msPaint = paint;
+            inp.addEventListener('input', paint);
+            inp.addEventListener('blur', function () { var d = msDigits(inp.value); if (msOk(d)) inp.value = mfPhone(d); });
+            inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); if (!btn.disabled) btn.click(); } });   // Enter로 상담 창이 저장되지 않게
+            btn.addEventListener('click', function () {
+                if (btn._busy) return; btn._busy = true;   // 두 번 눌러도 한 번만
+                try {
+                    var nm = nmC && P.inputs[nmC.k] ? P.inputs[nmC.k].value.trim() : '';
+                    var r = msSave(inp.value, P.msId, row.id, nm);
+                    if (r.ok) { P.msId = r.id; inp.value = mfPhone(r.ph); }
+                    toast(r.msg); paint(); if (!r.ok && !r.dup) inp.focus();
+                    if (r.ok && !r.same && state.view === 'consult') { var mb = document.querySelector('[data-act="ms-list"]'); if (mb) mb.textContent = '🚫 미쇼 의심 번호 (' + (db.msus || []).length + ')'; }
+                } finally { btn._busy = false; }
+            });
+            paint();
+            return h('div', { class: 'cl-fld full ms-box' }, h('div', { class: 'cl-lab' }, h('span', {}, '고객 번호 (미쇼 의심 번호 저장)')), h('span', { class: 'cl-inline ms-row' }, inp, btn), st);
+        }
+        function msList() {   // 상담 리스트 [🚫 미쇼 의심 번호]: 저장된 번호 목록 · 찾기 · 복사 · (대표) 삭제
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'ms-dlg';
+            var q = h('input', { type: 'search', placeholder: '번호 · 끝 4자리 · 이름으로 찾기', 'aria-label': '미쇼 의심 번호 찾기', autocomplete: 'off' });
+            var ul = h('ul', { class: 'ms-list' }), cnt = h('span', { class: 'ms-cnt' });
+            var paint = function () {
+                var t = q.value.trim(), td = t.replace(/\D/g, '');
+                var l = (db.msus || []).filter(function (x) { return !t || (td.length >= 3 && x.ph.indexOf(td) >= 0) || (x.nm && x.nm.indexOf(t) >= 0) || (x.by && x.by.indexOf(t) >= 0); }).sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
+                cnt.textContent = '전체 ' + (db.msus || []).length + '개' + (t ? ' · 찾은 ' + l.length + '개' : '');
+                ul.textContent = '';
+                if (!l.length) { ul.appendChild(h('li', { class: 'ms-empty' }, (db.msus || []).length ? '찾는 번호가 없어요.' : '아직 저장된 미쇼 의심 번호가 없어요. 상담 창의 [🚫 미쇼의심번호저장]으로 저장해요.')); return; }
+                l.slice(0, 300).forEach(function (x) {
+                    ul.appendChild(h('li', { class: 'ms-item' },
+                        h('div', { class: 'ms-main' }, h('b', {}, mfPhone(x.ph)), x.nm ? h('span', {}, x.nm) : null,
+                            h('small', {}, (x.by || '?') + (x.at ? ' · ' + ibTime(x.at) : '') + (x.pv ? ' · 고침: ' + mfPhone(x.pv) + ' →' : ''))),
+                        h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { copyText(mfPhone(x.ph)).then(function (ok) { toast(ok ? '번호를 복사했어요.' : '복사하지 못했어요.'); }); } }, '복사'),
+                        isBoss() ? h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'data-act': 'ms-del', onclick: function () {
+                            if (!confirm(mfPhone(x.ph) + ' 번호를 미쇼 의심 번호에서 뺄까요?')) return;
+                            db.msus = (db.msus || []).filter(function (y) { return y.id !== x.id; }); tomb(x.id); saveDb(); requestSync(DRIVE_PUSH_DELAY_MS); paint(); toast('미쇼 의심 번호에서 뺐어요.');
+                        } }, '빼기') : null));
+                });
+            };
+            q.addEventListener('input', paint);
+            dlg.appendChild(h('div', { 'data-dlg': 'ms' }, h('div', { class: 'dlg-head' }, '🚫 미쇼 의심 번호'),
+                h('div', { class: 'dlg-body' }, h('p', { class: 'ms-help' }, '상담 창에서 저장한 번호예요. 번호마다 한 번만 저장되고(중복 없음), 팀 키로 암호화돼 우리 팀만 봐요.'), h('div', { class: 'ms-top' }, q, cnt), ul),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'))));
+            paint(); showDlg(dlg); setTimeout(function () { try { q.focus(); } catch (e) { } }, 30);
+        }
         function clFormParts(s, row) {   // 상담 한 줄 입력 칸 (상담 고치기 창 · 상담 메모 창 공통)
             var P = { inputs: {}, st: row.st || 'n', keepC: row.c || '' };
             P.pick = h('div', { class: 'cl-stpick', role: 'group', 'aria-label': '상담 상태(줄 색)' });
@@ -14143,6 +14246,7 @@
                 if (pi >= 0 && mi >= 0 && pi < mi) { P.fields.splice(pi, 1); P.fields.splice(mi - 1, 0, P.phLab); }
                 else if (pi >= 0 && mi >= 0 && pi > mi) { P.fields.splice(pi, 1); P.fields.splice(mi, 0, P.phLab); }
             })();
+            if (row.ty === 'row' || !row.ty) P.fields.unshift(clMsBox(s, row, P));   // 11-20.1: 상태 바로 아래 · 순번 위
             P.values = function () {
                 var v = {};
                 Object.keys(P.inputs).forEach(function (k) { var t = P.inputs[k] === P.memoEl ? clTplClean(P.inputs[k].value) : P.inputs[k].value.replace(/\s+$/, ''); if (t) v[k] = t.slice(0, 3000); });
@@ -14434,6 +14538,7 @@
                     h('button', { type: 'button', class: 'btn', 'data-fk': 'cl-refresh', onclick: function () { cl.busy = false; clLoad(true); toast('새로 확인하고 있어요.'); } }, '새로고침'),
                     cl.data ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'cl-newsheet', onclick: clNewSheet }, '+ ' + clNextName() + ' 시트') : null,
                     cl.data ? h('button', { type: 'button', class: 'btn', 'data-act': 'cl-memo-open', onclick: clMemoOpen }, '📝 상담 메모 창') : null,
+                    cl.data ? h('button', { type: 'button', class: 'btn', 'data-act': 'ms-list', onclick: msList }, '🚫 미쇼 의심 번호' + ((db.msus || []).length ? ' (' + db.msus.length + ')' : '')) : null,
                     cl.data ? h('button', { type: 'button', class: 'btn', 'data-act': 'cl-excel', onclick: clExcel }, clXrLabel()) : null,
                     boss && cl.data ? h('button', { type: 'button', class: 'btn', 'data-act': 'cl-import', onclick: function () { fileIn.click(); } }, '변환 파일 불러오기') : null, fileIn));
             if (!driveOn()) return h('div', {}, head, h('div', { class: 'panel' }, h('div', { class: 'empty' }, '상담 리스트는 구글 드라이브 공유 저장소를 연결한 기기에서 쓸 수 있어요. 설정 → 공유 저장소에서 연결해 주세요.')));
