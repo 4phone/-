@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nmlvoJNTMzf8M6zTp0gLQSHFV0PONbaByyn45M8I9ZY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sVyE4FtiWwem9TB7WdgVJ39uuOLaGbeZhG5ZmI8Mw/E='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -9021,14 +9021,14 @@
                 });
             });
             var evs = (db.events || []).filter(function (e) { return /\[AI a[0-9a-z]+#\d+\]/.test(String(e.memo || '')); });
-            var chk = Object.create(null); newRows.forEach(function (o) { chk[o.r.id] = !o.touched; });
+            var chk = Object.create(null); newRows.forEach(function (o) { chk[o.r.id] = true; });   // aiA=1 = AI가 만든 줄 (직원이 '+ 상담 추가'로 만든 줄은 aiA가 없어 목록에 아예 안 나옴)
             var evOn = true;
             var rowTxt = function (o) { var s = o.s, r = o.r, dc = clColBy(s, 'date'), pc = clColBy(s, 'ph'), no = clColBy(s, 'no'), sc = clColBy(s, 'staff');
-                return s.name + ' · ' + (no ? (r.v[no.k] || '') + '번 · ' : '') + (dc ? r.v[dc.k] || '' : '') + (pc && r.v[pc.k] ? ' · ' + r.v[pc.k] : ' · 번호 없음') + (o.touched ? ' · ✏ 담당자 ' + r.v[sc.k] + ' 입력됨 (직원이 손댄 줄이라 체크 안 함)' : ''); };
+                return s.name + ' · ' + (no ? (r.v[no.k] || '') + '번 · ' : '') + (dc ? r.v[dc.k] || '' : '') + (pc && r.v[pc.k] ? ' · ' + r.v[pc.k] : ' · 번호 없음') + (o.touched ? ' · 담당 ' + r.v[sc.k] : '') + ' · 🤖 AI가 만든 줄'; };
             var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'tlog-dlg';
             dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '🧹 상담 리스트 AI 정리'),
                 h('div', { class: 'dlg-body' },
-                    h('p', { class: 'ph-tip' }, '상담 리스트에는 직원이 직접 적은 것만 남겨요. AI 통화 요약은 앞으로 콜 인입 🤖 줄에만 보여요. 직원이 직접 적은 줄·내용은 그대로예요.'),
+                    h('p', { class: 'ph-tip' }, '상담 리스트에는 직원이 직접 적은 것만 남겨요. 지우는 건 AI가 만든 줄(🤖 표시)뿐이고, 직원이 [+ 상담 추가]로 적은 줄은 이 목록에 나오지도 않아요(절대 안 지움). 정리 뒤 AI 요약은 콜 인입 🤖 줄에서만 보여요.'),
                     h('h4', {}, '① AI가 만든 줄 ' + newRows.length + '개 → 지움 (체크한 것만)'),
                     newRows.length ? h('ul', { class: 'ms-list' }, newRows.map(function (o) {
                         var cb = h('input', { type: 'checkbox', checked: chk[o.r.id], onchange: function () { chk[o.r.id] = this.checked; } });
