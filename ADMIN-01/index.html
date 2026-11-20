@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sJVx2xhcT8hPjY/z1wV02SSWgglWxXXgf6PCKWC/h4w='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lOTXLjOug44NU9BFg8Z/t4bmyjNCm89LDe8I+XbIAAg='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2336,7 +2336,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-20.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-20.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8890,6 +8890,111 @@
                 }, function () { delete ai.doing[x.id]; });
             });
         }
+        /* 11-20.6: 상담 리스트 한 고객 한 줄 · 자동 등록 되돌리기 · 번호 모르는 요약 */
+        function aiIdTime(id) { var m = /^a([0-9a-z]{8})/.exec(String(id || '')), t = m ? parseInt(m[1], 36) : 0; return t > 1.7e12 && t < 2.2e12 ? t : 0; }
+        function aiAnyRow(phone) {   // 상담 리스트 모든 시트에서 같은 번호 줄 → 가장 최근 날짜(같으면 최근에 고친) 줄
+            if (!phone || phone.length < 9 || !cl.data) return null;
+            var best = null, bk = '';
+            cl.data.sheets.forEach(function (s) {
+                var pc = clColBy(s, 'ph'), dc = clColBy(s, 'date'); if (!pc) return;
+                clRowsOf(s.id).forEach(function (r) {
+                    if (r.ty !== 'row' || digitsOnly(r.v[pc.k] || '') !== phone) return;
+                    var k = (dc ? String(r.v[dc.k] || '').slice(0, 10) : '') + '|' + String(1e13 + (r.u || 0));
+                    if (!best || k > bk) { best = { s: s, row: r }; bk = k; }
+                });
+            });
+            return best;
+        }
+        function aiNoPhone() { return ai.items.filter(function (x) { return x.done && x.done.how === 'nophone' && x.res; }); }
+        function aiNoPhoneOpen() {   // 📵 번호를 몰라 상담 리스트에 안 넣은 요약 (3일 보관)
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'tlog-dlg';
+            var l = aiNoPhone().slice().sort(function (a, b) { return (b.t || 0) - (a.t || 0); });
+            dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '📵 번호 모르는 통화 요약 ' + l.length + '건'),
+                h('div', { class: 'dlg-body' }, h('p', { class: 'ph-tip' }, '녹음 파일에 번호가 없고 콜 인입 착신·발신 줄과도 맞지 않아 상담 리스트에 넣지 않은 요약이에요 (3일 보관). 필요한 건 직접 상담 리스트 고객 줄에 옮겨 적어 주세요.'),
+                    l.length ? h('ul', { class: 'ms-list' }, l.map(function (x) {
+                        var r = x.res || {};
+                        return h('li', { class: 'ms-item' }, h('div', { class: 'ms-main' }, h('b', {}, aiWhen(x) + ' · ' + (aiDirTxt(x.dir || r.dir) || '방향 모름')), h('span', {}, [x.ph, x.staff, x.who ? '📇 ' + x.who : '', r.name ? '고객: ' + r.name : ''].filter(Boolean).join(' · ')),
+                            h('small', {}, (r.summary || []).join(' / '))),
+                            isBoss() ? h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { ibCall('aiDel', { id: x.id }).then(function () { ai.items = ai.items.filter(function (y) { return y.id !== x.id; }); aiNoPhoneOpen(); ibPaint(); }, function (e) { toast(driveErrText(e)); }); } }, '지우기') : null);
+                    })) : h('p', { class: 'ms-empty' }, '없어요.')),
+                h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'))));
+            showDlg(dlg);
+        }
+        var AI_REV_FROM = Date.parse('2026-11-20T12:00:00+09:00');   // 녹음 자동 올리기를 켠 날 (그 뒤 자동으로 들어간 것만 되돌리기 대상)
+        function aiStripBlock(text, hdr) {   // 메모에서 '■ 🤖 AI 통화 요약 (11/10 09:27 …' 묶음 하나만 빼기 (머리 줄 + 뒤따르는 '- ' 줄)
+            var L = String(text || '').split('\n'), out = [], i = 0, hit = false;
+            while (i < L.length) {
+                if (!hit && L[i].indexOf('■ 🤖 AI 통화 요약 (' + hdr) === 0) {
+                    hit = true; i++; while (i < L.length && /^- /.test(L[i])) i++;
+                    while (out.length && out[out.length - 1].trim() === '') out.pop();   // 앞 빈 줄도
+                    continue;
+                }
+                out.push(L[i]); i++;
+            }
+            return hit ? out.join('\n').replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '') : null;
+        }
+        function aiHdrOf(x) { var d = new Date(x.t || x.at || 0); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+        function aiRevertOpen() {   // 🧹 녹음 자동 올리기로 상담 리스트에 들어간 것 되돌리기 (대표)
+            if (!isBoss() || !cl.data) { toast(cl.data ? '대표 계정에서만 할 수 있어요.' : '상담 리스트를 먼저 열어 주세요.'); if (!cl.data && !cl.busy) clLoad(true); return; }
+            toast('점검하는 중이에요…');
+            ibCall('aiList', { n: 400 }).then(function (res) {
+                var items = (res && Array.isArray(res.items) ? res.items : []), byId = Object.create(null);
+                items.forEach(function (x) { if (x && x.id) byId[x.id] = x; });
+                var isAuto = function (id) { var x = byId[id]; if (x) return /^자동\(/.test(String(x.by || '')) && (x.at || 0) >= AI_REV_FROM; return aiIdTime(id) >= AI_REV_FROM; };
+                var newRows = [], strips = [], unsure = 0, ids = Object.create(null);
+                cl.data.sheets.forEach(function (s) {
+                    var mc = aiMemoCol(s);
+                    clRowsOf(s.id).forEach(function (r) {
+                        if (r.ty !== 'row' || !r.ai) return;
+                        var L = String(r.ai).split(',').filter(Boolean);
+                        if (r.aiA === 1 && isAuto(L[0])) { newRows.push({ s: s, r: r }); L.forEach(function (id) { ids[id] = 1; }); return; }
+                        L.forEach(function (id) {
+                            if (!isAuto(id)) return;
+                            ids[id] = 1;
+                            var x = byId[id]; if (!x || !mc) { unsure++; return; }
+                            strips.push({ s: s, r: r, id: id, mc: mc, hdr: aiHdrOf(x) });
+                        });
+                    });
+                });
+                var evs = (db.events || []).filter(function (e) { var m = /\[AI (a[0-9a-z]+)#\d+\]/.exec(String(e.memo || '')); return m && ids[m[1]]; });
+                var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'tlog-dlg';
+                var chk = Object.create(null); newRows.forEach(function (o) { chk[o.r.id] = true; });
+                var rowTxt = function (o) { var s = o.s, r = o.r, dc = clColBy(s, 'date'), pc = clColBy(s, 'ph'), nc = s.cols.filter(function (c) { return /고객명|성함|이름/.test(c.l.replace(/\s/g, '')); })[0], no = clColBy(s, 'no');
+                    return s.name + ' · ' + (no ? (r.v[no.k] || '') + '번 · ' : '') + (dc ? r.v[dc.k] || '' : '') + (nc && r.v[nc.k] ? ' · ' + r.v[nc.k] : '') + (pc && r.v[pc.k] ? ' · ' + r.v[pc.k] : ' · 번호 없음'); };
+                dlg.appendChild(h('div', {}, h('div', { class: 'dlg-head' }, '🧹 녹음 자동 등록 되돌리기'),
+                    h('div', { class: 'dlg-body' },
+                        h('p', { class: 'ph-tip' }, '오늘 녹음 자동 올리기로 상담 리스트에 들어간 것을 들어가기 전으로 되돌려요. 직원이 직접 적은 줄·내용은 건드리지 않아요.'),
+                        h('h4', {}, '① 새로 만든 줄 ' + newRows.length + '개 → 지움 (체크한 것만)'),
+                        newRows.length ? h('ul', { class: 'ms-list' }, newRows.map(function (o) {
+                            var cb = h('input', { type: 'checkbox', checked: true, onchange: function () { chk[o.r.id] = this.checked; } });
+                            return h('li', { class: 'ms-item' }, h('label', { class: 'ms-main' }, cb, h('span', {}, rowTxt(o))));
+                        })) : h('p', { class: 'ms-empty' }, '없어요.'),
+                        h('h4', {}, '② 원래 있던 줄에 붙인 AI 요약 ' + strips.length + '개 → 요약만 뺌'),
+                        unsure ? h('p', { class: 'ph-tip warn' }, '⚠ ' + unsure + '개는 서버에 기록이 없어 자동으로 못 빼요. 그 줄의 맨 아래 \'■ 🤖 AI 통화 요약\'을 직접 지워 주세요.') : null,
+                        h('h4', {}, '③ 요약에서 만든 약속 일정 ' + evs.length + '개 → 지움')),
+                    h('div', { class: 'dlg-foot' }, h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '닫기'),
+                        h('button', { type: 'button', class: 'btn btn-danger', 'data-act': 'ai-revert-go', disabled: newRows.length + strips.length + evs.length ? null : true, onclick: function () {
+                            if (!confirm('되돌릴까요? 지운 줄은 상담 리스트에서 사라져요.')) return;
+                            var now = Date.now(), touched = Object.create(null), nDel = 0, nStrip = 0, nEv = 0;
+                            newRows.forEach(function (o) { if (!chk[o.r.id]) return; if (o.r.rc) { try { clRecareDrop(o.r); } catch (e) { /* 무시 */ } } cl.data.del[o.r.id] = now; touched[o.s.id] = 1; nDel++; });
+                            cl.data.rows = cl.data.rows.filter(function (r) { return !(cl.data.del[r.id] === now); });
+                            strips.forEach(function (o) {
+                                var t = aiStripBlock(o.r.v[o.mc.k], o.hdr); if (t == null) return;
+                                o.r.v[o.mc.k] = t; o.r.ai = String(o.r.ai || '').split(',').filter(function (id) { return id && id !== o.id; }).join(','); clStamp(o.r); nStrip++;
+                            });
+                            evs.forEach(function (e) {
+                                db.events = db.events.filter(function (y) { return y.id !== e.id; }); tomb(e.id);
+                                if (e.taskId) { var tk = (db.tasks || []).filter(function (t) { return t.id === e.taskId; })[0]; if (tk && tk.status !== 'done') { db.tasks = db.tasks.filter(function (t) { return t.id !== tk.id; }); tomb(tk.id); } }
+                                nEv++;
+                            });
+                            Object.keys(touched).forEach(function (sh) { try { clRenumber(sh); } catch (e) { /* 무시 */ } });
+                            clQueue(); if (nEv) { saveDb(); requestSync(DRIVE_PUSH_DELAY_MS); }
+                            closeDlg(); render();
+                            toast('되돌렸어요: 줄 ' + nDel + '개 지움 · 붙인 요약 ' + nStrip + '개 뺌 · 일정 ' + nEv + '개 지움');
+                        } }, '되돌리기'))));
+                showDlg(dlg);
+            }, function (e) { toast(driveErrText(e)); });
+        }
         function aiMemoCol(s) { return clColBy(s, '', /상담내용/) || clColBy(s, 'wide') || null; }
         function aiBlock(x, tag) {   // 상담 내용 아래에 붙는 'AI 통화 요약' 묶음 (tag: '재케어')
             var r = x.res, d = new Date(x.t || x.at || Date.now()), unsure = r.fields.filter(function (f) { return !f.sure; }).length + (r.name && !r.name_sure ? 1 : 0), dt = aiDirTxt(x.dir || r.dir);
@@ -9007,31 +9112,25 @@
             }
             var exist = cl.data.rows.filter(function (y) { return aiHas(y, x.id); })[0];
             if (exist) { done('dup', exist.id); return { how: 'dup', row: exist }; }
+            /* 11-20.6: 상담 리스트는 한 고객 한 줄 — 번호를 모르면 넣지 않음(콜 인입·번호 모르는 요약) · 같은 번호 줄이 어느 시트에든 있으면 새 줄 대신 그 줄에 이어 붙임 */
+            var phone = digitsOnly(x.phone || ''), d = new Date(x.t || x.at || Date.now()), day = ymd(d), block = aiBlock(x);
+            if (phone.length < 9) { done('nophone', ''); return { how: 'nophone' }; }
+            var hit = aiAnyRow(phone);
+            if (hit) {
+                var hs = hit.s, hr = hit.row, hmc = aiMemoCol(hs), hdc = clColBy(hs, 'date'), sameDay = !!hdc && String(hr.v[hdc.k] || '').slice(0, 10) === day;
+                if (hmc) hr.v[hmc.k] = aiAppend(hr.v[hmc.k], sameDay ? block : aiBlock(x, '재케어'));
+                hr.ai = (hr.ai ? hr.ai + ',' : '') + x.id;
+                if (!sameDay) { if (hr.st !== 'sale' && r.st && AI_ST_TXT[r.st]) hr.st = r.st; clRecare(hr, hs); }
+                clStamp(hr); clQueue();
+                aiPromise(x, clRef(hs, hr));
+                done(sameDay ? 'merge' : 'recare', hr.id);
+                aiToast(x, sameDay ? '이미 있는 상담 줄에 AI 요약을 붙였어요' : '예전 상담 줄에 재케어 요약을 붙였어요', hs, hr, fromUp);
+                if (state.view === 'consult' && !clEditing()) render();
+                return { how: sameDay ? 'merge' : 'recare', row: hr };
+            }
             var mobS = r.kind === 'mob' ? aiMobSheet() : null, shId = mobS ? mobS.id : clDefaultSheet(), s = cl.data.sheets.filter(function (y) { return y.id === shId; })[0];
             if (!s) { delete ai.doing[x.id]; return { how: 'nosheet' }; }
-            var mc = aiMemoCol(s), phone = digitsOnly(x.phone || ''), d = new Date(x.t || x.at || Date.now()), day = ymd(d), block = aiBlock(x);
-            var same = aiSameRow(s, phone, day, false);
-            if (same) {   // 직원이 이미 적은 줄 (오늘 · 같은 번호): 적은 내용은 그대로 두고 아래에 AI 요약만
-                if (mc) same.v[mc.k] = aiAppend(same.v[mc.k], block);
-                same.ai = (same.ai ? same.ai + ',' : '') + x.id; clStamp(same); clQueue();
-                aiPromise(x, clRef(s, same));
-                done('merge', same.id);
-                aiToast(x, '이미 적은 상담 줄에 AI 요약을 붙였어요', s, same, fromUp);
-                return { how: 'merge', row: same };
-            }
-            var prev = phone.length >= 9 ? aiPrevRow(phone, r.kind, day) : null;
-            if (prev) {   // 재케어: 예전에 상담한 그 고객 줄에 날짜별 요약을 이어 붙이고 성공 가능성 갱신 (새 줄 안 만듦)
-                var ps = prev.s, pr = prev.row, pmc = aiMemoCol(ps);
-                if (pmc) pr.v[pmc.k] = aiAppend(pr.v[pmc.k], aiBlock(x, '재케어'));
-                pr.ai = (pr.ai ? pr.ai + ',' : '') + x.id;
-                if (pr.st !== 'sale' && r.st && AI_ST_TXT[r.st]) pr.st = r.st;
-                clRecare(pr, ps); clStamp(pr); clQueue();
-                aiPromise(x, clRef(ps, pr));
-                done('recare', pr.id);
-                aiToast(x, '예전 상담 줄에 재케어 요약을 붙였어요', ps, pr, fromUp);
-                if (state.view === 'consult' && !clEditing()) render();
-                return { how: 'recare', row: pr };
-            }
+            var mc = aiMemoCol(s);
             var v = clNewRowVals(s), row = { id: uid(), sh: s.id, ty: 'row', o: 0, v: v, st: r.st && r.st !== 'sale' ? r.st : 'n', ai: x.id, aiA: 1 };
             s.cols.forEach(function (c) {
                 var kd = clColKind(c);
@@ -9314,6 +9413,8 @@
             return h('div', { class: 'ai-strip', 'data-fk': 'ai-strip' },
                 h('b', {}, '🤖 AI 통화 요약'), h('span', {}, ' 오늘 ' + ok + '건 요약' + (pend ? ' · 등록 대기 ' + pend + '건' : '') + (bad.length ? ' · ' : '')), bad.length ? h('span', { class: 'bad' }, '⚠️ 실패 ' + bad.length + '건') : null,
                 aiUpBtn(), aiRecChip(),
+                aiNoPhone().length ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ai-nophone', onclick: aiNoPhoneOpen }, '📵 번호 모르는 요약 ' + aiNoPhone().length + '건') : null,
+                isBoss() ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'ai-revert', onclick: aiRevertOpen }, '🧹 자동 등록 되돌리기') : null,
                 bad.length ? h('details', { class: 'ai-fails' }, h('summary', {}, '실패 이유 보기'), h('ul', {}, bad.slice(0, 10).map(function (x) {
                     return h('li', {}, actHm(x.at || 0) + ' · ' + (x.file || '녹음') + ' — ' + (x.err || '실패'), isBoss() ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { ibCall('aiDel', { id: x.id }).then(function () { ai.items = ai.items.filter(function (y) { return y.id !== x.id; }); ibPaint(); }); } }, '지우기') : null);
                 }))) : null);
