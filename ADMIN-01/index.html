@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-2mcaztW22CFfSKl7f4bHtEi/l2DmEYvLmVlz32YcqDU='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-J+qhP6wRxw4ZDpg7tAvV1us3y7RjZL7YzZDsG+ZTegI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2339,7 +2339,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-21.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-21.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8882,12 +8882,19 @@
             return !named.length || named.some(function (st) { return st.id === me || st.name === mine; });
         }
         function ibMob(ph) { return /^01[016789]\d{7,8}$/.test(digitsOnly(ph || '')); }   // 휴대폰 번호(010 등)만 상담 대상
+        var ibRegPhC = null;
+        function ibRegPh() {   // 가입 장부 휴대폰 번호(숫자만) 모음 — 지금 계산 한 번 동안만 씀 (바로 다음에 버림 → 항상 최신)
+            if (ibRegPhC && ibRegPhC.r === db.regs) return ibRegPhC.s;
+            var s = Object.create(null); (db.regs || []).forEach(function (r) { s[digitsOnly(r.phone || '')] = 1; });
+            ibRegPhC = { r: db.regs, s: s }; Promise.resolve().then(function () { ibRegPhC = null; });
+            return s;
+        }
         function ibMemoWhy(x) {   // 착신 전화에 상담 메모를 안 여는 이유 ('' = 열어도 됨)
             var d = digitsOnly(x.phone || '');
             if (!d) return '번호 안 옴';
             if (!ibMob(d)) return '유선·대표번호';
             if (x.ctk === 1) return '저장된 연락처';
-            if ((db.regs || []).some(function (r) { return digitsOnly(r.phone || '') === d; })) return '가입 고객';
+            if (ibRegPh()[d]) return '가입 고객';   // 11-21.6: 가입 장부 번호 모음은 한 번만 만듦 (콜 개수 × 가입 수 → 한 번)
             return '';
         }
         function ibAutoMemo(fresh) {
@@ -15724,7 +15731,7 @@
                 : h('div', { class: 'cl-dock-e' }, '보관 중인 메모가 없어요. [＋ 열기]로 어느 화면에서든 상담 메모를 적을 수 있어요.'));
             clDockH(el);
         }
-        function clDockH(el) { try { document.body.style.setProperty('--dockh', el.offsetHeight + 'px'); } catch (e) { /* 무시 */ } }
+        function clDockH(el) { try { var v = el.offsetHeight + 'px'; if (document.body.style.getPropertyValue('--dockh') !== v) document.body.style.setProperty('--dockh', v); } catch (e) { /* 무시 */ } }   // 11-21.6: 같은 값이면 안 바꿈 (화면 배치 두 번 계산 막음)
         function clMemoPaint() { try { clDockPaint(); } catch (e) { /* 무시 */ } clMemoPaint0(); clMemoAuto(); clMemoAddon(); clTabsPos(); var M = cl.memo; if (M && M.rtPend && M.P && M.P.memoEl && M.open && !M.min) { var pk = M.rtPend; M.rtPend = null; clRtApply(pk); } }
         function clTabsPos() {   // 시트 탭: 처음엔 맨 뒤(최근 달)가 보이게, 그 뒤엔 보던 자리 그대로
             var t = document.querySelector('.cl-tabs'); if (!t) return;
@@ -15860,8 +15867,9 @@
             w.write(ent.d); w.close();
             return new Response(ds.readable).arrayBuffer().then(function (b) { return new TextDecoder().decode(b); });
         }
-        function glXmlText(s) { return String(s).replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#x([0-9a-fA-F]+);/g, function (m, h) { return String.fromCodePoint(parseInt(h, 16)); }).replace(/&#(\d+);/g, function (m, d) { return String.fromCodePoint(+d); }).replace(/&amp;/g, '&'); }
-        function glAttr(tag, name) { var m = new RegExp('\\s' + name + '="([^"]*)"').exec(tag); return m ? glXmlText(m[1]) : null; }
+        function glXmlText(s) { s = String(s); if (s.indexOf('&') < 0) return s; return s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&#x([0-9a-fA-F]+);/g, function (m, h) { return String.fromCodePoint(parseInt(h, 16)); }).replace(/&#(\d+);/g, function (m, d) { return String.fromCodePoint(+d); }).replace(/&amp;/g, '&'); }
+        var GL_ATTR_RE = Object.create(null);   // 11-21.6: 엑셀 읽기 빠르게 (같은 이름 정규식 재사용)
+        function glAttr(tag, name) { var re = GL_ATTR_RE[name] || (GL_ATTR_RE[name] = new RegExp('\\s' + name + '="([^"]*)"')); var m = re.exec(tag); return m ? glXmlText(m[1]) : null; }
         function glCol(letters) { var n = 0; for (var i = 0; i < letters.length; i++) n = n * 26 + letters.charCodeAt(i) - 64; return n; }
         function glColName(n) { var s = ''; while (n > 0) { var m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; }
         function glRef(ref) { var m = /^\$?([A-Z]{1,3})\$?(\d+)$/.exec(ref); return m ? { c: glCol(m[1]), r: +m[2] } : null; }
