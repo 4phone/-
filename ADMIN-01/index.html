@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-J+qhP6wRxw4ZDpg7tAvV1us3y7RjZL7YzZDsG+ZTegI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5m5bn4swFJM33HmtZ5QBaem3XHgBy3z3qMdi14YfacI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1290,6 +1290,7 @@
         .act-long { border-top-color: #3E441E; } .act-long-m { margin: 12px 0 0; font-size: 16px; }
         .act-long-b { display: grid; gap: 8px; margin-top: 14px; } .act-long-b .btn { padding: 11px; font-size: 15px; }
         .est-half { border-top: 5px solid #FF9F1C; }
+        .est-pick .est-q { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 10px 0; } .est-pick .est-q .btn { min-height: 44px; font-size: 15px; font-weight: 800; } .est-pick .est-row { display: flex; gap: 6px; } .est-pick .est-in { flex: 1; min-width: 0; min-height: 40px; } @media (max-width: 480px) { .est-pick .est-q { grid-template-columns: repeat(3, 1fr); } }
         .idl-pop { width: min(560px, 100%); }
         .idl-sec { margin-top: 12px; display: grid; gap: 6px; }
         .idl-tk { text-align: left; justify-content: flex-start; white-space: normal; font-weight: 700; }
@@ -2339,7 +2340,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-21.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-23.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2518,7 +2519,7 @@
             });
             list(d.qms, 2000).forEach(function (x) {   // 자주 하는 업무 메모 (직원별 한 줄 메모 → [업무에 넣기])
                 if (!x || !str(x.id, 40) || !str(x.t, 100).trim()) return;
-                out.qms.push({ id: str(x.id, 40), sid: str(x.sid, 40), t: str(x.t, 100).trim(), o: num(x.o), u: num(x.u), b: num(x.b) });
+                out.qms.push({ id: str(x.id, 40), sid: str(x.sid, 40), t: str(x.t, 100).trim(), o: num(x.o), u: num(x.u), b: num(x.b) }); if (str(x.est, 30).trim()) out.qms[out.qms.length - 1].est = str(x.est, 30).trim();   // 11-23.1: 지난번 예상 소요시간
             });
             list(d.tlog, 800).forEach(function (x) {   // 업무 옮김·삭제 기록 (7일 · 되돌리기)
                 if (!x || !str(x.id, 40) || !/^(del|move|hd)$/.test(x.k) || !(num(x.at) > 0)) return;
@@ -2550,7 +2551,7 @@
             });
             list(d.mgs, 2000).forEach(function (x) {   // 한 달 주요 업무 (달마다 · 팀 모두 보기)
                 if (!x || !str(x.id, 40) || !str(x.t, 120).trim() || !/^\d{4}-\d{2}$/.test(str(x.ym, 7))) return;
-                out.mgs.push({ id: str(x.id, 40), sid: str(x.sid, 40), ym: str(x.ym, 7), t: str(x.t, 120).trim(), d: num(x.d) ? 1 : 0, ds: str(x.ds, 40), o: num(x.o), u: num(x.u), b: num(x.b) });
+                out.mgs.push({ id: str(x.id, 40), sid: str(x.sid, 40), ym: str(x.ym, 7), t: str(x.t, 120).trim(), d: num(x.d) ? 1 : 0, ds: str(x.ds, 40), o: num(x.o), u: num(x.u), b: num(x.b) }); if (str(x.est, 30).trim()) out.mgs[out.mgs.length - 1].est = str(x.est, 30).trim();   // 11-23.1
             });
             list(d.intakes, 5000).forEach(function (x) {   // 신분증 요청 접수 메모 (팀 키로 암호화된 공유 저장소에만 보관)
                 if (!x || !str(x.code, 80) || !str(x.text, 4000)) return;
@@ -3955,15 +3956,39 @@
             if (qmUi.edit === x.id) { qmUi.edit = ''; qmUi.text = ''; }
             commit('메모를 지웠어요.');
         }
-        function qmToTask(x, next) {   // next: 익일(휴무를 건너뛴 다음 근무일) 업무로
+        /* ---- 11-23.1: 자주 하는 업무 · 한 달 주요 업무 → 스업 넣을 때 예상 소요시간 고르기 (한 번 누르면 바로 들어감 · 마지막 고른 시간 기억) ---- */
+        var EST_QUICK = ['5분', '10분', '15분', '20분', '30분', '1시간', '2시간', '3시간', '반나절', '하루'];
+        function estPick(x, title, go) {   // go(est): est 는 '30분' 같은 글자 또는 '' (시간 없이)
+            var dlg = document.getElementById('dlg'); dlg.textContent = ''; dlg.className = 'tlog-dlg est-pick';
+            var last = String(x.est || ''), inp = h('input', { type: 'text', class: 'est-in', maxlength: 30, placeholder: '직접 입력 (예: 40분, 1시간 30분)', 'aria-label': '예상 소요시간 직접 입력' });
+            var pick = function (v) {
+                v = String(v || '').trim().slice(0, 30);
+                if (v !== String(x.est || '')) { if (v) x.est = v; else delete x.est; stamp(x); }   // 이 메모의 다음 기본값
+                closeDlg(); go(v);
+            };
+            inp.value = last && EST_QUICK.indexOf(last) < 0 ? last : '';
+            inp.addEventListener('keydown', function (e) { if (e.isComposing) return; if (e.key === 'Enter') { e.preventDefault(); pick(inp.value); } });
+            dlg.appendChild(h('div', {},
+                h('div', { class: 'dlg-head' }, '⏱ 예상 소요시간'),
+                h('div', { class: 'dlg-body' },
+                    h('p', { class: 'ph-tip' }, h('b', {}, title), h('br', {}), '시간을 누르면 바로 스업에 들어가요.' + (last ? ' (지난번: ' + last + ')' : '')),
+                    h('div', { class: 'est-q' }, EST_QUICK.map(function (v) { return h('button', { type: 'button', class: 'btn' + (v === last ? ' btn-primary' : ''), 'data-est': v, onclick: function () { pick(v); } }, v); })),
+                    h('div', { class: 'est-row' }, inp, h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'est-ok', onclick: function () { pick(inp.value); } }, '넣기'))),
+                h('div', { class: 'dlg-foot' },
+                    h('button', { type: 'button', class: 'btn', 'data-act': 'est-none', onclick: function () { pick(''); } }, '시간 없이 넣기'),
+                    h('button', { type: 'button', class: 'btn', onclick: closeDlg }, '취소'))));
+            showDlg(dlg);
+            setTimeout(function () { var b = dlg.querySelector(last && EST_QUICK.indexOf(last) >= 0 ? '[data-est="' + last + '"]' : '[data-est]'); if (b) try { b.focus(); } catch (e) { /* 무시 */ } }, 0);
+        }
+        function qmToTask(x, next, est) {   // next: 익일(휴무를 건너뛴 다음 근무일) 업무로
             var today = ymd(new Date()), sid = x.sid && staffById(x.sid) ? x.sid : me;   // 대표님이 직원 메모를 넣으면 그 직원 업무로
             var due = next ? nextWorkDay('', sid) : today, dl = next ? '익일(' + koDate(due) + ')' : '오늘';
             var dup = db.tasks.some(function (t) { return t.staffId === sid && t.due === due && !closed(t) && t.title === x.t; });
             if (dup && !confirm('"' + x.t + '"\n' + (sid === me ? '' : staffName(sid) + ' 님 ') + dl + ' 업무에 이미 있어요. 한 번 더 넣을까요?')) return;
-            var nt = { id: uid(), title: x.t, staffId: sid, due: due, priority: 'normal', status: 'todo', memo: '', u: 0 };
+            var nt = { id: uid(), title: x.t, staffId: sid, due: due, priority: 'normal', status: 'todo', memo: '', u: 0 }; setEst(nt, est);
             taskToTop(nt); db.tasks.push(stamp(nt));
             var hidden = (state.date && state.date !== due) || (state.who !== 'all' && state.who !== 'me' && state.who !== me) || (state.status !== 'all' && state.status !== 'todo');
-            commit('"' + x.t + '" ' + (sid === me ? '' : staffName(sid) + ' 님 ') + dl + ' 스케줄업무(스업) 1번에 넣었어요.' + (hidden && sid === me ? (next ? ' 업무 화면에서 그 날짜를 고르면 보여요.' : ' [오늘]·[내 업무만]으로 보면 보여요.') : ''));
+            commit('"' + x.t + '" ' + (sid === me ? '' : staffName(sid) + ' 님 ') + dl + ' 스케줄업무(스업) 1번에 넣었어요' + (nt.est ? ' (예상 ' + nt.est + ')' : '') + '.' + (hidden && sid === me ? (next ? ' 업무 화면에서 그 날짜를 고르면 보여요.' : ' [오늘]·[내 업무만]으로 보면 보여요.') : ''));
         }
         function qmFocus(fk) { setTimeout(function () { var el = document.querySelector('[data-fk="' + fk + '"]'); if (el) try { el.focus(); } catch (e) { /* 무시 */ } }, 0); }
         /* ---------- 한 달 주요 업무: 달마다 꼭 할 일 (팀 모두 보기) · 체크로 완료 · 지난달 남은 것 가져오기 ---------- */
@@ -4025,7 +4050,7 @@
             if (items.length > 1 && !confirm(mgLabel(from) + ' 남은 업무 ' + add.length + '개를 ' + mgLabel(to) + '로 복사할까요? (' + mgLabel(from) + ' 것은 그대로 남아요)\n\n' + add.map(function (x) { return '· ' + x.t; }).join('\n').slice(0, 600))) return;
             if (!db.mgs) db.mgs = [];
             var mo = 0; cur.forEach(function (x) { mo = Math.max(mo, x.o); });
-            add.forEach(function (x) { db.mgs.push(stamp({ id: uid(), sid: x.sid, ym: to, t: x.t, d: 0, ds: '', o: ++mo, u: 0 })); });   // 담당 그대로
+            add.forEach(function (x) { var c = { id: uid(), sid: x.sid, ym: to, t: x.t, d: 0, ds: '', o: ++mo, u: 0 }; if (x.est) c.est = x.est; db.mgs.push(stamp(c)); });   // 담당 그대로
             commit(add.length === 1 ? '"' + add[0].t + '" ' + mgLabel(to) + '로 복사했어요.' : mgLabel(to) + '로 ' + add.length + '개 복사했어요.');
         }
         function mgMove(x, dir) {   // ▲▼ 순서 바꾸기 (같은 상태끼리 · 모든 직원 화면에 같은 순서)
@@ -4035,13 +4060,13 @@
             var t = x.o; x.o = y.o; y.o = t; stamp(x); stamp(y);
             commit('');
         }
-        function mgToTask(x) {
+        function mgToTask(x, est) {
             var today = ymd(new Date()), sid = x.sid && staffById(x.sid) ? x.sid : me;   // 담당자 업무로 (모두 공용이면 누른 사람)
             var dup = db.tasks.some(function (t) { return t.staffId === sid && t.due === today && !closed(t) && t.title === x.t; });
             if (dup && !confirm('"' + x.t + '"\n' + (sid === me ? '' : staffName(sid) + ' 님 ') + '오늘 업무에 이미 있어요. 한 번 더 넣을까요?')) return;
-            var nt = { id: uid(), title: x.t, staffId: sid, due: today, priority: 'normal', status: 'todo', memo: '', u: 0 };
+            var nt = { id: uid(), title: x.t, staffId: sid, due: today, priority: 'normal', status: 'todo', memo: '', u: 0 }; setEst(nt, est);
             taskToTop(nt); db.tasks.push(stamp(nt));
-            commit('"' + x.t + '" ' + (sid === me ? '' : staffName(sid) + ' 님 ') + '오늘 스케줄업무(스업) 1번에 넣었어요.');
+            commit('"' + x.t + '" ' + (sid === me ? '' : staffName(sid) + ' 님 ') + '오늘 스케줄업무(스업) 1번에 넣었어요' + (nt.est ? ' (예상 ' + nt.est + ')' : '') + '.');
         }
         function mgPanel() {
             var now = mgYm(new Date());
@@ -4078,7 +4103,7 @@
                             h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mg-up', 'aria-label': '위로', title: '위로', disabled: !(list[i - 1] && list[i - 1].d === x.d), onclick: function () { mgMove(x, -1); } }, '▲'),
                             h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mg-down', 'aria-label': '아래로', title: '아래로', disabled: !(list[i + 1] && list[i + 1].d === x.d), onclick: function () { mgMove(x, 1); } }, '▼')),
                         x.d ? null : h('button', { type: 'button', class: 'btn btn-sm mg-cp', 'data-act': 'mg-copy', title: mgLabel(mgShift(ym, 1)) + '로 복사 (이 달 것은 그대로)', onclick: function () { mgCopyNext([x], ym); } }, '→ ' + (+mgShift(ym, 1).slice(5)) + '월로 복사'),
-                        x.d ? null : h('button', { type: 'button', class: 'btn btn-sm qm-go', 'data-act': 'mg-go', title: '오늘 스케줄업무(스업)에 바로 넣기', onclick: function () { mgToTask(x); } }, '＋ 업무에 넣기'),
+                        x.d ? null : h('button', { type: 'button', class: 'btn btn-sm qm-go', 'data-act': 'mg-go', title: '오늘 스케줄업무(스업)에 바로 넣기', onclick: function () { estPick(x, x.t, function (est) { mgToTask(x, est); }); } }, '＋ 업무에 넣기'),
                         h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'mg-edit', onclick: function () { mgUi.edit = x.id; mgUi.text = x.t; mgUi.eto = null; render(); qmFocus('mg-edit'); } }, '수정'),
                         h('button', { type: 'button', class: 'btn btn-sm qm-del', 'data-act': 'mg-del', onclick: function () { mgDel(x); } }, '삭제')));
             });
@@ -4131,8 +4156,8 @@
                 return h('li', { class: 'qm-row', 'data-id': x.id },
                     h('div', { class: 'qm-t' }, h('span', { class: 'qm-n' }, n + '.'), h('span', {}, x.t)),
                     h('div', { class: 'qm-btns' },
-                        h('button', { type: 'button', class: 'btn btn-sm qm-go', 'data-act': 'qm-go', title: x.sid === me ? '오늘 스케줄업무(스업)에 바로 넣기' : staffName(x.sid) + ' 님 오늘 스케줄업무(스업)에 넣기', onclick: function () { qmToTask(x); } }, x.sid === me ? '＋ 업무에 넣기' : '＋ ' + staffName(x.sid) + ' 업무에'),
-                        h('button', { type: 'button', class: 'btn btn-sm qm-next', 'data-act': 'qm-next', title: (x.sid === me ? '' : staffName(x.sid) + ' 님 ') + '익일(다음 근무일) 스케줄업무(스업)에 넣기', onclick: function () { qmToTask(x, true); } }, '＋ 익일 업무에'),
+                        h('button', { type: 'button', class: 'btn btn-sm qm-go', 'data-act': 'qm-go', title: x.sid === me ? '오늘 스케줄업무(스업)에 바로 넣기' : staffName(x.sid) + ' 님 오늘 스케줄업무(스업)에 넣기', onclick: function () { estPick(x, x.t, function (est) { qmToTask(x, false, est); }); } }, x.sid === me ? '＋ 업무에 넣기' : '＋ ' + staffName(x.sid) + ' 업무에'),
+                        h('button', { type: 'button', class: 'btn btn-sm qm-next', 'data-act': 'qm-next', title: (x.sid === me ? '' : staffName(x.sid) + ' 님 ') + '익일(다음 근무일) 스케줄업무(스업)에 넣기', onclick: function () { estPick(x, x.t, function (est) { qmToTask(x, true, est); }); } }, '＋ 익일 업무에'),
                         h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'qm-edit', onclick: function () { qmUi.edit = x.id; qmUi.text = x.t; render(); qmFocus('qm-edit'); } }, '수정'),
                         h('button', { type: 'button', class: 'btn btn-sm qm-del', 'data-act': 'qm-del', onclick: function () { qmDel(x); } }, '삭제')));
             }
