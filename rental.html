@@ -3,11 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-1t2mCWMHn9j7tXjhgzPyIs8fKa1MAh+tUiAT621sVgc='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-MPmuw7pVCPgmJ9EBbj4DJo+WSM4mPvqITZHMmAvbWaQ='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
 <meta name="description" content="사거리인터넷 렌탈 - 정수기·가전 렌탈 상품을 렌탈사·약정별 월 렌탈료로 비교하고 바로 상담 접수하세요. 고객센터 1833-2440">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="사거리인터넷">
+<meta property="og:title" content="정수기 · 가전렌탈 구독 | 사거리인터넷">
+<meta property="og:description" content="정수기부터 가전까지, 렌탈사·약정별 월 렌탈료를 한눈에 비교하고 바로 상담하세요. 상담 1833-2440">
+<meta property="og:url" content="https://www.xn--v69aq4gtzi0phw6is8o.com/rental.html">
+<meta property="og:image" content="https://www.xn--v69aq4gtzi0phw6is8o.com/rental-og.jpg?v=1124">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.xn--v69aq4gtzi0phw6is8o.com/rental-og.jpg?v=1124">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1161,7 +1171,9 @@ var RENT_GIFT_SHOW = false;
         if (st.sort !== 'pop') q.set('sort', st.sort);
         var s = q.toString(); return s ? '?' + s : location.pathname.split('/').pop() || 'rental.html';
     }
-    function setUrl(qs, push) { try { history[push ? 'pushState' : 'replaceState']({ sg: 1 }, '', qs); } catch (e) { /* 무시 */ } }
+    /* 카톡 미리보기: 정수기 → water.html · 가전렌탈 → appliance.html 주소로 보이게(그 파일이 rental.html로 다시 연결) */
+    function pagePath(qs) { var t = ''; try { t = new URLSearchParams(qs.charAt(0) === '?' ? qs : '').get('type') || ''; } catch (e) { t = ''; } return t === '정수기' ? 'water.html' : t === '가전렌탈' ? 'appliance.html' : 'rental.html'; }
+    function setUrl(qs, push) { qs = String(qs || ''); qs = qs.charAt(0) === '?' ? pagePath(qs) + qs : 'rental.html'; try { history[push ? 'pushState' : 'replaceState']({ sg: 1 }, '', qs); } catch (e) { /* 무시 */ } }
     function openDetail(id) { listY = window.scrollY; fromList = true; setUrl('?id=' + encodeURIComponent(id), true); route(); window.scrollTo(0, 0); }
 
     function route() {
@@ -1746,6 +1758,7 @@ var RENT_GIFT_SHOW = false;
     Array.prototype.forEach.call(document.querySelectorAll('[data-nav]'), function (a) {
         a.addEventListener('click', function (e) { if (e.ctrlKey || e.metaKey || e.shiftKey) return; e.preventDefault(); st.type = a.getAttribute('data-nav'); clearPicks(); st.kexp = false; st.q = ''; $('q').value = ''; st.shown = PAGE; closeModal(); setUrl(listQs(), true); route(); window.scrollTo(0, 0); });
     });
+    try { if (/(^|\/)rental\.html$/i.test(location.pathname) && location.search) { var pp0 = pagePath(location.search); if (pp0 !== 'rental.html') history.replaceState(history.state, '', pp0 + location.search + location.hash); } } catch (e) { /* 무시 */ }
     route();
 })();
 
