@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-A2Q7gNpu3zrVvuZ9NlLRIzO6fpOUU8WMcOLfnkzI7uc='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-eGqcJwQc1kAhJlMaj5yRb4LFaRTLQJ/WG6GixyiqQtc='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2340,7 +2340,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-24.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-24.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2632,21 +2632,69 @@
 
         /* --- 데이터 읽기 / 쓰기 (항상 암호화된 상태로만 저장) --- */
         var saveChain = Promise.resolve();
+        /* ---- 11-24.2: 이 기기 저장 공간(브라우저 localStorage 약 5MB)이 꽉 차서 '저장하지 못했어요'가 뜨던 문제
+           ① 팀 데이터 저장이 실패하면 이 기기에만 둔 '사본'부터 비우고 다시 저장: 서버에도 있는 확인서 사본 → 나머지 확인서 사본(오래된 것부터)
+              → 손상 보관본 · 예전 계정 보관본 → 하루 지난 확인서 임시 보관본 (지금 쓰는 데이터는 안 지움)
+           ② 그래도 모자라면 팀 데이터를 큰 저장소(IndexedDB · 수백 MB)로 옮겨 저장 (팀 키로 암호화된 그대로) ---- */
+        var DB_IDB = 'sg-db', dbInIdb = false, lsFullToast = 0;
+        function dbIdb(mode, fn) {
+            return new Promise(function (ok, no) {
+                var rq; try { rq = indexedDB.open(DB_IDB, 1); } catch (e) { no(e); return; }
+                rq.onupgradeneeded = function () { try { rq.result.createObjectStore('kv'); } catch (e) { /* 있음 */ } };
+                rq.onerror = function () { no(rq.error); };
+                rq.onsuccess = function () {
+                    var d = rq.result, tx; try { tx = d.transaction('kv', mode); } catch (e) { d.close(); no(e); return; }
+                    var r = fn(tx.objectStore('kv'));
+                    tx.oncomplete = function () { d.close(); ok(r && 'result' in r ? r.result : undefined); };
+                    tx.onerror = tx.onabort = function () { d.close(); no(tx.error); };
+                };
+            });
+        }
+        function dbIdbGet(k) { return dbIdb('readonly', function (s) { return s.get(k); }); }
+        function dbIdbPut(k, v) { return dbIdb('readwrite', function (s) { s.put(v, k); }); }
+        function dbIdbDel(k) { return dbIdb('readwrite', function (s) { s.delete(k); }).catch(function () { /* 없음 */ }); }
+        function lsFreeSteps() {
+            var openDid = Object.create(null); try { mfAll(function (F) { if (F && F.did) openDid[F.did] = 1; }); } catch (e) { /* 무시 */ }
+            var regFs = function (id) { var r = (db && db.regs || []).filter(function (x) { return x.id === id; })[0]; return !!(r && r.fs === 1); };
+            var L = [function () { mfsList().forEach(function (x) { if (regFs(x.k.slice(MFS_PRE.length)) || x.t < Date.now() - 86400000) lsDel(x.k); }); }];   // 서버에도 있는 확인서 사본 · 하루 지난 사본
+            mfsList().sort(function (a, b) { return a.t - b.t; }).forEach(function (x) { L.push(function () { lsDel(x.k); }); });   // 남은 확인서 사본은 오래된 것부터 하나씩 (서버 fs·드라이브 원본은 그대로)
+            L.push(function () { lsDel(DB_KEY + '_corrupt'); lsDel(LEGACY_DB_KEY); lsDel(LEGACY_AUTH_KEY); lsDel(DB_KEY + '_old'); lsDel(AUTH_KEY + '_old'); });
+            var cut = Date.now() - 86400000;
+            mfdList().sort(function (a, b) { return a.t - b.t; }).forEach(function (x) { if (x.t < cut && !openDid[x.key.slice(MFD_PRE.length)]) L.push(function () { lsDel(x.key); }); });   // 하루 지난 임시 보관본 하나씩 (지금 열린 확인서 것은 남김)
+            return L;
+        }
+        function lsUse() { var n = 0; try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); n += k.length + String(localStorage.getItem(k) || '').length; } } catch (e) { /* 무시 */ } return n; }
+        function dbStore(txt) {   // 팀 데이터(암호문) 저장 → Promise (실패하면 거절)
+            if (lsSet(DB_KEY, txt)) { if (dbInIdb) { dbInIdb = false; dbIdbDel(DB_KEY); } return Promise.resolve(); }
+            var steps = lsFreeSteps();
+            for (var i = 0; i < steps.length; i++) { try { steps[i](); } catch (e) { /* 다음 */ } if (lsSet(DB_KEY, txt)) { if (dbInIdb) { dbInIdb = false; dbIdbDel(DB_KEY); } return Promise.resolve(); } }
+            return dbIdbPut(DB_KEY, txt).then(function () {   // 큰 저장소로: 먼저 저장하고 나서 작은 저장소엔 '거기 있음' 표시만
+                lsDel(DB_KEY);
+                if (!lsSet(DB_KEY, JSON.stringify({ idb: 1, t: Date.now() }))) throw new Error('store');
+                if (!dbInIdb && Date.now() - lsFullToast > 600000) { lsFullToast = Date.now(); toast('이 기기 저장 공간이 모자라서 팀 데이터를 큰 저장소로 옮겨 저장했어요. (계속 그대로 쓰시면 돼요)'); }
+                dbInIdb = true;
+            });
+        }
+        function dbLoadRaw() {   // 저장된 팀 데이터(암호문) 읽기 → Promise(raw 또는 null)
+            var raw = lsGet(DB_KEY); if (!raw) return Promise.resolve(null);
+            var m = null; try { m = JSON.parse(raw); } catch (e) { m = null; }
+            if (m && m.idb === 1 && !m.ct) return dbIdbGet(DB_KEY).then(function (v) { dbInIdb = true; return typeof v === 'string' ? v : raw; }, function () { return raw; });
+            return Promise.resolve(raw);
+        }
         function writeDbNow(key, obj) {   // 암호화해서 저장, 실패하면 거절됨
-            return encryptText(key, JSON.stringify(obj), 'db').then(function (blob) { if (!lsSet(DB_KEY, JSON.stringify(blob))) throw new Error('store'); });
+            return encryptText(key, JSON.stringify(obj), 'db').then(function (blob) { return dbStore(JSON.stringify(blob)); });   // 11-24.2: 꽉 차면 사본 비우고 / 큰 저장소로
         }
         function saveDb() {
             if (!cryptoKey || !db) return Promise.resolve();
             var key = cryptoKey, snapshot = JSON.parse(JSON.stringify(db));
             var p = saveChain.then(function () { return writeDbNow(key, snapshot); });
             saveChain = p.catch(function () { /* 실패해도 다음 저장은 계속 */ });
-            return p.catch(function () { toast('저장하지 못했어요. 브라우저의 저장 공간이 막혀 있는지 확인해 주세요.'); });
+            return p.catch(function () { toast('이 기기에 저장하지 못했어요 (이 기기 저장 공간 ' + (lsUse() / 1048576).toFixed(1) + 'MB 사용 중). 공유 저장소에는 계속 저장돼요.'); });
         }
         function rekey(r) {   // 비밀번호 변경: 새 키로 데이터를 다시 암호화하고, 데이터와 확인값을 연달아 교체
             var snapshot = JSON.parse(JSON.stringify(db)); cryptoKey = r.key;
             var p = saveChain.then(function () { return encryptText(r.key, JSON.stringify(snapshot), 'db'); }).then(function (blob) {
-                var a = lsSet(DB_KEY, JSON.stringify(blob)), b = lsSet(AUTH_KEY, JSON.stringify(r.auth));
-                if (!a || !b) throw new Error('store');
+                return dbStore(JSON.stringify(blob)).then(function () { if (!lsSet(AUTH_KEY, JSON.stringify(r.auth))) throw new Error('store'); });
             });
             saveChain = p.catch(function () { /* 무시 */ });
             return p;
@@ -2658,7 +2706,9 @@
             return Promise.resolve();
         }
         function openDb() {
-            var raw = lsGet(DB_KEY);
+            return dbLoadRaw().then(openDbRaw);   // 11-24.2: 큰 저장소로 옮겨 둔 경우도 읽음
+        }
+        function openDbRaw(raw) {
             if (!raw) { db = seedDb(); me = pickMe(); return Promise.resolve(); }
             var blob; try { blob = JSON.parse(raw); } catch (e) { return failDb(raw); }
             return decryptText(cryptoKey, blob, 'db').then(function (t) {
@@ -5828,7 +5878,7 @@
             return openEncPriv(pw, res.keys.encPriv).then(function (priv) {
                 return unwrapTeamKey(priv, res.keys.wk).then(function (k) { kk = { priv: priv, k: k }; });
             }).then(function () {
-                [DB_KEY, DB_KEY + '_corrupt', AUTH_KEY, GUARD_KEY, ME_KEY].forEach(lsDel);
+                [DB_KEY, DB_KEY + '_corrupt', AUTH_KEY, GUARD_KEY, ME_KEY].forEach(lsDel); dbIdbDel(DB_KEY); dbInIdb = false;
                 return makeAuth(pw);
             }).then(function (r) {
                 if (!lsSet(AUTH_KEY, JSON.stringify(r.auth))) throw new Error('store');
@@ -14142,7 +14192,7 @@
             if (t !== '삭제') { toast('삭제를 취소했어요.'); return; }
             authed = false; cryptoKey = null; db = null; stopPoll(); clearTimeout(pushTimer);
             saveChain.then(function () {
-                [DB_KEY, DB_KEY + '_corrupt', AUTH_KEY, GUARD_KEY, ME_KEY, LEGACY_DB_KEY, LEGACY_AUTH_KEY].forEach(function (k) { lsDel(k); });
+                [DB_KEY, DB_KEY + '_corrupt', AUTH_KEY, GUARD_KEY, ME_KEY, LEGACY_DB_KEY, LEGACY_AUTH_KEY].forEach(function (k) { lsDel(k); }); dbIdbDel(DB_KEY); dbInIdb = false;
                 try { var ks = []; for (var i = 0; i < localStorage.length; i++) ks.push(localStorage.key(i)); ks.forEach(function (k) { if (/^(sageori_admin_|sg-mfd-|sg-mfs-|sg-blog-|sg-cl|sg_admin)/.test(String(k || '')) || k === LAST_EMAIL_KEY) lsDel(k); }); } catch (e) { /* 무시 */ }   // 가입 확인서 임시 보관·예전 데이터·블로그 초안
                 location.reload();
             });
