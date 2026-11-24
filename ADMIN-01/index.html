@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-5m5bn4swFJM33HmtZ5QBaem3XHgBy3z3qMdi14YfacI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-A2Q7gNpu3zrVvuZ9NlLRIzO6fpOUU8WMcOLfnkzI7uc='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2340,7 +2340,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-23.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-24.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8983,8 +8983,9 @@
                     var to = v.to === '*' ? db.staff.filter(function (x) { return x.id !== me; }).map(function (x) { return x.id; }) : [v.to];
                     if (!db.dms) db.dms = [];
                     to.forEach(function (id) { db.dms.push(stamp({ id: uid(), to: id, fr: me, t: String(v.t || '').trim().slice(0, 1000), ref: String(pre.ref || '').slice(0, 300), at: Date.now(), ack: 0, u: 0 })); });
+                    var nw = db.dms.slice(-to.length);
                     commit('📨 ' + to.map(function (id) { return staffName(id); }).join(', ') + ' 님께 전달했어요. 확인하면 알려 드려요.');
-                    dmBump();
+                    dmFast(nw.map(function (x) { return { k: 'dm', o: x }; }));   // 11-24.1: 바로 (동기화 안 기다림)
                 }
             });
         }
@@ -9038,7 +9039,7 @@
             if (!d) { if (dmEl) { dmEl.remove(); dmEl = null; dmShownId = ''; } dmAttn(false); return; }
             if (dmEl && dmShownId === d.id) return;
             var newRcv = mine.filter(function (x) { return !x.rcv; });   // 이 화면에 떴다고 바로 기록 (대표님이 '뜸' 시각을 봄)
-            if (newRcv.length) { var nowR = Date.now(); newRcv.forEach(function (x) { x.rcv = nowR; x.rv = APP_VERSION; stamp(x); }); commit(''); dmBump(); }
+            if (newRcv.length) { var nowR = Date.now(); newRcv.forEach(function (x) { x.rcv = nowR; x.rv = APP_VERSION; stamp(x); }); commit(''); dmFast(newRcv.map(function (x) { return { k: 'st', o: x }; })); }
             if (dmEl) dmEl.remove();
             dmShownId = d.id;
             dmEl = h('div', { class: 'dm-back', 'data-fk': 'dm-pop', role: 'alertdialog', 'aria-modal': 'true', 'aria-label': '대표님 전달' },
@@ -9048,7 +9049,7 @@
                     d.ref ? h('div', { class: 'dm-ref' }, d.ref) : null,
                     h('button', { type: 'button', class: 'btn btn-primary dm-ok', 'data-fk': 'dm-ok', onclick: function () {
                         var x = (db.dms || []).filter(function (y) { return y.id === d.id; })[0]; if (!x) return;
-                        x.ack = Date.now(); if (!x.rcv) { x.rcv = x.ack; x.rv = APP_VERSION; } stamp(x); commit('확인했다고 ' + staffName(d.fr) + ' 님께 알렸어요.'); dmBump(); dmAttn(false); dmCheck();
+                        x.ack = Date.now(); if (!x.rcv) { x.rcv = x.ack; x.rv = APP_VERSION; } stamp(x); commit('확인했다고 ' + staffName(d.fr) + ' 님께 알렸어요.'); dmFast([{ k: 'st', o: x }]); dmAttn(false); dmCheck();
                         try { if (window.Notification && Notification.permission === 'default') Notification.requestPermission(); } catch (e) { /* 무시 */ }   // 다음부터 다른 창을 보고 있어도 알림
                     } }, '✅ 확인했어요')));
             document.body.appendChild(dmEl);
@@ -9060,10 +9061,11 @@
         var ibTickV = null, dmTickV = null, dmTickBusy = false, dmTickOff = false, dmTickAt = 0;
         function dmTick() {   // 3초마다 서버의 '신호 번호'만 확인 (내용 없음 · 가벼움) → 바뀌었으면 바로 동기화 → 팝업 / 확인 알림
             if (!authed || !db || !driveOn() || dmTickBusy || dmTickOff || accountGate()) return;
-            if (document.visibilityState !== 'visible' && Date.now() - dmTickAt < 8000) return;   // 다른 창을 보고 있으면 8초마다
+            if (Date.now() - dmTickAt < (document.visibilityState === 'visible' ? 2000 : 3000)) return;   // 11-24.1: 보고 있으면 2초 · 다른 창이면 3초 (일꾼이 1초마다 깨움)
             dmTickBusy = true; dmTickAt = Date.now();
-            driveCall(db.drive.url, 'dmTick', {}, 10000).then(function (r) {
+            ibCall('dmTick', { since: dmQV }, 10000).then(function (r) {
                 dmTickBusy = false;
+                if (r && r.q) { dmQMerge(r.q); } if (r && r.qv) dmQV = Number(r.qv) || dmQV;   // 11-24.1: 전달 내용까지 바로
                 var v = r && r.v != null ? String(r.v) : null; if (v == null) return;
                 var iv = r.ib != null ? String(r.ib) : null;   // 콜 인입(착신·홈페이지 버튼)이 바뀜 → 바로 새로 받음
                 if (iv !== null && ibTickV !== null && iv !== ibTickV) { if (ib.busy) iv = ibTickV; else ibLoad(false); }   // 받는 중이면 다음 신호 때 다시
@@ -9073,6 +9075,52 @@
                 dmTickV = v;
             }, function (e) { dmTickBusy = false; if (e && e.code === 'bad_action') dmTickOff = true; });   // 서버가 예전 버전이면 30초 동기화로
         }
+        /* ---- 11-24.1: 전달하기 5초 안에 — 전달·뜸·확인을 팀 키 암호문으로 서버 임시 기억장치에 바로 올리고(dmPush),
+           받는 화면은 2~3초 신호(dmTick)에서 내용까지 같이 받아 바로 팝업 (전체 동기화를 기다리지 않음 · 원본은 예전처럼 팀 데이터에 저장)
+           · 다른 창을 보고 있어도 크롬이 타이머를 1분으로 늦추지 않게 작은 일꾼(Worker)이 1초마다 깨움 ---- */
+        var dmQV = 0, dmFastOff = false, DM_AAD = 'sg-dm-v1:';
+        function dmPack(x) { return { id: str(x.id, 40), to: str(x.to, 40), fr: str(x.fr, 40), t: str(x.t, 1000), ref: str(x.ref, 300), at: num(x.at), ack: num(x.ack), rcv: num(x.rcv), rv: str(x.rv, 20), u: num(x.u), b: num(x.b) }; }
+        function dmFast(list) {   // list: [{ k: 'dm', o: 전달 }] · [{ k: 'st', o: 전달 }] (뜸·확인) → 실패하면 예전 방식(동기화 + 신호)
+            if (!driveOn() || dmFastOff || !list || !list.length) { dmBump(); return; }
+            Promise.all(list.map(function (it) {
+                var o = it.o, body = it.k === 'dm' ? dmPack(o) : { id: o.id, rcv: num(o.rcv), rv: str(o.rv, 20), ack: num(o.ack) };
+                return glEnc(body, DM_AAD + o.id + ':' + it.k).then(function (b) { return { id: o.id, k: it.k, to: o.to, fr: o.fr, b: b }; });
+            })).then(function (q) { return ibCall('dmPush', { q: q }, 10000); }).then(function (r) {
+                if (!r || !r.ok) throw new Error('dmPush');
+                if (r.v) dmTickV = String(r.v);   // 내 신호로 내가 다시 동기화하지 않게
+                setTimeout(function () { requestSync(0); }, 300);   // 원본은 팀 데이터에도 (뒤에서)
+            }).catch(function (e) { if (e && e.code === 'bad_action') dmFastOff = true; dmBump(); });   // 서버가 예전 버전 → 예전 방식
+        }
+        function dmQMerge(q) {   // dmTick 이 돌려준 전달·뜸·확인 → 내 데이터에 합치고 바로 팝업/알림
+            if (!Array.isArray(q) || !q.length || !db) return;
+            Promise.all(q.slice(0, 20).map(function (x) {
+                if (!x || typeof x.id !== 'string' || (x.k !== 'dm' && x.k !== 'st')) return null;
+                if (x.to !== me && x.fr !== me) return null;   // 나와 상관없는 전달은 안 풂
+                return glDec(x.b, DM_AAD + x.id + ':' + x.k).then(function (o) { return { k: x.k, o: o }; }, function () { return null; });
+            })).then(function (L) {
+                if (!db) return;
+                if (!db.dms) db.dms = [];
+                var ch = false;
+                L.forEach(function (it) {
+                    if (!it || !it.o || typeof it.o !== 'object') return;
+                    var cur = db.dms.filter(function (y) { return y.id === it.o.id; })[0];
+                    if (it.k === 'dm') {
+                        var d = dmPack(it.o); if (!d.id || !d.to || !d.fr || cur || (db.del && db.del[d.id])) return;
+                        db.dms.push(d); ch = true;
+                    } else if (cur) {
+                        if (num(it.o.rcv) && !cur.rcv) { cur.rcv = num(it.o.rcv); cur.rv = str(it.o.rv, 20); ch = true; }
+                        if (num(it.o.ack) && !cur.ack) { cur.ack = num(it.o.ack); if (!cur.rcv) cur.rcv = cur.ack; ch = true; }
+                    }
+                });
+                if (ch) { saveDb(); try { dmCheck(); } catch (e) { /* 무시 */ } }
+            });
+        }
+        (function () {   // 다른 창을 보고 있어도 1초마다 깨움 (크롬은 숨은 탭 타이머를 1분까지 늦춤 → 일꾼은 안 늦춤)
+            try {
+                var wk = new Worker(URL.createObjectURL(new Blob(['setInterval(function(){postMessage(1)},1000)'], { type: 'text/javascript' })));
+                wk.onmessage = function () { try { dmTick(); } catch (e) { /* 무시 */ } };
+            } catch (e) { /* 일꾼을 못 쓰면 아래 3초 타이머만 */ }
+        })();
         setInterval(dmTick, 3000);
         function dmBump() {   // 전달·확인 → 바로 서버에 올리고 신호 번호를 바꿈 (다른 기기가 3초 안에 알아챔)
             if (!driveOn()) return;
