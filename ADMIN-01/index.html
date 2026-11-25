@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oCrXIsyzVMg5ryvJyjoa/vQE9/+jYecg+blf5JoZozg='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-p1s8abG/9ECqRU0Lehg9PTPUdIRQ1weknE8H3liqzQ0='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2343,7 +2343,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-25.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-25.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -7937,7 +7937,15 @@
             var ids = co === 'U+' ? (soho ? ['lgsoho'] : ['lgu']) : co === 'KT' ? ['kt'] : co === '스카이라이프' ? ['sky'] : co === '헬로비전' ? ['hello']
                 : co === 'SK' ? (soho ? ['skbsoho'] : /SKT/.test(raw) ? ['skt'] : /SKB|브로드/.test(raw) ? ['skb'] : []) : [];   // SKT → SKT 단가표 · SKB → SKB 단가표 (절대 섞지 않음)
             if (/pop|팝/i.test(plan) && (co === 'SK' || !ids.length) && P.data.carriers.some(function (x) { return x.id === 'pop'; })) ids = ['pop'];   // 11-20.10: SKB POP (TV POP 180 · 요즘 우리집 결합)
-            if (!ids.length && co === 'SK') return { why: '통신사가 "' + (rec.carrier || 'SK') + '"로만 적혀 있어요. ' + (/스카이|sky/i.test(String(rec.dealer || '') + ' ' + plan) ? '스카이라이프 상품이면 "스카이라이프"로, ' : '') + 'SK 상품이면 SKT·SKB 중 하나로 통신사 칸을 고쳐 주세요 (단가가 달라요)' };
+            if (!ids.length && co === 'SK') {   // 11-25.8: SKT·SKB 표시가 없으면 그 날짜 단가표에서 둘 중 높은 단가 (확인 표시)
+                var two = ['SKT', 'SKB'].map(function (cn) { var o = JSON.parse(JSON.stringify(rec)); o.carrier = cn; var a = regFeeWired0(o, P); return { cn: cn, a: a }; }).filter(function (x) { return x.a && x.a.fee > 0; });
+                if (!two.length) return { why: '통신사가 "' + (rec.carrier || 'SK') + '"로만 적혀 있고 SKT·SKB 단가표 둘 다에서 상품을 찾지 못했어요 — 통신사 칸을 SKT·SKB 중 하나로 고쳐 주세요' };
+                two.sort(function (x, y) { return y.a.fee - x.a.fee; });
+                var hi = JSON.parse(JSON.stringify(two[0].a));
+                hi.chk = true; hi.sk = two[0].cn;
+                hi.src = '[통신사 SK만 적혀 ' + two.map(function (x) { return x.cn + ' ' + (x.a.fee / 10000) + '만'; }).join(' · ') + ' 중 높은 ' + two[0].cn + ' 단가 — 통신사 확인] ' + String(hi.src || '');
+                return hi;
+            }
             if (!ids.length) return { why: '통신사(' + (rec.carrier || '없음') + ')를 단가표에서 찾지 못했어요' };
             if (rec.dealer && mp.data && (mp.data.dealers || []).some(function (x) { return x.name === rec.dealer; })) return { why: rec.dealer + ' 유선(동판)은 거래처 동판 단가라 직접 적어 주세요' };
             var c = P.data.carriers.filter(function (x) { return x.id === ids[0]; })[0]; if (!c) return { why: ids[0] + ' 단가표가 없어요' };
@@ -8426,7 +8434,7 @@
         function regFeeAuto(M, rec) {   // 상담에서 고른 수수료가 없을 때만
             if (M.fee && +M.fee) return { fee: +M.fee, src: '상담에서 고른 상품 수수료' };
             if (rec.fee) return null;
-            var a; try { a = rec.type === '렌탈' ? regFeeRent(rec) : rec.kind === 'wired' ? regFeeWired(rec) : regFeeMobile(rec); } catch (e) { a = { why: '자동 계산 중 문제가 생겼어요' }; }
+            var a; try { a = rec.type === '렌탈' ? regFeeRent(rec) : rec.kind === 'wired' ? regFeeWired(rec, isYmd(rec.date) ? polAt(rec.date) : null) : regFeeMobile(rec); } catch (e) { a = { why: '자동 계산 중 문제가 생겼어요' }; }   // 11-25.8: 유선은 가입 날짜의 단가표
             a = gllLearnApply(rec, a);   // 💡 엑셀에서 익힌 금액 (같은 단가표 동안)
             if (a && a.fee) { rec.fee = String(a.fee); if (a.adj) rec.adj = String(a.adj); if (a.gv && !(M.pg && +M.pg)) rec.gv = String(a.gv); rec.fa = ('단가표 자동: ' + a.src).slice(0, 200); }
             return a;
@@ -8495,7 +8503,7 @@
             try {
                 var rec = JSON.parse(JSON.stringify(r)); delete rec.fee; delete rec.adj; delete rec.fa;
                 var a = regFeeAuto({}, rec);
-                out = a && a.fee ? { ok: true, t: '지금 단가표로 ' + (Math.round(a.fee / 1000) / 10) + '만 — 눌러서 넣기', full: a.src || '' }
+                out = a && a.fee ? { ok: true, t: (r.kind === 'wired' ? '가입일 단가표로 ' : '지금 단가표로 ') + (Math.round(a.fee / 1000) / 10) + '만 — 눌러서 넣기', full: a.src || '' }
                     : { t: a && a.why ? a.why : (r.type === '렌탈' ? '렌탈 수수료표에서 찾지 못했어요' : '자동 계산 대상이 아니에요 — 직접 적어 주세요'), full: a && a.why || '' };
             } catch (e) { out = { t: '계산 중 문제가 생겼어요 — 직접 적어 주세요', full: '' }; }
             regWhyC[k] = out; return out;
