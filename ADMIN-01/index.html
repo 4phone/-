@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nEyMl5uA23/3WSm0XHjKSwshojcCq47an8wflz4wtVw='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ijarsTJXv0eAXZ6CFufw2Pk6y1drmH5F/GRRY5gntik='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1883,6 +1883,7 @@
         .pol-tvx .btn-sm { padding: 2px 8px; min-height: 28px; font-size: 12.5px; }
         .pol-tvx .tv-d { border-color: #3B7BD0; }
         .pol-tvx .tv-sum { color: #1D4F91; }
+        .rx-ch div { white-space: normal; line-height: 1.45; } .rx-ch .rx-f { display: inline-block; min-width: 6em; color: #5b6156; font-size: 12px; } .rx-ch s { color: #b42318; } .rx-ch b { color: #1D6B32; }
         .pol-prex { background: #FFF6E5; border-color: #F0C987; } .pol-prex .tv-sum { color: #8A4B00; } .p-pre { display: block; color: #8A4B00; font-size: 11px; font-weight: 700; } .pol-prex .btn[aria-pressed=true] { background: #8A4B00; border-color: #8A4B00; color: #fff; }
         .pol-tvadd { background: #EEF6FF; border-color: #BCD6F2; }
         .pol-tvadd .tv-d { border-color: #3B7BD0; font-weight: 800; }
@@ -2313,7 +2314,8 @@
             var tax = /스카이/.test(String(r.dealer || '')) ? 0 : bh * 0.85 - bh;   // 세금 (스카이 접수 유선은 없음)
             return Math.round(bh + tax - a('fre') - a('ga') - a('sn') - 25000);   // − 프리 − 지원금 − 수납건 + 운영비(−2.5만)
         }
-        function regKindTag(r) { if (r && r.cx) return regKindText(r) + '(취소)'; var k = regKindText(r), t = gllNeedTag(k, regBm(r)); return t ? gllTag(k, t) : k; }   // 장부 C열: 모바일(단가제외) · 모바일(전략) …
+        function regKindTag(r) { if (r && r.cx) return regKindText(r) + '(취소)'; var k = regKindText(r), t = gllNeedTag(k, regBm(r), regMulti(r)); return t ? gllTag(k, t) : k; }
+        function regMulti(r) { if (!r || !r.name) return false; var nk = String(r.name).replace(/\s/g, ''); return (db.regs || []).filter(function (x) { return !x.cx && x.date === r.date && String(x.name || '').replace(/\s/g, '') === nk; }).length > 1; }   // 11-25.11: 그날 같은 고객 판매가 2건 이상   // 장부 C열: 모바일(단가제외) · 모바일(전략) …
         var REG_WELFARE_FROM = '2026-10';   // 이 달 장부부터 M열 '복지여부' 칸이 있음 (그 전 달 장부에는 없음)
         function regDerive(r0) {   // 장부 규칙: 유선 = 할부 36 · 부가서비스/보험 '유선없음' · 모델 '인(+티)(+전)' / 변경요금제가 없으면 유지개월·변경요금제 '유지' / 미결합이면 결합종류도 '미결합'
             var r = {}; Object.keys(r0 || {}).forEach(function (k) { r[k] = r0[k]; });
@@ -2344,7 +2346,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-25.10';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-25.11';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8056,70 +8058,107 @@
             for (var i = 0; i < it.length; i++) for (var j = i + 1; j < it.length; j++) if (it[i].v + it[j].v === d && it[i].n !== it[j].n) return it[i].n + ' ' + (it[i].v > 0 ? '+' : '') + it[i].v / 10000 + '만 · ' + it[j].n + ' ' + (it[j].v > 0 ? '+' : '') + it[j].v / 10000 + '만';
             return '';
         }
-        /* 📒 엑셀 액면단가 → 가입 장부 (엑셀이 정답) */
+        /* 📒 엑셀(가입고객리스트) → 가입 장부 (엑셀이 정답) — 11-25.11: 액면단가만이 아니라 고객 줄의 모든 칸 (가입 확인서로 저장된 기록을 엑셀대로) */
+        var RX_F = [['date', '가입날짜'], ['seller', '담당자'], ['dealer', '거래처'], ['carrier', '통신사'], ['type', '가입유형'], ['model', '모델'], ['plan', '요금제'], ['disc', '공시&선약'], ['subsidy', '공시금액'], ['price', '할부원금'], ['months', '할부개월'],
+            ['extra', '부가서비스'], ['ins', '보험'], ['combKind', '결합종류'], ['comb', '결합여부'], ['keep', '요금제유지개월'], ['plan2', '변경요금제'], ['bill1', '가입후요금'], ['bill2', '3개월후 요금'], ['prev', '이전사업자'], ['phone', '번호'], ['birth', '생년월일'],
+            ['pay', '유통망지원금'], ['fre', '프리'], ['gv', '유선상품권'], ['gh', '유선직정산'], ['ga', '지원금'], ['sn', '수납건'], ['fee', '액면단가'], ['adj', '부가 추가&차감']];
+        var RX_NUM = { subsidy: 1, price: 1, months: 1, keep: 1, bill1: 1, bill2: 1, pay: 1, fre: 1, gv: 1, gh: 1, ga: 1, sn: 1, fee: 1, adj: 1 };
+        var RX_CLR = { pay: 1, fre: 1, gv: 1, gh: 1, ga: 1, sn: 1, adj: 1 };   // 금액 칸: 엑셀이 비면(0) 가입 장부도 비움 · 글자 칸은 엑셀이 비어 있으면 그대로 둠
+        function rxNorm(f, v) {
+            v = v == null ? '' : String(v).trim();
+            if (f === 'phone' || f === 'birth') return digitsOnly(v);
+            if (RX_NUM[f]) { var n = +v.replace(/[^\d.-]/g, ''); if (!isFinite(n)) n = 0; if (GL_REG_NEG[f]) n = Math.abs(n); n = Math.round(n); return n ? String(n) : ''; }
+            return v.replace(/\s+/g, '').toLowerCase();
+        }
+        function regXlPair(S, calc, L, regs) {   // 엑셀 장부의 살아 있는 줄(취소·취고 빼고) ↔ 가입 장부 짝 짓기: 이름 · 구분 · 번호 끝 8자리 → 같은 날짜 줄부터 · 취소 표시 안 된 기록 먼저
+            var used = Object.create(null), nk = function (v) { return String(v || '').replace(/\s/g, ''); }, pk = function (v) { return digitsOnly(v || '').slice(-8); };
+            var rows = glRowsOf(calc), recs = rows.map(function (x) { return gllRowRec(S, calc, x.r, L); }), M = rows.map(function () { return null; });
+            var dd = function (a, b) { return Math.abs((parseInt(String(a).slice(8), 10) || 0) - (parseInt(String(b).slice(8), 10) || 0)); };
+            var pick = function (rec, strict) {
+                var cand = regs.filter(function (r) { return !used[r.id] && nk(r.name) === nk(rec.name) && (r.kind || 'mobile') === rec.kind && (!pk(r.phone) || !pk(rec.phone) || pk(r.phone) === pk(rec.phone)); });
+                if (strict) cand = cand.filter(function (r) { return r.date === rec.date; });
+                if (cand.length > 1) { var c2 = cand.filter(function (r) { return nk(r.plan) === nk(rec.plan) || nk(r.model) === nk(rec.model); }); if (c2.length) cand = c2; }
+                cand.sort(function (a, b) { return (a.cx ? 1 : 0) - (b.cx ? 1 : 0) || dd(a.date, rec.date) - dd(b.date, rec.date) || String(a.date).localeCompare(String(b.date)) || (a.id < b.id ? -1 : 1); });
+                return cand[0] || null;
+            };
+            [true, false].forEach(function (strict) { rows.forEach(function (x, i) { var rec = recs[i]; if (M[i] || !rec.name) return; var r = pick(rec, strict); if (r) { used[r.id] = 1; M[i] = r; } }); });
+            return { rows: rows, recs: recs, M: M, used: used };
+        }
         function regXlRows(E) {
             var S = E.S, calc = glCalcOf(E), H = glHead(S), L = gllLabOf(S), y = glYm(S.name);
-            if (!H || !L['액면단가'] || !y || !/장부/.test(S.name)) return null;
-            var ym = y.y + '-' + pad2(y.m), regs = (db.regs || []).filter(function (r) { return String(r.date || '').slice(0, 7) === ym; }), used = Object.create(null), out = [], miss = [];
-            var nk = function (v) { return String(v || '').replace(/\s/g, ''); }, pk = function (v) { return digitsOnly(v || '').slice(-8); };
-            glRowsOf(calc).forEach(function (x) {
-                var rec = gllRowRec(S, calc, x.r, L); if (!rec.name) return;
-                var no = glNum(gllTxt(E, x.r, H.no || 2)) || x.r, xf = Math.round(rec.xl.fee), xa = Math.round(rec.xl.adj), xt = Math.round(rec.xl.total);
-                if (!xf && !xa) return;   // 엑셀에 단가가 비어 있으면 건드리지 않음
-                var cand = regs.filter(function (r) { return !used[r.id] && nk(r.name) === nk(rec.name) && (r.kind || 'mobile') === rec.kind && (!pk(r.phone) || !pk(rec.phone) || pk(r.phone) === pk(rec.phone)); });
-                if (cand.length > 1) { var c2 = cand.filter(function (r) { return nk(r.plan) === nk(rec.plan) || nk(r.model) === nk(rec.model); }); if (c2.length) cand = c2; }
-                cand.sort(function (a, b) { return String(a.date).localeCompare(String(b.date)) || (a.id < b.id ? -1 : 1); });
-                var r = cand[0]; if (!r) { miss.push(no + '번 ' + rec.name); return; }
-                used[r.id] = 1;
-                var nf = xf ? String(xf) : '', na = xa ? String(xa) : '', of = digitsOnly(r.fee || ''), oa = String(r.adj || '').replace(/[^\d-]/g, '');
-                if ((of || '') === nf && (+oa || 0) === (+na || 0)) return;
-                var raw = null; try { var rc = JSON.parse(JSON.stringify(rec)); delete rc.fee; delete rc.adj; raw = rec.type === '렌탈' ? regFeeRent(rc) : rec.kind === 'wired' ? regFeeWired(rc, rec.date ? polAt(rec.date) : null) : regFeeMobile(rc); } catch (e) { raw = null; }
-                var ct = raw && raw.fee != null ? (+raw.fee || 0) + (+raw.adj || 0) : null;
-                out.push({ r: r, rec: rec, no: no, nf: nf, na: na, of: of, oa: oa, ct: ct, xt: xt, why: ct == null ? '' : ct === xt ? '단가표와 같음' : feeWhy(rec, ct, xt), raw: raw });
+            if (!H || !y || !/장부/.test(S.name)) return null;
+            var ym = y.y + '-' + pad2(y.m), regs = (db.regs || []).filter(function (r) { return String(r.date || '').slice(0, 7) === ym && !r.cx; }), out = [], miss = [];
+            var PR = regXlPair(S, calc, L, regs), rows = PR.rows, recs = PR.recs, M = PR.M, used = PR.used;
+            rows.forEach(function (x, i) {
+                var rec = recs[i]; if (!rec.name) return;
+                var no = glNum(gllTxt(E, x.r, H.no || 2)) || x.r, r = M[i];
+                if (!r) { miss.push(no + '번 ' + rec.name + ' (' + (+String(rec.date).slice(8) || '?') + '일)'); return; }
+                var ch = [];
+                RX_F.forEach(function (p) {
+                    var f = p[0], ov = r[f];
+                    if (f === 'date') { if (rec.date && rec.date !== r.date) ch.push([f, p[1], r.date, rec.date]); return; }
+                    var xv = f === 'fee' ? Math.round(rec.xl.fee) || '' : f === 'adj' ? Math.round(rec.xl.adj) || '' : rec[f];
+                    var a = rxNorm(f, ov), b = rxNorm(f, xv);
+                    if (a === b) return;
+                    if (!b && (!RX_CLR[f] || f === 'fee')) return;   // 엑셀 칸이 비어 있으면 지우지 않음
+                    ch.push([f, p[1], ov == null ? '' : String(ov), b ? (RX_NUM[f] ? b : String(xv).trim()) : '']);
+                });
+                if (!ch.length) return;
+                var it = { r: r, rec: rec, no: no, ch: ch, xt: Math.round(rec.xl.total), ct: null, why: '', raw: null };
+                if (ch.some(function (c) { return c[0] === 'fee' || c[0] === 'adj'; })) {
+                    try { var rc = JSON.parse(JSON.stringify(rec)); delete rc.fee; delete rc.adj; it.raw = rec.type === '렌탈' ? regFeeRent(rc) : rec.kind === 'wired' ? regFeeWired(rc, rec.date ? polAt(rec.date) : null) : regFeeMobile(rc); } catch (e) { it.raw = null; }
+                    it.ct = it.raw && it.raw.fee != null ? (+it.raw.fee || 0) + (+it.raw.adj || 0) : null;
+                    it.why = it.ct == null ? '' : it.ct === it.xt ? '단가표와 같음' : feeWhy(rec, it.ct, it.xt);
+                }
+                out.push(it);
             });
-            return { list: out, miss: miss, ym: ym, name: S.name };
+            var only = regs.filter(function (r) { return !used[r.id]; }).map(function (r) { return (r.name || '(이름 없음)') + ' ' + (+String(r.date).slice(8)) + '일 ' + (r.kind === 'mobile' ? '모바일' : '유선'); });
+            return { list: out, miss: miss, only: only, ym: ym, name: S.name, n: rows.length };
         }
         function regXlApply(E, X, btn) {
             if (!isBoss()) { toast('대표님만 할 수 있어요.'); return; }
             var on = X.list.filter(function (it) { return it.on !== false; }); if (!on.length) return;
-            if (!confirm('가입 장부 ' + on.length + '줄의 액면단가·부가를 엑셀 값으로 바꿀까요?\n(가입고객리스트는 이미 엑셀 그대로라 건드리지 않아요)')) return;
+            var nf = 0; on.forEach(function (it) { nf += it.ch.length; });
+            if (!confirm('가입 장부 ' + on.length + '명 · ' + nf + '칸을 엑셀(가입고객리스트) 값으로 바꿀까요?\n(가입고객리스트는 이미 엑셀 그대로라 건드리지 않아요 · 저장된 가입 확인서 그림은 그대로예요)')) return;
             var learn = [];
             on.forEach(function (it) {
-                var r = it.r;
-                if (it.nf) r.fee = it.nf; else delete r.fee;
-                if (it.na) r.adj = it.na; else delete r.adj;
-                r.fa = ('엑셀 기준: ' + X.name + ' ' + it.no + '번 줄' + (it.ct != null && it.ct !== it.xt ? ' · 단가표 계산 ' + won(it.ct) + (it.why ? ' · 차이: ' + it.why : '') : '')).slice(0, 200);
+                var r = it.r, feeCh = false;
+                it.ch.forEach(function (c) { if (c[0] === 'fee' || c[0] === 'adj') feeCh = true; if (c[3] === '' || c[3] == null) delete r[c[0]]; else r[c[0]] = String(c[3]).slice(0, REG_LONG[c[0]] || 60); });
+                if (feeCh) r.fa = ('엑셀 기준: ' + X.name + ' ' + it.no + '번 줄' + (it.ct != null && it.ct !== it.xt ? ' · 단가표 계산 ' + won(it.ct) + (it.why ? ' · 차이: ' + it.why : '') : '')).slice(0, 200);
                 stamp(r);
-                if (it.ct != null && it.ct !== it.xt) {   // 💡 같은 조건은 같은 단가표 동안 엑셀 금액으로 (가입 확인서 자동 수수료)
+                if (feeCh && it.ct != null && it.ct !== it.xt && it.xt) {   // 💡 같은 조건은 같은 단가표 동안 엑셀 금액으로 (가입 확인서 자동 수수료)
                     var rec = it.rec, k = gllFeeKey(rec), xt = it.xt;
                     learn.push({ k: k, pv: gllPvOf(rec, null), total: xt, fee: Math.round(rec.xl.fee + rec.xl.hid), adj: Math.round(rec.xl.adj), d: rec.date, src: X.name.replace(/장부/, '').trim() + ' ' + it.no + '번 줄', at: Date.now(), by: staffName(me),
                         note: ([rec.dealer, rec.carrier, rec.plan || rec.model].filter(Boolean).join(' · ') + ' · 단가표 ' + won(it.ct) + ' → 엑셀 ' + won(xt) + (it.why ? ' (' + it.why + ')' : ' (정책에서 이유를 못 찾음)')).slice(0, 200) });
                 }
             });
-            commit('가입 장부 ' + on.length + '줄 액면단가를 엑셀 기준으로 고쳤어요.');
+            commit('가입 장부 ' + on.length + '명을 엑셀 기준으로 고쳤어요.');
             if (btn) { btn.disabled = true; btn.textContent = '✓ 반영함'; }
             if (learn.length) flSave(function (list) { var ks = Object.create(null); learn.forEach(function (x) { ks[x.k + '|' + x.pv] = 1; }); return learn.concat(list.filter(function (x) { return !ks[x.k + '|' + x.pv]; })).slice(0, 500); })
                 .then(function () { toast('💡 단가표와 다른 ' + learn.length + '건의 금액·이유를 익혔어요 (같은 단가표 동안 가입 확인서 자동 수수료에 써요).'); })
                 .catch(function (e) { toast('익히기 저장은 못 했어요: ' + driveErrText(e)); });
         }
-        function regXlBox(E) {   // 🔍 엑셀 대조 창 맨 위: 가입 장부 ← 엑셀
+        function regXlBox(E) {   // 🔍 엑셀 대조 창 맨 위: 가입 장부 ← 엑셀 (고객마다 다른 칸)
             var X; try { X = regXlRows(E); } catch (e) { X = null; }
             if (!X) return null;
-            var box = h('div', { class: 'rx-box' }, h('h3', { class: 'kc-h' }, '📒 가입 장부 액면단가 ← 엑셀 (' + X.name + ') — ' + (X.list.length ? '다른 줄 ' + X.list.length + '개' : '모두 같아요 ✓')));
+            var nc = 0; X.list.forEach(function (it) { nc += it.ch.length; });
+            var box = h('div', { class: 'rx-box' }, h('h3', { class: 'kc-h' }, '📒 가입 장부(가입 확인서 기록) ← 엑셀 고객 줄 (' + X.name + ' · ' + X.n + '줄) — ' + (X.list.length ? '다른 고객 ' + X.list.length + '명 · ' + nc + '칸' : '모두 같아요 ✓')));
             if (X.list.length) {
-                var tb = h('table', { class: 'xc-t xc-fee' }, h('tr', {}, h('th', {}, ''), h('th', {}, '줄'), h('th', {}, '고객 · 상품'), h('th', {}, '가입 장부 지금'), h('th', {}, '엑셀 (바꿀 값)'), h('th', {}, '단가표 계산 · 왜 다른지')));
-                var m = function (v) { return v ? (+v / 10000) + '만' : '-'; };
+                var tb = h('table', { class: 'xc-t xc-fee' }, h('tr', {}, h('th', {}, ''), h('th', {}, '줄'), h('th', {}, '고객'), h('th', {}, '다른 칸: 가입 장부 지금 → 엑셀 (바꿀 값)'), h('th', {}, '단가표 계산 · 왜 다른지')));
+                var fv = function (c, v) { if (v === '' || v == null) return '(빈칸)'; return RX_NUM[c[0]] && /^-?\d+$/.test(String(v)) && Math.abs(+v) >= 1000 ? won(+v) : String(v); };
                 X.list.forEach(function (it) {
-                    var cb = h('input', { type: 'checkbox', checked: true, onchange: function () { it.on = this.checked; } });
-                    tb.appendChild(h('tr', {}, h('td', {}, cb), h('td', {}, String(it.no)), h('td', {}, (it.rec.name || '') + ' · ' + [it.rec.dealer, it.rec.carrier, it.rec.plan || it.rec.model].filter(Boolean).join(' · ').slice(0, 60)),
-                        h('td', { class: 'nm' }, m(it.of) + (it.oa ? ' · 부가 ' + m(it.oa) : '')), h('td', { class: 'nm' }, h('b', {}, m(it.nf)), it.na ? ' · 부가 ' + m(it.na) : ''),
-                        h('td', { class: 'why' }, it.ct == null ? '계산 못 함' + (it.raw && it.raw.why ? ' (' + it.raw.why + ')' : '') : won(it.ct) + (it.why ? ' → ' + it.why : ' → 정책에서 이유를 못 찾음'))));
+                    var cb = h('input', { type: 'checkbox', checked: true, 'aria-label': (it.rec.name || '') + ' 반영', onchange: function () { it.on = this.checked; } });
+                    var fee = it.ch.some(function (c) { return c[0] === 'fee' || c[0] === 'adj'; });
+                    tb.appendChild(h('tr', {}, h('td', {}, cb), h('td', {}, String(it.no)), h('td', {}, h('b', {}, it.rec.name || ''), h('br'), h('small', {}, (+String(it.rec.date).slice(8) || '') + '일 · ' + [it.rec.dealer, it.rec.carrier].filter(Boolean).join(' · '))),
+                        h('td', { class: 'rx-ch' }, it.ch.map(function (c) { return h('div', {}, h('span', { class: 'rx-f' }, c[1]), ' ', h('s', {}, fv(c, c[2])), ' → ', h('b', {}, fv(c, c[3]))); })),
+                        h('td', { class: 'why' }, !fee ? '-' : it.ct == null ? '계산 못 함' + (it.raw && it.raw.why ? ' (' + it.raw.why + ')' : '') : won(it.ct) + (it.why ? ' → ' + it.why : ' → 정책에서 이유를 못 찾음'))));
                 });
                 box.appendChild(tb);
-                if (isBoss()) box.appendChild(h('div', { class: 'quick-row' }, h('button', { type: 'button', class: 'btn btn-primary btn-sm', 'data-act': 'reg-xl-apply', onclick: function (ev) { regXlApply(E, X, ev.currentTarget); } }, '📒 체크한 줄 가입 장부에 엑셀 단가 반영 + 💡 익히기')));
-                box.appendChild(h('p', { class: 'ib-help' }, '엑셀이 정답이에요. 반영하면 가입 장부 액면단가·부가가 엑셀 값으로 바뀌고(💰 옆에 \'엑셀\' 표시), 단가표 계산과 다른 줄은 금액과 이유를 익혀서 다음 가입 확인서 자동 수수료에 써요.'));
+                if (isBoss()) box.appendChild(h('div', { class: 'quick-row' }, h('button', { type: 'button', class: 'btn btn-primary btn-sm', 'data-act': 'reg-xl-apply', onclick: function (ev) { regXlApply(E, X, ev.currentTarget); } }, '📒 체크한 고객 가입 장부를 엑셀대로 고치기 + 💡 단가 익히기')));
+                box.appendChild(h('p', { class: 'ib-help' }, '엑셀이 정답이에요. 반영하면 가입 장부(가입 확인서로 저장된 고객 기록)의 다른 칸이 엑셀 값으로 바뀌어요. 글자 칸은 엑셀이 비어 있으면 그대로 두고, 금액 칸(지원금·유통망지원금·프리 등)은 엑셀이 비면 비워요. 단가표 계산과 다른 액면단가는 금액과 이유를 익혀서 다음 가입 확인서 자동 수수료에 써요.'));
             }
-            if (X.miss.length) box.appendChild(h('p', { class: 'ib-help' }, '가입 장부에서 같은 고객을 못 찾은 엑셀 줄: ' + X.miss.slice(0, 15).join(', ') + (X.miss.length > 15 ? ' 외 ' + (X.miss.length - 15) + '줄' : '')));
+            if (X.miss.length) box.appendChild(h('p', { class: 'ib-help' }, '⚠ 가입 장부에 없는 엑셀 고객 ' + X.miss.length + '명 (가입 확인서를 저장하지 않았거나 이름이 달라요 — 가입 장부 [+ 한 줄 직접 추가]): ' + X.miss.slice(0, 30).join(', ') + (X.miss.length > 30 ? ' 외 ' + (X.miss.length - 30) + '명' : '')));
+            if (X.only.length) box.appendChild(h('p', { class: 'ib-help' }, '⚠ 엑셀에 없는 가입 장부 고객 ' + X.only.length + '명 (엑셀에 아직 안 적었거나 이름이 달라요): ' + X.only.slice(0, 30).join(', ') + (X.only.length > 30 ? ' 외 ' + (X.only.length - 30) + '명' : '')));
             return box;
         }
         function regFeeCalcIn(r, inp, input, field) {   // 가입 장부 고치기 창: 지금 적힌 칸으로 단가표 다시 계산 → 액면단가(·부가) 칸에 넣음 (저장은 [변경 저장])
@@ -8511,7 +8550,7 @@
         }
         function regFeeChip(r) {   // 장부 줄 아래: 액면단가 · 부가 추가&차감 (눌러서 고치기) — 비어 있으면 빨간 표시
             var adj = +String(r.adj || '').replace(/[^\d-]/g, '') || 0, man = function (v) { return (Math.round(v / 1000) / 10).toLocaleString('ko-KR') + '만'; };
-            var bm = r.fee ? regBm(r) : null, tg = bm == null ? '' : gllNeedTag(regKindText(r), bm);
+            var bm = r.fee ? regBm(r) : null, tg = bm == null ? '' : gllNeedTag(regKindText(r), bm, regMulti(r));
             var t = r.fee ? '💰 액면단가 ' + man(+r.fee) + (adj ? ' · 부가 ' + (adj > 0 ? '+' : '') + man(adj) : '') + (r.fa ? (/^엑셀/.test(r.fa) ? ' · 엑셀' : ' · 자동') : '') + (bm != null ? ' · 총매출 ' + man(bm) + (tg ? ' (' + tg + ')' : '') : '') : '⚠ 액면단가 비어 있음';
             var wy = r.fee ? null : regFeeWhyOf(r);   // 11-25.4: 왜 비었는지
             if (wy) t += ' · ' + (wy.t.length > 70 ? wy.t.slice(0, 68) + '…' : wy.t);
@@ -16666,7 +16705,7 @@
             rows.forEach(function (x) { if (pick[0](x) && (!pick[1] || pick[1](x))) sum += pick[2] === 'n' ? 1 : x.bm; });
             return sum;
         }
-        var GL_AUTO_DESC = { '자동_장부_영업일수': '오늘 날짜 − 1 (지난 달은 그 달 마지막 날)', '자동_장부_당일건수': '가입날짜가 오늘인 줄 수 (취소·취고 빼고)', '자동_장부_당일매출': '가입날짜가 오늘인 줄의 운영비포함총매출 합', '자동_장부_담당매출': '담당자별 운영비포함총매출 합 (찬팀=임찬양 · 그외=나머지)', '자동_장부_담당건수': '담당자별 건수 (취소·취고 빼고)', '자동_장부_종류건수': '모바일&유선 칸이 그 말로 시작하는 줄 수 (단가제외 포함 · 취소·취고 빼고)', '자동_장부_종류매출': '모바일·유선별 운영비포함총매출 합', '자동_장부_공통건수': '운영비포함총매출 20만원 초과 건수 (마진 20만 이하 제외)', '자동_장부_차수매출': '1차 = 1~15일 · 2차 = 16일부터 운영비포함총매출 합', '자동_장부_소호': '거래처 안모 · U+소호 상품 건수', '자동_콜인입': '콜 인입 화면의 오늘 실 인입 수 (미인입·비상담·테스트·중복 뺌)', '자동_동판': '전일까지 같은 명의 같은 날 2건 이상 · 매출 합 60만원 이상 (명의당 1건)', '자동_전략': '전일까지 단일 판매(그날 그 명의 1건) · 매출 50만원 이상 건수', '자동_오늘': '오늘 날짜', '자동_시각': '지금 시각', '자동_영업일수': '전일까지 지난 날 수', '자동_당일건수': '오늘 가입 건수', '자동_당일매출': '오늘 운영비포함총매출 합계', '자동_전일까지매출': '전일까지 운영비포함총매출 합계', '자동_전일까지매출_그외': '전일까지 그 외 담당자 매출', '자동_전일까지매출_구분': '전일까지 구분별 매출', '자동_전일까지건수': '전일까지 가입 건수 (취소 제외)', '자동_전일까지건수_담당': '전일까지 담당자 건수', '자동_전일까지건수_그외': '전일까지 그 외 담당자 건수', '자동_시상건수': '전일까지 운영비포함총매출 기준 이상 건수 (단가제외·취소 제외)', '자동_포함건수': '전일까지 구분에 이 글자가 들어간 건수', '자동_달성': '잔여가 0 이상이면 달성', '자동_상담건수': '같은 달 상담 리스트에 적힌 상담 수' };
+        var GL_AUTO_DESC = { '자동_장부_영업일수': '오늘 날짜 − 1 (지난 달은 그 달 마지막 날)', '자동_장부_당일건수': '가입날짜가 오늘인 줄 수 (취소·취고 빼고)', '자동_장부_당일매출': '가입날짜가 오늘인 줄의 운영비포함총매출 합', '자동_장부_담당매출': '전일까지 담당자별 운영비포함총매출 합 (찬팀=임찬양 · 그외=나머지)', '자동_장부_담당건수': '전일까지 담당자별 건수 (취소·취고 빼고)', '자동_장부_종류건수': '전일까지 모바일&유선 칸이 그 말로 시작하는 줄 수 (단가제외 포함 · 취소·취고 빼고)', '자동_장부_종류매출': '전일까지 모바일·유선별 운영비포함총매출 합', '자동_장부_공통건수': '전일까지 운영비포함총매출 20만원 초과 건수 (마진 20만 이하 제외)', '자동_장부_차수매출': '1차 = 1~15일 · 2차 = 16일~전일 운영비포함총매출 합', '자동_장부_소호': '전일까지 거래처 안모 · U+소호 상품 건수', '자동_콜인입': '콜 인입 화면의 오늘 실 인입 수 (미인입·비상담·테스트·중복 뺌)', '자동_동판': '전일까지 구분 칸에 (동판)이라고 적힌 줄 수 (엑셀과 같음)', '자동_전략': '전일까지 구분 칸에 (전략)이라고 적힌 줄 수 (단일 판매 50만원 이상이면 자동으로 붙음)', '자동_오늘': '오늘 날짜', '자동_시각': '지금 시각', '자동_영업일수': '전일까지 지난 날 수', '자동_당일건수': '오늘 가입 건수', '자동_당일매출': '오늘 운영비포함총매출 합계', '자동_전일까지매출': '전일까지 운영비포함총매출 합계', '자동_전일까지매출_그외': '전일까지 그 외 담당자 매출', '자동_전일까지매출_구분': '전일까지 구분별 매출', '자동_전일까지건수': '전일까지 가입 건수 (취소 제외)', '자동_전일까지건수_담당': '전일까지 담당자 건수', '자동_전일까지건수_그외': '전일까지 그 외 담당자 건수', '자동_시상건수': '전일까지 운영비포함총매출 기준 이상 건수 (단가제외·취소 제외)', '자동_포함건수': '전일까지 구분에 이 글자가 들어간 건수', '자동_달성': '잔여가 0 이상이면 달성', '자동_상담건수': '같은 달 상담 리스트에 적힌 상담 수' };
 
         /* ---------- 표시 형식 (엑셀 표시 형식 그대로: ₩ 회계, %, 천 단위 쉼표, 날짜 …) ---------- */
         function glGeneral(v) {
@@ -18554,10 +18593,10 @@
             return /\)$/.test(k) ? k.replace(/\)$/, t + ')') : k + '(' + t + ')';
         }
         function gllDanga(k) { return gllTag(k, '단가제외'); }
-        function gllNeedTag(kind, bm) {   // 총매출에 맞는 자동 표시 (붙일 게 없으면 '') · 20만 미만 = 단가제외 · 50만 이상 = 전략 · 그 사이는 그대로
+        function gllNeedTag(kind, bm, multi) {   // 총매출에 맞는 자동 표시 (붙일 게 없으면 '') · 20만 미만 = 단가제외 · 50만 이상 = 전략 · 그 사이는 그대로
             kind = String(kind || ''); if (typeof bm !== 'number' || !isFinite(bm) || glIsCancel(kind)) return '';
             if (bm < GLL_DANGA) return kind.indexOf('단가제외') < 0 ? '단가제외' : '';
-            if (bm >= GLL_JEON && kind.indexOf('전략') < 0 && kind.indexOf('동판') < 0) return '전략';
+            if (bm >= GLL_JEON && !multi && kind.indexOf('전략') < 0 && kind.indexOf('동판') < 0) return '전략';   // 11-25.11: 같은 날 같은 고객 2건 이상이면 (전략) 안 붙임
             return '';
         }
         function regGlBm(r) {   // 11-19.8: 가입 장부 줄 → 받아 둔 그 달 가입고객리스트의 같은 고객 줄 운영비포함총매출 (못 찾으면 null)
@@ -18593,7 +18632,9 @@
                 if (!glIsCancel(kind) && cFee && H.bm) {
                     var fee = row[cFee], feeN = typeof fee === 'number' ? fee : gllIsF(fee) ? gllNum(E, r, cFee) : null;
                     if (feeN) {
-                        var bm = glNum(calc.get(r, H.bm)), tg = gllNeedTag(kind, bm);
+                        var nmC = lab['고객명'], nmV = nmC ? String(row[nmC] == null ? '' : row[nmC]).replace(/\s/g, '') : '', dV = H.date ? glDayOf(calc.get(r, H.date)) : 0, multi = false;
+                        if (nmV && dV) for (var q = H.r + 1; q <= S.nr && !multi; q++) { if (q === r) continue; var wq = S.cv[q] || {}, kq = String(wq[H.kind] == null ? '' : wq[H.kind]); if (kq && !/취소|취고/.test(kq) && String(wq[nmC] == null ? '' : wq[nmC]).replace(/\s/g, '') === nmV && glDayOf(calc.get(q, H.date)) === dV) multi = true; }   // 11-25.11: 그날 같은 고객 2건 이상이면 (전략) 안 붙임
+                        var bm = glNum(calc.get(r, H.bm)), tg = gllNeedTag(kind, bm, multi);
                         if (tg) out.push([r, H.kind, gllTag(kind, tg)]);
                         else if (typeof bm === 'number' && isFinite(bm) && bm >= GLL_DANGA && bm < GLL_JEON && /전략\)$/.test(kind)) out.push([r, H.kind, kind.replace(/\(([^()]*)전략\)$/, function (m, a) { return a ? '(' + a + ')' : ''; })]);   // 금액을 고쳐 50만 아래로 내려가면 (전략)은 뺌
                     }
@@ -18754,8 +18795,8 @@
             try { var c = new GlCalc(S); L.forEach(function (x, i) { if (!GL_XL_CUM.test(x[2])) return; var v = c.get(x[0], x[1]); if (typeof v === 'number' && isFinite(v)) out[i] = v; }); } catch (e) { /* 계산 못 하면 차이 없이 */ }
             return out;
         }
-        function glXlKeep(S, L, bv) {   // 바꾼 뒤 자동 계산이 엑셀 값과 다르면 차이를 수식에 더함 → 바꾼 칸 수
-            var n = 0; if (!bv || !L.length) return 0;
+        function glXlKeep(S, L, bv) {   // 11-25.11: 더 이상 차이를 수식에 더하지 않음 (누적 = 전일까지로 엑셀과 같은 규칙 · 차이는 🔍 엑셀 대조에서 확인)
+            var n = 0; if (!bv || !L.length || !window.__glXlKeepOld) return 0;
             try {
                 delete S._reg; delete S._head;
                 var c = new GlCalc(S);
@@ -18782,6 +18823,7 @@
             var g = function (r, n) { var c = L[n]; if (!c) return ''; var v = calc.get(r, c); return v == null || v instanceof GlErr ? '' : String(v).trim(); };
             var nk = function (v) { return String(v || '').replace(/\s/g, ''); }, pk = function (v) { return digitsOnly(v || '').slice(-8); };
             var regs = (db.regs || []).filter(function (r) { return String(r.date || '').slice(0, 7) === ym; }), used = {}, hits = [], miss = [], keys = {};
+            var live = Object.create(null); try { live = regXlPair(S, calc, L, regs).used; } catch (le) { live = Object.create(null); }   // 11-25.11
             for (var r = H.r + 1; r <= S.nr; r++) {
                 var w = S.cv[r]; if (!w) continue;
                 var kind = String(w[H.kind] == null ? '' : w[H.kind]).trim();
@@ -18792,7 +18834,7 @@
                 var it = { row: r, name: nm, day: day, kind: kd, kindT: kind };
                 if (!nk(nm)) { it.why = '고객명이 비어 있어요'; miss.push(it); continue; }
                 var key = S.name + '|' + kd + '|' + nk(nm) + '|' + day; keys[key] = 1; it.key = key;
-                var cand = regs.filter(function (x) { return !used[x.id] && nk(x.name) === nk(nm) && (x.kind || 'mobile') === kd && (!pk(x.phone) || !pk(ph) || pk(x.phone) === pk(ph)); });
+                var cand = regs.filter(function (x) { return !used[x.id] && !live[x.id] && nk(x.name) === nk(nm) && (x.kind || 'mobile') === kd && (!pk(x.phone) || !pk(ph) || pk(x.phone) === pk(ph)); });
                 if (cand.length > 1 && day) { var c2 = cand.filter(function (x) { return parseInt(x.date.slice(8), 10) === day; }); if (c2.length) cand = c2; }
                 if (cand.length > 1) { var c3 = cand.filter(function (x) { return x.cxSrc === key; }); if (c3.length === 1) cand = c3; }
                 if (!cand.length) { it.why = '가입 확인서(가입 장부)에 없는 고객이에요'; miss.push(it); continue; }
@@ -18801,7 +18843,7 @@
                 if (day && Math.abs(xd - day) > 3) { it.why = '가입 확인서 날짜(' + xd + '일)와 달라요'; miss.push(it); continue; }
                 used[x.id] = 1; it.reg = x; hits.push(it);
             }
-            var un = regs.filter(function (x) { return x.cx && typeof x.cxSrc === 'string' && x.cxSrc.indexOf(S.name + '|') === 0 && !keys[x.cxSrc] && !used[x.id]; });
+            var un = regs.filter(function (x) { return x.cx && typeof x.cxSrc === 'string' && x.cxSrc.indexOf(S.name + '|') === 0 && !used[x.id] && (!keys[x.cxSrc] || live[x.id]); });   // 11-25.11: 엑셀 판매 줄과 짝이 되는 기록이 취소돼 있으면 되살림
             return { hits: hits, miss: miss, un: un, name: S.name };
         }
         function regCxSync(E, noCommit) {   // → { on: [], off: [], miss: [] } (바뀐 게 있으면 저장)
@@ -18844,7 +18886,7 @@
             box.appendChild(h('p', { class: 'ib-help' }, '취소 건은 가입 확인서 장부에 ❌ 취소로 남고(지우지 않음) 건수·순번·마감보고·거래처 개통 확인에서 빠져요. 요금제 변경·부가서비스 해지 일정도 지워요.'));
             return box;
         }
-        function glAutoLabelsNeed(S) { return glAutoLabels(S).filter(function (x) { var cur = S.cv[x[0]] ? S.cv[x[0]][x[1]] : undefined; return cur !== x[2] && !glXlOffIs(cur, x[2]); }); }
+        function glAutoLabelsNeed(S) { return glAutoLabels(S).filter(function (x) { var cur = S.cv[x[0]] ? S.cv[x[0]][x[1]] : undefined; return cur !== x[2]; }); }   // 11-25.11: 예전 '+(차이)' 수식도 순수 자동 수식으로
         function glAutoPlanNeed(S) {   // 이번 달 장부: 오늘 기준 자동 칸(날짜·영업일수·당일·전일까지)에 수식 대신 숫자·글자가 적혀 있으면 → 수식으로 (엑셀에서 값으로 저장된 '16일' 등)
             var out = [], hadR = '_reg' in S, hadH = '_head' in S;
             try {
@@ -18864,16 +18906,19 @@
         function glDongJr(calc, dong, T) {   // 동판: 같은 명의 같은 날 2건 이상 · 매출 합 60만원 이상 (명의당 1) / 전략: 그날 그 명의 1건(단일 판매) · 매출 50만원 이상 — 장부에 적힌 이번 달 전체 (엑셀 11월 장부와 같음)
             var S = calc.S, H = glHead(S); if (!H || !H.name) return 0;
             var g = {};
-            glRowsOf(calc).forEach(function (x) { if (!(x.day > 0)) return; var nm = calc.get(x.r, H.name); nm = gllKey(nm == null || nm instanceof GlErr ? '' : nm); if (!nm) return; var k = nm + '|' + x.day; (g[k] = g[k] || []).push(typeof x.bm === 'number' && isFinite(x.bm) ? x.bm : 0); });
+            var lab = 0; glRowsOf(calc).forEach(function (x) { if (T && T.cur && x.day >= T.d) return; if ((dong ? /동판/ : /전략/).test(x.kind)) lab++; });
+            if (!window.__glDongRule) return lab;   // 대표님 엑셀: 동판·전략 칸 = 구분에 (동판)·(전략)을 적은 줄 수 (자동 표시는 아래 줄 규칙: 단일 판매 50만 이상 → (전략))
+            glRowsOf(calc).forEach(function (x) { if (!(x.day > 0) || (T && T.cur && x.day >= T.d)) return; var nm = calc.get(x.r, H.name); nm = gllKey(nm == null || nm instanceof GlErr ? '' : nm); if (!nm) return; var k = nm + '|' + x.day; (g[k] = g[k] || []).push(typeof x.bm === 'number' && isFinite(x.bm) ? x.bm : 0); });
             var n = 0; Object.keys(g).forEach(function (k) { var a = g[k], s = a.reduce(function (t, v) { return t + v; }, 0); if (dong ? a.length >= 2 && s >= 600000 : a.length === 1 && a[0] >= 500000) n++; });
             return n;
         }
         function glAutoJ(calc, f, a, T) {   // '자동_장부_' 칸 (엑셀 11월 장부 실적장표 기준 · 취소·취고·예시 줄 빼고)
-            var rows = glRowsOf(calc), s1 = String(a[0] == null ? '' : a[0]), not = String(a[1] == null ? '' : a[1]) === '제외', n = 0, sum = 0;
+            var all = glRowsOf(calc), s1 = String(a[0] == null ? '' : a[0]), not = String(a[1] == null ? '' : a[1]) === '제외', n = 0, sum = 0;
+            var rows = T.cur ? all.filter(function (x) { return !(x.day >= T.d); }) : all;   // 11-25.11: 누적은 전일까지 (오늘 줄은 '당일 실적·당일 매출'에만)
             var add = function (x) { n++; sum += typeof x.bm === 'number' && isFinite(x.bm) ? x.bm : 0; };
             if (f === '자동_장부_영업일수') return Math.max(0, Math.min(T.d - 1, T.dim));
-            if (f === '자동_장부_당일건수') { rows.forEach(function (x) { if (x.day === T.d && x.kind.indexOf(s1) === 0) add(x); }); return n; }
-            if (f === '자동_장부_당일매출') { rows.forEach(function (x) { if (x.day === T.d) add(x); }); return sum; }
+            if (f === '자동_장부_당일건수') { all.forEach(function (x) { if (x.day === T.d && x.kind.indexOf(s1) === 0) add(x); }); return n; }
+            if (f === '자동_장부_당일매출') { all.forEach(function (x) { if (x.day === T.d) add(x); }); return sum; }
             if (f === '자동_장부_담당매출' || f === '자동_장부_담당건수') { rows.forEach(function (x) { if ((x.staff === s1) !== not) add(x); }); return f === '자동_장부_담당매출' ? sum : n; }
             if (f === '자동_장부_종류건수' || f === '자동_장부_종류매출') { rows.forEach(function (x) { if (x.kind.indexOf(s1) === 0) add(x); }); return f === '자동_장부_종류매출' ? sum : n; }
             if (f === '자동_장부_공통건수') { rows.forEach(function (x) { if (x.kind.indexOf(s1) === 0 && x.bm > GLL_DANGA) add(x); }); return n; }   // 마진(운영비포함총매출) 20만 이하 제외
