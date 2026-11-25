@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MkVqp5DeQJ2uqb8bgwl2Ne3CQO15tuRrW7m7Ku4lGTE='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rvLKD0aGtCpGVlbiF7z6HzNljCFn5FDNJBNt39ItXhQ='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2342,7 +2342,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-25.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-25.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -10078,6 +10078,17 @@
             (items || ib.items).slice().sort(function (a, b) { return a.t - b.t; }).forEach(function (x) { if (ibEff(x, A)) return; var d = ymd(new Date(x.t)); day[d] = (day[d] || 0) + 1; no[x.id] = day[d]; });
             return { no: no, day: day, auto: A, mt: MX.mt, free: MX.free };
         }
+        function ibChkDom(x) {   // 확인 칸 하나만 그 자리에서 바꿈
+            [].forEach.call(document.querySelectorAll('[data-fk="ib-chk-' + x.id + '"]'), function (el) {
+                el.checked = !!x.chk;
+                var lb = el.closest('label'); if (!lb) return;
+                var sm = lb.querySelector('small');
+                if (x.chk) { if (!sm) { sm = document.createElement('small'); lb.appendChild(sm); } sm.textContent = x.chk.by + (x.chk.at ? ' · ' + ibTime(x.chk.at) : ''); }
+                else if (sm) sm.remove();
+            });
+        }
+        var ibPaintT = 0;
+        function ibPaintSoon() { clearTimeout(ibPaintT); ibPaintT = setTimeout(function () { ibPaintT = 0; if (state.view === 'calls' && !Object.keys(ib.saving).length) ibPaint(); }, 1500); }   // 여러 개 연달아 눌러도 마지막에 한 번만 (메뉴 숫자 · 순번)
         function ibCheck(x, on) {
             if (!isBoss()) { toast('확인 표시는 대표님만 할 수 있어요.'); render(); return; }
             if (ib.saving[x.id]) return;
@@ -10086,8 +10097,8 @@
             x.chk = on ? { by: staffName(me), at: Date.now() } : null;   // 바로 화면에 표시
             ibPend[x.id] = { chk: x.chk };   // 저장 중에 목록을 다시 받아도 체크 유지
             [ib.items, ib.per && ib.per.items].forEach(function (L) { (L || []).forEach(function (y) { if (y.id === x.id) y.chk = x.chk; }); });
-            ibPaint();   // 콜 인입만 다시 그림 (전체 화면 X → 빠르게)
-            ibCall('ibCheck', { id: x.id, on: on }, 30000).then(function (res) { delete ib.saving[x.id]; ibPend[x.id] = { chk: x.chk, until: Date.now() + 30000 }; ibReplace(res.item); ibPaint(); },
+            ibChkDom(x);   // 11-25.3: 그 칸만 바로 바꿈 (화면 전체 다시 그리기 X → 누르는 즉시) · 숫자·순번은 저장 뒤에
+            ibCall('ibCheck', { id: x.id, on: on }, 30000).then(function (res) { delete ib.saving[x.id]; ibPend[x.id] = { chk: x.chk, until: Date.now() + 30000 }; ibReplace(res.item); ibChkDom(x); ibPaintSoon(); },
                 function (e) { delete ib.saving[x.id]; delete ibPend[x.id]; x.chk = before; [ib.items, ib.per && ib.per.items].forEach(function (L) { (L || []).forEach(function (y) { if (y.id === x.id) y.chk = before; }); }); ibPaint(); toast('확인 표시를 저장하지 못했어요. ' + driveErrText(e)); });
         }
         function ibNote(x, input) {
