@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ZPbDpvqKjkzkiXwoLKIgz49biSfPqJH9HWqdPKn5hEA='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HIyNfdrdODLDfdYxiW5FRTyeLBN7V2h+tyFizuE80jQ='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2288,7 +2288,7 @@
         var INTAKE_TPL = "이름 : \n주민번호(전체) : \n휴대폰번호 : \n휴대폰통신사 : \n설치주소 : \n이메일주소(필수) : \n인증가능시간(필수) : \n\n■ 납부정보 ■ \n은행 /카드사 : \n계좌/카드번호 : \n카드유효기간 : \n예금주 성함/주민번호 : \n본인이면 \"본인\" \n\n● 접수정보 ● \n인터넷통신사 : \n인터넷상품: \nWIFI 유,무: \nTV상품+셋탑1 : \n전화상품 : X \n월요금 : \n설치비 : \n\n◆ 고객사은품 ◆ \n상품권 : 원 \n현금 : 원 \n상품권종류 : \n은행+계좌 : \n예금주: \n(본인,납부자외 불가)";   // 신분증 요청: 고객 접수 메모 양식 (복사해서 그대로 사용)
         var INTAKE_KEEP_DAYS = 30;   // 접수 메모(주민번호·계좌 등)는 30일 지나면 자동으로 지움
         var DEALERS = ['스카이', '이티', '안모', '성연', '수석', '신창', '에이탑', '반추', '모빙'];
-        var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo', 'addr', 'bank', 'pay', 'fre', 'fee', 'gv', 'gh', 'ga', 'gat', 'sn', 'snt', 'adj', 'fa', 'wdp', 'welf'];
+        var REG_FIELDS = ['dealer', 'seller', 'carrier', 'model', 'serial', 'phone', 'name', 'birth', 'disc', 'subsidy', 'price', 'months', 'plan', 'extra', 'ins', 'combKind', 'comb', 'keep', 'plan2', 'bill1', 'bill2', 'prev', 'type', 'memo', 'addr', 'bank', 'pay', 'fre', 'fee', 'gv', 'gh', 'ga', 'gat', 'sn', 'snt', 'adj', 'fa', 'wdp', 'welf', 'dcm'];
         var REG_LONG = { gat: 200, snt: 200, fa: 200, plan: 120, extra: 160, ins: 80, memo: 300, model: 80, plan2: 120, addr: 150, bank: 80 };
         var REG_MANUAL = { price: 1, memo: 1 };   // 장부에서만 적는 칸 (확인서를 다시 저장해도 지우지 않음)
         var REG_NEGF = function (k) { return function (r) { var d = String(r[k] || '').replace(/\D/g, ''); return +d ? '-' + (+d) : ''; }; };   // 가입고객리스트처럼 -(마이너스)
@@ -2343,7 +2343,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-25.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-25.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -6024,7 +6024,7 @@
         /* ---------- 가입 확인서(모바일·유선): 이 화면에서 바로 작성하고, 고객이 터치로 서명 ---------- */
         // 작성 내용은 어디에도 저장하지 않고 이 화면(메모리)에만 있어요. 잠그거나 새로고침하면 지워져요(고객 개인정보 보호).
         var mforms = {}, mfMoving = false;   // mforms.mobile / mforms.wired: { kind, el, sheet, sig: { guard, apply }, box: {} }
-        var MF_ONE = { type: 1, disc: 1, ins: 1, card: 1, comb: 1, used: 1, add: 1, esp: 1 };   // 하나만 고르는 칸 (다른 칸을 누르면 앞의 체크가 풀림)
+        var MF_ONE = { type: 1, disc: 1, ins: 1, card: 1, comb: 1, used: 1, add: 1, esp: 1, dcm: 1 };   // 하나만 고르는 칸 (다른 칸을 누르면 앞의 체크가 풀림)
         var MF_LINK = {   // '가입자와 동일' 체크: [가입자 정보 칸, 따라 채울 칸]
             cardSame: [['name', 'cardOwner'], ['birth', 'cardBirth'], ['phone', 'cardPhone']],
             paySame: [['name', 'payOwner'], ['birth', 'payBirth']],
@@ -6264,7 +6264,13 @@
                         row(cell(kk('TV 요금제', '렌탈 상품'), inp('tvPlan', 'TV 요금제 (렌탈: 렌탈 상품)')), (function (c) { c.classList.add('net-only'); return c; })(tcell(chk('tvNone', '없음 (인터넷 단독)'))))),
                     (function (g) { g.classList.add('net-only'); return g; })(grp('추가 요금제',
                         row(cell(chk('addY', '신청', 'add'), inp('addPlan', '추가 요금제 이름'), k('('), inp('addFee', '추가 요금제 금액(원)', { mode: 'numeric', kind: 'money', max: 15, cls: 'amt' }), k('원)')), tcell(chk('addN', '미신청', 'add'))),
-                        row(wcell(note('*개통 당일 내에만 신청이 가능합니다.')))))),
+                        row(wcell(note('*개통 당일 내에만 신청이 가능합니다.'))))),
+                    (function (g) { g.classList.add('net-only', 'mf-dcm'); g.style.display = 'none'; return g; })(grp('요금할인 방식',
+                        (function (r) { r.classList.add('mf-dcm-sky'); return r; })(row(tcell(chk('dcm30', '30% 요금할인', 'dcm')), tcell(chk('dcmHome', '홈결합', 'dcm')),
+                            wcell(note('*30% 요금할인: 인터넷+TV 요금 30% 할인 (100M·200M) · 홈결합: 500M·1G 인터넷+TV는 홈결합으로만 가입됩니다.')))),
+                        (function (r) { r.classList.add('mf-dcm-pop'); return r; })(row(tcell(chk('dcmPop', '요즘 우리집 결합', 'dcm')),
+                            cell(k('선납권'), K.combo('prepay', '선납권 금액(원)', [['없음', '3,000', '5,000', '10,000', '15,000']], { cls: 'short', max: 10 }), k('원')),
+                            wcell(note('*선납권은 VAT 별도 금액이며 3,000~15,000원까지 가능합니다.'))))))),
 
                 K.cardSec(),
                 (function (g) { g.classList.add('net-only'); return g; })(K.combSec()),
@@ -6333,6 +6339,16 @@
                 if (M.gateOn) mfGate(M);
             };
             sheet.addEventListener('change', function () { setTimeout(rentPaint, 0); });
+            var dcmPaint = function () {   // 11-25.6: 통신사 · 요금제에 맞는 요금할인 방식 줄만 보임 (안 보이는 줄은 저장·인쇄에서 빠짐)
+                var gE = sheet.querySelector('.mf-dcm'); if (!gE) return;
+                var kd = sheet.classList.contains('rent') ? '' : dcmKind(q('carrier').value, q('netPlan').value + ' ' + q('tvPlan').value);
+                gE.style.display = kd ? '' : 'none';
+                sheet.querySelector('.mf-dcm-sky').style.display = kd === 'sky' ? '' : 'none';
+                sheet.querySelector('.mf-dcm-pop').style.display = kd === 'pop' ? '' : 'none';
+                if (kd === 'pop' && !q('dcmPop').checked && !sheet.getAttribute('data-dcm-auto')) { q('dcmPop').checked = true; sheet.setAttribute('data-dcm-auto', '1'); }   // POP 표 요금 = 요즘 우리집 결합
+            };
+            sheet.addEventListener('input', dcmPaint); sheet.addEventListener('change', function () { setTimeout(dcmPaint, 0); });
+            M.dcmPaint = dcmPaint;
             M.rentPaint = rentPaint;
             return mfFinish(M, sheet, { keep: false, file: '사거리인터넷-유선가입확인서', gate: true });
         }
@@ -7567,6 +7583,8 @@
                 r.type = c('tNew') ? '신규' : c('tTrans') ? '동판' : c('tRenew') ? '재약정' : '';
                 r.plan = [v('netPlan'), mfTvNone(v('tvPlan')) ? '' : v('tvPlan'), c('addY') ? v('addPlan') : ''].filter(Boolean).join(' + ');
                 r.model = regWiredModel(mfTvNone(v('tvPlan')) ? '' : v('tvPlan'));   // 장부 모델 칸: 인 / 인+티 / 인+티+티
+                var dk = dcmKind(v('carrier'), v('netPlan') + ' ' + v('tvPlan'));   // 11-25.6: 요금할인 방식 (스카이 · POP만)
+                if (dk) r.dcm = dcmText(dk === 'sky' ? (c('dcm30') ? '30% 요금할인' : c('dcmHome') ? '홈결합' : '') : c('dcmPop') ? '요즘 우리집 결합' : '', dk === 'pop' && /\d/.test(v('prepay')) ? feePrepaidAmt({ plan: '선납권 ' + v('prepay') + '원' }) : 0);
                 r.bill1 = digitsOnly(v('billW'));
                 var gw = function (n) { var t = digitsOnly(v(n)); return +t ? t : ''; };
                 r.gv = gw('giftV'); r.gh = gw('giftH'); r.ga = gw('giftA');   // 상품권 → 유선상품권 · 본사 → 유선직정산 · 추가지원금 → 지원금(입금하기)
@@ -7597,6 +7615,14 @@
            적은 개월 수 N 은 M+N 규칙 · 정책서에 기간이 있으면 정책서 날짜가 기준 (여러 개면 가장 늦은 날) */
         var MF_XNONE = /^(없음|미유치|중고없음|해당없음|-|x|무)$/i;
         function mfPlanKeep(v) { return /^(요금제\s*)?유지$/.test(String(v || '').replace(/\s+/g, ' ').trim()); }   // 변경 요금제 칸 '요금제 유지' (가입 요금제 계속 사용)
+        /* 11-25.6: 요금할인 방식 — 스카이라이프(30% 요금할인 · 홈결합) · SKB POP(요즘 우리집 결합 + 선납권) */
+        function dcmKind(car, plan) { car = String(car || ''); plan = String(plan || ''); if (/스카이|sky/i.test(car)) return 'sky'; if (/pop|팝/i.test(plan) && (!car.trim() || /SK|브로드/i.test(car))) return 'pop'; return ''; }
+        function dcmOfPick(c, g) { var n = String(g && g.name || ''); if (!c) return ''; if (c.id === 'sky') return /30\s*%/.test(n) ? '30% 요금할인' : /홈\s*결합/.test(n) ? '홈결합' : ''; if (c.id === 'pop') return '요즘 우리집 결합'; return ''; }
+        function dcmParse(t) {   // '홈결합' · '30% 요금할인' · '요즘 우리집 결합 · 선납권 5,000원' → { m, pre }
+            t = String(t || ''); var m = /(30\s*%|홈\s*결합|요즘\s*우리\s*집)/.exec(t);
+            return { m: !m ? '' : /30/.test(m[1]) ? '30% 요금할인' : /홈/.test(m[1]) ? '홈결합' : '요즘 우리집 결합', pre: /선납/.test(t) ? feePrepaidAmt({ plan: t }) : 0 };
+        }
+        function dcmText(m, pre) { return [m || '', pre > 0 ? '선납권 ' + pre.toLocaleString('ko-KR') + '원' : ''].filter(Boolean).join(' · '); }
         function mfTvNone(v) { return /^(없음|x|-|미신청)$/i.test(String(v || '').trim()); }   // 유선 TV 요금제 '없음' (인터넷 단독)
         function mfXSvc(t) { t = String(t || '').trim(); return t && !MF_XNONE.test(t) ? t : ''; }
         var MF_DEALER_CAR = { '성연': 'U+', '수석': 'U+', '신창': 'SK', '에이탑': 'KT', '반추': 'KT' };   // 모바일 단가표가 없을 때 쓰는 기본값
@@ -7906,7 +7932,8 @@
         function regFeeWired0(rec, Pin) {
             var P = Pin || polCur(); if (!P || !P.data) return { why: '유선 단가표가 없어요' };
             var co = ctCarrier(rec.carrier, 'wired').tag, raw = String(rec.carrier || '').toUpperCase(), plan = String(rec.plan || ''), soho = /소호/.test(plan + ' ' + (rec.type || '') + ' ' + (rec.carrier || ''));   // 접수처(안모·스카이 등)와 상관없이 같은 유선 단가 · 소호 상품만 소호 단가
-            var comb = /결합하기|기결합/.test(rec.comb || '');
+            var comb = /결합하기|기결합/.test(rec.comb || ''), dcm = dcmParse(rec.dcm).m;
+            if (co === '스카이라이프' && dcm) comb = dcm === '홈결합';   // 11-25.6: 확인서에서 고른 요금할인 방식이 먼저
             var ids = co === 'U+' ? (soho ? ['lgsoho'] : ['lgu']) : co === 'KT' ? ['kt'] : co === '스카이라이프' ? ['sky'] : co === '헬로비전' ? ['hello']
                 : co === 'SK' ? (soho ? ['skbsoho'] : /SKT/.test(raw) ? ['skt'] : /SKB|브로드/.test(raw) ? ['skb'] : []) : [];   // SKT → SKT 단가표 · SKB → SKB 단가표 (절대 섞지 않음)
             if (/pop|팝/i.test(plan) && (co === 'SK' || !ids.length) && P.data.carriers.some(function (x) { return x.id === 'pop'; })) ids = ['pop'];   // 11-20.10: SKB POP (TV POP 180 · 요즘 우리집 결합)
@@ -7949,15 +7976,15 @@
                 });
             }); };
             scanG();
-            if (!best && c.id === 'sky' && !comb && tvW) { skyHome = true; scanG(); if (best) best.home = 1; }   // 11-25.4: 스카이 500M·1G 번들은 30% 할인 표에 없고 홈결합 표에만 → 홈결합 금액 (결합 확인 표시)
+            if (!best && c.id === 'sky' && !comb && tvW) { skyHome = true; scanG(); if (best) best.home = dcm === '30% 요금할인' ? 2 : 1; }   // 11-25.4: 스카이 500M·1G 번들은 30% 할인 표에 없고 홈결합 표에만 → 홈결합 금액 (결합 확인 표시)
             if (!best) return { why: c.name + ' · ' + sp + (tvW ? ' + ' + parts : '') + ' 상품을 단가표에서 찾지 못했어요' };
             var f = polFee(best.r), tvN = Math.max(0, (String(rec.model || '').match(/티/g) || []).length - 1), add = 0, addTxt = '';
             if (tvN && tvW) { var o = polTvOpts(c, best.r).filter(function (x) { return x.d; })[0]; if (o) { add = Math.round(o.a * 10000) * tvN; addTxt = ' + TV 추가 ' + tvN + '대(' + (o.l === 'TV 추가' ? '추가셋탑' : o.l) + ' +' + o.a + '만)'; } else addTxt = ' · TV 추가 ' + tvN + '대 수수료는 직접 확인'; }
-            return { cid: c.id, fee: f.fee + add, chk: !!(tvN && !add && tvW) || !!best.part || !!best.home, gv: best.r.g > 0 ? Math.round(best.r.g * 10000) : 0, src: c.name + ' ' + best.r.n + (best.home ? ' [홈결합 표 — 30% 할인 표엔 이 속도 번들이 없어요 · 홈결합 맞는지 확인]' : '') + (/\((수도권|지방권)\)/.test(best.r.n) && !feeRegion(rec) ? ' (주소가 없어 수도권 기준)' : '') + ' 합계 ' + (f.fee / 10000) + '만' + (best.part ? ' (TV 이름 앞부분으로 찾음 · 확인)' : '') + addTxt + (best.r.g > 0 ? ' (상품권 ' + best.r.g + '만)' : '') + ' · ' + polLabel(P) };
+            return { cid: c.id, fee: f.fee + add, chk: !!(tvN && !add && tvW) || !!best.part || !!best.home, gv: best.r.g > 0 ? Math.round(best.r.g * 10000) : 0, src: c.name + ' ' + best.r.n + (best.home === 2 ? ' [확인서엔 30% 요금할인인데 이 속도 번들은 홈결합 표에만 있어요 · 할인 방식 확인]' : best.home ? ' [홈결합 표 — 30% 할인 표엔 이 속도 번들이 없어요 · 홈결합 맞는지 확인]' : c.id === 'sky' && dcm ? ' (' + dcm + ' 표)' : '') + (/\((수도권|지방권)\)/.test(best.r.n) && !feeRegion(rec) ? ' (주소가 없어 수도권 기준)' : '') + ' 합계 ' + (f.fee / 10000) + '만' + (best.part ? ' (TV 이름 앞부분으로 찾음 · 확인)' : '') + addTxt + (best.r.g > 0 ? ' (상품권 ' + best.r.g + '만)' : '') + ' · ' + polLabel(P) };
         }
         /* 11-20.10: 선납권 · POP 지역 · 엑셀 액면단가 → 가입 장부 (역으로) · 왜 다른지 풀이해서 익히기 */
         function feePrepaidAmt(rec) {   // '(선납권 1만원)' · '선납권 5천원' · '선납 10,000원' → 원 (없으면 0)
-            var t = [rec && rec.plan, rec && rec.snt, rec && rec.extra, rec && rec.memo].join(' '), m = /선납\s*권?\s*[:(]?\s*([\d,.]+)\s*(만|천)?\s*원?/.exec(t);
+            var t = [rec && rec.dcm, rec && rec.plan, rec && rec.snt, rec && rec.extra, rec && rec.memo].join(' '), m = /선납\s*권?\s*[:(]?\s*([\d,.]+)\s*(만|천)?\s*원?/.exec(t);
             if (!m) return 0;
             var n = parseFloat(m[1].replace(/,/g, '')); if (!isFinite(n) || n <= 0) return 0;
             n = m[2] === '만' ? n * 10000 : m[2] === '천' ? n * 1000 : n < 100 ? n * 10000 : n;   // '선납권 1' 처럼 숫자만이면 만원
@@ -11460,6 +11487,13 @@
             var TV = polTvSum(p), feeLine = '수수료(액면단가) : ' + (polFee(p.r).fee + Math.round(TV.man * 10000)).toLocaleString('ko-KR') + '원' + (p.r.g > 0 ? ' (단가표 상품권 ' + Math.round(p.r.g * 10000).toLocaleString('ko-KR') + '원)' : '') + (TV.n ? ' (TV 추가 ' + TV.txt + ' +' + TV.man + '만 포함)' : ''), fi = -1, si = -1;
             lines.forEach(function (l, i) { if (/^\s*수수료\(액면단가\)\s*:/.test(l)) fi = i; if (si < 0 && /^\s*설치비\s*:/.test(l)) si = i; });
             if (fi >= 0) lines[fi] = feeLine; else if (si >= 0) lines.splice(si + 1, 0, feeLine); else lines.push(feeLine);   // 가입고객리스트 액면단가로 들어감
+            (function () {   // 11-25.6: 요금할인 방식 줄 (스카이 · POP만)
+                var dm = dcmOfPick(p.c, p.g), di = -1, wi = -1;
+                lines.forEach(function (l, i) { if (di < 0 && /^\s*요금할인 방식\s*:/.test(l)) di = i; if (wi < 0 && /^\s*월요금\s*:/.test(l)) wi = i; });
+                if (!dm) { if (di >= 0) lines.splice(di, 1); return; }
+                var old = di >= 0 ? dcmParse(lines[di]).pre : 0, ln = '요금할인 방식 : ' + dm + (p.c.id === 'pop' ? ' · 선납권 ' + (old ? old.toLocaleString('ko-KR') + '원' : '없음') : '');
+                if (di >= 0) lines[di] = ln; else lines.splice(wi >= 0 ? wi + 1 : lines.length, 0, ln);
+            })();
             U.memo.value = lines.join('\n');
             state.view = 'idreq'; render();
             setTimeout(function () {
@@ -13419,6 +13453,9 @@
             S('dpOwner', v('예금주').replace(/[\d\-\/(),.]+/g, ' ').replace(/\s+/g, ' ').trim());
             var fl = v('수수료(액면단가)'), fm2 = /^([\d,]+)/.exec(fl), pg2 = /상품권\s*([\d,]+)/.exec(fl);
             o.fee = fm2 ? dg(fm2[1]) : ''; o.pg = pg2 ? dg(pg2[1]) : '';
+            var dp = dcmParse(intakeVal(text, '요금할인 방식'));   // 11-25.6
+            if (dp.m) o.chk.push(dp.m === '30% 요금할인' ? 'dcm30' : dp.m === '홈결합' ? 'dcmHome' : 'dcmPop');
+            if (dp.pre) S('prepay', dp.pre.toLocaleString('ko-KR'));
             return o;
         }
         function intakeToForm(text, who, phone) {   // 접수 메모에 렌탈 · 모바일 상담 줄이 있으면 그 가입 확인서로, 아니면 유선 가입 확인서로
@@ -15397,7 +15434,18 @@
             t = clTplPut(t, '안내 요금', '월 ' + won(r.p) + ' (미결합)' + (r.dc != null ? ' · 휴대폰 결합 시 월 ' + won(polComb(r)) : ''));
             t = clTplPut(t, '오퍼', on ? polStageText(polPick) : '');
             t = clTplPut(t, '설치비', polInstall(c, r, g));
-            return t;
+            return clDcmPut(t, dcmOfPick(c, g), c.id === 'pop');
+        }
+        function clDcmPut(t, m, pop) {   // 11-25.6: '■ 요금할인 방식 : 홈결합' (선납권은 적어 둔 금액 그대로)
+            var L = String(t || '').split('\n'), i = -1;
+            L.forEach(function (l, j) { if (i < 0 && l.indexOf('■ 요금할인 방식') === 0) i = j; });
+            if (!m) { if (i >= 0) L.splice(i, 1); return L.join('\n'); }
+            var old = i >= 0 ? dcmParse(L[i]).pre : 0;
+            var line = '■ 요금할인 방식 : ' + m + (pop ? ' · 선납권 ' + (old ? old.toLocaleString('ko-KR') + '원' : '없음') : '');
+            if (i >= 0) { L[i] = line; return L.join('\n'); }
+            var at = -1; L.forEach(function (l, j) { if (at < 0 && l.indexOf('■ 상담 상품') === 0) at = j; });
+            L.splice(at >= 0 ? at + 1 : 0, 0, line);
+            return L.join('\n');
         }
         function clMemoAuto() {   // 실시간: 인터넷상담 표에서 상품·차수를 누를 때마다 상담 메모에 바로 반영
             var M = cl.memo; if (!M || !M.open) return;
@@ -15595,6 +15643,7 @@
                 if (parts.length > 1) t = clIntakeLine(t, 'TV상품+셋탑1', parts.slice(1).join(' + '));
                 if (fee) t = clIntakeLine(t, '월요금', fee);
                 if (inst) t = clIntakeLine(t, '설치비', inst);
+                var dcl = L('요금할인 방식'); if (dcl) t = t.replace(/^(월요금 :.*)$/m, function (m0) { return m0 + '\n요금할인 방식 : ' + dcl; });   // 11-25.6
             } else {   // 모바일 · 렌탈: 인터넷 줄 대신 상담 내용 줄을 접수정보에 (가입확인서로 이동할 때 이 줄로 채움)
                 var add = String(memo || '').split('\n').filter(function (l) { return /^■ [^:]+:\s*\S/.test(l) && !/^■ (특이사항|재케어)/.test(l); });
                 t = t.replace(/^(● 접수정보 ●[^\n]*)$/m, function (m0) { return m0 + '\n' + add.join('\n'); });
