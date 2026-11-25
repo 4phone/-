@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-1eEGf2J5LMJbDHC4QOzRnNfyGHH61Wi5Mw1jTKA20aA='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nEyMl5uA23/3WSm0XHjKSwshojcCq47an8wflz4wtVw='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1883,6 +1883,7 @@
         .pol-tvx .btn-sm { padding: 2px 8px; min-height: 28px; font-size: 12.5px; }
         .pol-tvx .tv-d { border-color: #3B7BD0; }
         .pol-tvx .tv-sum { color: #1D4F91; }
+        .pol-prex { background: #FFF6E5; border-color: #F0C987; } .pol-prex .tv-sum { color: #8A4B00; } .p-pre { display: block; color: #8A4B00; font-size: 11px; font-weight: 700; } .pol-prex .btn[aria-pressed=true] { background: #8A4B00; border-color: #8A4B00; color: #fff; }
         .pol-tvadd { background: #EEF6FF; border-color: #BCD6F2; }
         .pol-tvadd .tv-d { border-color: #3B7BD0; font-weight: 800; }
         .pol-tvadd .tv-sum { font-weight: 700; }
@@ -2343,7 +2344,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-25.9';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-25.10';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -11187,7 +11188,36 @@
            인터넷 상품처럼 '짚어 두기'(상담 통신사·상품·요금·오퍼 줄)는 건드리지 않고,
            누르면 상담 메모의 '재케어 메모' 줄 아래에 따로 줄을 넣어요. 다시 누르면 빠져요. (CCTV 1개 · 보험 1개까지) */
         var polAdd = Object.create(null);   // { cctv: {key,c,r,g}, ins: {...} }
-        var polTv = { key: '', n: {} };   // TV 추가(추가셋탑): 고른 상품 줄 key · { 옵션 이름: 대수 }
+        var polTv = { key: '', n: {} };
+        var polPre = { key: '', a: 0 };   // 11-25.10: 선납권 (고른 상품 줄 key · VAT 별도 금액)
+        function polPreOpts(c) {   // 단가표 '선납권 (VAT별도) 5,000원: 정책 -18 / 10,000원: 정책 -36' → [{ a: 5000, man: 18, dc: 5500 }]
+            var R0 = feePrepaidRule(c);
+            return Object.keys(R0.map).map(Number).sort(function (x, y) { return x - y; }).map(function (a) { return { a: a, man: R0.map[a], dc: Math.round(a * 1.1) }; });
+        }
+        function polPreOf(pk) { if (!pk || polPre.key !== pk.key || !polPre.a) return null; return polPreOpts(pk.c).filter(function (o) { return o.a === polPre.a; })[0] || null; }
+        function polPreW(c, key) { if (polPre.key !== key || !polPre.a) return 0; var o = polPreOpts(c).filter(function (x) { return x.a === polPre.a; })[0]; return o ? Math.round(o.man * 10000) : 0; }
+        function polPreSet(c, r, g, key, a) {   // 선납권 고르기 · 같은 걸 다시 누르면 빼기 → 짚어 둔 1·2·3차 금액도 다시 계산
+            polPre = { key: key, a: a };
+            polOn[key] = true; polLast = { key: key, c: c, r: r, g: g };
+            if (polPick && polPick.key === key && typeof polPick.stage === 'number') polPick.v = polFee(r).fee - polPreW(c, key) - POL_KEEP[polPick.stage - 1];
+            render(); clMemoAuto();
+        }
+        function polPreInline(c, r, g, key) {   // 상품 줄 안: 🎟 선납권 [5,000원 (월 -5,500원 · 수수료 -18만)] …
+            var opts = polPreOpts(c); if (!opts.length) return null;
+            var cur = polPre.key === key ? polPre.a : 0, o0 = opts.filter(function (o) { return o.a === cur; })[0];
+            return h('div', { class: 'pol-tvx pol-prex' + (cur ? ' has' : ''), onclick: function (e) { e.stopPropagation(); } }, h('span', {}, '🎟 선납권'),
+                opts.map(function (o) {
+                    return h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'pol-pre', 'aria-pressed': cur === o.a ? 'true' : 'false', title: '선납권 ' + won(o.a) + '(VAT 별도) — 고객 월요금 ' + won(o.dc) + ' 할인(VAT 포함) · 수수료 -' + o.man + '만', onclick: function (e) { e.stopPropagation(); polPreSet(c, r, g, key, cur === o.a ? 0 : o.a); } },
+                        won(o.a) + ' (월 -' + won(o.dc) + ' · -' + o.man + '만)');
+                }),
+                o0 ? h('b', { class: 'tv-sum' }, '→ 월 ' + won(r.p - o0.dc) + ' · 수수료 ' + won(polFee(r).fee - Math.round(o0.man * 10000))) : h('small', {}, '선납권 금액은 VAT 별도 · 월요금은 VAT 포함 할인'),
+                o0 ? h('button', { type: 'button', class: 'link-btn', 'data-act': 'pol-pre-clear', onclick: function (e) { e.stopPropagation(); polPreSet(c, r, g, key, 0); } }, '빼기') : null);
+        }
+        function polPreBar(pk) {   // 단가표 위 '선택' 아래 (선납권 정책이 있는 통신사만)
+            if (!pk || !polPreOpts(pk.c).length) return null;
+            var el = polPreInline(pk.c, pk.r, pk.g, pk.key); if (el) { el.classList.add('has'); el.classList.add('pol-picknote'); }
+            return el;
+        }   // TV 추가(추가셋탑): 고른 상품 줄 key · { 옵션 이름: 대수 }
         function polTvOpts(c, r) {   // 통신사 '추가 정책'의 추가셋탑·TV추가 줄 → [{ l: 이름, a: 만원, d: 기본(이 상품 TV와 맞음) }]
             var line = (c && c.extra || []).filter(function (l) { return /추가\s*셋탑|셋탑\s*추가|추가\s*TV|TV\s*추가|추가\s*IPTV/i.test(l) && !/유심|IOT/i.test(l); })[0];
             if (!line) return [];
@@ -11355,15 +11385,15 @@
                 rows.push(h('tr', { class: 'pol-grp' }, h('td', { colspan: '9' }, g.name)));
                 list.forEach(function (r) {
                     shown++;
-                    var f = polFee(r), s1 = f.fee - POL_KEEP[0], s2 = f.fee - POL_KEEP[1], s3 = f.fee - POL_KEEP[2], key = c.id + '|' + g.name + '|' + r.n;
+                    var f = polFee(r), key = c.id + '|' + g.name + '|' + r.n, preW = polPreW(c, key), preO = preW ? polPreOf({ key: key, c: c }) : null, s1 = f.fee - preW - POL_KEEP[0], s2 = f.fee - preW - POL_KEEP[1], s3 = f.fee - preW - POL_KEEP[2];
                     var gmax = r.gd && c.guide[r.gd] ? c.guide[r.gd][2] : null;
                     rows.push(h('tr', { class: 'pol-row' + (polOn[key] ? ' on' : ''), 'data-key': key, onclick: function () { polOn[key] = !polOn[key]; this.classList.toggle('on', !!polOn[key]); polLast = polOn[key] ? { key: key, c: c, r: r, g: g } : (polLast && polLast.key === key ? null : polLast); if (!polOn[key] && polPick && polPick.key === key) { polPick = null; render(); } clMemoAuto(); } },
-                        h('td', {}, r.n, polTvLine(c, r), polTvInline(c, r, g, key), f.warn ? h('span', { class: 'pol-warn' }, '⚠ ' + f.warn) : null, r.nt ? h('span', { class: 'pol-nt' }, r.nt) : null),
+                        h('td', {}, r.n, polTvLine(c, r), polTvInline(c, r, g, key), polPreInline(c, r, g, key), f.warn ? h('span', { class: 'pol-warn' }, '⚠ ' + f.warn) : null, r.nt ? h('span', { class: 'pol-nt' }, r.nt) : null),
                         polInstCell(c, r, g),
-                        h('td', { class: 'p-price', 'data-l': '월요금(미결합)' }, won(r.p)),
+                        h('td', { class: 'p-price', 'data-l': '월요금(미결합)' }, preO ? won(r.p - preO.dc) : won(r.p), preO ? h('small', { class: 'p-pre' }, '선납권 -' + won(preO.dc) + ' (원래 ' + won(r.p) + ')') : null),
                         r.dc != null ? h('td', { class: 'p-comb', 'data-l': '결합요금', title: r.ad ? '표 요금 ' + won(r.p) + ' + 인터넷·TV 결합할인 해제 ' + won(r.ad) + ' = ' + won(r.p + r.ad) + ' → 휴대폰 결합할인 -' + won(r.dc) : '' }, won(polComb(r)), h('small', {}, (r.ad ? '+' + r.ad.toLocaleString('ko-KR') + ' ' : '') + '-' + r.dc.toLocaleString('ko-KR'))) : h('td', { class: 'p-comb', 'data-l': '결합요금' }, h('span', { class: 'p-none' }, '-')),
                         polGuideCell(c, r, g, key, gmax),
-                        h('td', { class: 'p-fee', 'data-l': '수수료', title: '상품권 ' + r.g + '만 + 현금 ' + r.c + '만 = 합계 ' + r.t + '만' }, won(f.fee), h('small', {}, (f.fee / 10000) + '만'),
+                        h('td', { class: 'p-fee', 'data-l': '수수료', title: '상품권 ' + r.g + '만 + 현금 ' + r.c + '만 = 합계 ' + r.t + '만' }, won(f.fee - preW), h('small', {}, preW ? '선납권 -' + preW / 10000 + '만 (원래 ' + f.fee / 10000 + '만)' : (f.fee / 10000) + '만'),
                             r.g > 0 ? h('span', { class: 'p-gift' }, '🎁 상품권 ' + r.g + '만') : h('span', { class: 'p-gift none' }, '상품권 없음'),
                             r.g > 0 ? h('small', { class: 'p-cash' }, '현금 ' + r.c + '만') : null),
                         polCell(s1, 'p-1', '1차 상담', key, 1, c, r, g), polCell(s2, 'p-2', '2차 상담', key, 2, c, r, g), polCell(s3, 'p-3', '3차 상담', key, 3, c, r, g)));
@@ -11529,7 +11559,8 @@
         function polToIdr() {
             var p = polPick || polLast;
             if (!p) { toast('상담할 상품 줄(또는 1·2·3차·가이드 금액)을 먼저 눌러 주세요.'); return; }
-            var U = idrUI(), lines = U.memo.value.replace(/\r/g, '').split('\n'), vals = polIntake(p.c, p.r, p.g), miss = false;
+            var U = idrUI(), lines = U.memo.value.replace(/\r/g, '').split('\n'), vals = polIntake(p.c, p.r, p.g), miss = false, PRE = polPreOf(p);
+            if (PRE) vals.forEach(function (kv) { if (kv[0] === '월요금') kv[1] = won(p.r.p - PRE.dc) + ' (선납권 ' + won(PRE.a) + ' 적용 · 원래 ' + won(p.r.p) + ')'; });   // 11-25.10
             vals.forEach(function (kv) {
                 var esc = kv[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), re = new RegExp('^(\\s*' + esc + '\\s*:).*$'), hit = false;
                 lines = lines.map(function (l) { if (!hit && re.test(l)) { hit = true; return l.replace(re, '$1') + ' ' + kv[1]; } return l; });
@@ -11539,14 +11570,14 @@
                 lines = INTAKE_TPL.split('\n');
                 vals.forEach(function (kv) { var esc = kv[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), re = new RegExp('^(\\s*' + esc + '\\s*:).*$'); lines = lines.map(function (l) { return re.test(l) ? l.replace(re, '$1') + ' ' + kv[1] : l; }); });
             }
-            var TV = polTvSum(p), feeLine = '수수료(액면단가) : ' + (polFee(p.r).fee + Math.round(TV.man * 10000)).toLocaleString('ko-KR') + '원' + (p.r.g > 0 ? ' (단가표 상품권 ' + Math.round(p.r.g * 10000).toLocaleString('ko-KR') + '원)' : '') + (TV.n ? ' (TV 추가 ' + TV.txt + ' +' + TV.man + '만 포함)' : ''), fi = -1, si = -1;
+            var TV = polTvSum(p), feeLine = '수수료(액면단가) : ' + (polFee(p.r).fee + Math.round(TV.man * 10000) - (PRE ? Math.round(PRE.man * 10000) : 0)).toLocaleString('ko-KR') + '원' + (p.r.g > 0 ? ' (단가표 상품권 ' + Math.round(p.r.g * 10000).toLocaleString('ko-KR') + '원)' : '') + (TV.n ? ' (TV 추가 ' + TV.txt + ' +' + TV.man + '만 포함)' : '') + (PRE ? ' (선납권 ' + won(PRE.a) + ' -' + PRE.man + '만 반영)' : ''), fi = -1, si = -1;
             lines.forEach(function (l, i) { if (/^\s*수수료\(액면단가\)\s*:/.test(l)) fi = i; if (si < 0 && /^\s*설치비\s*:/.test(l)) si = i; });
             if (fi >= 0) lines[fi] = feeLine; else if (si >= 0) lines.splice(si + 1, 0, feeLine); else lines.push(feeLine);   // 가입고객리스트 액면단가로 들어감
             (function () {   // 11-25.6: 요금할인 방식 줄 (스카이 · POP만)
                 var dm = dcmOfPick(p.c, p.g), di = -1, wi = -1;
                 lines.forEach(function (l, i) { if (di < 0 && /^\s*요금할인 방식\s*:/.test(l)) di = i; if (wi < 0 && /^\s*월요금\s*:/.test(l)) wi = i; });
                 if (!dm) { if (di >= 0) lines.splice(di, 1); return; }
-                var old = di >= 0 ? dcmParse(lines[di]).pre : 0, ln = '요금할인 방식 : ' + dm + (p.c.id === 'pop' ? ' · 선납권 ' + (old ? old.toLocaleString('ko-KR') + '원' : '없음') : '');
+                var old = polPre.key === p.key ? polPre.a : di >= 0 ? dcmParse(lines[di]).pre : 0, ln = '요금할인 방식 : ' + dm + (p.c.id === 'pop' ? ' · 선납권 ' + (old ? old.toLocaleString('ko-KR') + '원 (월 -' + Math.round(old * 1.1).toLocaleString('ko-KR') + '원)' : '없음') : '');
                 if (di >= 0) lines[di] = ln; else lines.splice(wi >= 0 ? wi + 1 : lines.length, 0, ln);
             })();
             U.memo.value = lines.join('\n');
@@ -13436,7 +13467,7 @@
                 h('div', { class: 'pol-tools' }, idrStep, h('div', { class: 'pol-row1' }, cars, acts), h('div', { class: 'pol-search' }, q, h('div', { class: 'pol-sps' }, sps)),
                     polAddSig() ? h('div', { class: 'pol-picknote pa-note' }, '추가 상품: ', h('b', {}, ['cctv', 'ins'].filter(function (k) { return polAdd[k]; }).map(function (k) { return polAdd[k].r.n; }).join(' · ')), h('button', { type: 'button', class: 'link-btn', 'data-act': 'pol-addon-clear', onclick: function () { polAdd = Object.create(null); render(); clMemoAddon(); } }, '추가 상품 빼기')) : null,
                     picked ? h('div', { class: 'pol-picknote' }, '선택: ', h('b', {}, picked.c.name + ' · ' + picked.r.n), polPick ? ' · ' + polStageText(polPick) : '', h('button', { type: 'button', class: 'link-btn', onclick: function () { polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); polTv = { key: '', n: {} }; render(); } }, '선택 지우기')) : null,
-                    picked ? polTvBar(picked) : null),
+                    picked ? polTvBar(picked) : null, picked ? polPreBar(picked) : null),
                 S.top ? polTopPanel(D) : null,
                 cards.length ? cards : h('div', { class: 'panel' }, h('div', { class: 'pol-empty' }, '조건에 맞는 요금제가 없어요. 통신사·속도·검색어를 바꿔 보세요.')),
                 D.src ? h('p', { class: 'ib-help' }, '출처: ' + D.src + ' · 결합요금은 각 통신사 공식 홈페이지의 가족결합 인터넷 할인 기준(3년 약정)이에요. SK 인터넷+TV는 표 요금이 인터넷·TV 결합할인(광랜 1,100 / 기가 5,500) 적용가라서, 휴대폰 결합 시 그 할인을 되돌린 뒤 휴대폰 결합할인을 빼요(+표시). KT는 단독 500M·1G만 휴대폰 결합 시 5,500원이 한 번 더 빠지고, TV를 함께 쓰면 5,500원까지예요.') : null);
@@ -15479,24 +15510,24 @@
             return cl.data.sheets.filter(function (s) { return s.id === id; })[0] || null;
         }
         function clPk() { return polLast || polPick; }   // 마지막으로 누른 상품 줄 (1·2·3차 금액을 눌러도 그 줄)
-        function clPkSig() { var pk = clPk(); if (!pk) return ''; var on = polPick && polPick.key === pk.key; return pk.key + '#' + (on ? polPick.stage + ':' + polPick.v : '-') + '#tv' + polTvSum(pk).n + JSON.stringify(polTv.n); }
+        function clPkSig() { var pk = clPk(); if (!pk) return ''; var on = polPick && polPick.key === pk.key; return pk.key + '#' + (on ? polPick.stage + ':' + polPick.v : '-') + '#tv' + polTvSum(pk).n + JSON.stringify(polTv.n) + '#pre' + (polPre.key === pk.key ? polPre.a : '-'); }
         function clPkFill(t, pk) {   // 상담 내용 양식에 짚어 둔 상품 넣기: 상담 통신사 · 상담 상품 · 안내 요금 · 오퍼 · 설치비
             var c = pk.c, r = pk.r, g = pk.g, on = polPick && polPick.key === pk.key;
             var tel = POL_TELCO[c.id] || (polBase(c.id) !== c.id && POL_TELCO[polBase(c.id)] ? POL_TELCO[polBase(c.id)] + ' · 유심동판' : c.name);
             t = clTplPut(t, '상담 통신사', tel);
             var TV = polTvSum(pk);
             t = clTplPut(t, '상담 상품', r.n + (g && g.name && /유심|모바일/.test(g.name + c.name) ? ' (' + g.name + ')' : '') + (TV.n ? ' + TV 추가 ' + TV.txt + ' (수수료 +' + TV.man + '만)' : ''));
-            t = clTplPut(t, '안내 요금', '월 ' + won(r.p) + ' (미결합)' + (r.dc != null ? ' · 휴대폰 결합 시 월 ' + won(polComb(r)) : ''));
+            var PR = polPreOf(pk); t = clTplPut(t, '안내 요금', PR ? '월 ' + won(r.p - PR.dc) + ' (선납권 ' + won(PR.a) + ' 적용 · 원래 ' + won(r.p) + ')' : '월 ' + won(r.p) + ' (미결합)' + (r.dc != null ? ' · 휴대폰 결합 시 월 ' + won(polComb(r)) : ''));
             t = clTplPut(t, '오퍼', on ? polStageText(polPick) : '');
             t = clTplPut(t, '설치비', polInstall(c, r, g));
-            return clDcmPut(t, dcmOfPick(c, g), c.id === 'pop');
+            return clDcmPut(t, dcmOfPick(c, g), c.id === 'pop', polPre.key === pk.key ? polPre.a : null);
         }
-        function clDcmPut(t, m, pop) {   // 11-25.6: '■ 요금할인 방식 : 홈결합' (선납권은 적어 둔 금액 그대로)
+        function clDcmPut(t, m, pop, preA) {   // 11-25.6: '■ 요금할인 방식 : 홈결합' (선납권은 적어 둔 금액 그대로)
             var L = String(t || '').split('\n'), i = -1;
             L.forEach(function (l, j) { if (i < 0 && l.indexOf('■ 요금할인 방식') === 0) i = j; });
             if (!m) { if (i >= 0) L.splice(i, 1); return L.join('\n'); }
-            var old = i >= 0 ? dcmParse(L[i]).pre : 0;
-            var line = '■ 요금할인 방식 : ' + m + (pop ? ' · 선납권 ' + (old ? old.toLocaleString('ko-KR') + '원' : '없음') : '');
+            var old = preA != null ? preA : i >= 0 ? dcmParse(L[i]).pre : 0;
+            var line = '■ 요금할인 방식 : ' + m + (pop ? ' · 선납권 ' + (old ? old.toLocaleString('ko-KR') + '원 (월 -' + Math.round(old * 1.1).toLocaleString('ko-KR') + '원)' : '없음') : '');
             if (i >= 0) { L[i] = line; return L.join('\n'); }
             var at = -1; L.forEach(function (l, j) { if (at < 0 && l.indexOf('■ 상담 상품') === 0) at = j; });
             L.splice(at >= 0 ? at + 1 : 0, 0, line);
@@ -16001,7 +16032,7 @@
             if (false && row.st === 'sale' && clIsRent(rentMemo) && confirm('렌탈 판매성공 — 상담 리스트 "' + s.name + '"에 저장했어요.\n\n렌탈 가입 확인서를 바로 열까요?\n(상담 메모의 제조사 · 렌탈사 · 상품 · 약정 · 월 렌탈료 · 사은품이 들어가요)\n\n[취소]를 누르면 신분증 요청으로 가요.')) {
                 var pcR = clColBy(s, 'ph'), digR = pcR ? digitsOnly(row.v[pcR.k] || '') : '';
                 M.open = false; clMemoBlank(M); clMemoPaint();
-                polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null; polTv = { key: '', n: {} };
+                polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null; polTv = { key: '', n: {} }; polPre = { key: '', a: 0 };
                 rtToForm(rentMemo, /^01\d{8,9}$/.test(digR) ? digR : '');
                 return;
             }
@@ -16020,13 +16051,13 @@
                 if (fill) { U.name.value = String(cu.nm || '').trim().slice(0, 20); U.phone.value = fm; U.memo.value = clIntakeText(M, rentMemo, okPh ? dig : ''); idrVaultSave(); }
                 M.open = false; clMemoBlank(M); clMemoPaint();
                 if (fill && kdS === 'net' && (polPick || polLast)) polToIdr(); else { state.view = 'idreq'; render(); }
-                polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null; polTv = { key: '', n: {} };
+                polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null; polTv = { key: '', n: {} }; polPre = { key: '', a: 0 };
                 setTimeout(idrSohoAsk, 150);
                 setTimeout(function () { toast('판매성공 — 상담 리스트 "' + s.name + '"에 저장하고 신분증 요청으로 왔어요. ' + (fill ? '고객 정보와 접수 메모를 채웠어요. 빨간 줄(빈 칸)만 마저 적고 링크를 보내 주세요.' : '고객 이름을 적고 링크를 보내 주세요.')); try { (U.name.value ? U.phone : U.name).focus({ preventScroll: true }); } catch (e) { /* 무시 */ } }, 80);
                 return;
             }
             M.open = false; clMemoBlank(M); clMemoPaint();
-            polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null; polTv = { key: '', n: {} };   // 상담 끝: 단가표 선택도 비워서 다음 고객은 새로 시작
+            polPick = null; polLast = null; polOn = Object.create(null); polAdd = Object.create(null); rt.pk = null; polTv = { key: '', n: {} }; polPre = { key: '', a: 0 };   // 상담 끝: 단가표 선택도 비워서 다음 고객은 새로 시작
             state.view = 'consult'; cl.sheet = s.id; cl.st = 'all'; cl.q = ''; cl.hl = row.id;
             render();
             setTimeout(function () { var tr = document.querySelector('tr[data-row="' + row.id + '"]'); if (tr) tr.scrollIntoView({ block: 'center' }); }, 60);
