@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-C7H41EOjp3htMenF0V2wxGjF6SYEvomrNRLniirEQws='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ZPbDpvqKjkzkiXwoLKIgz49biSfPqJH9HWqdPKn5hEA='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2343,7 +2343,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-25.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-25.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -6237,7 +6237,7 @@
             var GIFT_LIST = [['없음']].concat([(function () { var a = []; for (var w = 10000; w <= 1000000; w += 10000) a.push(w.toLocaleString('ko-KR')); return a; })()]);
             var gift = function (name, label) { return h('span', { class: 'mf-giftc' }, K.combo(name, label, GIFT_LIST, { cls: 'gift', kind: 'money', mode: 'numeric', max: 11, click: true, ph: '선택' })); };
             var kk = function (net, rent) { return h('span', { class: 'mf-k' }, h('span', { class: 'net-only' }, net), h('span', { class: 'rent-only' }, rent)); };   // 인터넷 / 렌탈 칸 이름
-            var NET_CAR = [['U+', 'SK', 'KT', '스카이라이프', 'LG헬로비전']], NET_PREV = [['U+', 'SK', 'KT', '스카이라이프', 'LG헬로비전', '신규']];
+            var NET_CAR = [['U+', 'SKT', 'SKB', 'KT', '스카이라이프', 'LG헬로비전']], NET_PREV = [['U+', 'SKT', 'SKB', 'KT', '스카이라이프', 'LG헬로비전', '신규']];   // 11-25.5: 유선 SK → SKT · SKB
             var etc = [1, 2, 3, 4, 5].map(function (n) { return row(wcell(k('*', true), inp('etc' + n, '기타 정보 ' + n + '번째 줄', { max: 150 }))); });
             var sheet = h('div', { class: 'mf-sheet wired', 'data-form': 'wired' },
                 K.header('사거리인터넷', [h('span', { class: 'net-only' }, '_ 인터넷'), h('span', { class: 'rent-only' }, '_ 렌탈')], [chk('tNew', '신규', 'type'), chk('tTrans', '동판', 'type'), chk('tRenew', '재약정', 'type'), chk('tRent', '렌탈', 'type')]),
@@ -13400,7 +13400,7 @@
             else if (own) { S('payOwner', own.replace(/[\d\-\/(),.]+/g, ' ').replace(/\s+/g, ' ').trim()); var ob = dg(own); if (ob.length >= 6) S('payBirth', ob.slice(0, 6)); }
             var car = v('인터넷통신사'), cn = car.replace(/\s+/g, '').toUpperCase();
             var soho = /소호|사업자/.test(cn);   // 소호 상품 → 'SK소호'·'U+소호' (가입 장부·단가표가 소호 단가로 계산)
-            S('carrier', /헬로/.test(cn) ? 'LG헬로비전' : /스카이/.test(cn) ? '스카이라이프' : /U\+|LG|유플/.test(cn) ? (soho ? 'U+소호' : 'U+') : /SK/.test(cn) ? (soho ? 'SK소호' : 'SK') : /KT/.test(cn) ? 'KT' : car);
+            S('carrier', /헬로/.test(cn) ? 'LG헬로비전' : /스카이/.test(cn) ? '스카이라이프' : /U\+|LG|유플/.test(cn) ? (soho ? 'U+소호' : 'U+') : /SK/.test(cn) ? (soho ? 'SK소호' : /SKB|브로드/.test(cn) ? 'SKB' : /SKT/.test(cn) ? 'SKT' : 'SK') : /KT/.test(cn) ? 'KT' : car);
             var net = v('인터넷상품'), wifi = v('WIFI 유,무');
             S('netPlan', net + (net && /유|O|있/i.test(wifi) && !/와이파이|WIFI/i.test(net) ? ' 와이파이' : ''));
             S('tvPlan', v('TV상품+셋탑1').replace(/\s*\(셋탑\s*\d+대\)\s*$/, ''));
