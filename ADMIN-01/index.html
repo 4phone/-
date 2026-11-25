@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-p1s8abG/9ECqRU0Lehg9PTPUdIRQ1weknE8H3liqzQ0='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-1eEGf2J5LMJbDHC4QOzRnNfyGHH61Wi5Mw1jTKA20aA='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2343,7 +2343,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-25.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-25.9';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -8625,11 +8625,23 @@
                     !q ? h('button', { type: 'button', class: 'btn btn-sm', 'data-act': 'reg-miss', title: '이 달 드라이브 폴더의 가입 확인서와 장부를 맞춰 봐요 (빠진 줄 찾기)', onclick: function () { regMissCheck(this); } }, '🔎 드라이브와 맞춰 보기') : null,
                     noFee ? h('button', { type: 'button', class: 'btn btn-sm reg-fill', 'data-act': 'reg-fee-fill', title: '액면단가가 빈 줄을 지금 단가표로 계산해서 채워요', onclick: function () { regFeeFill(list); } }, '💰 빈 액면단가 채우기 (' + noFee + ')') : null),
                 h('div', { class: 'reg-find' }, h('input', { type: 'search', 'data-fk': 'reg-q', placeholder: '고객 이름·휴대폰 번호로 찾기 (모든 달)', 'aria-label': '가입 장부에서 고객 찾기', value: state.regQ || '',
-                    oninput: function () { state.regQ = this.value; render(); } }),
+                    oninput: function () { state.regQ = this.value; regQLive(this); } }),
                     q ? h('button', { type: 'button', class: 'btn btn-sm', onclick: function () { state.regQ = ''; render(); } }, '지우기') : null),
                 q ? h('div', { class: 'reg-find-note' }, '"' + q + '" 찾은 결과 ' + list.length + '건 (모든 달 · 최근 날짜부터 · 번호는 그 달 장부 순서)') : regMonthsBar(),
                 q ? null : regMissBox(),
                 rows.length ? rows : h('div', { class: 'reg-empty' }, q ? '"' + q + '"(으)로 저장된 가입 확인서가 없어요. 드라이브 저장을 하지 않았거나 다른 이름으로 적었을 수 있어요.' : ymLabel(state.regYm) + '에 드라이브 저장한 가입 확인서가 없어요.'));
+        }
+        function regQLive(inp) {   // 11-25.9: 입력 칸(한글 조합 중)은 건드리지 않고 그 밖의 장부 화면만 바꿈
+            var old = inp.closest && inp.closest('.reg-box'), oF = old && old.querySelector('.reg-find');
+            var nu = null; try { nu = old && oF ? regLedger() : null; } catch (e) { nu = null; }
+            var nF = nu && nu.querySelector('.reg-find');
+            if (!nF || oF.parentNode !== old || nF.parentNode !== nu) { render(); return; }
+            [].slice.call(oF.childNodes).forEach(function (c) { if (c !== inp) oF.removeChild(c); });   // 찾기 칸 옆 [지우기]
+            [].slice.call(nF.childNodes).forEach(function (c) { if (c.tagName !== 'INPUT') oF.appendChild(c); });
+            var kids = [].slice.call(nu.childNodes), at = kids.indexOf(nF);
+            [].slice.call(old.childNodes).forEach(function (c) { if (c !== oF) old.removeChild(c); });
+            kids.slice(0, at).forEach(function (c) { old.insertBefore(c, oF); });
+            kids.slice(at + 1).forEach(function (c) { old.appendChild(c); });
         }
         function dealerText(name, list) {   // 카카오톡 개통 확인용 텍스트
             var lines = list.map(function (r, i) {
