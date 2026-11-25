@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rvLKD0aGtCpGVlbiF7z6HzNljCFn5FDNJBNt39ItXhQ='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-C7H41EOjp3htMenF0V2wxGjF6SYEvomrNRLniirEQws='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -191,6 +191,7 @@
         .reg-row.reg-cx { background: #FFF3F3; } .reg-row.reg-cx .reg-n { color: #C62828; font-size: 12px; } .reg-row.reg-cx .reg-main b { text-decoration: line-through; color: #8A8A8A; }
         .reg-scw { display: inline-block; padding: 1px 7px; margin-right: 4px; border-radius: 999px; background: #E53E3E; color: #fff; font-size: 12px; font-weight: 800; vertical-align: middle; animation: scwBlink 1.6s ease-in-out infinite; } @keyframes scwBlink { 50% { opacity: .55; } } @media (prefers-reduced-motion: reduce) { .reg-scw { animation: none; } }
         .reg-row.reg-scwr { background: #FFF0F0; box-shadow: inset 4px 0 0 #E53E3E; } .scw-bar { margin: 0 0 12px; padding: 10px 14px; border: 2px solid #E53E3E; border-radius: 12px; background: #FFF5F5; color: #9B1C1C; } .scw-bar b { font-size: 15px; } .scw-bar .scw-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; } .scw-bar .btn { border-color: #E53E3E; color: #9B1C1C; background: #fff; font-weight: 800; } .scan-upd { color: #9B1C1C; font-weight: 700; }
+        .reg-fee.none.can { border-color: #2F855A; color: #22543D; background: #F0FFF4; }
         .reg-cxb { display: inline-block; padding: 1px 7px; margin-right: 4px; border-radius: 999px; background: #C62828; color: #fff; font-size: 12px; font-weight: 800; vertical-align: middle; }
         .xc-off { color: #1F6B3A; font-weight: 700; } .xc-cx { margin: 6px 0 12px; padding: 8px 12px; border: 1px solid #F0C4C4; border-radius: 10px; background: #FFF8F8; }
         .reg-main { min-width: 0; }
@@ -2342,7 +2343,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-25.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-25.4';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -7909,7 +7910,7 @@
             var ids = co === 'U+' ? (soho ? ['lgsoho'] : ['lgu']) : co === 'KT' ? ['kt'] : co === '스카이라이프' ? ['sky'] : co === '헬로비전' ? ['hello']
                 : co === 'SK' ? (soho ? ['skbsoho'] : /SKT/.test(raw) ? ['skt'] : /SKB|브로드/.test(raw) ? ['skb'] : []) : [];   // SKT → SKT 단가표 · SKB → SKB 단가표 (절대 섞지 않음)
             if (/pop|팝/i.test(plan) && (co === 'SK' || !ids.length) && P.data.carriers.some(function (x) { return x.id === 'pop'; })) ids = ['pop'];   // 11-20.10: SKB POP (TV POP 180 · 요즘 우리집 결합)
-            if (!ids.length && co === 'SK') return { why: '통신사가 "' + (rec.carrier || 'SK') + '"로만 적혀 있어요. SKT인지 SKB인지 통신사 칸을 고쳐 주세요 (단가가 달라요)' };
+            if (!ids.length && co === 'SK') return { why: '통신사가 "' + (rec.carrier || 'SK') + '"로만 적혀 있어요. ' + (/스카이|sky/i.test(String(rec.dealer || '') + ' ' + plan) ? '스카이라이프 상품이면 "스카이라이프"로, ' : '') + 'SK 상품이면 SKT·SKB 중 하나로 통신사 칸을 고쳐 주세요 (단가가 달라요)' };
             if (!ids.length) return { why: '통신사(' + (rec.carrier || '없음') + ')를 단가표에서 찾지 못했어요' };
             if (rec.dealer && mp.data && (mp.data.dealers || []).some(function (x) { return x.name === rec.dealer; })) return { why: rec.dealer + ' 유선(동판)은 거래처 동판 단가라 직접 적어 주세요' };
             var c = P.data.carriers.filter(function (x) { return x.id === ids[0]; })[0]; if (!c) return { why: ids[0] + ' 단가표가 없어요' };
@@ -7932,10 +7933,10 @@
             var parts = plan.split(/\s*\+\s*/).slice(1).join(' ').trim(), tvW = !!parts && !/^(x|없음|-|미신청|유지)$/i.test(parts) && !/^전화|070/.test(parts);
             var pn = feeNorm(plan).replace(/올/g, 'all').replace(/basic/g, '베이직').replace(/skyall|스카이all/g, '');
             if (c.id === 'sky') pn = pn.replace(/지니a?|genie|eny/g, '베이직');   // 스카이라이프 번들 = IPTV BASIC (지니A 기준)
-            var best = null;
-            c.groups.forEach(function (g) {
-                if (c.id === 'sky' && /30%/.test(g.name) && comb) return;   // 스카이: 결합이면 홈결합 표
-                if (c.id === 'sky' && /홈결합/.test(g.name) && !comb) return;
+            var best = null, skyHome = false;
+            var scanG = function () { c.groups.forEach(function (g) {
+                if (c.id === 'sky' && /30%/.test(g.name) && (comb || skyHome)) return;   // 스카이: 결합이면 홈결합 표
+                if (c.id === 'sky' && /홈결합/.test(g.name) && !comb && !skyHome) return;
                 g.rows.forEach(function (r) {
                     if (polSpeed(r.n) !== sp && !(sp === '200M' && /200M/i.test(r.n))) return;
                     var rp = polParts(r.n), tv = rp.slice(1).filter(function (x) { return !polNotTv(x); }).join(' ');
@@ -7946,11 +7947,13 @@
                     if (/\((수도권|지방권)\)/.test(r.n)) score += r.n.indexOf('(' + (feeRegion(rec) || '수도권') + ')') >= 0 ? 0.5 : 0;   // POP: 주소로 수도권/지방권 (주소 없으면 수도권)
                     if (!best || score > best.score) best = { r: r, g: g, score: score, part: part };
                 });
-            });
+            }); };
+            scanG();
+            if (!best && c.id === 'sky' && !comb && tvW) { skyHome = true; scanG(); if (best) best.home = 1; }   // 11-25.4: 스카이 500M·1G 번들은 30% 할인 표에 없고 홈결합 표에만 → 홈결합 금액 (결합 확인 표시)
             if (!best) return { why: c.name + ' · ' + sp + (tvW ? ' + ' + parts : '') + ' 상품을 단가표에서 찾지 못했어요' };
             var f = polFee(best.r), tvN = Math.max(0, (String(rec.model || '').match(/티/g) || []).length - 1), add = 0, addTxt = '';
             if (tvN && tvW) { var o = polTvOpts(c, best.r).filter(function (x) { return x.d; })[0]; if (o) { add = Math.round(o.a * 10000) * tvN; addTxt = ' + TV 추가 ' + tvN + '대(' + (o.l === 'TV 추가' ? '추가셋탑' : o.l) + ' +' + o.a + '만)'; } else addTxt = ' · TV 추가 ' + tvN + '대 수수료는 직접 확인'; }
-            return { cid: c.id, fee: f.fee + add, chk: !!(tvN && !add && tvW) || !!best.part, gv: best.r.g > 0 ? Math.round(best.r.g * 10000) : 0, src: c.name + ' ' + best.r.n + (/\((수도권|지방권)\)/.test(best.r.n) && !feeRegion(rec) ? ' (주소가 없어 수도권 기준)' : '') + ' 합계 ' + (f.fee / 10000) + '만' + (best.part ? ' (TV 이름 앞부분으로 찾음 · 확인)' : '') + addTxt + (best.r.g > 0 ? ' (상품권 ' + best.r.g + '만)' : '') + ' · ' + polLabel(P) };
+            return { cid: c.id, fee: f.fee + add, chk: !!(tvN && !add && tvW) || !!best.part || !!best.home, gv: best.r.g > 0 ? Math.round(best.r.g * 10000) : 0, src: c.name + ' ' + best.r.n + (best.home ? ' [홈결합 표 — 30% 할인 표엔 이 속도 번들이 없어요 · 홈결합 맞는지 확인]' : '') + (/\((수도권|지방권)\)/.test(best.r.n) && !feeRegion(rec) ? ' (주소가 없어 수도권 기준)' : '') + ' 합계 ' + (f.fee / 10000) + '만' + (best.part ? ' (TV 이름 앞부분으로 찾음 · 확인)' : '') + addTxt + (best.r.g > 0 ? ' (상품권 ' + best.r.g + '만)' : '') + ' · ' + polLabel(P) };
         }
         /* 11-20.10: 선납권 · POP 지역 · 엑셀 액면단가 → 가입 장부 (역으로) · 왜 다른지 풀이해서 익히기 */
         function feePrepaidAmt(rec) {   // '(선납권 1만원)' · '선납권 5천원' · '선납 10,000원' → 원 (없으면 0)
@@ -8421,11 +8424,27 @@
                 return h('button', { type: 'button', class: 'btn btn-sm', 'aria-pressed': on ? 'true' : 'false', 'data-ym': ym, onclick: function () { state.regYm = ym; render(); } }, ymLabel(ym));
             }));
         }
+        /* ---- 11-25.4: 액면단가가 비어 있으면 '왜' 비었는지 장부 줄에 바로 (지금 단가표로 계산해 보고 이유 · 계산되면 금액) ---- */
+        var regWhyC = Object.create(null);
+        function regFeeWhyOf(r) {
+            var P = polCur(), k = r.id + '|' + (r.u || 0) + '|' + (P ? P.at : 0) + '|' + (mp.data ? 1 : 0);
+            if (regWhyC[k]) return regWhyC[k];
+            var out;
+            try {
+                var rec = JSON.parse(JSON.stringify(r)); delete rec.fee; delete rec.adj; delete rec.fa;
+                var a = regFeeAuto({}, rec);
+                out = a && a.fee ? { ok: true, t: '지금 단가표로 ' + (Math.round(a.fee / 1000) / 10) + '만 — 눌러서 넣기', full: a.src || '' }
+                    : { t: a && a.why ? a.why : (r.type === '렌탈' ? '렌탈 수수료표에서 찾지 못했어요' : '자동 계산 대상이 아니에요 — 직접 적어 주세요'), full: a && a.why || '' };
+            } catch (e) { out = { t: '계산 중 문제가 생겼어요 — 직접 적어 주세요', full: '' }; }
+            regWhyC[k] = out; return out;
+        }
         function regFeeChip(r) {   // 장부 줄 아래: 액면단가 · 부가 추가&차감 (눌러서 고치기) — 비어 있으면 빨간 표시
             var adj = +String(r.adj || '').replace(/[^\d-]/g, '') || 0, man = function (v) { return (Math.round(v / 1000) / 10).toLocaleString('ko-KR') + '만'; };
             var bm = r.fee ? regBm(r) : null, tg = bm == null ? '' : gllNeedTag(regKindText(r), bm);
             var t = r.fee ? '💰 액면단가 ' + man(+r.fee) + (adj ? ' · 부가 ' + (adj > 0 ? '+' : '') + man(adj) : '') + (r.fa ? (/^엑셀/.test(r.fa) ? ' · 엑셀' : ' · 자동') : '') + (bm != null ? ' · 총매출 ' + man(bm) + (tg ? ' (' + tg + ')' : '') : '') : '⚠ 액면단가 비어 있음';
-            return h('button', { type: 'button', class: 'reg-fee' + (r.fee ? '' : ' none'), 'data-act': 'reg-fee', title: r.fa ? String(r.fa) : r.fee ? '직접 적은 값 (눌러서 고치기)' : '눌러서 액면단가 적기', onclick: function () { editReg(r); } }, t);
+            var wy = r.fee ? null : regFeeWhyOf(r);   // 11-25.4: 왜 비었는지
+            if (wy) t += ' · ' + (wy.t.length > 70 ? wy.t.slice(0, 68) + '…' : wy.t);
+            return h('button', { type: 'button', class: 'reg-fee' + (r.fee ? '' : ' none') + (wy && wy.ok ? ' can' : ''), 'data-act': 'reg-fee', title: r.fa ? String(r.fa) : r.fee ? '직접 적은 값 (눌러서 고치기)' : (wy ? wy.t + (wy.full && wy.full !== wy.t ? '\n' + wy.full : '') + '\n\n' : '') + '눌러서 액면단가 적기', onclick: function () { if (wy && wy.ok) regFeeFill([r]); else editReg(r); } }, t);   // 계산되면 바로 채우기(확인 창) · 아니면 고치기 창
         }
         function regFeeFill(list) {   // 액면단가가 빈 줄 → 지금 단가표로 계산해서 채움 (장부에 직접 적은 값은 그대로)
             var need = list.filter(function (r) { return !r.fee; }); if (!need.length) { toast('액면단가가 빈 줄이 없어요.'); return; }

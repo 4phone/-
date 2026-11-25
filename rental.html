@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-MPmuw7pVCPgmJ9EBbj4DJo+WSM4mPvqITZHMmAvbWaQ='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'sha256-oxaWUwmw+G+2dxfQEW07zQLCMnYzWhZAN6qJkzGJdms='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Cormorant+Garamond:ital,wght@1,500&display=swap">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Cormorant+Garamond:ital,wght@1,500&display=swap">
 <style>
 :root { --deep: #0A2B32; --teal: #134047; --teal-2: #1F5A5E; --teal-3: #3D7D74; --mint: #8FD8CB; --gold: #E9CF8F; --gold-2: #F3DFA8; --gold-3: #E2C27A; --gold-ink: #8A6418;
         --ink: #0E2A30; --muted: #5C7376; --line: #E3E8E6; --paper: #F7F3E8; --white: #FFFFFF; --shadow: 0 16px 36px rgba(14,52,59,0.10); }
@@ -354,6 +354,11 @@ img { max-width: 100%; }
 .faq details[open] summary::after { transform: rotate(180deg); }
 .faq details p { margin: 0; padding: 0 18px 16px; font-size: 14.5px; color: #34504F; line-height: 1.7; }
 @media (max-width: 640px) { .faq { padding: 0 16px 6px; } .faq h2 { font-size: 19px; } }
+/* 11-25 목록을 불러오는 동안 칸을 미리 잡아 둠 (불러온 뒤 화면이 아래로 밀리지 않게) */
+.tabs:empty { min-height: 46px; }
+#grid:empty { min-height: 100vh; }
+.subtools:has(~ .list #grid:empty) #facets[hidden] { display: block !important; visibility: hidden; min-height: 146px; }
+@media (max-width: 900px) { .tabs:empty { min-height: 42px; } .subtools:has(~ .list #grid:empty) #facets[hidden] { min-height: 140px; } }
 .biz-tag { display: inline-block; align-self: flex-start; margin-top: 6px; font-size: 11.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
 .cc-foot { display: flex; align-items: stretch; border-top: 1px solid #EFE6CF; }
 .cc-go { flex: 1; min-height: 46px; border: 0; background: #FBF6E6; color: var(--gold-ink); font-weight: 800; font-size: 14.5px; text-align: center; }
@@ -1037,6 +1042,29 @@ var RENT_GIFT_SHOW = false;
         } catch (e) { /* 맞춤표를 못 쓰면 받은 그대로 */ }
         return j;
     }
+    /* 지난 렌탈 목록 보관함 (IndexedDB · 열리지 않거나 1.5초 넘게 걸리면 그냥 새로 받음) */
+    var idbP = null;
+    function idbOpen() {
+        if (idbP) return idbP;
+        idbP = new Promise(function (ok, no) {
+            try {
+                if (!window.indexedDB) return no(new Error('noidb'));
+                var r = indexedDB.open('sg-rental', 1), tm = setTimeout(function () { no(new Error('slow')); }, 1500);
+                r.onupgradeneeded = function () { try { r.result.createObjectStore('kv'); } catch (e) { /* 이미 있음 */ } };
+                r.onsuccess = function () { clearTimeout(tm); ok(r.result); };
+                r.onerror = r.onblocked = function () { clearTimeout(tm); no(r.error || new Error('idb')); };
+            } catch (e) { no(e); }
+        });
+        idbP.then(null, function () { idbP = Promise.reject(new Error('idb')); idbP.then(null, function () { }); });
+        return idbP;
+    }
+    function idbGet(k) {
+        return idbOpen().then(function (db) { return new Promise(function (ok, no) { try { var q = db.transaction('kv', 'readonly').objectStore('kv').get(k); q.onsuccess = function () { ok(q.result || null); }; q.onerror = function () { no(q.error); }; } catch (e) { no(e); } }); });
+    }
+    function idbSet(k, v) {
+        idbOpen().then(function (db) { try { var t = db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); } catch (e) { /* 보관 못 해도 화면은 그대로 */ } }, function () { /* 보관 못 해도 화면은 그대로 */ });
+    }
+    try { Object.keys(localStorage).forEach(function (k) { if (/^sg-rental-feed-/.test(k)) localStorage.removeItem(k); }); } catch (e) { /* 무시 */ }   // 예전 보관본 정리 (사거리온 저장 공간 확보)
     function getFeed(force) {
         if (DATA && !force) return Promise.resolve(DATA);
         if (!force) {
@@ -1044,14 +1072,17 @@ var RENT_GIFT_SHOW = false;
                 var c = JSON.parse(sessionStorage.getItem(CK) || 'null');
                 if (c && typeof c.t === 'number' && Date.now() - c.t < TTL && Date.now() >= c.t && c.d && Array.isArray(c.d.items) && c.d.items.length) { DATA = c.d; return Promise.resolve(DATA); }
             } catch (e) { /* 보관함을 못 쓰면 새로 받음 */ }
-            try {   // 다시 온 손님: 지난번(하루 안) 목록을 먼저 바로 보여주고, 새 목록은 뒤에서 받아 바뀐 게 있으면 다시 그림 (렌탈 자료가 3초 넘게 걸려서)
-                var lc = JSON.parse(localStorage.getItem(CK) || 'null');
+            // 다시 온 손님: 지난번(하루 안) 목록을 먼저 바로 보여주고, 새 목록은 뒤에서 받아 바뀐 게 있으면 다시 그림 (렌탈 자료가 3초 넘게 걸려서)
+            // 11-25: 지난 목록은 localStorage(사거리온과 같이 쓰는 5MB 칸, 이 목록만 2.9MB) 대신 IndexedDB에 보관
+            return idbGet(CK).then(function (lc) {
+                if (DATA) return DATA;
                 if (lc && typeof lc.t === 'number' && Date.now() - lc.t < LS_TTL && Date.now() >= lc.t && lc.d && Array.isArray(lc.d.items) && lc.d.items.length) {
                     DATA = lc.d; var old = JSON.stringify(lc.d.items);
                     getFeed(true).then(function (d) { if (JSON.stringify(liteOf(d).items) !== old && !$('list-view').hidden) { fixCart(); renderList(); } }, function () { /* 지난 목록 그대로 */ });
-                    return Promise.resolve(DATA);
+                    return DATA;
                 }
-            } catch (e) { /* 보관함을 못 쓰면 새로 받음 */ }
+                return getFeed(true);
+            }, function () { return getFeed(true); });
         }
         if (loading) return loading;
         var ctl = window.AbortController ? new AbortController() : null;
@@ -1065,8 +1096,8 @@ var RENT_GIFT_SHOW = false;
                 DATA = d;
                 try {
                     var lite = liteOf(d);
+                    idbSet(CK, { t: Date.now(), d: lite });
                     sessionStorage.setItem(CK, JSON.stringify({ t: Date.now(), d: lite }));
-                    try { localStorage.setItem(CK, JSON.stringify({ t: Date.now(), d: lite })); } catch (e2) { /* 보관 못 해도 화면은 그대로 */ }
                 } catch (e) { /* 보관 못 해도 화면은 그대로 */ }
                 return d;
             })
@@ -1816,5 +1847,6 @@ var RENT_GIFT_SHOW = false;
     setInterval(function () { if (on) place(); }, 1500);   // 장바구니·메모 창이 새로 떠도 따라 올라감
 })();
 </script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Cormorant+Garamond:ital,wght@1,500&display=swap">   <!-- 11-25: 글꼴 표는 맨 아래에서 (첫 화면을 막지 않게) -->
 </body>
 </html>

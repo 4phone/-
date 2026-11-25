@@ -31,6 +31,7 @@
     <link rel="icon" href="사거리로고_투명.png" type="image/png">
     
     <!-- 프리텐다드 폰트 불러오기 (화면에 쓰인 글자만 나눠 받는 방식 · 2026-10-31 속도 개선) -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" />
     <meta name="color-scheme" content="light only">
     <!-- [추가] 첫 화면·제목용 글꼴 (Noto Sans KR 가는 굵기, Noto Serif KR 명조, Cormorant Garamond 영문 장식) -->
@@ -40,7 +41,25 @@
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Noto+Serif+KR:wght@500;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap"></noscript>
     
     <!-- 다음/카카오 주소 검색 API -->
-    <script defer src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <script>
+    /* 주소 검색(다음 우편번호)은 첫 화면이 다 뜬 뒤에 불러옴 (11-25 속도 개선) · 주소 칸을 누르면 바로 불러옴 */
+    (function () {
+        var st = 0, cbs = [];
+        function load(cb) {
+            if (cb) { if (window.daum && daum.Postcode) { cb(true); return; } cbs.push(cb); }
+            if (st) return; st = 1;
+            var s = document.createElement('script');
+            s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js'; s.async = true;
+            s.onload = function () { var t = 0; (function wait() { if ((window.daum && daum.Postcode) || t++ > 40) { cbs.splice(0).forEach(function (f) { try { f(!!(window.daum && daum.Postcode)); } catch (e) { } }); } else setTimeout(wait, 50); })(); };
+            s.onerror = function () { st = 0; cbs.splice(0).forEach(function (f) { try { f(false); } catch (e) { } }); };
+            document.head.appendChild(s);
+        }
+        window.sgPostcodeLoad = load;
+        window.addEventListener('load', function () { setTimeout(function () { (window.requestIdleCallback || function (f) { setTimeout(f, 1); })(function () { load(); }); }, 2500); });
+        document.addEventListener('focusin', function (e) { var t = e.target; if (t && t.closest && t.closest('[id^="sidebar-"], [id^="pop-full"]')) load(); }, true);
+        try { Object.keys(localStorage).forEach(function (k) { if (/^sg-rental-feed-/.test(k)) localStorage.removeItem(k); }); } catch (e) { }   // 렌탈 목록 예전 보관본(2.9MB) 정리 → 사거리온 저장 공간 확보
+    })();
+    </script>
 
     <!-- [추가] 카카오맵 API 연동 마법의 열쇠 -->
     <script>
@@ -3522,7 +3541,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             }
         }
 
-        function execDaumPostcode(prefix) { if (!window.daum || !daum.Postcode) { ['-postcode', '-addr1'].forEach(function (x) { var el = document.getElementById(prefix + x); if (el) { el.readOnly = false; el.removeAttribute('readonly'); } }); var a1 = document.getElementById(prefix + '-addr1'); if (a1) a1.focus(); alert('주소 검색을 불러오지 못했어요. 주소를 직접 입력해 주세요. (우편번호는 몰라도 괜찮아요)'); return; } new daum.Postcode({ oncomplete: function(data) { let addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress; document.getElementById(prefix + '-postcode').value = data.zonecode; document.getElementById(prefix + '-addr1').value = addr; document.getElementById(prefix + '-addr2').focus(); } }).open(); }
+        function execDaumPostcode(prefix) { if ((!window.daum || !daum.Postcode) && window.sgPostcodeLoad && !execDaumPostcode.w && !execDaumPostcode.f) { execDaumPostcode.w = 1; window.sgPostcodeLoad(function (ok) { execDaumPostcode.w = 0; if (!ok) execDaumPostcode.f = 1; execDaumPostcode(prefix); }); return; } if (!window.daum || !daum.Postcode) { ['-postcode', '-addr1'].forEach(function (x) { var el = document.getElementById(prefix + x); if (el) { el.readOnly = false; el.removeAttribute('readonly'); } }); var a1 = document.getElementById(prefix + '-addr1'); if (a1) a1.focus(); alert('주소 검색을 불러오지 못했어요. 주소를 직접 입력해 주세요. (우편번호는 몰라도 괜찮아요)'); return; } new daum.Postcode({ oncomplete: function(data) { let addr = data.userSelectedType === 'R' ? data.roadAddress : data.jibunAddress; document.getElementById(prefix + '-postcode').value = data.zonecode; document.getElementById(prefix + '-addr1').value = addr; document.getElementById(prefix + '-addr2').focus(); } }).open(); }
         function autoCleanAccount(target) { target.value = target.value.replace(/[^0-9]/g, ''); }
         function autoFormatCardValid(target) { let val = target.value.replace(/[^0-9]/g, ''); if (val.length >= 3) { target.value = val.substring(0, 2) + '/' + val.substring(2, 4); } else { target.value = val; } }
         function toggleDirectBankInput(selectEl, targetId) { const targetEl = document.getElementById(targetId); if (selectEl.value === '직접입력') { targetEl.style.display = 'block'; targetEl.focus(); } else { targetEl.style.display = 'none'; targetEl.value = ''; } }
