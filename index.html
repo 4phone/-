@@ -807,6 +807,8 @@
         .pr-name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; min-width: 0; }   /* TV 이름을 속도 옆 한 줄로 (옆 카드와 줄 높이가 같게) */
         .pr-speed { font-size: 22px; font-weight: 800; color: #0E2A30; letter-spacing: -0.6px; line-height: 1.1; }
         .pr-tv { font-size: 14px; font-weight: 600; color: #5C7376; word-break: keep-all; white-space: nowrap; }
+        .pr-speed.pr-tvn { word-break: keep-all; }   /* TV 이름도 속도와 같은 크기·색 (11-25) */
+        @media (max-width: 480px) { .pr-speed { font-size: 18px; } .pr-name { gap: 2px 6px; } }   /* 휴대폰: 속도+TV 한 줄에 */
         .pr-price { display: flex; align-items: baseline; gap: 3px; white-space: nowrap; color: #0E2A30; }
         .pr-price small { font-size: 13px; font-weight: 600; color: #5C7376; }
         .pr-price b { font-size: 27px; font-weight: 800; letter-spacing: -0.8px; line-height: 1; font-variant-numeric: tabular-nums; }
@@ -2916,7 +2918,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                         cardHtml += `
                         <div class="plan-row">
                             <div class="pr-main">
-                                <div class="pr-name"><span class="pr-speed">${displayProductName}</span></div>
+                                <div class="pr-name"><span class="pr-speed">${displayProductName}</span><span class="pr-tv pr-wifi">+WIFI</span></div>
                                 <div class="pr-price"><small>월</small><b>${formatPrice.replace('원', '')}</b><small>원</small></div>
                             </div>
                             <div class="pr-meta"><span class="pr-chip">알뜰 실속</span><span class="pr-gift">혜택 <b>${formatSubsidy}</b></span></div>
@@ -2978,7 +2980,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
                             cardHtml += `
                             <div class="plan-row">
                                 <div class="pr-main">
-                                    <div class="pr-name"><span class="pr-speed">${speed}</span>${type === '결합' ? '<span class="pr-tv">+ ' + cleanRow[3] + '</span>' : ''}</div>
+                                    <div class="pr-name"><span class="pr-speed">${speed}</span>${type === '결합' ? '<span class="pr-speed pr-tvn">+ ' + cleanRow[3] + '</span>' : ''}<span class="pr-tv pr-wifi">+WIFI</span></div>
                                     <div class="pr-price"><small>월</small><b>${formatPrice.replace('원', '')}</b><small>원</small></div>
                                 </div>
                                 <div class="pr-meta"><span class="pr-chip">${conditionText}</span><span class="pr-gift">사은품 <b>${formatSubsidy}</b></span></div>
@@ -4235,7 +4237,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             if (!items.length) return;
             items.forEach(function (x) { track.appendChild(card(x)); });
             var meta = document.getElementById('hl-meta');
-            if (meta && j.at) { var at = new Date(+j.at); meta.textContent = ''; meta.appendChild(el('i')); meta.appendChild(document.createTextNode((at.getMonth() + 1) + '월 ' + at.getDate() + '일 ' + ('0' + at.getHours()).slice(-2) + ':' + ('0' + at.getMinutes()).slice(-2) + ' 업데이트 · 최근 ' + items.length + '건')); }
+            if (meta && j.at) { var at = new Date(+j.at); meta.textContent = ''; meta.appendChild(el('i')); meta.appendChild(document.createTextNode((at.getMonth() + 1) + '월 ' + at.getDate() + '일 ' + ('0' + at.getHours()).slice(-2) + ':' + ('0' + at.getMinutes()).slice(-2) + ' 업데이트')); }
             sec.hidden = false;
             flow();
         }
