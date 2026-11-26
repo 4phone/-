@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KOfS7tIVCow3H75XcvJypRu6rywlf1uMDRU4uTeHTM8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nj4aIXegjfrVPLlzohXLeFmfRvSiooizJW7sQcpXyU0='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -769,6 +769,9 @@
         .cl-idr { display: block; width: 100%; max-width: 76px; box-sizing: border-box; margin-top: 4px; font: inherit; font-size: 11.5px; line-height: 1.25; font-weight: 800; white-space: nowrap; text-align: center; padding: 3px 4px; min-height: 28px; border-radius: 8px; border: 1.5px solid #00A0DC; background: #fff; color: #00739E; cursor: pointer; }
         .cl-idr span { display: block; } .cl-idr:hover { background: #E6F7FD; }
         @media (pointer: coarse) { .cl-idr { min-height: 40px; font-size: 12.5px; } }
+        .cl-grip { display: inline-block; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; padding: 2px 6px 2px 0; margin-right: 2px; color: #8A8F75; font-size: 16px; line-height: 1; vertical-align: middle; }
+        .cl-grip:hover { color: #3E441E; } tr.cl-dragging { opacity: .45; } tr.cl-dragging .cl-grip { cursor: grabbing; }
+        .cl-tbl tr.cl-drop-up td { box-shadow: inset 0 3px 0 #C0392B; } .cl-tbl tr.cl-drop-dn td { box-shadow: inset 0 -3px 0 #C0392B; }
         .cl-st { display: inline-block; margin-top: 3px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 800; color: #fff; background: var(--sb, #999); white-space: nowrap; }
         .cl-st.lt { color: #4A2A40; }
         .cl-empty { padding: 26px; text-align: center; color: var(--muted); }
@@ -2356,7 +2359,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-26.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-26.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -14850,6 +14853,42 @@
         }
         function clTplClean(t) { return String(t || '').split('\n').filter(function (l) { return !/^■ [^:]+:\s*$/.test(l); }).join('\n').replace(/\n{3,}/g, '\n\n').trim(); }   // 저장할 때 비어 있는 양식 줄은 뺌
         function clMask(v) { return String(v).replace(/(\d{2,3})([-\s.]?)(\d{3,4})([-\s.]?)(\d{4})/g, function (m, a, s1, b, s2, c) { return a + s1 + '****' + s2 + c; }); }
+        function clDragRow(s, grip) {   // 11-26.8: ⠿ 를 누른 채 위·아래로 끌어서 놓으면 그 자리로 (누르기만 하면 아무 일 없음)
+            grip.addEventListener('click', function (e) { e.stopPropagation(); });
+            grip.addEventListener('keydown', function (e) { e.stopPropagation(); });
+            grip.addEventListener('pointerdown', function (e) {
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                e.preventDefault(); e.stopPropagation();
+                var tr = grip.closest('tr'), tb = tr && tr.parentNode; if (!tb) return;
+                var tgt = null, below = false, moved = false, y0 = e.clientY;
+                tr.classList.add('cl-dragging'); try { grip.setPointerCapture(e.pointerId); } catch (x) { /* 무시 */ }
+                var clear = function () { if (tgt) tgt.classList.remove('cl-drop-up', 'cl-drop-dn'); };
+                var mv = function (ev) {
+                    if (Math.abs(ev.clientY - y0) > 5) moved = true;
+                    var el = document.elementFromPoint(ev.clientX, ev.clientY), t2 = el && el.closest ? el.closest('tr[data-row]') : null;
+                    clear(); tgt = t2 && t2 !== tr && t2.parentNode === tb ? t2 : null;
+                    if (tgt) { var b = tgt.getBoundingClientRect(); below = ev.clientY > b.top + b.height / 2; tgt.classList.add(below ? 'cl-drop-dn' : 'cl-drop-up'); }
+                    if (ev.clientY < 70) window.scrollBy(0, -14); else if (ev.clientY > window.innerHeight - 70) window.scrollBy(0, 14);   // 화면 끝에서는 저절로 내려감
+                };
+                var up = function () {
+                    grip.removeEventListener('pointermove', mv); grip.removeEventListener('pointerup', up); grip.removeEventListener('pointercancel', up);
+                    tr.classList.remove('cl-dragging'); clear();
+                    if (moved && tgt) clMoveRow(s, tr.getAttribute('data-row'), tgt.getAttribute('data-row'), below);
+                };
+                grip.addEventListener('pointermove', mv); grip.addEventListener('pointerup', up); grip.addEventListener('pointercancel', up);
+            });
+        }
+        function clMoveRow(s, id, tid, below) {   // 화면은 최근(순서 큰 것)이 위 → 위에 놓으면 그 줄보다 순서 하나 큼
+            if (!cl.data) return;
+            var L = clRowsOf(s.id), r = null, t = null;
+            L.forEach(function (x) { if (x.id === id) r = x; if (x.id === tid) t = x; });
+            if (!r || !t || r === t) return;
+            L = L.filter(function (x) { return x !== r; });
+            var ti = L.indexOf(t); L.splice(below ? ti : ti + 1, 0, r);
+            var n = 0; L.forEach(function (x, i) { if (x.o !== i + 1) { x.o = i + 1; x.u = Math.max(Date.now(), (x.u || 0) + 1); n++; } });   // 순서만 바뀐 줄은 u만 (내용 고친 시각 ct는 그대로)
+            if (!n) return;
+            cl.hl = r.id; clQueue(); render(); toast('순서를 바꿨어요.');
+        }
         function clStamp(x) { x.u = Math.max(Date.now(), (x.u || 0) + 1); x.ct = x.u; x.by = staffName(me); }   // ct: 내용을 고친 시각 (순번만 바꾼 건 u만)
         function clCan(what) {   // 지우기·불러오기·엑셀은 대표님만
             if (isBoss()) return true;
@@ -15593,6 +15632,7 @@
                         var longV = (kd === 'wide' || kd === 'mid') && (String(shownV).length > (kd === 'mid' ? 50 : 90) || String(shownV).split('\n').length > 4), opened = cl.openAll || !!cl.open[r.id];
                         var cellBody = longV ? [h('div', { class: 'cl-clip' + (opened ? ' open' : '') }, shownV), h('button', { type: 'button', class: 'cl-more', 'data-act': 'cl-more', onkeydown: function (e) { e.stopPropagation(); }, onclick: function (e) { e.stopPropagation(); var on = !this.previousSibling.classList.contains('open'); this.previousSibling.classList.toggle('open', on); this.textContent = on ? '▲ 접기' : '▼ 더보기'; if (on) cl.open[r.id] = 1; else delete cl.open[r.id]; } }, opened ? '▲ 접기' : '▼ 더보기')] : shownV;
                         var td = h('td', { 'data-l': clHead(c), class: (kd === 'wide' ? 'wide' : kd === 'mid' ? 'mid' : kd === 'ph' ? 'ph' : (kd === 'date' || kd === 'time' || kd === 'staff' || kd === 'no') ? 'nw' : /위치/.test(c.l) ? 'loc' : '') + (v ? '' : ' blank'), style: css || false }, cellBody);
+                        if (i === 0) { var grip = h('span', { class: 'cl-grip', title: '끌어서 순서 바꾸기', 'aria-label': '끌어서 순서 바꾸기', 'data-act': 'cl-grip' }, '⠿'); td.insertBefore(grip, td.firstChild); clDragRow(s, grip); }
                         if (i === 0) { td.classList.remove('blank'); var kk = kOf(r); if (kk !== 'net') td.appendChild(h('span', { class: 'cl-ktag k-' + kk }, kk === 'mob' ? '📱 모바일' : '🧴 렌탈')); td.appendChild(h('div', {}, h('span', { class: 'cl-st' + (hex && clLight(hex) ? ' lt' : ''), style: hex ? '--sb:#' + hex : '--sb:#9AA088' }, si && r.st !== 'etc' ? si[1] : (r.st === 'etc' ? '기타 색' : '보통')), r.ctp === 'ok' ? h('span', { class: 'cl-ctp', title: '구글 연락처에 가망 번호로 저장됨' }, '📇저장') : r.ctp === 'cust' ? h('span', { class: 'cl-ctp', title: '이미 가입 고객 번호' }, '📇가입') : r.ctp === 'fail' ? h('span', { class: 'cl-ctp bad', title: '가망 번호 저장 실패 — 줄을 눌러 다시 저장' }, '📇실패') : null));
                             if (r.st === 'sale') td.appendChild(h('button', { type: 'button', class: 'cl-idr', 'data-act': 'cl-row-idr', title: '신분증 요청으로 가서 이 상담 내용으로 채우기', onclick: function (e) { e.stopPropagation(); clRowToIdr(s, r); }, onkeydown: function (e) { e.stopPropagation(); } }, h('span', {}, '🪪신분증'), h('span', {}, '요청'))); }
                         return td;
