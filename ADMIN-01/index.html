@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-cNPopP35sYNYn12bmWuelAhnFmSMRvX6vnDzelKBW8o='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mp4tI2KZNDteGqI/oY538uzW2VaBxiCM/WSKV1DnTbA='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -376,6 +376,11 @@
         .ms-btn:disabled { background: #E6F4E8; border-color: #9CCBA4; color: #1F6B2A; opacity: 1; cursor: default; }
         .ms-st { font-size: 12.5px; font-weight: 700; color: var(--muted); min-height: 1em; }
         .ms-st.ok { color: #1F6B2A; } .ms-st.warn { color: #A61F1F; }
+        .mz-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; } .mz-lab { min-width: 64px; font-size: 12.5px; font-weight: 800; color: #5b2a2a; }
+        .mz-chip[aria-pressed=true] { background: #A61F1F; border-color: #A61F1F; color: #fff; }
+        .mz-pct { margin-top: 10px; padding: 8px 10px; border-radius: 8px; background: #fff; font-size: 13px; font-weight: 800; color: var(--muted); }
+        .mz-pct.hi { background: #FDE8E8; color: #A61F1F; } .mz-pct.mid { background: #FFF4E0; color: #9A4A12; } .mz-pct.lo { background: #EAF6EC; color: #1F6B2A; }
+        .mz-kk { margin-top: 6px; font-size: 12px; font-weight: 700; color: #7A3E00; line-height: 1.5; }
         .ms-dlg { width: min(560px, calc(100vw - 24px)); }
         .ms-help { margin: 0 0 10px; font-size: 13px; color: var(--muted); line-height: 1.5; }
         .ms-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; } .ms-top input { flex: 1; min-width: 0; } .ms-cnt { flex: none; font-size: 12.5px; color: var(--muted); }
@@ -2349,7 +2354,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-26.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-26.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -14585,7 +14590,7 @@
                 var v = {};
                 if (r.v && typeof r.v === 'object') Object.keys(r.v).slice(0, 40).forEach(function (k) { if ((CL_KEY.test(k) || (r.ty === 'sec' && k === 't')) && typeof r.v[k] === 'string' && r.v[k] !== '') v[k] = r.v[k].slice(0, 3000); });
                 var o = { id: id, sh: r.sh, ty: r.ty, o: num(r.o), v: v, u: num(r.u), by: str(r.by, 20) }; if (num(r.ct)) o.ct = num(r.ct);
-                if (r.ty === 'row') { o.st = okSt[r.st] ? r.st : 'n'; if (str(r.rc, 40)) o.rc = str(r.rc, 40); if (/^\d{4}-\d{2}-\d{2}$/.test(String(r.rcd || ''))) o.rcd = String(r.rcd); if (/^(ok|fail|cust)$/.test(String(r.ctp || ''))) o.ctp = r.ctp; if (str(r.ai, 400)) o.ai = str(r.ai, 400); if (r.aiA === 1) o.aiA = 1; }   // ai: 🤖 AI 통화 요약 번호 · aiA: AI가 자동으로 만든 줄   // rc: 자동으로 만든 재케어 일정 · rcd: 그때의 등록 날짜
+                if (r.ty === 'row') { o.st = okSt[r.st] ? r.st : 'n'; if (str(r.rc, 40)) o.rc = str(r.rc, 40); if (/^\d{4}-\d{2}-\d{2}$/.test(String(r.rcd || ''))) o.rcd = String(r.rcd); if (/^(ok|fail|cust)$/.test(String(r.ctp || ''))) o.ctp = r.ctp; if (/^[sgj-][abcde-][xuo-]$/.test(String(r.mz || '')) && r.mz !== '---') o.mz = r.mz; if (str(r.ai, 400)) o.ai = str(r.ai, 400); if (r.aiA === 1) o.aiA = 1; }   // ai: 🤖 AI 통화 요약 번호 · aiA: AI가 자동으로 만든 줄   // rc: 자동으로 만든 재케어 일정 · rcd: 그때의 등록 날짜
                 if (CL_HEX.test(String(r.c || ''))) o.c = String(r.c);
                 var cc = hexMap(r.cc), fc = hexMap(r.fc); if (cc) o.cc = cc; if (fc) o.fc = fc;
                 out.rows.push(o);
@@ -14886,7 +14891,7 @@
                     var fromS = s; cur.v = clMapVals(cur.v, fromS, famE); cur.sh = famE.id; s = famE; movedE = famE.name;
                     if (!isNew) { var mo2 = 0; clRowsOf(famE.id).forEach(function (x) { if (x.id !== cur.id) mo2 = Math.max(mo2, x.o); }); cur.o = mo2 + 1; }
                 }
-                if (isNew || (P.st || 'n') !== origSt) cur.st = P.st || 'n'; if (P.keepC) cur.c = P.keepC; else delete cur.c;
+                if (isNew || (P.st || 'n') !== origSt) cur.st = P.st || 'n'; if (P.mz && P.mz !== '---') cur.mz = P.mz; else delete cur.mz;   // 11-26.2 미쇼 의심 체크 if (P.keepC) cur.c = P.keepC; else delete cur.c;
                 if (isNew) { var mo = 0; clRowsOf(s.id).forEach(function (x) { mo = Math.max(mo, x.o); }); cur.o = mo + 1; cl.data.rows.push(cur); }
                 var rcMsg = clRecare(cur, s);
                 clStamp(cur); closeDlg(); if (movedE) { cl.sheet = s.id; cl.hl = cur.id; } clQueue(); render(); toast((isNew ? '상담을 추가했어요.' : '상담 내용을 고쳤어요.') + (movedE ? ' 📱 상담 종류에 맞게 "' + movedE + '" 시트로 옮겼어요.' : '') + rcMsg);
@@ -14903,6 +14908,15 @@
         /* 11-20.1: 🚫 미쇼 의심 번호 — 상담 창 '상태' 아래에 고객 번호를 적고 [미쇼의심번호저장]을 누르면 바로 팀 데이터(db.msus · 팀 키 암호화)에 저장
            · 번호마다 기록 하나 (id = 'ms_' + 숫자) → 여러 직원·기기가 같은 번호를 저장해도 합칠 때 하나로만 남음 (절대 중복 안 됨)
            · 같은 상담 창에서 다른 번호로 다시 저장하면 원래 번호를 고쳐 저장(수정) · 다른 상담에 이미 있는 번호면 새로 저장하지 않고 알려 줌 */
+        var MZ_L = [['s', '서울', 35], ['g', '경기', 20], ['j', '지방', 5]];   // 11-26.2: 미쇼 의심 % 점수 (합계 5~95%)
+        var MZ_A = [['a', '20~30대 여성', 40], ['b', '20~30대 남성', 25], ['c', '40~50대 여성', 15], ['d', '40~50대 남성', 10], ['e', '50대 이상', 5]];
+        var MZ_K = [['x', '카톡 프로필 없음', 25], ['u', '카톡 확인 못 함', 10], ['o', '카톡 프로필 정상', -10]];
+        function mzParse(z) { z = /^[sgj-][abcde-][xuo-]$/.test(String(z || '')) ? z : '---'; return { l: z.charAt(0), a: z.charAt(1), k: z.charAt(2) }; }
+        function mzPct(m) {
+            var n = 0, set = 0, why = [];
+            [[MZ_L, m.l], [MZ_A, m.a], [MZ_K, m.k]].forEach(function (p) { var x = p[0].filter(function (y) { return y[0] === p[1]; })[0]; if (x) { set++; n += x[2]; why.push(x[1] + ' ' + (x[2] >= 0 ? '+' : '') + x[2]); } });
+            return set ? { p: Math.max(5, Math.min(95, n)), set: set, why: why } : null;
+        }
         function msDigits(v) { var d = String(v || '').replace(/\D/g, ''); if (/^821\d{8,9}$/.test(d)) d = '0' + d.slice(2); return d; }
         function msOk(d) { return /^0\d{8,10}$/.test(d); }
         function msGet(id) { var l = db.msus || []; for (var i = 0; i < l.length; i++) if (l[i].id === id) return l[i]; return null; }
@@ -14999,7 +15013,32 @@
                 } finally { btn._busy = false; }
             });
             paint();
-            var box = h('div', { class: 'cl-fld full ms-box' }, h('div', { class: 'cl-lab' }, h('span', {}, '고객 번호 (미쇼 의심 번호 저장)')), h('span', { class: 'cl-inline ms-row' }, inp, btn), st);
+            /* 11-26.2: 위치 · 연령·성별 · 카톡 확인 → 미쇼 의심 % (줄에 r.mz 'LAK' 3글자로 저장) */
+            P.mz = /^[sgj-][abcde-][xuo-]$/.test(String(row.mz || '')) ? row.mz : '---';
+            var pctEl = h('div', { class: 'mz-pct', role: 'status', 'aria-live': 'polite' }), kakaoEl = h('div', { class: 'mz-kk' });
+            var mzPaint = function () {
+                var m = mzParse(P.mz), r = mzPct(m);
+                box.querySelectorAll('[data-mz]').forEach(function (b) { var a = b.getAttribute('data-mz').split(':'); b.setAttribute('aria-pressed', m[a[0]] === a[1] ? 'true' : 'false'); });
+                pctEl.className = 'mz-pct' + (r ? r.p >= 70 ? ' hi' : r.p >= 40 ? ' mid' : ' lo' : '');
+                pctEl.textContent = r ? '🚫 미쇼 의심 ' + r.p + '% · ' + (r.p >= 70 ? '높음' : r.p >= 40 ? '보통' : '낮음') + ' (' + r.why.join(' · ') + ')' + (r.set < 3 ? ' · ' + r.set + '/3 체크' : '') : '위치 · 연령·성별 · 카톡 확인을 누르면 미쇼 의심 %가 나와요';
+                kakaoEl.textContent = m.a === 'a' ? '📱 카톡 확인: 번호가 구글 연락처에 \'… 미쇼의심\' 이름으로 저장돼요 → 업무폰 카카오톡 [친구] 목록을 새로고침하고 \'미쇼의심\'으로 찾아 프로필을 본 뒤 아래 카톡 확인을 눌러 주세요.' : '';
+                kakaoEl.style.display = m.a === 'a' ? '' : 'none';
+            };
+            var mzRow = function (lab, key, L) {
+                return h('div', { class: 'mz-row' }, h('span', { class: 'mz-lab' }, lab), L.map(function (x) {
+                    return h('button', { type: 'button', class: 'btn btn-sm mz-chip', 'data-mz': key + ':' + x[0], 'aria-pressed': 'false', onclick: function () {
+                        var m = mzParse(P.mz); m[key] = m[key] === x[0] ? '-' : x[0]; P.mz = m.l + m.a + m.k; mzPaint();
+                        if (key === 'a' && m.a === 'a') {   // 20~30대 여성: 미쇼 의심 번호로 바로 저장 → 구글 연락처 → 카카오톡 친구 목록에서 확인
+                            var d = msDigits(inp.value), mine = P.msId ? msGet(P.msId) : null;
+                            if (!msOk(d)) { toast('20~30대 여성: 고객 번호를 적으면 미쇼 의심 번호로 저장해서 카톡에서 확인할 수 있어요.'); inp.focus(); }
+                            else if (!(mine && mine.ph === d) && !msGet('ms_' + d)) btn.click();
+                        }
+                    } }, x[1]);
+                }));
+            };
+            var box = h('div', { class: 'cl-fld full ms-box' }, h('div', { class: 'cl-lab' }, h('span', {}, '고객 번호 (미쇼 의심 번호 저장)')), h('span', { class: 'cl-inline ms-row' }, inp, btn), st,
+                mzRow('위치', 'l', MZ_L), mzRow('연령·성별', 'a', MZ_A), kakaoEl, mzRow('카톡 확인', 'k', MZ_K), pctEl);
+            mzPaint();
             box._paint = paint; return box;
         }
         function msList() {   // 상담 리스트 [🚫 미쇼 의심 번호]: 저장된 번호 목록 · 찾기 · 복사 · (대표) 삭제
@@ -16076,6 +16115,7 @@
                 aiR.st = row.st; delete aiR.aiA; row = aiR;
             }
             var rcMsg = clRecare(row, s);
+            if (M.P.mz && M.P.mz !== '---') row.mz = M.P.mz;   // 11-26.2 미쇼 의심 체크
             clStamp(row); if (!aiR) cl.data.rows.push(row);
             if (clCuHas(M.cu)) { var pcV = clColBy(s, 'ph'), nmV = clColBy(s, '', /고객명|성함|이름/); cuvPut({ src: 'memo', rid: row.id, sh: s.id, ph: pcV ? digitsOnly(row.v[pcV.k] || '').slice(0, 11) : '', nm: String(M.cu.nm || (nmV ? row.v[nmV.k] : '') || '').trim().slice(0, 20), cu: M.cu }); }   // 🗂 판매성공이 아니어도 고객 정보는 보관함에 (나중에 신분증 요청으로 넘길 때 다시 채움)
             clearTimeout(cl.autoT);
@@ -16245,7 +16285,6 @@
                         else { M.built = ''; clMemoStash(); clMemoPaint(); toast('임시 저장했어요.'); }
                     } }, '💾 임시 저장'),
                     h('button', { type: 'button', class: 'btn btn-sm cl-draft-btn', 'data-act': 'cl-draft-open', onclick: function () { clDw = ''; clDraftList(); } }, '📂 불러오기' + (clDraftMine() ? ' (' + clDraftMine() + ')' : '')), aiUpBtn()),
-                aiFlowBox(M),
                 h('p', { class: 'cl-memo-auto' }, '💾 적는 내용은 자동으로 보관돼요 (팀 키로 암호화) · 창이 꺼져도 2일 동안 [📂 불러오기]에서 다시 불러올 수 있고, 3일째 자동으로 지워져요.'),
                 h('p', { class: 'cl-memo-live' }, '⚡ 상담하기 유선 단가표에서 상품 줄·1·2·3차를 누르면 인터넷 상담으로, 🧴 렌탈 단가표에서 줄을 누르면 렌탈 상담으로 바로 들어가요.'),
                 h('div', { class: 'cl-form' }, P.kindSeg, h('div', { class: 'cl-meta' }, '상태 (줄 색)'), P.pick, P.fields)));
