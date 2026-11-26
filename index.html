@@ -6027,6 +6027,11 @@ if (typeof module !== 'undefined') module.exports = SGAI;
             + '.sgfav-or{display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:700;color:#718096;margin:12px 0 6px}.sgfav-or:before,.sgfav-or:after{content:"";flex:1;height:1px;background:#E2E8F0}'
             + '.pc-fav-btn{display:flex;align-items:center;justify-content:center;gap:4px;width:85px;height:38px;border-radius:999px;border:1px solid rgba(233,207,143,.7);background:#FFFFFF;color:#134047;font:800 12.5px/1 Pretendard,system-ui,sans-serif;cursor:pointer;box-shadow:0 8px 18px rgba(3,20,24,.18);transition:transform .2s}'
             + '.pc-fav-btn span{color:#C99A2E;font-size:15px}.pc-fav-btn:hover{transform:translateX(-8px)}.pc-fav-btn:focus-visible{outline:3px solid #E2BA62;outline-offset:2px}'
+            + '.sgfav-ib{display:inline-block;padding:1px 8px;margin:0 1px;border-radius:8px;background:#FFFFFF;border:1px solid #CBD5E0;font-weight:800;color:#134047;white-space:nowrap}'
+            + '.sgfav-ios{align-items:flex-start;padding-top:max(16px,env(safe-area-inset-top))}.sgfav-top{align-items:flex-end;padding-bottom:max(24px,env(safe-area-inset-bottom))}'
+            + '.sgfav-arr{position:fixed;z-index:1;width:58px;height:58px;border-radius:50%;background:#FFD86B;color:#0E343B;font-size:32px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px rgba(255,216,107,.35),0 8px 20px rgba(0,0,0,.3);animation:sgfavB 1s ease-in-out infinite;pointer-events:none}'
+            + '.sgfav-dots .sgfav-arr{right:14px;bottom:max(10px,env(safe-area-inset-bottom))}.sgfav-share .sgfav-arr{left:calc(50% - 29px);bottom:max(10px,env(safe-area-inset-bottom))}.sgfav-top .sgfav-arr{right:14px;top:10px;animation-name:sgfavU}'
+            + '@keyframes sgfavB{50%{transform:translateY(10px)}}@keyframes sgfavU{50%{transform:translateY(-10px)}}@media (prefers-reduced-motion:reduce){.sgfav-arr{animation:none}}'
             + '@media print{.sgfav-ov,.pc-fav-btn{display:none!important}}';
         document.head.appendChild(st);
     }
@@ -6043,6 +6048,7 @@ if (typeof module !== 'undefined') module.exports = SGAI;
             document.body.appendChild(ov);
         }
         while (ov.firstChild) ov.removeChild(ov.firstChild);
+        ov.className = 'sgfav-ov';
         var box = el('div', 'sgfav-box'), x = el('button', 'sgfav-x', '✕'); x.type = 'button'; x.setAttribute('aria-label', '닫기'); x.onclick = close; box.appendChild(x);
         var ic = el('img', 'sgfav-ic'); ic.src = 'icon-180.png'; ic.alt = ''; box.appendChild(ic);
         var ok = el('button', 'sgfav-ok', '닫기'); ok.type = 'button'; ok.onclick = close;
@@ -6067,11 +6073,32 @@ if (typeof module !== 'undefined') module.exports = SGAI;
             };
             box.appendChild(go); box.appendChild(ok);
         } else if (isIOS) {
+            /* 아이폰·아이패드: 애플이 홈페이지의 바로 설치를 막아 둠(앱스토어 앱만 한 번에 설치) → 기기·사파리 버전에 맞는 버튼 위치를 화살표로 짚어 줌 (2026-11-26) */
             shortTitle();
-            box.appendChild(el('p', 'sgfav-h', '아이폰에 앱 설치하기'));
-            var n2 = el('p', 'sgfav-n'); n2.appendChild(document.createTextNode('이름은 ')); n2.appendChild(el('b', '', SHORT)); n2.appendChild(document.createTextNode('으로 들어가 있어요. 고칠 필요 없어요.')); box.appendChild(n2);
-            box.appendChild(steps(['화면 아래(아이패드는 위)의 공유 버튼 ⬆︎ 을 눌러요', '아래로 내려 [홈 화면에 추가]를 눌러요', '오른쪽 위 [추가]를 누르면 끝! 홈 화면의 아이콘을 누르면 앱처럼 열려요.']));
+            var iPad = /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+            var otherBr = /CriOS|EdgiOS|FxiOS|Whale/i.test(ua);
+            var sv = +((ua.match(/Version\/(\d+)/) || [])[1] || 0);
+            var mode = (iPad || otherBr) ? 'top' : (sv >= 26 ? 'dots' : 'share');
+            box.appendChild(el('p', 'sgfav-h', '아이폰 앱 설치 (10초)'));
+            var n2 = el('p', 'sgfav-n'); n2.appendChild(document.createTextNode('아이폰은 애플 규칙상 버튼 한 번 설치가 막혀 있어요. 아래 3번만 누르면 ')); n2.appendChild(el('b', '', SHORT)); n2.appendChild(document.createTextNode(' 앱 아이콘이 생겨요.')); box.appendChild(n2);
+            var ib = function (t) { return el('span', 'sgfav-ib', t); };
+            var li = function (parts) { var x = el('li', ''); parts.forEach(function (p) { x.appendChild(typeof p === 'string' ? document.createTextNode(p) : p); }); return x; };
+            var ol = el('ol', 'sgfav-steps');
+            if (mode === 'dots') {
+                ol.appendChild(li(['화면 오른쪽 아래 ', ib('⋯'), ' 버튼을 눌러요 (화살표 위치)']));
+                ol.appendChild(li([ib('공유'), ' → ', ib('홈 화면에 추가'), ' (안 보이면 아래로 내리거나 [더 보기])']));
+            } else if (mode === 'share') {
+                ol.appendChild(li(['화면 아래 가운데 공유 ', ib('⬆︎'), ' 버튼을 눌러요 (화살표 위치)']));
+                ol.appendChild(li(['아래로 내려 ', ib('홈 화면에 추가'), '를 눌러요']));
+            } else {
+                ol.appendChild(li(['화면 오른쪽 위 공유 ', ib('⬆︎'), ' 버튼을 눌러요 (화살표 위치)']));
+                ol.appendChild(li([ib('홈 화면에 추가'), '를 눌러요 (안 보이면 아래로 내리거나 [더 보기])']));
+            }
+            ol.appendChild(li(['오른쪽 위 ', ib('추가'), ' 누르면 끝! 이름은 이미 ', el('b', '', SHORT), '으로 들어가 있어요.']));
+            box.appendChild(ol);
             box.appendChild(ok);
+            ov.className = 'sgfav-ov sgfav-ios sgfav-' + mode;
+            var arr = el('div', 'sgfav-arr', mode === 'top' ? '⬆' : '⬇'); arr.setAttribute('aria-hidden', 'true'); ov.appendChild(arr);
         } else if (isMobile) {
             shortTitle();
             box.appendChild(el('p', 'sgfav-h', '앱 설치하기'));
