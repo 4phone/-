@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KVpC08eZpYyKop0LWbqltNwMsTZHQDnvkQLDHzW5LNs='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hJHf17fMCATuo5dRQRDGHEqqdoLKH8wCFx5q2m3qdVk='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1292,7 +1292,7 @@
         .clr-list { display: grid; gap: 8px; margin: 8px 0; max-height: 50vh; overflow: auto; } .clr-r { display: flex; gap: 8px; align-items: center; justify-content: space-between; border: 1px solid var(--line, #E3E5D8); border-radius: 10px; padding: 8px 10px; }
         .clr-r > div { min-width: 0; } .clr-s { font-size: 12.5px; color: #5B5E4A; overflow-wrap: anywhere; margin-top: 2px; } .clr-help { font-size: 12.5px; color: #5B5E4A; margin: 6px 0; }
         .dm-flow { font-size: 12.5px; color: var(--muted, #5B5E4A); margin: 2px 0 4px; overflow-wrap: anywhere; } .dm-miss { font-size: 12.5px; color: #B3261E; background: #FDECEA; border-radius: 8px; padding: 6px 8px; margin: 4px 0; }
-        select.ib-src { font-size: 12px; padding: 2px 6px; min-height: 28px; max-width: 170px; margin-left: 6px; border-radius: 8px; }
+        select.ib-src { font-size: 12px; padding: 2px 6px; min-height: 28px; max-width: 100%; margin-left: 6px; border-radius: 8px; }   /* 11-26.6: 경로 글이 안 잘리게 */
         select.ib-src.on { border-color: #3E441E; font-weight: 700; }
         .ib-srcsum { color: #3E441E; font-weight: 700; }
         .bl-link-tip { font-size: 13px; color: #3E441E; background: #F1F2E8; border-radius: 8px; padding: 6px 10px; margin: 6px 0 0; }
@@ -2355,7 +2355,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-26.5';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-26.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -9130,7 +9130,7 @@
         }
         function ibNorm(x) { return ibPendApply(ibNorm0(x)); }
         function ibNorm0(x) {
-            return { id: x.id, t: x.t, kind: x.kind, label: String(x.label).slice(0, 60), dev: x.dev === 'm' ? 'm' : 'pc', ph: typeof x.ph === 'string' ? x.ph.slice(0, 12) : '', n4: typeof x.n4 === 'string' ? x.n4.replace(/\D/g, '').slice(-4) : '', ctk: x.ctk === 1 ? 1 : x.ctk === 0 ? 0 : -1, ctn: typeof x.ctn === 'string' ? x.ctn.slice(0, 20) : '', miss: x.miss === 1 ? 1 : 0, ai: aiIbNorm(x.ai), name: typeof x.name === 'string' ? x.name.slice(0, 20) : '', phone: typeof x.phone === 'string' ? x.phone.replace(/\D/g, '').slice(0, 11) : '',
+            return { id: x.id, t: x.t, kind: x.kind, label: String(x.label).slice(0, 60), dev: x.dev === 'm' ? 'm' : 'pc', ph: typeof x.ph === 'string' ? x.ph.slice(0, 12) : '', n4: typeof x.n4 === 'string' ? x.n4.replace(/\D/g, '').slice(-4) : '', ctk: x.ctk === 1 ? 1 : x.ctk === 0 ? 0 : -1, ctn: typeof x.ctn === 'string' ? x.ctn.slice(0, 30) : '', miss: x.miss === 1 ? 1 : 0, ai: aiIbNorm(x.ai), name: typeof x.name === 'string' ? x.name.slice(0, 20) : '', phone: typeof x.phone === 'string' ? x.phone.replace(/\D/g, '').slice(0, 11) : '',
                 chk: x.chk && typeof x.chk.by === 'string' ? { by: x.chk.by.slice(0, 20), at: Number(x.chk.at) || 0 } : null,
                 asg: x.asg && typeof x.asg.to === 'string' && x.asg.to ? { to: x.asg.to.slice(0, 20), by: String(x.asg.by || '').slice(0, 20), at: Number(x.asg.at) || 0 } : null,
                 cm: Array.isArray(x.cm) ? x.cm.filter(function (c) { return c && typeof c.id === 'string' && typeof c.text === 'string'; }).map(function (c) { return { id: c.id, by: String(c.by || '').slice(0, 20), em: String(c.em || ''), text: c.text.slice(0, 500), at: Number(c.at) || 0 }; }) : [] };
@@ -9631,6 +9631,11 @@
             var b = aiSumBox(x) || (x.kind === 'snd' ? h('div', { class: 'ib-aisum' }, Date.now() - x.t < 900000 ? '🤖 녹음 요약을 기다리는 중이에요' : '🎙 녹음 요약 없음 (녹음이 안 올라왔어요)') : null);
             return b ? h('div', { class: 'ib-aiw' }, b) : null;
         }
+        function ibWho(x) {   // 11-26.6: 연락처 이름 · 전체 번호 (예전 녹음은 이름에 '통화 ' 이 붙어 왔음 → 떼고, 숫자면 번호로)
+            var nm = String(x.ctn || '').replace(/^\s*통화\s*(녹음)?\s+/, '').trim(), ph = x.phone || '', dg = nm.replace(/[\s\-()+]/g, '');
+            if (/^\d{8,12}$/.test(dg)) { if (!ph) ph = /^82\d{9,10}$/.test(dg) ? '0' + dg.slice(2) : dg; nm = ''; }
+            return { nm: nm, ph: ph };
+        }
         function durTxt(s) { s = Math.round(+s || 0); var hh = Math.floor(s / 3600), mm = Math.floor(s % 3600 / 60), ss = s % 60; return hh ? hh + '시간 ' + mm + '분' : mm ? mm + '분 ' + ss + '초' : ss + '초'; }
         function aiSumBox(x) {   // 콜 인입 줄 아래: 분류 · 요약 · 약속 (서버가 바로 적어 둔 것)
             var a = x.ai; if (!a) return null;
@@ -9917,9 +9922,9 @@
                 return h('div', { class: 'ib-row ib-out', 'data-ib': x.id },
                     h('div', { class: 'ib-time' }, ibTime(x.t), x.ai && x.ai.du ? h('span', { class: 'ib-dur', title: '통화 시간 (녹음 길이)' }, '⏱ ' + durTxt(x.ai.du)) : null),
                     h('div', { class: 'ib-kind k-snd' }, '📤 발신'),
-                    h('div', { class: 'ib-main' }, h('div', { class: 'ib-who' }, x.ctn ? '📇 ' + x.ctn : x.phone ? '📞 ' + mfPhone(x.phone) : x.ai && x.ai.nm ? '🗣 ' + x.ai.nm.replace(/\?$/, '') + ' (AI가 들은 이름)' : '📞 번호 안 옴' + (x.n4 ? ' · 끝 ' + x.n4 : '')),
+                    h('div', { class: 'ib-main' }, h('div', { class: 'ib-who' }, (function () { var w = ibWho(x); return w.nm || w.ph ? (w.nm ? '📇 ' + w.nm + (w.ph ? ' · ' + mfPhone(w.ph) : '') : '📞 ' + mfPhone(w.ph)) : null; })() || (x.ai && x.ai.nm ? '🗣 ' + x.ai.nm.replace(/\?$/, '') + ' (AI가 들은 이름)' : '📞 번호 안 옴' + (x.n4 ? ' · 끝 ' + x.n4 : ''))),
                         h('div', { class: 'ib-label' }, x.label),
-                        h('div', { class: 'ib-sub' }, x.ctn && x.phone ? h('a', { href: 'tel:' + x.phone, class: 'ib-phone' }, mfPhone(x.phone)) : null,
+                        h('div', { class: 'ib-sub' }, ibWho(x).nm && ibWho(x).ph ? h('a', { href: 'tel:' + ibWho(x).ph, class: 'ib-phone' }, '📞 전화 걸기') : null,
                             m ? h('button', { type: 'button', class: 'ib-cl', title: '상담 리스트에서 이 고객 보기', onclick: function () { cl.sheet = m.sh; cl.q = digitsOnly(x.phone || '') || x.n4 || ''; state.view = 'consult'; render(); window.scrollTo(0, 0); } }, '📝 상담 리스트 · ' + [m.shn, m.day, m.name].filter(Boolean).join(' · ')) : null),
                         null),
                     h('div', { class: 'ib-asg' }, h('small', { class: 'ib-asg-by' }, x.asg ? '담당 ' + x.asg.to : '담당 없음')),
@@ -10516,10 +10521,10 @@
                             x.kind === 'rcv' || x.kind === 'call' ? ibSrcSel(x, null) : null,
                             x.kind === 'rcv' ? (function () { var m = ibClMatch(x); if (!m) return h('span', { class: 'ib-cl none' }, mk === 'nomatch' ? '📝 상담 리스트에 없어서 미인입 — 늦게라도 이 번호로 상담 리스트에 적으면 자동으로 실 인입' : '📝 상담 리스트에 아직 없음 (적으면 바로 실 인입 · 30분 지나도 없으면 미인입, 나중에 적어도 실 인입으로 바뀜)');
                                 return h('button', { type: 'button', class: 'ib-cl', 'data-fk': 'ib-cl-' + x.id, title: '상담 리스트에서 이 고객 보기', onclick: function () { cl.sheet = m.sh; cl.q = digitsOnly(x.phone || '') || x.n4 || ''; state.view = 'consult'; render(); window.scrollTo(0, 0); } },
-                                    '📝 상담 리스트 · ' + [m.day, m.name, m.who].filter(Boolean).join(' · ') + (m.memo ? ' — ' + m.memo.replace(/■[^:\n]*:\s*(\n|$)/g, '').replace(/\s+/g, ' ').trim().slice(0, 90) : '')); })() : null,
+                                    '📝 상담 리스트 · ' + [m.day, m.name, m.who].filter(Boolean).join(' · ') + (m.memo ? ' — ' + m.memo.replace(/■[^:\n]*:\s*(\n|$)/g, '').replace(/\s+/g, ' ').trim().slice(0, 600) : '')); })() : null,
                             boss ? h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-dm-' + x.id, title: '이 콜을 직원에게 전달 (직원 화면에 팝업)', onclick: function () { dmSend({ to: x.asg ? (db.staff.filter(function (st) { return st.name === x.asg.to; })[0] || {}).id : '', ref: IB_KIND[x.kind][1] + ' · ' + x.label + (x.phone ? ' · ' + mfPhone(x.phone) : x.n4 ? ' · 끝 ' + x.n4 : '') + ' · ' + ibHms(x.t), t: (x.phone ? mfPhone(x.phone) + ' ' : '') + '고객님 연락 부탁드려요.' }); } }, '📨 전달') : null,
                             x.kind === 'rcv' && x.phone ? h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-memo-' + x.id, title: '이 번호로 상담 메모 열기', onclick: function () { ibRcvMemo(x); } }, '📝 상담 메모') : null,
-                            SEQ.mt[x.id] ? h('span', { class: 'ib-rcv-ok', title: '착신 휴대폰에 실제로 전화가 왔어요' }, '📱 통화 확인 ' + ibHms(SEQ.mt[x.id].t) + ' · ' + SEQ.mt[x.id].ph + (SEQ.mt[x.id].n4 ? ' · 끝 ' + SEQ.mt[x.id].n4 : '')) : null)),
+                            SEQ.mt[x.id] ? h('span', { class: 'ib-rcv-ok', title: '착신 휴대폰에 실제로 전화가 왔어요' }, '📱 통화 확인 ' + ibHms(SEQ.mt[x.id].t) + ' · ' + SEQ.mt[x.id].ph + (SEQ.mt[x.id].phone ? ' · ' + mfPhone(SEQ.mt[x.id].phone) + (ibWho(SEQ.mt[x.id]).nm ? ' (' + ibWho(SEQ.mt[x.id]).nm + ')' : '') : SEQ.mt[x.id].n4 ? ' · 끝 ' + SEQ.mt[x.id].n4 : '')) : null)),
                     asg,
                     h('div', { class: 'ib-chkw' }, h('label', { class: 'ib-chk' + (boss ? '' : ' ro') }, chk, h('span', {}, '확인'), x.chk ? h('small', {}, x.chk.by + (x.chk.at ? ' · ' + ibTime(x.chk.at) : '')) : (boss ? null : h('small', {}, '대표 확인 전'))), markBtns),
                     h('div', { class: 'ib-act' }, h('button', { type: 'button', class: 'btn btn-sm' + (open ? ' on' : ''), 'data-fk': 'ib-open-' + x.id, 'aria-expanded': open ? 'true' : 'false',
