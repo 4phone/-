@@ -644,6 +644,9 @@
             .m-app-btn { order: 2; display: inline-flex; align-items: center; gap: 5px; margin: 0 12px 0 auto; padding: 8px 13px; min-height: 36px; border-radius: 999px; border: 1px solid rgba(243,213,143,.75); background: linear-gradient(135deg, rgba(243,213,143,.22), rgba(226,186,98,.12)); color: #F3D58F; font-size: 13px; font-weight: 800; letter-spacing: -0.2px; cursor: pointer; font-family: inherit; white-space: nowrap; }
             .m-app-btn:active { transform: scale(.96); }
         }
+        @media (max-width: 400px) { .m-app-btn { padding: 7px 10px; gap: 4px; font-size: 12px; margin-right: 10px; min-height: 32px; } .m-app-btn svg { width: 13px; height: 13px; } }
+        @media (min-width: 351px) and (max-width: 380px) { .nav-logo-group img { height: 32px !important; } .nav-logo-text { height: 16px !important; } .nav-logo-group { gap: 8px !important; } }
+        @media (max-width: 350px) { .m-app-btn { padding: 6px 9px; font-size: 11.5px; margin-right: 8px; letter-spacing: -0.4px; } .m-app-btn svg { display: none; } .nav-logo-group img { height: 30px !important; } .nav-logo-text { height: 15px !important; } .nav-logo-group { gap: 7px !important; } }
         @media (display-mode: standalone) { .m-app-btn { display: none !important; } }
         html.sg-app .m-app-btn { display: none !important; }
         #mobile-nav-menu { border: 1px solid rgba(19,64,71,0.15); }
@@ -973,6 +976,14 @@
             .mobile-swipe-tabs { background: #0E343B; border-bottom: 1px solid rgba(255,255,255,0.08); box-shadow: 0 8px 20px rgba(3,20,24,0.2); }
             .m-tab-link { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: rgba(244,250,248,0.85); font-weight: 700; }
             .m-tab-link:active { background: var(--sg-gold); color: #0E343B; border-color: var(--sg-gold); }
+            /* 휴대폰 메뉴 칸: 3칸 × 3줄로 한눈에 (옆으로 넘기지 않음 · 2026-11-26) */
+            .mobile-swipe-tabs.m-grid + .sg-hero .sg-hero-inner { padding-top: 34px; }
+            .mobile-swipe-tabs.m-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 7px; overflow: visible; white-space: normal; padding: 10px 12px 12px; position: relative; top: auto; }
+            .m-grid .m-tab-link { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 42px; padding: 6px 4px; font-size: 13px; line-height: 1.2; letter-spacing: -0.4px; border-radius: 12px; word-break: keep-all; white-space: nowrap; }
+            .m-grid .m-tab-sub { color: #F3D58F; border-color: rgba(243,213,143,0.35); }
+            .m-grid .m-tab-boss { color: #F3D58F; border-color: rgba(243,213,143,0.75); background: linear-gradient(135deg, rgba(243,213,143,0.16), rgba(226,186,98,0.06)); font-size: 12.5px; font-weight: 800; }
+            .m-grid .m-tab-boss span { display: block; font-size: 11px; font-weight: 600; opacity: 0.9; }
+            @media (max-width: 340px) { .m-grid .m-tab-link { font-size: 12px; letter-spacing: -0.6px; } .m-grid .m-tab-boss { font-size: 11.5px; } .m-grid .m-tab-boss span { font-size: 10px; } }
             .sg-hero-inner { display: block; padding: 76px 22px 40px; min-height: 0; }
             .sg-hero-copy { max-width: none; }
             .sg-eyebrow { margin-bottom: 18px; }
@@ -1542,15 +1553,25 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
         </div>
     </div>
 
-    <!-- 모바일 전용 통신사 스와이프 탭 -->
-    <div class="mobile-swipe-tabs">
+    <!-- 모바일 전용 메뉴 칸 (2026-11-26: 옆으로 넘기지 않고 PC 메뉴 이름 그대로 3칸 × 3줄) -->
+    <div class="mobile-swipe-tabs m-grid">
         <a href="#prov-section-LG" class="m-tab-link" onclick="scrollToProv(event, 'LG')">U+인터넷</a>
-        <a href="#prov-section-KT" class="m-tab-link" onclick="scrollToProv(event, 'KT')">KT</a>
-        <a href="#prov-section-SK" class="m-tab-link" onclick="scrollToProv(event, 'SK')">SK</a>
+        <a href="#prov-section-KT" class="m-tab-link" onclick="scrollToProv(event, 'KT')">KT인터넷</a>
+        <a href="#prov-section-SK" class="m-tab-link" onclick="scrollToProv(event, 'SK')">SK인터넷</a>
         <a href="#prov-section-알뜰" class="m-tab-link" onclick="scrollToProv(event, '알뜰')">알뜰인터넷</a>
-        <a href="#prov-section-스카이" class="m-tab-link" onclick="scrollToProv(event, '스카이')">스카이라이프</a>
-        <a href="#prov-section-헬로" class="m-tab-link" onclick="scrollToProv(event, '헬로')">헬로비전</a>
+        <a href="#prov-section-스카이" class="m-tab-link" onclick="scrollToProv(event, '스카이')">KT스카이라이프</a>
+        <a href="#prov-section-헬로" class="m-tab-link" onclick="scrollToProv(event, '헬로')">LG헬로비전</a>
+        <a href="rental.html" class="m-tab-link m-tab-sub">렌탈</a>
+        <a href="#" class="m-tab-link m-tab-sub" onclick="openGiftPopup(event)">사은품 라인업</a>
+        <a href="boss.html" class="m-tab-link m-tab-boss">사업장(매장)<span>+오피스+다회선</span></a>
     </div>
+    <script>
+    /* 휴대폰 메뉴 칸을 위쪽 고정 머리말 바로 아래에 맞춤 (머리말 높이만큼 띄움) */
+    (function () {
+        function fit() { var n = document.querySelector('.navbar'), g = document.querySelector('.m-grid'); if (!n || !g) return; g.style.marginTop = (window.innerWidth <= 950 && getComputedStyle(n).position === 'fixed') ? n.offsetHeight + 'px' : ''; }
+        fit(); window.addEventListener('resize', fit); window.addEventListener('load', fit); document.addEventListener('DOMContentLoaded', fit);
+    })();
+    </script>
 
     <!-- 메인 첫 화면 (프리미엄 청록 디자인) -->
     <section class="sg-hero" aria-label="사거리인터넷 소개">
@@ -3545,7 +3566,7 @@ html.sgc-lock, html.sgc-lock body { overflow: hidden; }
             event.preventDefault(); 
             const target = document.getElementById('prov-section-' + prov);
             if (target) {
-                const offset = window.innerWidth > 950 ? 90 : 130; 
+                const nb = document.querySelector('.navbar'); const offset = window.innerWidth > 950 ? 90 : Math.max(80, Math.round((nb ? nb.getBoundingClientRect().bottom : 70) + 12)); 
                 const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - offset;
                 
                 window.scrollTo({
