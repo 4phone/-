@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nj4aIXegjfrVPLlzohXLeFmfRvSiooizJW7sQcpXyU0='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-h28DTikE+jjBq0CHb1qdnscM6f78pxStrD/LbtlCY2Y='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -769,6 +769,7 @@
         .cl-idr { display: block; width: 100%; max-width: 76px; box-sizing: border-box; margin-top: 4px; font: inherit; font-size: 11.5px; line-height: 1.25; font-weight: 800; white-space: nowrap; text-align: center; padding: 3px 4px; min-height: 28px; border-radius: 8px; border: 1.5px solid #00A0DC; background: #fff; color: #00739E; cursor: pointer; }
         .cl-idr span { display: block; } .cl-idr:hover { background: #E6F7FD; }
         @media (pointer: coarse) { .cl-idr { min-height: 40px; font-size: 12.5px; } }
+        .ib-aivia { font-size: 12px; font-weight: 700; color: #1F6F3F; margin: 0 0 4px; }
         .cl-grip { display: inline-block; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; padding: 2px 6px 2px 0; margin-right: 2px; color: #8A8F75; font-size: 16px; line-height: 1; vertical-align: middle; }
         .cl-grip:hover { color: #3E441E; } tr.cl-dragging { opacity: .45; } tr.cl-dragging .cl-grip { cursor: grabbing; }
         .cl-tbl tr.cl-drop-up td { box-shadow: inset 0 3px 0 #C0392B; } .cl-tbl tr.cl-drop-dn td { box-shadow: inset 0 -3px 0 #C0392B; }
@@ -2359,7 +2360,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-26.8';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-26.9';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -9643,6 +9644,17 @@
         }
         function aiWhen(x) { var d = new Date(x.t || x.at || Date.now()); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
         function aiDirTxt(dir) { return dir === 'out' ? '발신' : dir === 'in' ? '수신' : ''; }
+        function ibMtRcv(SEQ, x) {   // 버튼 줄과 합쳐진 착신 기록 (원래 줄 · 번호·이름·요약 포함)
+            var r = SEQ && SEQ.mt ? SEQ.mt[x.id] : null; if (!r) return null;
+            if (ib._mtRef !== ib.items) { var m = Object.create(null); ib.items.forEach(function (y) { if (y && y.id) m[y.id] = y; }); ib._mtMap = m; ib._mtRef = ib.items; }
+            return ib._mtMap[r.id] || r;
+        }
+        function ibAiVia(x, rc) {   // 버튼 줄 아래: 합쳐진 착신 통화의 요약 (이 줄에 요약이 따로 있으면 그것)
+            if (x.ai || !rc) return ibAiW(x);
+            if (!rc.ai) return rc.miss ? null : h('div', { class: 'ib-aiw' }, h('div', { class: 'ib-aisum', 'data-fk': 'ib-aivia-' + x.id }, Date.now() - rc.t < 900000 ? '🤖 ' + ibHms(rc.t) + ' 착신 통화 — 녹음 요약을 기다리는 중이에요' : '🎙 ' + ibHms(rc.t) + ' 착신 통화 — 녹음 요약 없음 (녹음이 안 올라왔어요)'));
+            var w = ibWho(rc), b = aiSumBox(rc); if (!b) return null;
+            return h('div', { class: 'ib-aiw', 'data-fk': 'ib-aivia-' + x.id }, h('div', { class: 'ib-aivia' }, '📱 ' + ibHms(rc.t) + ' 착신 통화 요약' + (w.ph ? ' · ' + mfPhone(w.ph) : rc.n4 ? ' · 끝 ' + rc.n4 : '') + (w.nm ? ' (' + w.nm + ')' : '') + (rc.ai.du ? ' · ⏱ ' + durTxt(rc.ai.du) : '')), b);
+        }
         function ibAiW(x) {   // 11-20.11: 요약은 줄 아래 전체 폭으로 크게
             var b = aiSumBox(x) || (x.kind === 'snd' ? h('div', { class: 'ib-aisum' }, Date.now() - x.t < 900000 ? '🤖 녹음 요약을 기다리는 중이에요' : '🎙 녹음 요약 없음 (녹음이 안 올라왔어요)') : null);
             return b ? h('div', { class: 'ib-aiw' }, b) : null;
@@ -10521,7 +10533,7 @@
                     pickBox = h('input', { type: 'checkbox', 'data-fk': 'ib-sel-' + x.id, 'aria-label': '지울 기록으로 선택', checked: !!ib.sel[x.id] });
                     pickBox.addEventListener('change', function () { if (this.checked) ib.sel[x.id] = 1; else delete ib.sel[x.id]; render(); });
                 }
-                var mk0 = ibMark(x), au = AU[x.id], mk = ibEff(x, AU), no = SEQ.no[x.id];
+                var mk0 = ibMark(x), au = AU[x.id], mk = ibEff(x, AU), no = SEQ.no[x.id], rcM = ibMtRcv(SEQ, x);
                 var markBtns = h('div', { class: 'ib-mk', role: 'group', 'aria-label': '실 인입 아님 표시' },
                     [['no', '미인입'], ['nc', '비상담'], ['old', '중복 인입'], ['test', '테스트']].concat(au || mk0 === 'yes' ? [['yes', '실 인입']] : []).map(function (o) {
                         if (o[0] === 'old') { var onO = mk0 === 'old' || (!mk0 && au === 'old'); return h('button', { type: 'button', class: 'btn btn-sm ib-mk-old' + (!mk0 && au === 'old' ? ' auto' : ''), 'data-fk': 'ib-mk-old-' + x.id, 'aria-pressed': onO ? 'true' : 'false', disabled: boss ? null : true, title: boss ? (mk0 === 'old' ? '다시 누르면 풀려요' : au === 'old' ? '자동으로 중복 인입이에요 (이 번호로 앞서 들어온 인입이 있음). 새 상담이면 [실 인입]' : '같은 손님이 다시 건 전화 → 중복 인입으로 표시하면 실 인입 순번에서 빠져요') : '대표님만 표시할 수 있어요', onclick: function () { if (!mk0 && au === 'old') { toast('자동으로 중복 인입이에요. 새 상담이면 [실 인입]을 눌러 주세요.'); return; } ibMarkSet(x, 'old'); } }, (onO ? '✓ ' : '') + o[1]); }
@@ -10540,13 +10552,13 @@
                                     '📝 상담 리스트 · ' + [m.day, m.name, m.who].filter(Boolean).join(' · ') + (m.memo ? ' — ' + m.memo.replace(/■[^:\n]*:\s*(\n|$)/g, '').replace(/\s+/g, ' ').trim().slice(0, 600) : '')); })() : null,
                             boss ? h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-dm-' + x.id, title: '이 콜을 직원에게 전달 (직원 화면에 팝업)', onclick: function () { dmSend({ to: x.asg ? (db.staff.filter(function (st) { return st.name === x.asg.to; })[0] || {}).id : '', ref: IB_KIND[x.kind][1] + ' · ' + x.label + (x.phone ? ' · ' + mfPhone(x.phone) : x.n4 ? ' · 끝 ' + x.n4 : '') + ' · ' + ibHms(x.t), t: (x.phone ? mfPhone(x.phone) + ' ' : '') + '고객님 연락 부탁드려요.' }); } }, '📨 전달') : null,
                             x.kind === 'rcv' && x.phone ? h('button', { type: 'button', class: 'btn btn-sm', 'data-fk': 'ib-memo-' + x.id, title: '이 번호로 상담 메모 열기', onclick: function () { ibRcvMemo(x); } }, '📝 상담 메모') : null,
-                            SEQ.mt[x.id] ? h('span', { class: 'ib-rcv-ok', title: '착신 휴대폰에 실제로 전화가 왔어요' }, '📱 통화 확인 ' + ibHms(SEQ.mt[x.id].t) + ' · ' + SEQ.mt[x.id].ph + (SEQ.mt[x.id].phone ? ' · ' + mfPhone(SEQ.mt[x.id].phone) + (ibWho(SEQ.mt[x.id]).nm ? ' (' + ibWho(SEQ.mt[x.id]).nm + ')' : '') : SEQ.mt[x.id].n4 ? ' · 끝 ' + SEQ.mt[x.id].n4 : '')) : null)),
+                            rcM ? h('span', { class: 'ib-rcv-ok', title: '착신 휴대폰에 실제로 전화가 왔어요' }, '📱 통화 확인 ' + ibHms(rcM.t) + ' · ' + rcM.ph + (ibWho(rcM).ph ? ' · ' + mfPhone(ibWho(rcM).ph) + (ibWho(rcM).nm ? ' (' + ibWho(rcM).nm + ')' : '') : rcM.n4 ? ' · 끝 ' + rcM.n4 : '')) : null)),
                     asg,
                     h('div', { class: 'ib-chkw' }, h('label', { class: 'ib-chk' + (boss ? '' : ' ro') }, chk, h('span', {}, '확인'), x.chk ? h('small', {}, x.chk.by + (x.chk.at ? ' · ' + ibTime(x.chk.at) : '')) : (boss ? null : h('small', {}, '대표 확인 전'))), markBtns),
                     h('div', { class: 'ib-act' }, h('button', { type: 'button', class: 'btn btn-sm' + (open ? ' on' : ''), 'data-fk': 'ib-open-' + x.id, 'aria-expanded': open ? 'true' : 'false',
                         onclick: function () { if (ib.open[x.id]) delete ib.open[x.id]; else ib.open[x.id] = 1; render(); } }, '댓글' + (x.cm.length ? ' ' + x.cm.length : '')),
                         bossDel ? h('button', { type: 'button', class: 'btn btn-sm btn-danger', 'data-fk': 'ib-del-' + x.id, disabled: ib.deleting ? true : null, onclick: function () { ibDelete([x.id]); } }, '삭제') : null),
-                    ibAiW(x), notes);
+                    ibAiVia(x, rcM), notes);
             });
             return h('div', {}, head,
                 h('p', { class: 'forms-sub' }, '고객이 홈페이지에서 전화·카톡·문자 버튼을 누르거나 접수를 마치면 여기에 바로 올라와요. 이름 버튼을 눌러 담당자를 정하고(모든 직원 가능), 처리 내용은 댓글로 남겨 주세요. [확인] 체크와 기록 삭제는 대표님만 할 수 있어요.'),
