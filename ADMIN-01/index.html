@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-hJHf17fMCATuo5dRQRDGHEqqdoLKH8wCFx5q2m3qdVk='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-KOfS7tIVCow3H75XcvJypRu6rywlf1uMDRU4uTeHTM8='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1889,6 +1889,7 @@
         .pol-tvx .btn-sm { padding: 2px 8px; min-height: 28px; font-size: 12.5px; }
         .pol-tvx .tv-d { border-color: #3B7BD0; }
         .pol-tvx .tv-sum { color: #1D4F91; }
+        .dl-code { font-size: 15px; } .dl-code b { font-size: 24px; letter-spacing: 4px; color: #A61F1F; }
         .pol-tbl td.p-inst .p-none { display: block; white-space: normal; min-width: 150px; max-width: 230px; font-size: 11.5px; font-weight: 600; line-height: 1.45; color: var(--muted); }
         .pol-tbl tr.pol-row td.p-inst span.p-none, body .pol-tbl tr.pol-row td.p-inst span.p-none { display: block; white-space: normal; max-width: none; margin-right: 0; }
         .ib-aimv { margin-left: 8px; font-size: 12px; color: #8A4B00; }
@@ -2355,7 +2356,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-26.6';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-26.7';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -2424,6 +2425,11 @@
         }, true);
         function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
         function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+        function devLabel() {   // 11-26.7: 'Windows PC · Chrome' · 'Android 휴대폰 · 삼성 인터넷' (기기 잠금 목록에 보이는 이름 · 개인정보 아님)
+            var u = navigator.userAgent || '', os = /iPhone/.test(u) ? 'iPhone' : /iPad/.test(u) ? 'iPad' : /Android/.test(u) ? (/Mobile/.test(u) ? 'Android 휴대폰' : 'Android 태블릿') : /Windows/.test(u) ? 'Windows PC' : /Mac OS/.test(u) ? 'Mac' : 'PC';
+            var br = /SamsungBrowser/.test(u) ? '삼성 인터넷' : /Whale/.test(u) ? '웨일' : /Edg\//.test(u) ? 'Edge' : /CriOS|Chrome\//.test(u) ? 'Chrome' : /Safari\//.test(u) ? 'Safari' : /Firefox/.test(u) ? 'Firefox' : '';
+            return (os + (br ? ' · ' + br : '')).slice(0, 30);
+        }
         function devId() {   // 이 기기를 구분하는 무작위 번호 (로그인 기기 수 세기용, 개인정보 아님)
             var k = 'sageori_admin_device', v = lsGet(k);
             if (!v || !/^[A-Za-z0-9]{24}$/.test(v)) {
@@ -4905,7 +4911,7 @@
             if (!DRIVE_URL_RE.test(url)) return Promise.reject(new Error('url'));
             var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, waitMs || DRIVE_TIMEOUT_MS);
             var base = { action: action, av: APP_VERSION };   // 화면 버전: 예전 화면이면 서버가 저장을 거절 (새로고침 안내)
-            if (action === 'login' || action === 'signup' || action === 'adminInit') base.dev = devId();   // 계정당 기기 3대: 이 기기를 구분하는 번호
+            if (action === 'login' || action === 'signup' || action === 'adminInit' || action === 'devLock') { base.dev = devId(); base.dn = devLabel(); }   // 계정당 기기 3대: 이 기기를 구분하는 번호 (+ 기기 이름: 기기 잠금 목록용)
             if (db && db.account && db.account.session) base.session = db.account.session;   // 계정 로그인 확인표(서버가 승인된 계정인지 확인)
             var body = JSON.stringify(Object.assign(base, payload || {}));
             return fetch(url, {
@@ -5943,7 +5949,14 @@
             if (wait > 0) { ui.err('비밀번호를 여러 번 틀려서 잠겼어요. ' + fmtWait(wait) + ' 뒤에 다시 시도해 주세요.'); return; }
             ui.busy(true, '확인 중...');
             var srv = acctToken(email, pw).then(function (tok) {
-                return driveCall(teamUrl, 'login', { email: email, pw: tok }).then(function (r) { return { res: r }; }, function (e) { return { er: e }; });
+                var go = function (dc) { return driveCall(teamUrl, 'login', dc ? { email: email, pw: tok, dcode: dc } : { email: email, pw: tok }); };
+                var ask = function (msg) { var c = window.prompt(msg); c = String(c || '').replace(/\D/g, ''); return c.length === 6 ? c : ''; };
+                return go('').catch(function (e) {   // 11-26.7: 🔒 기기 잠금 계정 → 등록된 기기에서 받은 6자리 코드
+                    if (!e || e.code !== 'dev_locked') throw e;
+                    var c1 = ask('🔒 이 계정은 등록한 기기에서만 로그인할 수 있어요.\n등록된 기기의 사거리온 → 설정 → 🔒 내 계정 기기 잠금 → [다른 기기 추가 코드 받기]에서 받은 6자리 코드를 넣어 주세요.');
+                    if (!c1) throw e;
+                    return go(c1).catch(function (e2) { if (!e2 || e2.code !== 'dev_code') throw e2; var c2 = ask('코드가 맞지 않거나 10분이 지났어요. 새 코드를 넣어 주세요.'); if (!c2) throw e2; return go(c2); });
+                }).then(function (r) { return { res: r }; }, function (e) { return { er: e }; });
             });
             var loc = auth ? verifyPw(pw, auth).then(function (key) { return { key: key }; }, function () { return { bad: true }; }) : Promise.resolve({ none: true });
             Promise.all([srv, loc]).then(function (r) {
@@ -14512,6 +14525,29 @@
                 acctOp(a.email, a.gx ? 'gxOff' : 'gxOn', a.staffId, a.gx ? s.name + '님의 엑셀 다운로드 권한을 뺐어요.' : s.name + '님에게 엑셀 다운로드 권한을 줬어요.');
             } }, a.gx ? '📥 엑셀 받기 권한 있음' : '📥 엑셀 받기 권한 주기');
         }
+        var dlk = { st: null, busy: false, code: '', codeExp: 0 };
+        function devLockCall(op, extra) {
+            dlk.busy = true; render();
+            return acctCall('devLock', Object.assign({ op: op }, extra || {})).then(function (r) { dlk.busy = false; dlk.st = r; if (r.code) { dlk.code = r.code; dlk.codeExp = r.codeExp; } render(); return r; },
+                function (e) { dlk.busy = false; render(); toast(e && e.code === 'bad_action' ? 'Apps Script를 1120-16으로 배포한 뒤에 쓸 수 있어요.' : driveErrText(e)); throw e; });
+        }
+        function devLockBlock() {   // 11-26.7: 🔒 내 계정 기기 잠금 (설정)
+            if (!driveOn() || !db.drive.acc || !db.account || !db.account.session) return null;
+            if (!dlk.st && !dlk.busy && !dlk.err) { dlk.err = 1; devLockCall('list').then(function () { dlk.err = 0; }, function () { /* 서버가 예전 버전 */ }); }
+            var st = dlk.st, on = !!(st && st.on), live = on && dlk.code && dlk.codeExp > Date.now(), hm = function (t) { var d = new Date(t); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
+            return h('div', { class: 'set-block', 'data-fk': 'dev-lock' }, h('h2', {}, '🔒 내 계정 기기 잠금'),
+                h('p', { class: 'ib-help' }, on ? '켜져 있어요: 아래 기기에서만 내 아이디(' + db.account.email + ')로 로그인돼요. 다른 기기는 비밀번호를 알아도 못 들어오고, 이미 로그인돼 있던 다른 기기도 풀렸어요.' : '켜면 지금 이 기기만 내 아이디로 로그인되고, 다른 기기의 로그인은 바로 풀려요. 휴대폰 같은 기기는 [다른 기기 추가 코드]로 하나씩 등록해요 (최대 3대). 직원 계정은 그대로예요.'),
+                on ? h('ul', { class: 'kc-ul' }, (st.devs || []).map(function (x) {
+                    return h('li', {}, (x.me ? '✅ ' : '📱 ') + x.n + (x.me ? ' (지금 이 기기)' : '') + (x.t ? ' · 등록 ' + fmtDT(x.t) : ''), ' ',
+                        x.me ? null : h('button', { type: 'button', class: 'btn btn-sm', disabled: dlk.busy ? true : null, onclick: function () { if (confirm(x.n + ' 기기를 빼고 그 기기 로그인을 풀까요?')) devLockCall('del', { i: x.i }).then(function () { toast('뺐어요.'); }, function () {}); } }, '빼기'));
+                })) : null,
+                live ? h('p', { class: 'dl-code' }, '다른 기기 추가 코드: ', h('b', {}, dlk.code), ' (' + hm(dlk.codeExp) + '까지 · 한 번만) — 새 기기에서 로그인하면 코드를 물어봐요.') : null,
+                h('div', { class: 'actions' },
+                    !on ? h('button', { type: 'button', class: 'btn btn-dark', 'data-act': 'dev-lock-on', disabled: dlk.busy ? true : null, onclick: function () { if (confirm('지금 이 기기(' + devLabel() + ')만 내 아이디로 로그인되게 잠글까요?\n다른 기기(휴대폰 포함)의 로그인은 바로 풀려요. 휴대폰은 다음 단계의 6자리 코드로 다시 등록해요.')) devLockCall('on').then(function () { toast('🔒 이 기기만 로그인되게 잠갔어요. 휴대폰은 [다른 기기 추가 코드 받기]로 등록해 주세요.'); }, function () {}); } }, '🔒 이 기기만 로그인되게 잠그기') : null,
+                    on ? h('button', { type: 'button', class: 'btn btn-primary', 'data-act': 'dev-lock-code', disabled: dlk.busy ? true : null, onclick: function () { devLockCall('code').then(function (r) { toast('코드 ' + r.code + ' (10분) — 휴대폰에서 로그인할 때 넣어 주세요.'); }, function () {}); } }, '📱 다른 기기 추가 코드 받기') : null,
+                    on ? h('button', { type: 'button', class: 'btn', 'data-act': 'dev-lock-off', disabled: dlk.busy ? true : null, onclick: function () { if (confirm('기기 잠금을 풀까요? 어느 기기에서든 비밀번호로 로그인할 수 있게 돼요.')) devLockCall('off').then(function () { dlk.code = ''; toast('기기 잠금을 풀었어요.'); }, function () {}); } }, '잠금 풀기') : null,
+                    h('button', { type: 'button', class: 'btn btn-sm', disabled: dlk.busy ? true : null, onclick: function () { devLockCall('list').then(function () {}, function () {}); } }, '새로고침')));
+        }
         function renderSettings() {
             if (!isAdminUser()) return renderStaffSettings();
             var file = h('input', { type: 'file', accept: '.json,application/json', hidden: true, id: 'import-file' });
@@ -14532,6 +14568,7 @@
                                 h('button', { type: 'button', class: 'btn btn-sm btn-danger', onclick: function () { removeStaff(s); } }, '삭제')));
                     }))),
                 accountBlock(),
+                devLockBlock(),
                 driveBlock(),
                 driveOn() ? h('div', { class: 'set-block', 'data-fk': 'ci-set' }, h('h2', {}, '📱 착신 휴대폰 연결'), ibCiSetup()) : null,
                 h('div', { class: 'set-block' }, h('h2', {}, '암호화 백업'),
