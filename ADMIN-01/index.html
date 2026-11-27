@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-l97wUz7cV5TPfT5v5D8m64kiLt2Q7AdpoZQ3l6WYgYI='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Aay7f750GSKqk1+NQmd2XLqWPD5UGQCL8u6Mq9K3mqY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -1235,7 +1235,7 @@
         .vs-bar-fill { display: block; height: 100%; background: var(--olive-700); border-radius: 999px; }
         .vs-bar-num { text-align: right; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
         .vs-row { display: grid; grid-template-columns: 128px 170px minmax(0, 1fr) 70px; gap: 10px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--line); font-size: 14px; }
-        .vs-src { font-weight: 700; } .vs-det { color: var(--muted); word-break: break-all; }
+        .vs-src { font-weight: 700; } .vs-how { color: var(--ink, #222); font-weight: 600; } .vs-tech { font-size: 11px; margin-top: 2px; } .vs-tech summary { cursor: pointer; color: var(--muted); } .vs-det { color: var(--muted); word-break: break-all; }
         @media (max-width: 900px) {
             .vs-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
             .vs-card { padding: 12px; } .vs-card b { font-size: 19px; }
@@ -2360,7 +2360,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-26.10';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-27.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -10803,10 +10803,12 @@
             var m = {}; items.forEach(function (x) { var k = keyFn(x); m[k] = (m[k] || 0) + 1; });
             return Object.keys(m).map(function (k) { return [k, m[k]]; }).sort(function (a, b) { return b[1] - a[1] || (a[0] < b[0] ? -1 : 1); });
         }
-        var VS_GROUPS = ['구글', '네이버', '카카오', '인스타그램', '다음', '유튜브', '페이스북', '당근', '밴드', '블로그', '빙·줌', '직접 방문', '기타'];
+        var VS_GROUPS = ['전단·QR', '구글', '네이버', '카카오', '인스타그램', '다음', '유튜브', '페이스북', '당근', '밴드', '블로그', '빙·줌', '직접 방문', '기타'];
         function vsGroup(src) {   // 자세한 경로 → 큰 묶음 (구글 검색·구글 앱·구글 광고 → 구글)
             var s = String(src || '');
+            if (/^광고·링크:.*(전단|현수막|flyer|print|qr)/i.test(s)) return '전단·QR';   // 11-27.1
             if (/구글|google|gmail/i.test(s)) return '구글';
+            if (/^광고·링크:.*kakao/i.test(s)) return '카카오';
             if (/네이버|naver/i.test(s)) return '네이버';
             if (/카카오/.test(s)) return '카카오';
             if (/인스타/.test(s)) return '인스타그램';
@@ -10820,6 +10822,33 @@
             if (s === '직접 방문') return '직접 방문';
             return '기타';
         }
+        function vsPlain(x) {   // [이름, 어떻게 들어왔는지] — 홈페이지가 보낸 경로·utm 표시로 판단
+            var s = String(x.src || ''), u = [x.us, x.um, x.uc].join(' '), us = String(x.us || '').replace(/^광고·링크:\s*/, '');
+            var lk = /^광고·링크:\s*(.+)$/.exec(s), tag = us || (lk ? lk[1] : '');
+            var area = (/[_\-\s]([가-힣]{2,10})$/.exec(tag) || [])[1] || (/^[가-힣]{2,10}$/.test(String(x.uc || '')) && !/전단|현수막|광고/.test(x.uc) ? x.uc : '');
+            if (/현수막|placard/i.test(u + ' ' + s)) return ['🪧 현수막 QR' + (area ? ' (' + area + ')' : ''), '현수막의 QR 코드를 휴대폰으로 찍고 들어왔어요' + (area ? ' — ' + area + ' 현수막' : '')];
+            if (/전단|flyer|leaflet|print|poster|qr/i.test(u + ' ' + s)) return ['📄 전단지 QR' + (area ? ' (' + area + ')' : ''), '전단지의 QR 코드를 휴대폰으로 찍고 들어왔어요' + (area ? ' — ' + area + ' 지역에 돌린 전단' : '')];
+            if (/bizboard|비즈보드/i.test(u) || (/kakao|카카오/i.test(String(x.us || '')) && /cpc|cpm|display|ad|광고/i.test(String(x.um || '')))) return ['💬 카카오톡 광고', '카카오톡 채팅 목록 위 광고 배너를 누르고 들어왔어요'];
+            if (/(^|\s)(sms|lms|mms|문자)/i.test(u)) return ['✉️ 문자 링크', '보낸 문자 속 링크를 누르고 들어왔어요'];
+            if (s === '구글 광고') return ['🔵 구글 광고', '구글에서 검색한 뒤 광고를 누르고 들어왔어요'];
+            if (s === '네이버 광고') return ['🟢 네이버 광고', '네이버에서 검색한 뒤 파워링크 광고를 누르고 들어왔어요'];
+            if (/블로그|티스토리/.test(s)) return ['📝 ' + s, '블로그 글 속 링크를 누르고 들어왔어요'];
+            if (/플레이스|지도/.test(s)) return ['📍 ' + s, '지도·플레이스의 업체 정보에서 홈페이지를 누르고 들어왔어요'];
+            if (/카페/.test(s)) return ['☕ ' + s, '카페 글 속 링크를 누르고 들어왔어요'];
+            if (/구글|google/i.test(s)) return ['🔵 구글 검색', '구글에서 검색해 광고가 아닌 결과를 누르고 들어왔어요'];
+            if (/네이버/.test(s)) return ['🟢 네이버 검색', '네이버에서 검색해 광고가 아닌 결과를 누르고 들어왔어요'];
+            if (/다음/.test(s)) return ['🔍 다음 검색', '다음에서 검색해 결과를 누르고 들어왔어요'];
+            if (/카카오/.test(s)) return ['💬 카카오톡', '카카오톡 대화·채널·오픈채팅에 공유된 링크를 누르고 들어왔어요'];
+            if (/인스타/.test(s)) return ['📷 인스타그램', '인스타그램 프로필·게시물의 링크를 누르고 들어왔어요'];
+            if (/유튜브/.test(s)) return ['▶️ 유튜브', '유튜브 영상·채널의 링크를 누르고 들어왔어요'];
+            if (/페이스북/.test(s)) return ['📘 페이스북', '페이스북 게시물의 링크를 누르고 들어왔어요'];
+            if (/당근/.test(s)) return ['🥕 당근', '당근 게시글·비즈프로필의 링크를 누르고 들어왔어요'];
+            if (/밴드/.test(s)) return ['👥 밴드', '밴드 글 속 링크를 누르고 들어왔어요'];
+            if (s === '직접 방문') return ['🏠 직접 방문', '주소를 직접 쳤거나 즐겨찾기·홈 화면 아이콘으로, 또는 어디서 왔는지 알려 주지 않는 앱 안에서 열었어요'];
+            if (lk) return ['🔗 홍보 링크 (' + lk[1] + ')', '"' + lk[1] + '" 표시를 붙여 둔 홍보 링크를 누르고 들어왔어요'];
+            return [s || '알 수 없음', '다른 사이트의 링크를 누르고 들어왔어요'];
+        }
+        function vsLb(x) { return x.lb || (x.lb = vsPlain(x)[0]); }
         function vsKw(x) {   // 11-20.3: 🔎 검색어 · 광고 키워드 · 순위 (홈페이지가 보낸 값 — 예전 기록·검색 사이트가 안 알려 준 경우는 없음)
             var a = [];
             if (x.kw) a.push('🔎 검색어 "' + x.kw + '"');
@@ -10833,7 +10862,7 @@
             var label = btn.textContent; btn.disabled = true; btn.textContent = '만드는 중...';
             vsFetch(pv).then(function (o) {
                 btn.disabled = false; btn.textContent = label;
-                var r = o.r, items = o.items, days = daysIn(r), byDay = {}, srcs = vsCount(items, function (x) { return x.src; }), grps = vsCount(items, function (x) { return vsGroup(x.src); });
+                var r = o.r, items = o.items, days = daysIn(r), byDay = {}, srcs = vsCount(items, vsLb), grps = vsCount(items, function (x) { return vsGroup(x.src); });
                 days.forEach(function (d) { byDay[d] = { all: 0, m: 0, pc: 0 }; });
                 items.forEach(function (x) { var d = ymd(new Date(x.t)); if (byDay[d]) { byDay[d].all++; byDay[d][x.dev]++; } });
                 var mob = items.filter(function (x) { return x.dev === 'm'; }).length;
@@ -10849,7 +10878,7 @@
                 head.push(sum.length); sum.push(['날짜', '방문', '모바일', 'PC']);
                 days.forEach(function (d) { sum.push([d, byDay[d].all, byDay[d].m, byDay[d].pc]); });
                 var det = [['일시', '경로 묶음', '유입 경로', '검색어', '광고 키워드', '광고 순위', '참조 사이트', 'utm_source', 'utm_medium', 'utm_campaign', '기기', '첫 화면', '광고 IP', '7일 광고 클릭', '기기 표시']];
-                items.forEach(function (x) { det.push([fmtDT(x.t), vsGroup(x.src), x.src, x.kw, x.ak, x.kr || '', x.ref, x.us, x.um, x.uc, x.dev === 'm' ? '모바일' : 'PC', x.page, x.ip, x.adn || '', x.did]); });
+                items.forEach(function (x) { det.push([fmtDT(x.t), vsGroup(x.src), vsLb(x) + ' — ' + vsPlain(x)[1], x.kw, x.ak, x.kr || '', x.ref, x.us, x.um, x.uc, x.dev === 'm' ? '모바일' : 'PC', x.page, x.ip, x.adn || '', x.did]); });
                 var sus = vsAdSus(items); if (sus.length) { sum.push([]); head.push(sum.length); sum.push(['광고 부정클릭 의심 IP (' + VS_AD_MIN + '번 이상)', '이 기간 클릭', '7일 최대']); sus.forEach(function (o) { sum.push([o.ip || '(기기 ' + o.did + ')', o.n, o.max7 || '']); }); }
                 saveBlob('홈페이지인입_' + r.label + '.xlsx', xlsxBlob([
                     { name: '요약', widths: [34, 10, 10, 10], rows: sum, head: head },
@@ -10897,7 +10926,7 @@
             var gcount = Object.create(null); all.forEach(function (x) { var g = vsGroup(x.src); gcount[g] = (gcount[g] || 0) + 1; });
             if (vs.grp !== 'all' && !gcount[vs.grp] && vs.grp !== '구글') vs.grp = 'all';
             var items = vs.grp === 'all' ? all : all.filter(function (x) { return vsGroup(x.src) === vs.grp; });
-            var srcs = vsCount(items, function (x) { return x.src; }), top = srcs.length ? srcs[0][1] : 0;
+            var srcs = vsCount(items, vsLb), top = srcs.length ? srcs[0][1] : 0;
             var mob = items.filter(function (x) { return x.dev === 'm'; }).length, gN = gcount['구글'] || 0;
             var grpBtns = h('div', { class: 'vs-tabs vs-grps', role: 'group', 'aria-label': '경로 묶음' },
                 [['all', '전체', all.length]].concat(VS_GROUPS.filter(function (g) { return g === '구글' || gcount[g]; }).map(function (g) { return [g, g, gcount[g] || 0]; })).map(function (g) {
@@ -10906,8 +10935,9 @@
                 }));
             var status = vsStatusTxt();
             var rows = items.slice(0, 300).map(function (x) {
-                return h('div', { class: 'vs-row' }, h('div', { class: 'ib-time' }, ibTime(x.t), x.ai && x.ai.du ? h('span', { class: 'ib-dur', title: '통화 시간 (녹음 길이)' }, '⏱ ' + durTxt(x.ai.du)) : null), h('div', { class: 'vs-src' }, x.src),
-                    h('div', { class: 'vs-det' }, vsKw(x) ? h('b', { class: 'vs-kw' }, vsKw(x)) : null, vsKw(x) ? h('br') : null, vsDetail(x) || (vsKw(x) ? '' : '-')), h('div', {}, h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC')));
+                return h('div', { class: 'vs-row' }, h('div', { class: 'ib-time' }, ibTime(x.t), x.ai && x.ai.du ? h('span', { class: 'ib-dur', title: '통화 시간 (녹음 길이)' }, '⏱ ' + durTxt(x.ai.du)) : null), h('div', { class: 'vs-src' }, vsLb(x)),
+                    h('div', { class: 'vs-det' }, h('span', { class: 'vs-how' }, '→ ' + vsPlain(x)[1]), vsKw(x) ? h('br') : null, vsKw(x) ? h('b', { class: 'vs-kw' }, vsKw(x)) : null,
+                        vsDetail(x) ? h('details', { class: 'vs-tech' }, h('summary', {}, '자세히'), vsDetail(x)) : null), h('div', {}, h('span', { class: 'ib-dev' }, x.dev === 'm' ? '모바일' : 'PC')));
             });
             return h('div', {}, head,
                 h('p', { class: 'forms-sub' }, '고객이 어떤 경로(네이버 검색, 구글 검색, 인스타그램, 카카오톡, 직접 방문 등)로 홈페이지에 들어왔는지 보여줘요. 한 사람이 새로고침해도 한 번만 세요. 아래 [구글]을 누르면 구글로 들어온 방문만 따로 볼 수 있어요. 오른쪽 위 [엑셀]로 기간별 자료를 내려받을 수 있어요.'),
