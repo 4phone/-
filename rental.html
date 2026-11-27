@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-oxaWUwmw+G+2dxfQEW07zQLCMnYzWhZAN6qJkzGJdms='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-sIBiTzbKZF6ANFiSQp1VQlOrOX0GkSsHRiKgRJswIpo=' 'sha256-NGy1tVjH+W2FbsxRGuxJd8sLSxUVqTKHuyxNBYO3o+M='; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com data:; img-src 'self' https: data:; connect-src 'self' https://modil.co.kr https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#0A2B32">
 <title>정수기 · 가전렌탈 | 사거리인터넷</title>
@@ -85,7 +85,7 @@ img { max-width: 100%; }
 .chips::-webkit-scrollbar { display: none; }
 .chip { flex: none; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid #DCD2BA; background: transparent; font-size: 13.5px; font-weight: 600; color: var(--muted); }
 .chip[aria-pressed="true"] { border-color: var(--gold-3); background: #FBF3DC; color: var(--gold-ink); }
-.meta { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); }
+.meta { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13.5px; color: var(--muted); min-height: 20px; }   /* 개수 글자가 늦게 들어와도 아래가 안 밀리게 (11-27) */
 .meta b { color: var(--ink); }
 .reset { border: 0; background: none; color: var(--teal-2); font-weight: 700; text-decoration: underline; padding: 6px 2px; }
 
@@ -357,8 +357,10 @@ img { max-width: 100%; }
 /* 11-25 목록을 불러오는 동안 칸을 미리 잡아 둠 (불러온 뒤 화면이 아래로 밀리지 않게) */
 .tabs:empty { min-height: 46px; }
 #grid:empty { min-height: 100vh; }
-.subtools:has(~ .list #grid:empty) #facets[hidden] { display: block !important; visibility: hidden; min-height: 146px; }
-@media (max-width: 900px) { .tabs:empty { min-height: 42px; } .subtools:has(~ .list #grid:empty) #facets[hidden] { min-height: 140px; } }
+/* 불러오는 동안(빈 칸·회색 상자) 고르기 칸 자리를 미리 비워 둠 → 목록이 아래로 툭 밀리지 않게 (가전렌탈은 칸이 더 높음 · 11-27) */
+.subtools:has(~ .list #grid:empty) #facets[hidden], .subtools:has(~ .list #grid > .skel) #facets[hidden] { display: block !important; visibility: hidden; min-height: 146px; }
+.subtools:has(~ .list #grid:empty) #facets[hidden][data-r="a"], .subtools:has(~ .list #grid > .skel) #facets[hidden][data-r="a"] { min-height: 279px; }
+@media (max-width: 900px) { .tabs:empty { min-height: 42px; } .subtools:has(~ .list #grid:empty) #facets[hidden], .subtools:has(~ .list #grid > .skel) #facets[hidden] { min-height: 140px; } .subtools:has(~ .list #grid:empty) #facets[hidden][data-r="a"], .subtools:has(~ .list #grid > .skel) #facets[hidden][data-r="a"] { min-height: 268px; } }
 .biz-tag { display: inline-block; align-self: flex-start; margin-top: 6px; font-size: 11.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
 .cc-foot { display: flex; align-items: stretch; border-top: 1px solid #EFE6CF; }
 .cc-go { flex: 1; min-height: 46px; border: 0; background: #FBF6E6; color: var(--gold-ink); font-weight: 800; font-size: 14.5px; text-align: center; }
@@ -637,6 +639,7 @@ body { color-scheme: only light; }   /* 몸통 안 입력 칸·체크 상자·�
 </div>
 <div class="subtools">
     <div class="facets" id="facets" hidden></div>
+    <script>(function(){try{if(/type=(%EA%B0%80%EC%A0%84|가전)/.test(location.search))document.getElementById('facets').setAttribute('data-r','a')}catch(e){}})();</script>   <!-- 가전렌탈이면 첫 화면부터 고르기 칸 자리를 높게 잡음 (11-27) -->
     <div class="meta"><span id="count" aria-live="polite"></span><button type="button" class="reset" id="reset" hidden>조건 초기화</button></div>
 </div>
 <main class="list">
@@ -1238,6 +1241,7 @@ var RENT_GIFT_SHOW = false;
         $('list-view').hidden = false; $('detail-view').hidden = true; document.title = '정수기 · 가전렌탈 | 사거리인터넷';
         var grid = $('grid');
         if (!DATA) {
+            $('facets').setAttribute('data-r', st.type === '가전렌탈' ? 'a' : 'w');
             clear(grid); for (var i = 0; i < 8; i++) grid.appendChild(h('div', { class: 'skel', 'aria-hidden': 'true' }));
             $('count').textContent = '상품 정보를 불러오는 중이에요...'; $('more').hidden = true;
         }
