@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Aay7f750GSKqk1+NQmd2XLqWPD5UGQCL8u6Mq9K3mqY='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dlKQkaYpMRBQ09AOHVsT7RV8LqnvTaU87SsZ4uIPhsg='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -2360,7 +2360,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-27.1';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-27.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -6663,7 +6663,7 @@
             var label = (cr.tag ? hz + ' ' + cr.tag + '. ' : hz + ' ') + [name, what, cr.sub, when].filter(Boolean).join('. ');   // 통신사를 안 적었으면 하트 뒤에 바로 이름
             label = label.slice(0, 80);
             var note = ['사거리인터넷 ' + (M.kind === 'mobile' ? '모바일' : rentC ? '렌탈' : '유선') + ' 가입', v('carrier'), v('seller') ? '담당 ' + v('seller') : '', v('netUse') ? '거래처 ' + v('netUse') : '', '가입 ' + y + '-' + pad(m) + '-' + pad(d)].filter(Boolean).join(' · ').slice(0, 200);
-            return { label: label, phone: digitsOnly(v('phone')), note: note, birth: digitsOnly(v('birth')).slice(0, 8) };   // 가입자 생년월일 → 구글 연락처 생일 (법정대리인 생년월일은 안 넣음 · 틀리면 서버가 무시)
+            return { label: label, phone: digitsOnly(v('phone')), note: note, birth: digitsOnly(v('birth')).slice(0, 8), line: M.kind === 'mobile' ? 'm' : rentC ? 'r' : 'w' };   // 11-27.2: 종류(휴대폰·유선·렌탈)마다 연락처 하나   // 가입자 생년월일 → 구글 연락처 생일 (법정대리인 생년월일은 안 넣음 · 틀리면 서버가 무시)
         }
         function mfDriveSave(M, sheet, btn) {   // 완성한 가입 확인서 → 구글 드라이브 '26년10월' 폴더 (파일 이름: 20일 고객명 / 유선은 뒤에 '유선')
             var q = function (n) { var el = sheet.querySelector('[data-mf="' + n + '"]'); return el; };
@@ -6812,7 +6812,9 @@
         }
         function ctOkMsg(cr, ct) {   // 판매 고객 연락처 저장 결과 문구
             return (cr.updated ? (cr.fromProspect ? '재케어(가망) 연락처를 판매 고객 "' + ct.label + '"(으)로 바꿨어요.' : '같은 번호의 구글 연락처를 "' + ct.label + '"(으)로 바꿨어요.') : '구글 연락처에 "' + ct.label + '"(으)로 저장했어요.')
-                + (cr.removed ? ' 남아 있던 재케어 연락처 ' + cr.removed + '개는 지웠어요.' : '');
+                + (cr.removed ? ' 남아 있던 재케어 연락처 ' + cr.removed + '개는 지웠어요.' : '')
+                + (cr.dup ? ' 같은 번호의 예전 ' + (cr.line || '') + ' 연락처 ' + cr.dup + '개는 하나로 정리했어요.' : '')
+                + (cr.other && cr.other.length ? ' (같은 번호의 ' + cr.other.join('·') + ' 연락처는 따로 그대로 있어요)' : '');
         }
         function ctSaleRetry(M, ct, why) {   // 그림은 저장됐는데 연락처만 실패: 연락처만 다시 저장 (몇 번이든)
             if (!confirm('가입 확인서 그림은 드라이브에 저장했어요.\n\n⚠ 구글 연락처는 아직 저장하지 못했어요.\n' + why + '\n\n[확인]을 누르면 연락처만 다시 저장해요.')) { toast('연락처는 저장하지 않았어요. 이 확인서를 다시 저장하면 연락처도 다시 저장해요.'); return; }
