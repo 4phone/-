@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <!-- 보안 정책(CSP): 이 페이지의 스크립트 외에는 실행하지 않고, 구글 Apps Script(공유 저장소 연동) 외의 외부 접속·전송·글꼴·이미지 불러오기를 모두 막습니다 -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-dlKQkaYpMRBQ09AOHVsT7RV8LqnvTaU87SsZ4uIPhsg='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-E9x/zpIQZWAGhLVkJb7I11zIin6i/kJDqC97BzEn9Ko='; style-src 'unsafe-inline'; img-src 'self' data:; media-src blob:; worker-src blob:; connect-src 'self' https://script.google.com/macros/s/ https://script.googleusercontent.com https://modil.co.kr/api/feed/rental http://127.0.0.1:47615; base-uri 'none'; form-action 'none'; object-src 'none'">
     <meta name="referrer" content="no-referrer">
     <!-- 관리자 전용 페이지: 검색엔진에 노출되지 않도록 설정 -->
     <meta name="robots" content="noindex, nofollow, noarchive">
@@ -146,6 +146,7 @@
         .ib-pv { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 4px 0 10px; padding: 8px 10px; background: #fff; border: 1px solid var(--line); border-radius: 12px; }
         .ib-pv-u { display: inline-flex; gap: 4px; } .ib-pv-u .btn.on { background: var(--olive-700); border-color: var(--olive-700); color: #fff; }
         .ib-pv-nav { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; } .ib-pv-label { min-width: 0; font-size: 15px; } .ib-pv-pick { min-height: 32px; max-width: 160px; }
+        @media (max-width: 480px) { .ib-pv-pick { max-width: 118px; font-size: 13px; padding-left: 6px; padding-right: 4px; } .ib-pv-label { font-size: 14px; } }   /* 11-27.3: 휴대폰에서 ▶ 버튼이 혼자 아래 줄로 내려가던 것 */
         .ib-pt-w { overflow-x: auto; max-height: 360px; overflow-y: auto; padding: 6px; } .ib-pt { border-collapse: collapse; width: 100%; font-size: 13px; }
         .ib-pt th, .ib-pt td { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; } .ib-pt th:first-child, .ib-pt td:first-child { text-align: left; }
         .ib-pt th { position: sticky; top: 0; background: #F4F5EC; } .ib-pt tr.z td { color: #A6A898; } .ib-pt tr.sum td { font-weight: 800; background: #F7F8F0; }
@@ -568,7 +569,7 @@
         .t-row.dragging { background: #FFFBE6; box-shadow: 0 8px 22px rgba(0,0,0,.18); position: relative; z-index: 3; }
         .t-row.dragging .t-drag { cursor: grabbing; }
         /* 콜 인입 */
-        .nav-step { float: right; margin: 3px 0 0 6px; padding: 0 5px; border: 1px solid rgba(255, 99, 82, .55); border-radius: 6px; color: #FF7A6B; font-size: 10.5px; font-weight: 800; line-height: 15px; letter-spacing: -.2px; }
+        .nav-step { float: right; margin: 3px 0 0 6px; padding: 0 5px; border: 1px solid rgba(255, 99, 82, .55); border-radius: 6px; color: #FF7A6B; font-size: 11.5px; font-weight: 800; line-height: 16px; letter-spacing: -.2px; }
         .nav button[aria-current="page"] .nav-step { color: #FF8A7C; border-color: rgba(255, 138, 124, .7); }
         .nav-badge { display: inline-block; min-width: 20px; margin-left: 8px; padding: 1px 6px; border-radius: 999px; background: #E53E3E; color: #fff; font-size: 12px; font-weight: 800; text-align: center; line-height: 18px; }
         .ib-row { display: grid; grid-template-columns: 128px 86px minmax(0, 1fr) minmax(0, 1.25fr) 150px 86px; gap: 10px 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); border-left: 5px solid #E53E3E; }
@@ -1051,7 +1052,7 @@
         .gll-sum b { color: var(--ink); font-size: 15px; margin-left: 2px; }
         .gll-sum-n { margin-left: auto; }
         .gll-list { display: flex; flex-direction: column; gap: 8px; }
-        .gll-card { background: #fff; border: 1px solid var(--line); border-left: 5px solid #B9C29F; border-radius: 12px; padding: 10px 12px 8px; }
+        .gll-card { background: #fff; border: 1px solid var(--line); border-left: 5px solid #B9C29F; border-radius: 12px; padding: 10px 12px 8px; content-visibility: auto; contain-intrinsic-size: auto 240px; }   /* 11-27.3: 화면 밖 카드는 배치 계산 안 함 (300명 장부도 빠르게) */
         .gll-card.mobile { border-left-color: #2F55B8; } .gll-card.wired { border-left-color: #2E7D32; } .gll-card.rent { border-left-color: #7B4FB5; } .gll-card.cancel { border-left-color: #C0392B; background: #FCF6F5; }
         .gll-card.flash { box-shadow: 0 0 0 3px var(--gold); }
         .gll-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
@@ -1249,6 +1250,7 @@
         .ib-sub { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: 13px; color: var(--muted); margin-top: 2px; }
         .ib-sub b { color: var(--ink, #222); }
         .ib-phone { font-weight: 700; color: #2B6CB0; }
+        @media (max-width: 700px) { .ib-phone { display: inline-block; padding: 7px 0; } }   /* 11-27.3: 휴대폰에서 번호 누르기 쉽게 */
         .ib-dev { background: #F1F4E6; border-radius: 6px; padding: 1px 7px; font-size: 12px; max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
         .ib-main { min-width: 0; }
         .ib-no { display: inline-block; min-width: 38px; margin-right: 6px; padding: 1px 7px; border-radius: 999px; background: #3E441E; color: #fff; font-size: 12px; font-weight: 800; text-align: center; }
@@ -1396,6 +1398,7 @@
         .set-block > p { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
         .staff-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
         .staff-row:last-child { border-bottom: none; }
+        @media (max-width: 700px) { .staff-row { grid-template-columns: 14px minmax(0, 1fr); } .staff-row > .actions { grid-column: 1 / -1; flex-wrap: wrap; justify-content: flex-start; } }   /* 11-27.3: 휴대폰에서 직원 이름이 세로로 깨지던 것 → 버튼은 이름 아래 줄로 */
         .staff-row i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
         .staff-row .role { color: var(--muted); font-size: 13.5px; margin-left: 8px; }
 
@@ -2022,7 +2025,7 @@
             .nav { order: 3; flex: 1 0 100%; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; padding-bottom: 2px; overflow: visible; }
             .nav button { white-space: normal; word-break: keep-all; line-height: 1.2; padding: 7px 4px; font-size: 13.5px; min-height: 38px; text-align: center; justify-content: center; position: relative; }
             .nav-badge { position: absolute; top: -4px; right: -2px; margin: 0; }
-            .nav-step { float: none; position: absolute; top: -6px; left: 1px; margin: 0; padding: 0 3px; font-size: 9px; line-height: 12px; background: #2E3315; }
+            .nav-step { float: none; position: absolute; top: -6px; left: 1px; margin: 0; padding: 0 3px; font-size: 10px; line-height: 13px; background: #2E3315; }
             .rail-foot { margin: 0 0 0 auto; padding: 0; border: none; display: flex; align-items: center; gap: 8px; min-width: 0; }
             .rail-foot label { display: none; }
             .rail-foot select { width: auto; max-width: 118px; padding: 6px 8px; }
@@ -2360,7 +2363,7 @@
         var AUTH_CODES = ['login_required', 'pending', 'disabled'];
         var BUILD_TEAM_URL = '';        // 시험용 빌드에서만 채움 (운영에서는 ADMIN-01/team.json 에서 서버 주소를 읽어요)
         var LAST_EMAIL_KEY = 'sageori_admin_last_email_v1';   // 로그인 화면에 미리 채워 둘 이메일
-        var APP_VERSION = '2026-11-27.2';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
+        var APP_VERSION = '2026-11-27.3';   // 로그인 화면 맨 아래에 표시: 예전 화면이 남아 있는지(캐시) 바로 알 수 있어요
         var teamUrl = '', teamCfgDone = false, teamCfgState = 'none', legacyOpen = false, keysOffered = false;   // teamCfgState: ok / none(파일 없음) / bad(내용 이상) / file(내 컴퓨터에서 연 파일)
         var uni = { mode: 'login', pending: null };            // 아이디 로그인 화면 상태 (pending: 승인을 기다리는 가입/중지된 계정)
         var DRIVE_POLL_MS = 30000;      // 화면을 열어 두면 30초마다 다른 직원의 변경 사항 확인 (전달하기 팝업도 이 주기로)
@@ -13898,7 +13901,7 @@
                     h('label', { class: 'idr-field' }, h('span', {}, '고객 성함'), U.name),
                     h('label', { class: 'idr-field' }, h('span', {}, '고객 휴대폰'), U.phone),
                     h('div', { class: 'idr-field idr-wide idr-make-row' }, U.make, h('span', { class: 'ib-help' }, '성함·휴대폰만 적고 먼저 링크를 보내도 돼요. 접수 메모는 아래에 적고 [4-1 내용 작성 완료]로 저장해요.')),
-                    h('div', { class: 'idr-field idr-wide' }, h('div', { class: 'idr-intake-top' }, h('span', {}, '고객 접수 메모 ', h('small', {}, '(고객에게는 안 보여요 · 아래 최근 요청 목록에서 복사)')), U.tpl), U.memo, U.partsBox)),
+                    h('div', { class: 'idr-field idr-wide' }, h('div', { class: 'idr-intake-top' }, h('span', {}, '고객 접수 메모 ', h('small', { style: 'font-size:12px' }, '(고객에게는 안 보여요 · 아래 최근 요청 목록에서 복사)')), U.tpl), U.memo, U.partsBox)),
                 h('div', { class: 'idr-form-foot' }, h('p', {}, '고객 전용 주소는 72시간 동안 한 번만 쓸 수 있어요. 사진·서류는 서버에 남기지 않고 관리자 메일로만 보내져요. 접수 메모는 팀 암호로 잠가서 보관하고 ' + INTAKE_KEEP_DAYS + '일 뒤 자동으로 지워요.'), h('div', { class: 'idr-make-btns' }, U.upd)));
             U.title = h('div', { class: 'vs-h' }, '고객에게 보낼 문자');
             U.area = h('textarea', { class: 'idr-msg', readonly: true, rows: '9', 'aria-label': '고객에게 보낼 문자 내용' });
@@ -16357,14 +16360,20 @@
         }
         function clDockH(el) { try { var v = el.offsetHeight + 'px'; if (document.body.style.getPropertyValue('--dockh') !== v) document.body.style.setProperty('--dockh', v); } catch (e) { /* 무시 */ } }   // 11-21.6: 같은 값이면 안 바꿈 (화면 배치 두 번 계산 막음)
         function clMemoPaint() { try { clDockPaint(); } catch (e) { /* 무시 */ } clMemoPaint0(); clMemoAuto(); clMemoAddon(); clTabsPos(); var M = cl.memo; if (M && M.rtPend && M.P && M.P.memoEl && M.open && !M.min) { var pk = M.rtPend; M.rtPend = null; clRtApply(pk); } }
-        function clTabsPos() {   // 시트 탭: 처음엔 맨 뒤(최근 달)가 보이게, 그 뒤엔 보던 자리 그대로
+        function clTabsPos() {   // 시트 탭: 처음엔 맨 뒤(최근 달)가 보이게, 그 뒤엔 보던 자리 그대로 (11-27.3: 다음 프레임에 한 번만)
+            if (clTabsPos.q) return; clTabsPos.q = 1;
+            (window.requestAnimationFrame || setTimeout)(function () { clTabsPos.q = 0; try { clTabsPos0(); } catch (e) { /* 무시 */ } });
+        }
+        function clTabsPos0() {
             var t = document.querySelector('.cl-tabs'); if (!t) return;
-            if (!t.getAttribute('data-sx')) { t.setAttribute('data-sx', '1'); t.addEventListener('scroll', function () { cl.tabX = t.scrollLeft; }, { passive: true }); }
+            if (t.classList.contains('gl-tabs')) return;   // 가입고객리스트 탭은 glAfterRender가 (위치 따로 기억)
+            var k = 'tabX';
+            if (!t.getAttribute('data-sx')) { t.setAttribute('data-sx', '1'); t.addEventListener('scroll', function () { cl[k] = t.scrollLeft; }, { passive: true }); }
             var a = t.querySelector('[aria-pressed="true"]'), max = t.scrollWidth - t.clientWidth;
             if (max <= 0) return;
-            var x = cl.tabX == null ? max : Math.min(cl.tabX, max);
+            var x = cl[k] == null ? max : Math.min(cl[k], max);
             if (a) { var l = a.offsetLeft, r = l + a.offsetWidth; if (l < x) x = Math.max(0, l - 8); else if (r > x + t.clientWidth) x = Math.min(max, r - t.clientWidth + 8); }
-            t.scrollLeft = x; cl.tabX = t.scrollLeft;
+            t.scrollLeft = x; cl[k] = t.scrollLeft;
         }
         function clMemoW(w) {   // 상담 메모 창 너비 (PC · 이 기기에서만 기억) → 실제 너비
             var b = document.body;
@@ -18894,6 +18903,17 @@
             return true;
         }
         function gllCallGrow(ta) { ta.style.height = 'auto'; ta.style.height = Math.max(34, ta.scrollHeight + 2) + 'px'; }
+        var gllGrowQ = [];
+        function gllCallGrowLater(ta) {   // 11-27.3: 그린 뒤 한 번에 (빈 칸은 재지 않고 기본 높이)
+            if (!ta.value) { ta.style.height = '34px'; return; }
+            gllGrowQ.push(ta); if (gllGrowQ.length > 1) return;
+            setTimeout(function () {
+                var a = gllGrowQ.splice(0).filter(function (x) { return x.isConnected; });
+                a.forEach(function (x) { x.style.height = 'auto'; });
+                var hs = a.map(function (x) { return x.scrollHeight; });
+                a.forEach(function (x, i) { x.style.height = Math.max(34, hs[i] + 2) + 'px'; });
+            }, 0);
+        }
         function gllCalls(S, r) { var a = S.calls && S.calls[gllCallKey(S, r)]; return Array.isArray(a) ? a : ['', '', '', '', '']; }
         function gllCallSet(E, key, i, val) {
             var S = E.S; if (!S.calls) S.calls = {};
@@ -19459,7 +19479,7 @@
             var saveB = can ? h('button', { type: 'button', class: 'btn btn-sm gll-callsave' + (dirty ? ' dirty' : ''), disabled: !dirty, title: '적은 콜 기록 저장 (Ctrl+Enter)', onclick: function (e) { e.stopPropagation(); if (gllCallSaveAll(E, key)) render(); } }, dirty ? '💾 콜 저장 (저장 안 됨)' : '✓ 콜 저장됨') : null;
             var callBox = h('div', { class: 'gll-calls', 'aria-label': '콜 기록' }, calls.slice(0, showN).map(function (v0, i) {
                 var v = drf && drf[i] != null ? drf[i] : v0, edited = drf && drf[i] != null && String(drf[i]).trim() !== String(v0 || '');
-                var ta = h('textarea', { class: 'gll-call' + (v ? ' on' : '') + (edited ? ' ed' : ''), rows: 1, placeholder: '콜' + (i + 1) + ' — 누르면 오늘 날짜 · 줄 바꿈은 Enter · 저장은 [💾 콜 저장] 또는 Ctrl+Enter', 'aria-label': '콜' + (i + 1), disabled: !can, 'data-fk': 'gll-call-' + r + '-' + i });
+                var ta = h('textarea', { class: 'gll-call' + (v ? ' on' : '') + (edited ? ' ed' : ''), rows: 1, placeholder: '콜' + (i + 1) + ' — 눌러서 적기 (오늘 날짜 자동)', title: '누르면 오늘 날짜 · 줄 바꿈은 Enter · 저장은 [💾 콜 저장] 또는 Ctrl+Enter', 'aria-label': '콜' + (i + 1), disabled: !can, 'data-fk': 'gll-call-' + r + '-' + i });
                 ta.value = v || '';
                 var pre = '';
                 function mark() {
@@ -19472,7 +19492,7 @@
                 ta.addEventListener('input', function () { gllCallGrow(ta); mark(); });
                 ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.isComposing) { e.preventDefault(); mark(); if (gllCallSaveAll(E, key)) render(); } });
                 ta.addEventListener('blur', function () { if (pre && ta.value.trim() === pre.trim()) { ta.value = ''; var d = gl.cdr && gl.cdr[key]; if (d) { delete d[i]; if (!Object.keys(d).length) delete gl.cdr[key]; } if (saveB && !(gl.cdr && gl.cdr[key])) { saveB.disabled = true; saveB.classList.remove('dirty'); saveB.textContent = '✓ 콜 저장됨'; } } pre = ''; });
-                setTimeout(function () { gllCallGrow(ta); }, 0);
+                gllCallGrowLater(ta);
                 return ta;
             }), saveB);
             var more = h('button', { type: 'button', class: 'gll-more-b', 'aria-expanded': open ? 'true' : 'false', onclick: function () { f.open[r] = !open; render(); } }, open ? '접기 ▴' : '자세히 ▾');
